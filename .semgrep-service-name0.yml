@@ -65,8 +65,6 @@ rules:
     paths:
       include:
         - internal/service/account
-      exclude:
-        - internal/service/account
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -284,8 +282,6 @@ rules:
     paths:
       include:
         - internal/service/amp
-      exclude:
-        - internal/service/amp
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -402,8 +398,6 @@ rules:
     paths:
       include:
         - internal/service/apigateway
-      exclude:
-        - internal/service/apigateway
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -434,8 +428,6 @@ rules:
     paths:
       include:
         - internal/service/apigateway
-      exclude:
-        - internal/service/apigateway
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -449,8 +441,6 @@ rules:
     message: Do not use "APIGateway" in var name inside apigateway package
     paths:
       include:
-        - internal/service/apigateway
-      exclude:
         - internal/service/apigateway
     patterns:
       - pattern: var $NAME = ...
@@ -481,8 +471,6 @@ rules:
     paths:
       include:
         - internal/service/apigatewayv2/*_test.go
-      exclude:
-        - internal/service/apigatewayv2
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -498,8 +486,6 @@ rules:
     paths:
       include:
         - internal/service/apigatewayv2
-      exclude:
-        - internal/service/apigatewayv2
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -514,8 +500,6 @@ rules:
     paths:
       include:
         - internal/service/apigatewayv2
-      exclude:
-        - internal/service/apigatewayv2
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:
@@ -529,8 +513,6 @@ rules:
     message: Do not use "AppAutoScaling" in func name inside appautoscaling package
     paths:
       include:
-        - internal/service/appautoscaling
-      exclude:
         - internal/service/appautoscaling
     patterns:
       - pattern: func $NAME( ... ) { ... }
@@ -721,8 +703,6 @@ rules:
     paths:
       include:
         - internal/service/appintegrations/*_test.go
-      exclude:
-        - internal/service/appintegrations
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
