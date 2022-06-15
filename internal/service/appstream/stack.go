@@ -211,7 +211,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("embed_host_domains"); ok {
-		input.EmbedHostDomains = flex.ExpandStringList(v.([]interface{}))
+		input.EmbedHostDomains = flex.ExpandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("feedback_url"); ok {

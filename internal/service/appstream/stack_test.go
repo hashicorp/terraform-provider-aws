@@ -95,6 +95,9 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
 				),
 			},
 			{
@@ -214,6 +217,8 @@ func testAccStackCompleteConfig(name, description string) string {
 resource "aws_appstream_stack" "test" {
   name        = %[1]q
   description = %[2]q
+
+  embed_host_domains = ["example.com", "subdomain.example.com"]
 
   storage_connectors {
     connector_type = "HOMEFOLDERS"
