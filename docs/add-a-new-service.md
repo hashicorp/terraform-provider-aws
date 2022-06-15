@@ -9,8 +9,8 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS Go SDK service client:
 
-- Determine the service identifier using the rule described in [the Naming Guide](./naming.md#service-identifier).
-- In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](../names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
+- Determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
+- In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
 
 - Run the following then submit the pull request:
 
