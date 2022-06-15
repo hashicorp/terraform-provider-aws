@@ -12,11 +12,11 @@ If this is the first addition of a resource or datasource for a new service, ple
 
 ## Steps to Add a Datasource
 
-### Fork the provider and create a feature branch
+### Fork the Provider and Create a Feature Branch
 
 For a new resources use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-### Name the datasource
+### Name the Datasource
 
 Either by creating the file manually, or using `skaff` to generate a template.
 
@@ -36,7 +36,7 @@ Attribute names are to specified in `camel_case` as opposed to the AWS API which
 
 These will map the AWS API response to the datasource schema. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
-#### Write passing Acceptance Tests
+### Write Passing Acceptance Tests
 In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
 You will need at minimum:
@@ -45,11 +45,11 @@ You will need at minimum:
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
 - Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
 
-### Create documentation for the resource
+### Create Documentation for the Datasource
 
 Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
 
-### Ensure format and lint checks are passing locally
+### Ensure Format and Lint Checks are Passing Locally
 
 Run `go fmt` to format your code, and install and run all linters to detect and resolve any structural issues with the implementation or documentation.
 

@@ -10,19 +10,18 @@ Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by 
 
 - [Add Service Client](add-a-new-service.md#add-a-service-client)
 - [Perform Service Design](add-a-new-service.md#perform-service-design)
-- [Add a New Resource](add-a-new-service.md#add-a-new-resource)
 
 ### Add a New Resource to the Provider
 
 Allow the management of a logical resource within AWS by adding a new resource to the Terraform AWS Provider.
 
-- [Name the Resource](add-a-new-resource.md#add-a-new-resource)
-- [Fork the Provider](add-a-new-resource.md#fork-the-provider)
+- [Fork the Provider](add-a-new-resource.md#fork-the-provider-and-create-a-feature-branch)
+- [Name the Resource](add-a-new-resource.md#name-the-resource)
 - [Fill out the Resource Schema](add-a-new-resource.md#fill-out-the-resource-schema)
 - [Implement CRUD Handlers](add-a-new-resource.md#implement-crud-handlers)
 - [Write Passing Acceptance Tests](add-a-new-resource.md#write-passing-acceptance-tests)
 - [Create Documentation for the Resource](add-a-new-resource.md#create-documentation-for-the-resource)
-- [Ensure Format and Lint Checks are Passing](add-a-new-resource.md#ensure-format-and-link-checks-are-passing)
+- [Ensure Format and Lint Checks are Passing Locally](add-a-new-resource.md#ensure-format-and-lint-checks-are-passing-locally)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
@@ -31,13 +30,13 @@ Allow the management of a logical resource within AWS by adding a new resource t
 Allow reading an existing AWS resource by id or filter, and allow its use within Terraform configurations.
 
 
-- [Name the Datasource](add-a-new-datasource.md#add-a-new-datasource)
-- [Fork the Provider](add-a-new-datasource.md#fork-the-provider)
+- [Fork the Provider](add-a-new-datasource.md#fork-the-provider-and-create-a-feature-branch)
+- [Name the Datasource](add-a-new-datasource.md#name-the-datasource)
 - [Fill out the Datasource Schema](add-a-new-datasource.md#fill-out-the-datasource-schema)
 - [Implement Read Handler](add-a-new-datasource.md#implement-read-handler)
 - [Write Passing Acceptance Tests](add-a-new-datasource.md#write-passing-acceptance-tests)
-- [Create Documentation for the Resource](add-a-new-resource.md#create-documentation-for-the-resource)
-- [Ensure Format and Lint Checks are Passing](add-a-new-datasource.md#ensure-format-and-link-checks-are-passing)
+- [Create Documentation for the Datasource](add-a-new-datasource.md#create-documentation-for-the-datasource)
+- [Ensure Format and Lint Checks are Passing Locally](add-a-new-datasource.md#ensure-format-and-lint-checks-are-passing-locally)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
