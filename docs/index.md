@@ -34,7 +34,7 @@ Allow reading an existing AWS resource by id or filter, and allow its use within
 - [Name the Datasource](add-a-new-datasource.md#add-a-new-datasource)
 - [Fork the Provider](add-a-new-datasource.md#fork-the-provider)
 - [Fill out the Datasource Schema](add-a-new-datasource.md#fill-out-the-datasource-schema)
-- [Implement CRUD Handlers](add-a-new-datasource.md#implement-crud-handlers)
+- [Implement Read Handler](add-a-new-datasource.md#implement-read-handler)
 - [Write Passing Acceptance Tests](add-a-new-datasource.md#write-passing-acceptance-tests)
 - [Create Documentation for the Resource](add-a-new-resource.md#create-documentation-for-the-resource)
 - [Ensure Format and Lint Checks are Passing](add-a-new-datasource.md#ensure-format-and-link-checks-are-passing)
