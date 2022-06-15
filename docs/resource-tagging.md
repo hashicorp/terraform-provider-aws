@@ -6,16 +6,16 @@ As of version 3.38.0 of the Terraform AWS Provider, resources that previously im
 
 Thus, for in-flight and future contributions, implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
 
-- [ ] _Generated Service Tagging Code_: Each service has a `generate.go` file where generator directives live. Through these directives and their flags, you can customize code generation for the service. You can find the code that the tagging generator generates in a `tags_gen.go` file in a service, such as `internal/service/ec2/tags_gen.go`. Unlike previously, you should generally _not_ need to edit the generator code (i.e., in `internal/generate/tags`).
-- [ ] _Resource Tagging Code Implementation_: In the resource code (e.g., `internal/service/{service}/{thing}.go`), implementation of `tags` and `tags_all` schema attributes, along with implementation of `CustomizeDiff` in the resource definition and handling in `Create`, `Read`, and `Update` functions.
-- [ ] _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
-- [ ] _Resource Tagging Documentation Implementation_: In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`), addition of `tags` argument and `tags_all` attribute.
+- _Generated Service Tagging Code_: Each service has a `generate.go` file where generator directives live. Through these directives and their flags, you can customize code generation for the service. You can find the code that the tagging generator generates in a `tags_gen.go` file in a service, such as `internal/service/ec2/tags_gen.go`. Unlike previously, you should generally _not_ need to edit the generator code (i.e., in `internal/generate/tags`).
+- _Resource Tagging Code Implementation_: In the resource code (e.g., `internal/service/{service}/{thing}.go`), implementation of `tags` and `tags_all` schema attributes, along with implementation of `CustomizeDiff` in the resource definition and handling in `Create`, `Read`, and `Update` functions.
+- _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
+- _Resource Tagging Documentation Implementation_: In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`), addition of `tags` argument and `tags_all` attribute.
 
 ## Generating Tag Code for a Service
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation, including fixes for potential error messages in this process, can be found in the [generate documentation](../../internal/generate/tags/README.md).
+More details about this code generation, including fixes for potential error messages in this process, can be found in the [generate documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Use the AWS Go SDK to determine which types of tagging code to generate. There are three main types of tagging code you can generate: service tags, list tags, and update tags. These are not mutually exclusive and some services use more than one.
@@ -120,7 +120,7 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
-- Some EC2 resources (e.g., [`aws_ec2_fleet`](https://www.terraform.io/docs/providers/aws/r/ec2_fleet.html)) have a `TagSpecifications` field in the `InputStruct` instead of a `Tags` field. In these cases the `ec2TagSpecificationsFromKeyValueTags()` helper function should be used. This example shows using `TagSpecifications`:
+- Some EC2 resources (e.g., [`aws_ec2_fleet`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_fleet)) have a `TagSpecifications` field in the `InputStruct` instead of a `Tags` field. In these cases the `ec2TagSpecificationsFromKeyValueTags()` helper function should be used. This example shows using `TagSpecifications`:
 
   ```go
   // Typically declared near conn := /* ... */
