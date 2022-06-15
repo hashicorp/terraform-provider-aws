@@ -32,7 +32,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAuthorizationTokenDataSourceConfig_respository(rName),
+				Config: testAccAuthorizationTokenDataSourceConfig_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "registry_id", "aws_ecr_repository.repo", "registry_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
@@ -51,7 +51,7 @@ var testAccAuthorizationTokenDataSourceConfig_basic = `
 data "aws_ecr_authorization_token" "repo" {}
 `
 
-func testAccAuthorizationTokenDataSourceConfig_respository(rName string) string {
+func testAccAuthorizationTokenDataSourceConfig_repository(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "repo" {
   name = %q
