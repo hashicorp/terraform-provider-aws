@@ -34,6 +34,15 @@ func DataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"include_public_key": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"public_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
@@ -57,6 +66,10 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		input.KeyPairIds = aws.StringSlice([]string{v.(string)})
 	}
 
+	if v, ok := d.GetOk("include_public_key"); ok {
+		input.IncludePublicKey = aws.Bool(v.(bool))
+	}
+
 	keyPair, err := FindKeyPair(conn, input)
 
 	if err != nil {
@@ -77,6 +90,8 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)
+	d.Set("include_public_key", input.IncludePublicKey)
+	d.Set("public_key", keyPair.PublicKey)
 
 	if err := d.Set("tags", KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
