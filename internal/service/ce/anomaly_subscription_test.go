@@ -53,6 +53,31 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	})
 }
 
+func TestAccCEAnomalySubscription_disappears(t *testing.T) {
+	var subscription costexplorer.AnomalySubscription
+	resourceName := "aws_ce_anomaly_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAnomalySubscriptionDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
+					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceAnomalySubscription(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
