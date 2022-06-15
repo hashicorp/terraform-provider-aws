@@ -26,7 +26,7 @@ func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDisplayNameDataSourceConfig(name),
+				Config: testAccUserDataSourceConfig_displayName(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
@@ -53,7 +53,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserUserIDDataSourceConfig(name, userID),
+				Config: testAccUserDataSourceConfig_id(name, userID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "user_id", userID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
@@ -71,7 +71,7 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserNonExistentDataSourceConfig,
+				Config:      testAccUserDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`no Identity Store User found matching criteria`),
 			},
 		},
@@ -92,7 +92,7 @@ func testAccPreCheckUserID(t *testing.T) {
 	}
 }
 
-func testAccUserDisplayNameDataSourceConfig(name string) string {
+func testAccUserDataSourceConfig_displayName(name string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -106,7 +106,7 @@ data "aws_identitystore_user" "test" {
 `, name)
 }
 
-func testAccUserUserIDDataSourceConfig(name, id string) string {
+func testAccUserDataSourceConfig_id(name, id string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -123,7 +123,7 @@ data "aws_identitystore_user" "test" {
 `, name, id)
 }
 
-const testAccUserNonExistentDataSourceConfig = `
+const testAccUserDataSourceConfig_nonExistent = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_identitystore_user" "test" {
