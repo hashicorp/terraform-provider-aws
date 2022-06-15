@@ -240,7 +240,7 @@ func TestAccElastiCacheCluster_port(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_Port(rName, port),
+				Config: testAccClusterConfig_port(rName, port),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
@@ -1367,7 +1367,7 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, engine, engineVersion, parameterGroupName)
 }
 
-func testAccClusterConfig_Port(rName string, port int) string {
+func testAccClusterConfig_port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = "%s"

@@ -18,7 +18,7 @@ func TestAccDSDirectoryDataSource_nonExistent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDirectoryDataSourceConfig_NonExistent,
+				Config:      testAccDirectoryDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
@@ -118,7 +118,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	})
 }
 
-const testAccDirectoryDataSourceConfig_NonExistent = `
+const testAccDirectoryDataSourceConfig_nonExistent = `
 data "aws_directory_service_directory" "test" {
   directory_id = "d-abc0123456"
 }

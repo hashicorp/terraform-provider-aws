@@ -417,7 +417,7 @@ rules:
       - metavariable-pattern:
           metavariable: "$VALUE"
           patterns:
-            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config_.*"
+            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
             - pattern-not: acctest.ConfigCompose(...)
     severity: WARNING
   - id: test-configcompose-funcs-correct-form
@@ -437,7 +437,7 @@ rules:
       - metavariable-pattern:
           metavariable: "$VALUE"
           patterns:
-            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config_.*"
+            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
             - pattern-not-regex: "acctest\\..*"
     severity: WARNING
   - id: test-config-funcs-check

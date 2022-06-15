@@ -296,7 +296,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_PubliclyAccessible(rName, true),
+				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
@@ -312,7 +312,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterInstanceConfig_PubliclyAccessible(rName, false),
+				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -338,7 +338,7 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, true),
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rNameSuffix, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
@@ -354,7 +354,7 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, false),
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rNameSuffix, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
@@ -953,7 +953,7 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_CACertificateIdentifier(rName),
+				Config: testAccClusterInstanceConfig_caCertificateID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
@@ -1764,7 +1764,7 @@ resource "aws_rds_cluster_instance" "test" {
 `, rName, performanceInsightsRetentionPeriod)
 }
 
-func testAccClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {
+func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
@@ -1789,7 +1789,7 @@ resource "aws_rds_cluster_instance" "test" {
 `, rName, publiclyAccessible)
 }
 
-func testAccClusterInstanceConfig_CopyTagsToSnapshot(n int, f bool) string {
+func testAccClusterInstanceConfig_copyTagsToSnapshot(n int, f bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
   cluster_identifier = "tf-aurora-cluster-test-%[1]d"
@@ -1820,7 +1820,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
 `, n, f))
 }
 
-func testAccClusterInstanceConfig_CACertificateIdentifier(rName string) string {
+func testAccClusterInstanceConfig_caCertificateID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
