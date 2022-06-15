@@ -114,7 +114,7 @@ resource "aws_key_pair" "test" {
 func testAccKeyPairDataSourceConfig_includePublicKey(rName, publicKey string) string {
 	return fmt.Sprintf(`
 data "aws_key_pair" "by_name" {
-  key_name = aws_key_pair.test.key_name
+  key_name           = aws_key_pair.test.key_name
   include_public_key = true
 }
 
