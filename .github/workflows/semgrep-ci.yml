@@ -22,14 +22,23 @@ jobs:
     - name: semgrep
       uses: returntocorp/semgrep-action@v1
   naming_cac:
-    name: Semgrep Naming Scan Caps/AWS/Config/EC2
+    name: Semgrep Naming Scan Caps/AWS/EC2
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: .github/scripts/semgrep.sh caps-aws-config
+    - run: .github/scripts/semgrep.sh caps-aws-ec2
+  naming_tests:
+    name: Semgrep Test Configs Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh configs
   naming_semgrep0:
     name: Semgrep Service Name Scan A-C
     runs-on: ubuntu-latest
