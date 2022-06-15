@@ -403,8 +403,13 @@ func expandPolicyOption(tfMap map[string]interface{}) *fms.PolicyOption {
 
 	apiObject := &fms.PolicyOption{}
 
-	apiObject.NetworkFirewallPolicy = expandPolicyOptionNetworkFirewall(tfMap["network_firewall_policy"].(map[string]interface{}))
-	apiObject.ThirdPartyFirewallPolicy = expandPolicyOptionThirdpartyFirewall(tfMap["thirdparty_firewall_policy"].(map[string]interface{}))
+	if v, ok := tfMap["network_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkFirewallPolicy = expandPolicyOptionNetworkFirewall(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["thirdparty_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ThirdPartyFirewallPolicy = expandPolicyOptionThirdpartyFirewall(v[0].(map[string]interface{}))
+	}
 
 	return apiObject
 }
