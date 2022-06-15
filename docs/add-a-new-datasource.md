@@ -22,7 +22,7 @@ Either by creating the file manually, or using `skaff` to generate a template.
 
 All resources should be named with the following pattern: `aws_<service>_<name>`
 
-Where `<service>` is the AWS short service name that matches the key in the `serviceData` map in the `conns` package (created via the [Adding a new Service](add-a-new-service.md) )
+Where `<service>` is the AWS short service name that matches the key in the `serviceData` map in the `conns` package (created via the [Adding a new Service](add-a-new-service.md))
 
 Where `<name>` represents the conceptual infrastructure represented by the create, read, update, and delete methods of the service API. It should be a singular noun. For example, in an API that has methods such as `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name of the resource would end in `_thing`.
 
@@ -47,7 +47,7 @@ You will need at minimum:
 
 ### Create Documentation for the Datasource
 
-Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
+Add a file covering the use of the new resource in `website/docs/d/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
 
 ### Ensure Format and Lint Checks are Passing Locally
 
