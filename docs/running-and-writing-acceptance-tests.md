@@ -51,7 +51,7 @@
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
-Terraform Providers, see the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/index.html).
+Terraform Providers, see the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing).
 
 ## Acceptance Tests Often Cost Money to Run
 
@@ -149,7 +149,7 @@ ok  	github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch	27.
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
 
-For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#environment-variables) for more information.
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests#environment-variables) for more information.
 
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
@@ -201,19 +201,19 @@ If you want to run only short-running tests, you can use either one of these equ
 For example:
 
 ```console
-% make testacc TESTS='TestAccECSTaskDefinition_' PKG=ecs TESTARGS=-short
+$ make testacc TESTS='TestAccECSTaskDefinition_' PKG=ecs TESTARGS=-short
 ```
 
 Or:
 
 ```console
-% TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestAccECSTaskDefinition_' -short -timeout 180m
+$ TF_ACC=1 go test ./internal/service/ecs/... -v -count 1 -parallel 20 -run='TestAccECSTaskDefinition_' -short -timeout 180m
 ```
 
 ## Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimizes the
-amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html) with Terraform AWS Provider specific conventions and helpers.
+amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests) with Terraform AWS Provider specific conventions and helpers.
 
 ### Anatomy of an Acceptance Test
 
@@ -1204,7 +1204,7 @@ data "aws_example_thing" "test" {
 
 ## Acceptance Test Sweepers
 
-When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Extending Terraform documentation on test sweepers](https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html) with Terraform AWS Provider specific details.
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [SDKv2 documentation on test sweepers](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
 
 ### Running Test Sweepers
 
@@ -1389,33 +1389,33 @@ There are several aspects to writing good acceptance tests. These checklists wil
 
 These are basic principles to help guide the creation of acceptance tests.
 
-- [ ] __Covers Changes__: Every line of resource or data source code added or changed should be covered by one or more tests. For example, if a resource has two ways of functioning, tests should cover both possible paths. Nearly every codebase change needs test coverage to ensure functionality and prevent future regressions. If a bug or other problem prompted a fix, a test should be added that previously would have failed, especially if the report included a configuration.
-- [ ] __Follows the Single Responsibility Principle__: Every test should have a single responsibility and effectively test that responsibility. This may include individual tests for verifying basic functionality of the resource (Create, Read, Delete), separately verifying using and updating a single attribute in a resource, or separately changing between two attributes to verify two "modes"/"types" possible with a resource configuration. In following this principle, test configurations should be as simple as possible. For example, not including extra configuration unless it is necessary for the specific test.
+- __Covers Changes__: Every line of resource or data source code added or changed should be covered by one or more tests. For example, if a resource has two ways of functioning, tests should cover both possible paths. Nearly every codebase change needs test coverage to ensure functionality and prevent future regressions. If a bug or other problem prompted a fix, a test should be added that previously would have failed, especially if the report included a configuration.
+- __Follows the Single Responsibility Principle__: Every test should have a single responsibility and effectively test that responsibility. This may include individual tests for verifying basic functionality of the resource (Create, Read, Delete), separately verifying using and updating a single attribute in a resource, or separately changing between two attributes to verify two "modes"/"types" possible with a resource configuration. In following this principle, test configurations should be as simple as possible. For example, not including extra configuration unless it is necessary for the specific test.
 
 ### Test Implementation
 
 The below are required items that will be noted during submission review and prevent immediate merging:
 
-- [ ] __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [Extending Terraform TestCase documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
-- [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
-- [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
-- [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
-- [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
-- [ ] __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [SDKv2 TestCase documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/testcase#checkdestroy).
+- __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
+- __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
+- __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
+- __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
+- __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
-- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
-- [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
+- __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
+- __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
 
-- [ ] __Implements ImportState Testing__: Tests should include an additional `TestStep` configuration that verifies resource import via `ImportState: true` and `ImportStateVerify: true`. This `TestStep` should be added to all possible tests for the resource to ensure that all infrastructure configurations are properly imported into Terraform.
+- __Implements ImportState Testing__: Tests should include an additional `TestStep` configuration that verifies resource import via `ImportState: true` and `ImportStateVerify: true`. This `TestStep` should be added to all possible tests for the resource to ensure that all infrastructure configurations are properly imported into Terraform.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- [ ] __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
-- [ ] __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
-- [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
-- [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+- __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Builtin Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#builtin-check-functions).
+- __Uses TestCheckResourceAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
+- __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
+- __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAcc{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
 
 ### Avoid Hard Coding
 
@@ -1423,12 +1423,12 @@ Avoid hard coding values in acceptance test checks and configurations for consis
 
 #### Hardcoded Account IDs
 
-- [ ] __Uses Account Data Sources__: Any hardcoded account numbers in configuration, e.g., `137112412989`, should be replaced with a data source. Depending on the situation, there are several data sources for account IDs including:
-    - [`aws_caller_identity` data source](https://www.terraform.io/docs/providers/aws/d/caller_identity.html),
-    - [`aws_canonical_user_id` data source](https://www.terraform.io/docs/providers/aws/d/canonical_user_id.html),
-    - [`aws_billing_service_account` data source](https://www.terraform.io/docs/providers/aws/d/billing_service_account.html), and
-    - [`aws_sagemaker_prebuilt_ecr_image` data source](https://www.terraform.io/docs/providers/aws/d/sagemaker_prebuilt_ecr_image.html).
-- [ ] __Uses Account Test Checks__: Any check required to verify an AWS Account ID of the current testing account or another account should use one of the following available helper functions over the usage of `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
+- __Uses Account Data Sources__: Any hardcoded account numbers in configuration, e.g., `137112412989`, should be replaced with a data source. Depending on the situation, there are several data sources for account IDs including:
+    - [`aws_caller_identity` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity),
+    - [`aws_canonical_user_id` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/canonical_user_id),
+    - [`aws_billing_service_account` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/billing_service_account), and
+    - [`aws_sagemaker_prebuilt_ecr_image` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/sagemaker_prebuilt_ecr_image).
+- __Uses Account Test Checks__: Any check required to verify an AWS Account ID of the current testing account or another account should use one of the following available helper functions over the usage of `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
     - `acctest.CheckResourceAttrAccountID()`: Validates the state value equals the AWS Account ID of the current account running the test. This is the most common implementation.
     - `acctest.MatchResourceAttrAccountID()`: Validates the state value matches any AWS Account ID (e.g. a 12 digit number). This is typically only used in data source testing of AWS managed components.
 
@@ -1446,7 +1446,7 @@ resource "aws_backup_selection" "test" {
 
 #### Hardcoded AMI IDs
 
-- [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. The package `internal/acctest` includes test configuration helper functions to simplify these lookups:
+- __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) pointing to an Amazon Linux image. The package `internal/acctest` includes test configuration helper functions to simplify these lookups:
     - `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
     - `testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig()` (EC2): AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
     - `testAccLatestAmazonLinuxPVEBSAMIConfig()` (EC2): AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
@@ -1471,7 +1471,7 @@ resource "aws_launch_configuration" "test" {
 
 #### Hardcoded Availability Zones
 
-- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). Use the convenience function called `acctest.ConfigAvailableAZsNoOptIn()` (defined in `internal/acctest/acctest.go`) to declare `data "aws_availability_zones" "available" {...}`. You can then reference the data source via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources using `count`.
+- __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones). Use the convenience function called `acctest.ConfigAvailableAZsNoOptIn()` (defined in `internal/acctest/acctest.go`) to declare `data "aws_availability_zones" "available" {...}`. You can then reference the data source via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources using `count`.
 
 Here's an example of using `acctest.ConfigAvailableAZsNoOptIn()` and `data.aws_availability_zones.available.names[0]`:
 
@@ -1491,10 +1491,10 @@ resource "aws_subnet" "test" {
 
 #### Hardcoded Database Versions
 
-- [ ] __Uses Database Version Data Sources__: Hardcoded database versions, e.g., RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
-    - [`aws_rds_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/rds_engine_version.html),
-    - [`aws_docdb_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/docdb_engine_version.html), and
-    - [`aws_neptune_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/neptune_engine_version.html).
+- __Uses Database Version Data Sources__: Hardcoded database versions, e.g., RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
+    - [`aws_rds_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_engine_version),
+    - [`aws_docdb_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/docdb_engine_version), and
+    - [`aws_neptune_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/neptune_engine_version).
 
 Here's an example of using `aws_rds_engine_version` and `data.aws_rds_engine_version.default.version`:
 
@@ -1520,7 +1520,7 @@ resource "aws_db_instance" "bar" {
 
 #### Hardcoded Direct Connect Locations
 
-- [ ] __Uses aws_dx_locations Data Source__: Hardcoded AWS Direct Connect locations, e.g., `EqSe2`, should be replaced with the [`aws_dx_locations` data source](https://www.terraform.io/docs/providers/aws/d/dx_locations.html).
+- __Uses aws_dx_locations Data Source__: Hardcoded AWS Direct Connect locations, e.g., `EqSe2`, should be replaced with the [`aws_dx_locations` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/dx_locations).
 
 Here's an example using `data.aws_dx_locations.test.location_codes`:
 
@@ -1537,13 +1537,13 @@ resource "aws_dx_lag" "test" {
 
 #### Hardcoded Instance Types
 
-- [ ] __Uses Instance Type Data Source__: Singular hardcoded instance types and classes, e.g., `t2.micro` and `db.t2.micro`, should be replaced with a list of preferences using a data source. Because offerings vary from region to region and partition to partition, providing a list of preferences dramatically improves the likelihood that one of the options will be available. Depending on the situation, there are several data sources for instance types and classes, including:
-    - [`aws_ec2_instance_type_offering` data source](https://www.terraform.io/docs/providers/aws/d/ec2_instance_type_offering.html) - Convenience functions declare configurations that are referenced with `data.aws_ec2_instance_type_offering.available` including:
+- __Uses Instance Type Data Source__: Singular hardcoded instance types and classes, e.g., `t2.micro` and `db.t2.micro`, should be replaced with a list of preferences using a data source. Because offerings vary from region to region and partition to partition, providing a list of preferences dramatically improves the likelihood that one of the options will be available. Depending on the situation, there are several data sources for instance types and classes, including:
+    - [`aws_ec2_instance_type_offering` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_instance_type_offering) - Convenience functions declare configurations that are referenced with `data.aws_ec2_instance_type_offering.available` including:
         - The `acctest.AvailableEC2InstanceTypeForAvailabilityZone()` function for test configurations using an EC2 Subnet which is inherently within a single Availability Zone
         - The `acctest.AvailableEC2InstanceTypeForRegion()` function for test configurations that do not include specific Availability Zones
-    - [`aws_rds_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/rds_orderable_db_instance.html),
-    - [`aws_neptune_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/neptune_orderable_db_instance.html), and
-    - [`aws_docdb_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/docdb_orderable_db_instance.html).
+    - [`aws_rds_orderable_db_instance` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_orderable_db_instance),
+    - [`aws_neptune_orderable_db_instance` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/neptune_orderable_db_instance), and
+    - [`aws_docdb_orderable_db_instance` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/docdb_orderable_db_instance).
 
 Here's an example of using `acctest.AvailableEC2InstanceTypeForRegion()` and `data.aws_ec2_instance_type_offering.available.instance_type`:
 
@@ -1581,7 +1581,7 @@ resource "aws_db_instance" "test" {
 
 #### Hardcoded Partition DNS Suffix
 
-- [ ] __Uses aws_partition Data Source__: Any hardcoded DNS suffix configuration, e.g., the `amazonaws.com` in a `ec2.amazonaws.com` service principal, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.dns_suffix`.
+- __Uses aws_partition Data Source__: Any hardcoded DNS suffix configuration, e.g., the `amazonaws.com` in a `ec2.amazonaws.com` service principal, should be replaced with the [`aws_partition` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.dns_suffix`.
 
 Here's an example of using `aws_partition` and `data.aws_partition.current.dns_suffix`:
 
@@ -1609,8 +1609,8 @@ POLICY
 
 #### Hardcoded Partition in ARN
 
-- [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`.
-- [ ] __Uses Builtin ARN Check Functions__: Tests should use available ARN check functions to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
+- __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`.
+- __Uses Builtin ARN Check Functions__: Tests should use available ARN check functions to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
 
     - `acctest.CheckResourceAttrRegionalARN()` verifies that an ARN matches the account ID and region of the test execution with an exact resource value
     - `acctest.MatchResourceAttrRegionalARN()` verifies that an ARN matches the account ID and region of the test execution with a regular expression of the resource value
@@ -1635,7 +1635,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 #### Hardcoded Region
 
-- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
+- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
 
 Here's an example of using `aws_region` and `data.aws_region.current.name`:
 
@@ -1652,7 +1652,7 @@ resource "aws_route53_zone" "test" {
 
 #### Hardcoded Spot Price
 
-- [ ] __Uses aws_ec2_spot_price Data Source__: Any hardcoded spot prices, e.g., `0.05`, should be replaced with the [`aws_ec2_spot_price` data source](https://www.terraform.io/docs/providers/aws/d/ec2_spot_price.html). A common pattern is declaring `data "aws_ec2_spot_price" "current" {}` and referencing it via `data.aws_ec2_spot_price.current.spot_price`.
+- __Uses aws_ec2_spot_price Data Source__: Any hardcoded spot prices, e.g., `0.05`, should be replaced with the [`aws_ec2_spot_price` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_spot_price). A common pattern is declaring `data "aws_ec2_spot_price" "current" {}` and referencing it via `data.aws_ec2_spot_price.current.spot_price`.
 
 Here's an example of using `aws_ec2_spot_price` and `data.aws_ec2_spot_price.current.spot_price`:
 
@@ -1674,7 +1674,7 @@ resource "aws_spot_fleet_request" "test" {
 
 #### Hardcoded SSH Keys
 
-- [ ] __Uses acctest.RandSSHKeyPair() or RandSSHKeyPairSize() Functions__: Any hardcoded SSH keys should be replaced with random SSH keys generated by either the acceptance testing framework's function [`RandSSHKeyPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/acctest#RandSSHKeyPair) or the provider function `RandSSHKeyPairSize()`. `RandSSHKeyPair()` generates 1024-bit keys.
+- __Uses acctest.RandSSHKeyPair() or RandSSHKeyPairSize() Functions__: Any hardcoded SSH keys should be replaced with random SSH keys generated by either the acceptance testing framework's function [`RandSSHKeyPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/acctest#RandSSHKeyPair) or the provider function `RandSSHKeyPairSize()`. `RandSSHKeyPair()` generates 1024-bit keys.
 
 Here's an example using `aws_key_pair`
 
@@ -1711,7 +1711,7 @@ resource "aws_key_pair" "test" {
 
 #### Hardcoded Email Addresses
 
-- [ ] __Uses either acctest.DefaultEmailAddress Constant or acctest.RandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `acctest.DefaultEmailAddress` or the function `acctest.RandomEmailAddress()`.
+- __Uses either acctest.DefaultEmailAddress Constant or acctest.RandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `acctest.DefaultEmailAddress` or the function `acctest.RandomEmailAddress()`.
 
 Using `acctest.DefaultEmailAddress` is preferred when using a single email address in an acceptance test.
 
