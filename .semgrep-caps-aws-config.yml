@@ -423,6 +423,27 @@ rules:
           metavariable: "$VALUE"
           patterns:
             - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config_.*"
+            - pattern-not: acctest.ConfigCompose(...)
+    severity: WARNING
+  - id: test-configcompose-funcs-correct-form
+    languages:
+      - go
+    message: "Config funcs should follow form testAcc<Resource>Config_<testDetail>"
+    paths:
+      include:
+        - internal/service/**/*_test.go
+    patterns:
+      - pattern-inside: "[]resource.TestStep{ ... }"
+      - pattern: "{..., $KEY: acctest.ConfigCompose(..., $VALUE, ...), ...}"
+      - metavariable-pattern:
+          metavariable: "$KEY"
+          patterns:
+            - pattern: "Config"
+      - metavariable-pattern:
+          metavariable: "$VALUE"
+          patterns:
+            - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config_.*"
+            - pattern-not-regex: "acctest\\..*"
     severity: WARNING
   - id: test-config-funcs-check
     languages:
