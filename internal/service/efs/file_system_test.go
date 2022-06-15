@@ -300,14 +300,14 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemWithLifecyclePolicyConfig(
+				Config: testAccFileSystemConfig_lifecyclePolicy(
 					"transition_to_ia",
 					"invalid_value",
 				),
 				ExpectError: regexp.MustCompile(`got invalid_value`),
 			},
 			{
-				Config: testAccFileSystemWithLifecyclePolicyConfig(
+				Config: testAccFileSystemConfig_lifecyclePolicy(
 					"transition_to_ia",
 					efs.TransitionToIARulesAfter30Days,
 				),
@@ -323,7 +323,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFileSystemWithLifecyclePolicyConfig(
+				Config: testAccFileSystemConfig_lifecyclePolicy(
 					"transition_to_primary_storage_class",
 					efs.TransitionToPrimaryStorageClassRulesAfter1Access,
 				),
@@ -341,7 +341,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFileSystemWithLifecyclePolicyMultiConfig(
+				Config: testAccFileSystemConfig_lifecyclePolicyMulti(
 					"transition_to_primary_storage_class",
 					efs.TransitionToPrimaryStorageClassRulesAfter1Access,
 					"transition_to_ia",
@@ -594,7 +594,7 @@ resource "aws_efs_file_system" "test" {
 `, provisionedThroughputInMibps)
 }
 
-func testAccFileSystemWithLifecyclePolicyConfig(lpName, lpVal string) string {
+func testAccFileSystemConfig_lifecyclePolicy(lpName, lpVal string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   lifecycle_policy {
@@ -604,7 +604,7 @@ resource "aws_efs_file_system" "test" {
 `, lpName, lpVal)
 }
 
-func testAccFileSystemWithLifecyclePolicyMultiConfig(lpName1, lpVal1, lpName2, lpVal2 string) string {
+func testAccFileSystemConfig_lifecyclePolicyMulti(lpName1, lpVal1, lpName2, lpVal2 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   lifecycle_policy {
