@@ -187,6 +187,79 @@ func TestValidARN(t *testing.T) {
 	}
 }
 
+func TestValidServicePrincipal(t *testing.T) {
+	v := ""
+	_, errors := ValidServicePrincipal(v, "test.google.com")
+	if len(errors) != 0 {
+		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+	}
+
+	validNames := []string{
+		"a4b.amazonaws.com",
+		"appstream.application-autoscaling.amazonaws.com",
+		"alexa-appkit.amazon.com",
+		"member.org.stacksets.cloudformation.amazonaws.com",
+		"vpc-flow-logs.amazonaws.com",
+		"logs.eu-central-1.amazonaws.com",
+	}
+	for _, v := range validNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"test.google.com",
+		"transfer.amz.com",
+		"test",
+		"testwithwildcard*",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Principal", v)
+		}
+	}
+}
+
+func TestValidARNOrServicePrincipal(t *testing.T) {
+	v := ""
+	_, errors := ValidARNOrServicePrincipal(v, "test.google.com")
+	if len(errors) != 0 {
+		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+	}
+
+	validNames := []string{
+		"a4b.amazonaws.com",
+		"appstream.application-autoscaling.amazonaws.com",
+		"alexa-appkit.amazon.com",
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier", // lintignore:AWSAT003,AWSAT005 // Lambda func qualifier
+		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // China EC2 ARN
+		"arn:aws-cn:s3:::bucket/object",                                             // lintignore:AWSAT005          // China S3 ARN
+	}
+	for _, v := range validNames {
+		_, errors := ValidARNOrServicePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"test.google.com",
+		"testwithwildcard*",
+		"arn",
+		"123456789012",
+		"arn:aws",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidARNOrServicePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Principal", v)
+		}
+	}
+}
+
 func TestValidateCIDRBlock(t *testing.T) {
 	for _, ts := range []struct {
 		cidr  string

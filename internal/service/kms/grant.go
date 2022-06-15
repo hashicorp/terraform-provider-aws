@@ -58,7 +58,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: verify.ValidARNOrServicePrincipal,
 			},
 			"operations": {
 				Type: schema.TypeSet,
@@ -98,7 +98,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				ValidateFunc: verify.ValidARNOrServicePrincipal,
 			},
 			"grant_creation_tokens": {
 				Type:     schema.TypeSet,
