@@ -17,7 +17,9 @@ Some examples of functionality that is not expected in this provider:
 
 ## Infrastructure as Code Suitability
 
-The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
+The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. Specifically: IaC is best suited for [immutable rather than mutable infrastrcture](https://www.hashicorp.com/resources/what-is-mutable-vs-immutable-infrastructure) -- i.e. for resources with a single desired state described in its entirety, as opposed to resources defined via a dynamic process.
+
+If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
 
 ## Resource Type Considerations
 
