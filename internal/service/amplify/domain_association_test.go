@@ -34,7 +34,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig(rName, domainName, false),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
@@ -75,7 +75,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig(rName, domainName, false),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
@@ -104,7 +104,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig(rName, domainName, true),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
@@ -124,7 +124,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 			{
-				Config: testAccDomainAssociationUpdatedConfig(rName, domainName, true),
+				Config: testAccDomainAssociationConfig_updated(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
@@ -206,7 +206,7 @@ func testAccCheckDomainAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDomainAssociationConfig(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationConfig_basic(rName, domainName string, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -231,7 +231,7 @@ resource "aws_amplify_domain_association" "test" {
 `, rName, domainName, waitForVerification)
 }
 
-func testAccDomainAssociationUpdatedConfig(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationConfig_updated(rName, domainName string, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
