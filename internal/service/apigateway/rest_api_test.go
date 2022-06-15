@@ -755,7 +755,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIEndpointConfigurationVPCEndpointIds1Config(rName),
+				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
@@ -784,7 +784,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRestAPIEndpointConfigurationVPCEndpointIds1Config(rName),
+				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
@@ -1410,7 +1410,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
-func testAccRestAPIEndpointConfigurationVPCEndpointIds1Config(rName string) string {
+func testAccRestAPIConfig_vpcEndpointIDs1(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
