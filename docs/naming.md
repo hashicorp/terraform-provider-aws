@@ -99,7 +99,7 @@ A correct example is `accessanalyzer_analyzer.html.markdown`. An incorrect examp
 
 Write multiword names in Go using _MixedCaps_ (or _mixedCaps_) rather than underscores.
 
-For more details on capitalizations we enforce with CI Semgrep tests, see the [Caps List](../../names/caps.md).
+For more details on capitalizations we enforce with CI Semgrep tests, see the [Caps List](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md).
 
 Initialisms and other abbreviations are a key difference between many camel/Pascal case interpretations and mixedCaps. **Abbreviations in mixedCaps should be the correct, human-readable case.** After all, names in code _are for humans_. (The mixedCaps convention aligns with HashiCorp's emphasis on pragmatism and beauty.)
 
