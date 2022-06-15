@@ -53,6 +53,36 @@ func TestAccEC2KeyPairDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSource1Name := "data.aws_key_pair.by_name"
+	resourceName := "aws_key_pair.test"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPairDataSourceConfig_includePublicKey(rName, publicKey),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSource1Name, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "public_key", resourceName, "public_key"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "tags.%", resourceName, "tags.%"),
+				),
+			},
+		},
+	})
+}
+
 func testAccKeyPairDataSourceConfig_basic(rName, publicKey string) string {
 	return fmt.Sprintf(`
 data "aws_key_pair" "by_name" {
@@ -77,6 +107,20 @@ resource "aws_key_pair" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName, publicKey)
+}
+
+func testAccKeyPairDataSourceConfig_includePublicKey(rName, publicKey string) string {
+	return fmt.Sprintf(`
+data "aws_key_pair" "by_name" {
+  key_name = aws_key_pair.test.key_name
+  include_public_key = true
+}
+
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = %[2]q
 }
 `, rName, publicKey)
 }
