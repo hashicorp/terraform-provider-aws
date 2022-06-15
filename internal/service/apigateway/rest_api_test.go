@@ -156,7 +156,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
-				Config: testAccRestAPIConfig_Name(rName),
+				Config: testAccRestAPIConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(resourceName, &restApi),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
@@ -1402,7 +1402,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, bodyDisableExecuteApiEndpoint)
 }
 
-func testAccRestAPIConfig_Name(rName string) string {
+func testAccRestAPIConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

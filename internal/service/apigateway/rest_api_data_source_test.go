@@ -20,7 +20,7 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccRestAPIConfig_Name(rName),
+					testAccRestAPIConfig_name(rName),
 					testAccRestAPIDataSourceConfig_name(),
 				),
 				Check: resource.ComposeTestCheckFunc(
