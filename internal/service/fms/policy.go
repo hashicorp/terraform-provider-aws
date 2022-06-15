@@ -139,6 +139,43 @@ func ResourcePolicy() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 						},
+						"policy_option": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"network_firewall_policy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"firewall_deployment_model": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(fms.FirewallDeploymentModel_Values(), false),
+												},
+											},
+										},
+									},
+									"thirdparty_firewall_policy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"firewall_deployment_model": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(fms.FirewallDeploymentModel_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -306,10 +343,12 @@ func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutp
 		return err
 	}
 
-	securityServicePolicy := []map[string]string{{
+	securityServicePolicy := []map[string]interface{}{{
 		"type":                 *resp.Policy.SecurityServicePolicyData.Type,
 		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
+		"policy_option":        flattenPolicyOption(resp.Policy.SecurityServicePolicyData.PolicyOption),
 	}}
+
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
 		return err
 	}
@@ -350,7 +389,52 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 		Type:               aws.String(securityServicePolicy["type"].(string)),
 	}
 
+	if v, ok := securityServicePolicy["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		fmsPolicy.SecurityServicePolicyData.PolicyOption = expandPolicyOption(v[0].(map[string]interface{}))
+	}
+
 	return fmsPolicy
+}
+
+func expandPolicyOption(tfMap map[string]interface{}) *fms.PolicyOption {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &fms.PolicyOption{}
+
+	apiObject.NetworkFirewallPolicy = expandPolicyOptionNetworkFirewall(tfMap["network_firewall_policy"].(map[string]interface{}))
+	apiObject.ThirdPartyFirewallPolicy = expandPolicyOptionThirdpartyFirewall(tfMap["thirdparty_firewall_policy"].(map[string]interface{}))
+
+	return apiObject
+}
+
+func expandPolicyOptionNetworkFirewall(tfMap map[string]interface{}) *fms.NetworkFirewallPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &fms.NetworkFirewallPolicy{}
+
+	if v, ok := tfMap["firewall_deployment_model"].(string); ok {
+		apiObject.FirewallDeploymentModel = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandPolicyOptionThirdpartyFirewall(tfMap map[string]interface{}) *fms.ThirdPartyFirewallPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &fms.ThirdPartyFirewallPolicy{}
+
+	if v, ok := tfMap["firewall_deployment_model"].(string); ok {
+		apiObject.FirewallDeploymentModel = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandPolicyMap(set []interface{}) map[string][]*string {
@@ -391,6 +475,47 @@ func flattenPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
 	}
 
 	return []interface{}{flatPolicyMap}
+}
+
+func flattenPolicyOption(fmsPolicyOption *fms.PolicyOption) map[string]interface{} {
+	if fmsPolicyOption == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["network_firewall_policy"] = flattenPolicyOptionNetworkFirewall(fmsPolicyOption.NetworkFirewallPolicy)
+	tfMap["thirdparty_firewall_policy"] = flattenPolicyOptionThirdpartyFirewall(fmsPolicyOption.ThirdPartyFirewallPolicy)
+
+	return tfMap
+}
+
+func flattenPolicyOptionNetworkFirewall(fmsNetworkFirewallPolicy *fms.NetworkFirewallPolicy) map[string]interface{} {
+	if fmsNetworkFirewallPolicy == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := fmsNetworkFirewallPolicy.FirewallDeploymentModel; v != nil {
+		tfMap["firewall_deployment_model"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenPolicyOptionThirdpartyFirewall(fmsThirdPartyFirewallPolicy *fms.ThirdPartyFirewallPolicy) map[string]interface{} {
+	if fmsThirdPartyFirewallPolicy == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := fmsThirdPartyFirewallPolicy.FirewallDeploymentModel; v != nil {
+		tfMap["firewall_deployment_model"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {

@@ -81,8 +81,22 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `security_service_policy_data` Configuration Block
 
-* `managed_service_data` (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
+* `managed_service_data` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
+* `policy_option` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. Documented below.
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. For the current list of supported types, please refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
+
+## `policy_option` Configuration Block
+
+* `network_firewall_policy` - (Optional) Defines the deployment model to use for the firewall policy. Documented below.
+* `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. Documented below.
+
+## `network_firewall_policy` Configuration Block
+
+* `firewall_deployment_model` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policy_option` section. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
+
+## `thirparty_firewall_policy` Configuration Block
+
+* `firewall_deployment_model` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
 
 ## Attributes Reference
 
