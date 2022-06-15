@@ -19,7 +19,7 @@ The HashiCorp Terraform AWS provider team is :
 
 ## Why isn’t my PR merged yet?
 
-Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members. For more information on how we prioritize pull requests, see the [prioritization guide](./prioritization.md).
+Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members. For more information on how we prioritize pull requests, see the [prioritization guide](prioritization.md).
 
 ## How do you decide what gets merged for each release?
 
@@ -27,7 +27,7 @@ We have a large backlog of pull requests to get through and the team are moving 
 
 The number one factor we look at when deciding what issues to look at are your 👍 [reactions](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original issue/PR description as these can be [easily discovered](https://github.com/hashicorp/terraform-provider-aws/issues?q=is%3Aopen+sort%3Areactions-%2B1-desc). Comments that further explain desired use cases or poor user experience are also heavily factored. The items with the most support are always on our radar, and we commit to keep the community updated on their status and potential timelines.
 
-We publish a [roadmap](../../ROADMAP.md) every quarter which describes major themes or specific product areas of focus. What is excluded from the public roadmap is work performed under NDA with AWS on new services, and any ad-hoc work we pick up during the quarter. This ad-hoc work can be responding to bugs, gardening day activity, customer prioritization, and technical debt items.
+We publish a [roadmap](https://github.com/hashicorp/terraform-provider-aws/blob/main/ROADMAP.md) every quarter which describes major themes or specific product areas of focus. What is excluded from the public roadmap is work performed under NDA with AWS on new services, and any ad-hoc work we pick up during the quarter. This ad-hoc work can be responding to bugs, gardening day activity, customer prioritization, and technical debt items.
 
 We also are investing time to improve the contributing experience by improving documentation, adding more linter coverage to ensure that incoming PR's can be in as good shape as possible. This will allow us to get through them quicker.
 
@@ -41,7 +41,7 @@ We release weekly on Thursday. We release often to ensure we can bring value to 
 
 ## Backward Compatibility Promise
 
-Our policy is described on the Terraform website [here](https://www.terraform.io/docs/extend/best-practices/versioning.html). While we do our best to prevent breaking changes until major version releases of the provider, it is generally recommended to [pin the provider version in your configuration](https://www.terraform.io/docs/configuration/providers.html#provider-versions).
+Our policy is described on the Terraform website [here](https://www.terraform.io/plugin/sdkv2/best-practices/versioning). While we do our best to prevent breaking changes until major version releases of the provider, it is generally recommended to [pin the provider version in your configuration](https://www.terraform.io/language/providers/configuration#provider-versions).
 
 Due to the constant release pace of AWS and the relatively infrequent major version releases of the provider, there can be cases where a minor version update may contain unexpected changes depending on your configuration or environment. These may include items such as a resource requiring additional IAM permissions to support newer functionality. We typically base these decisions on a pragmatic compromise between introducing a relatively minor one-time inconvenience for a subset of the community versus better overall user experience for the entire community.
 
@@ -69,7 +69,7 @@ Error: error validating provider credentials: error calling sts:GetCallerIdentit
 
 To use this new region before support has been added to the Terraform AWS Provider, you can disable the provider's automatic region validation via:
 
-```hcl
+```terraform
 provider "aws" {
   # ... potentially other configuration ...
 
