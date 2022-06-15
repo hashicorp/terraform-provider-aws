@@ -32,7 +32,7 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyConfig(rName),
+				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(resourceName, &v),
 				),
@@ -62,9 +62,9 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyTagsConfig1(rName, "key1", "value1"),
+				Config: testAccSnapshotCopyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -75,18 +75,18 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSnapshotCopyTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSnapshotCopyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccSnapshotCopyTagsConfig1(rName, "key2", "value2"),
+				Config: testAccSnapshotCopyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -111,7 +111,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotCopyConfig(rName),
+				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
@@ -202,7 +202,7 @@ resource "aws_db_snapshot" "test" {
 }`, rName)
 }
 
-func testAccSnapshotCopyConfig(rName string) string {
+func testAccSnapshotCopyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotCopyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -212,7 +212,7 @@ resource "aws_db_snapshot_copy" "test" {
 }`, rName))
 }
 
-func testAccSnapshotCopyTagsConfig1(rName, tagKey, tagValue string) string {
+func testAccSnapshotCopyConfig_tags1(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotCopyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -226,7 +226,7 @@ resource "aws_db_snapshot_copy" "test" {
 }`, rName, tagKey, tagValue))
 }
 
-func testAccSnapshotCopyTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotCopyBaseConfig(rName),
 		fmt.Sprintf(`

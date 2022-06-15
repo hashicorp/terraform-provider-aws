@@ -25,7 +25,7 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyDataSourceConfig(rName),
+				Config: testAccProxyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auth", resourceName, "auth"),
@@ -44,7 +44,7 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccProxyDataSourceConfig(rName string) string {
+func testAccProxyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 # Secrets Manager setup
 

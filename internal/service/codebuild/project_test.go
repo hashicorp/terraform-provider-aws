@@ -18,10 +18,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkipCodebuild)
+	acctest.RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipCodebuild(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidInputException: Region",
 	)

@@ -28,7 +28,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicConfig(rName),
+				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`og:.+`)),
@@ -62,7 +62,7 @@ func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicTimeoutBlockConfig(rName),
+				Config: testAccOptionGroupConfig_timeoutBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -88,7 +88,7 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroup_namePrefix,
+				Config: testAccOptionGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
 					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexp.MustCompile("^tf-test-")),
@@ -114,7 +114,7 @@ func TestAccRDSOptionGroup_generatedName(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroup_generatedName,
+				Config: testAccOptionGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists("aws_db_option_group.test", &v),
 				),
@@ -141,7 +141,7 @@ func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionGroupDescriptionConfig(rName, "description1"),
+				Config: testAccOptionGroupConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option_group_description", "description1"),
@@ -172,7 +172,7 @@ func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupBasicDestroyConfig(rName),
+				Config: testAccOptionGroupConfig_destroy(rName),
 			},
 			{
 				ResourceName:            resourceName,
@@ -196,7 +196,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionSettings(rName),
+				Config: testAccOptionGroupConfig_optionSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -215,7 +215,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccOptionGroupOptionSettings_update(rName),
+				Config: testAccOptionGroupConfig_optionSettingsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -248,7 +248,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionSettingsIAMRole(rName),
+				Config: testAccOptionGroupConfig_optionSettingsIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -278,7 +278,7 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupSQLServerEEOptions(rName),
+				Config: testAccOptionGroupConfig_sqlServerEEOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -291,7 +291,7 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupSQLServerEEOptions_update(rName),
+				Config: testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -314,7 +314,7 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.2.0.0.v2"),
+				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.2.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -330,7 +330,7 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
 			},
 			{
-				Config: testAccOptionGroupOracleEEOptionSettings(rName, "13.3.0.0.v2"),
+				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.3.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -355,7 +355,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1"),
+				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
@@ -368,7 +368,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, "example1,example2"),
+				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1,example2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
@@ -390,7 +390,7 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupMultipleOptions(rName),
+				Config: testAccOptionGroupConfig_multipleOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -419,7 +419,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupTags1Config(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -433,7 +433,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -442,7 +442,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOptionGroupTags1Config(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -466,7 +466,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckOptionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupTagsWithOption1Config(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
@@ -481,7 +481,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccOptionGroupTagsWithOption2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
@@ -491,7 +491,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOptionGroupTagsWithOption1Config(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
@@ -608,7 +608,7 @@ func testAccCheckOptionGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccOptionGroupBasicTimeoutBlockConfig(rName string) string {
+func testAccOptionGroupConfig_timeoutBlock(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -627,7 +627,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupBasicConfig(rName string) string {
+func testAccOptionGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -641,7 +641,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupBasicDestroyConfig(rName string) string {
+func testAccOptionGroupConfig_destroy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -682,7 +682,7 @@ resource "aws_db_option_group" "test" {
 `, mySQLPreferredInstanceClasses, rName)
 }
 
-func testAccOptionGroupOptionSettings(rName string) string {
+func testAccOptionGroupConfig_optionSettings(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -706,7 +706,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOptionSettingsIAMRole(rName string) string {
+func testAccOptionGroupConfig_optionSettingsIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -748,7 +748,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOptionSettings_update(rName string) string {
+func testAccOptionGroupConfig_optionSettingsUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -772,7 +772,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupSQLServerEEOptions(rName string) string {
+func testAccOptionGroupConfig_sqlServerEEOptions(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "sqlserver-ee"
@@ -787,7 +787,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupSQLServerEEOptions_update(rName string) string {
+func testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "sqlserver-ee"
@@ -806,7 +806,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-func testAccOptionGroupOracleEEOptionSettings(rName, optionVersion string) string {
+func testAccOptionGroupConfig_oracleEEOptionSettings(rName, optionVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -848,7 +848,7 @@ resource "aws_db_option_group" "test" {
 `, rName, optionVersion)
 }
 
-func testAccOptionGroupMultipleOptions(rName string) string {
+func testAccOptionGroupConfig_multipleOptions(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -871,7 +871,7 @@ resource "aws_db_option_group" "test" {
 `, rName)
 }
 
-const testAccOptionGroup_namePrefix = `
+const testAccOptionGroupConfig_namePrefix = `
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
 }
@@ -884,7 +884,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-const testAccOptionGroup_generatedName = `
+const testAccOptionGroupConfig_generatedName = `
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
 }
@@ -896,7 +896,7 @@ resource "aws_db_option_group" "test" {
 }
 `
 
-func testAccOptionGroupOptionGroupDescriptionConfig(rName, optionGroupDescription string) string {
+func testAccOptionGroupConfig_description(rName, optionGroupDescription string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -911,7 +911,7 @@ resource "aws_db_option_group" "test" {
 `, rName, optionGroupDescription)
 }
 
-func testAccOptionGroupOptionOptionSettingsMultipleConfig(rName, value string) string {
+func testAccOptionGroupConfig_settingsMultiple(rName, value string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -944,7 +944,7 @@ resource "aws_db_option_group" "test" {
 `, rName, value)
 }
 
-func testAccOptionGroupTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -962,7 +962,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccOptionGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -981,7 +981,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccOptionGroupTagsWithOption1Config(rName, tagKey1, tagValue1 string) string {
+func testAccOptionGroupConfig_tagsOption1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -1008,7 +1008,7 @@ resource "aws_db_option_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccOptionGroupTagsWithOption2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOptionGroupConfig_tagsOption2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"

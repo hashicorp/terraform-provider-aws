@@ -24,7 +24,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allocated_storage"),
@@ -72,7 +72,7 @@ func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 	})
 }
 
-func testAccInstanceDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		acctest.ConfigAvailableAZsNoOptIn(),

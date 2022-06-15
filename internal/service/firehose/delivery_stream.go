@@ -26,7 +26,7 @@ const (
 	destinationTypeElasticsearch = "elasticsearch"
 	destinationTypeRedshift      = "redshift"
 	destinationTypeSplunk        = "splunk"
-	destinationTypeHttpEndpoint  = "http_endpoint"
+	destinationTypeHTTPEndpoint  = "http_endpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -784,7 +784,7 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
-			d.Set("destination", destinationTypeHttpEndpoint)
+			d.Set("destination", destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
@@ -947,7 +947,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					destinationTypeRedshift,
 					destinationTypeElasticsearch,
 					destinationTypeSplunk,
-					destinationTypeHttpEndpoint,
+					destinationTypeHTTPEndpoint,
 				}, false),
 			},
 
@@ -2601,7 +2601,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			createInput.SplunkDestinationConfiguration = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
+		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err
@@ -2759,7 +2759,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			updateInput.SplunkDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
+		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := updateHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err

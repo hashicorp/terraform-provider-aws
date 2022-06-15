@@ -22,7 +22,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),
+				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
@@ -32,7 +32,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDeliveryStreamBasicDataSourceConfig(rName string) string {
+func testAccDeliveryStreamDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

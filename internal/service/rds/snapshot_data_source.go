@@ -162,7 +162,7 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		recent := d.Get("most_recent").(bool)
 		log.Printf("[DEBUG] aws_db_snapshot - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
-			snapshot = mostRecentDbSnapshot(resp.DBSnapshots)
+			snapshot = mostRecentDBSnapshot(resp.DBSnapshots)
 		} else {
 			return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
 		}
@@ -189,7 +189,7 @@ func (a rdsSnapshotSort) Less(i, j int) bool {
 	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
 }
 
-func mostRecentDbSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
+func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
 	sortedSnapshots := snapshots
 	sort.Sort(rdsSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]

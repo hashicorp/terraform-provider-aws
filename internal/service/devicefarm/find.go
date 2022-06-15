@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDevicepoolByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.DevicePool, error) {
+func FindDevicePoolByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.DevicePool, error) {
 
 	input := &devicefarm.GetDevicePoolInput{
 		Arn: aws.String(arn),
@@ -33,7 +33,7 @@ func FindDevicepoolByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.D
 	return output.DevicePool, nil
 }
 
-func FindProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Project, error) {
+func FindProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Project, error) {
 
 	input := &devicefarm.GetProjectInput{
 		Arn: aws.String(arn),
@@ -58,7 +58,7 @@ func FindProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Proj
 	return output.Project, nil
 }
 
-func FindUploadByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Upload, error) {
+func FindUploadByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Upload, error) {
 
 	input := &devicefarm.GetUploadInput{
 		Arn: aws.String(arn),
@@ -83,7 +83,7 @@ func FindUploadByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.Uploa
 	return output.Upload, nil
 }
 
-func FindNetworkProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.NetworkProfile, error) {
+func FindNetworkProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.NetworkProfile, error) {
 
 	input := &devicefarm.GetNetworkProfileInput{
 		Arn: aws.String(arn),
@@ -108,7 +108,7 @@ func FindNetworkProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefa
 	return output.NetworkProfile, nil
 }
 
-func FindInstanceProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.InstanceProfile, error) {
+func FindInstanceProfileByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.InstanceProfile, error) {
 
 	input := &devicefarm.GetInstanceProfileInput{
 		Arn: aws.String(arn),
@@ -133,7 +133,7 @@ func FindInstanceProfileByArn(conn *devicefarm.DeviceFarm, arn string) (*devicef
 	return output.InstanceProfile, nil
 }
 
-func FindTestGridProjectByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.TestGridProject, error) {
+func FindTestGridProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.TestGridProject, error) {
 
 	input := &devicefarm.GetTestGridProjectInput{
 		ProjectArn: aws.String(arn),

@@ -29,7 +29,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(groupName),
+				Config: testAccParameterGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -56,7 +56,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupAddParametersConfig(groupName),
+				Config: testAccParameterGroupConfig_addParameters(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -86,7 +86,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig(groupName),
+				Config: testAccParameterGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -121,7 +121,7 @@ func TestAccRDSParameterGroup_caseWithMixedParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupCaseWithMixedParametersConfig(groupName),
+				Config: testAccParameterGroupConfig_caseWithMixedParameters(groupName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 		},
@@ -140,7 +140,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: createParameterGroupsExceedDefaultLimit(groupName),
+				Config: testAccParameterGroupConfig_exceedDefaultLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -319,7 +319,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: updateParameterGroupsExceedDefaultLimit(groupName),
+				Config: testAccParameterGroupConfig_updateExceedDefaultLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -508,7 +508,7 @@ func TestAccRDSParameterGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig(groupName),
+				Config: testAccParameterGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParamaterGroupDisappears(&v),
@@ -570,7 +570,7 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupWithApplyMethodConfig(groupName),
+				Config: testAccParameterGroupConfig_applyMethod(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -610,7 +610,7 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupOnlyConfig(groupName),
+				Config: testAccParameterGroupConfig_only(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -639,7 +639,7 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupIncludeDefaultConfig(groupName),
+				Config: testAccParameterGroupConfig_includeDefault(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
@@ -668,7 +668,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupUpdateParametersInitialConfig(groupName),
+				Config: testAccParameterGroupConfig_updateParametersInitial(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -694,7 +694,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupUpdateParametersUpdatedConfig(groupName),
+				Config: testAccParameterGroupConfig_updateParametersUpdated(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -728,7 +728,7 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupUpperCaseConfig(rName, "Max_connections"),
+				Config: testAccParameterGroupConfig_upperCase(rName, "Max_connections"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
@@ -746,7 +746,7 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupUpperCaseConfig(rName, "max_connections"),
+				Config: testAccParameterGroupConfig_upperCase(rName, "max_connections"),
 			},
 		},
 	})
@@ -1116,7 +1116,7 @@ func testAccCheckParameterNotUserDefined(rName, paramName string) resource.TestC
 	}
 }
 
-func testAccParameterGroupConfig(rName string) string {
+func testAccParameterGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1140,7 +1140,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupCaseWithMixedParametersConfig(rName string) string {
+func testAccParameterGroupConfig_caseWithMixedParameters(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1185,7 +1185,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
-func testAccParameterGroupWithApplyMethodConfig(rName string) string {
+func testAccParameterGroupConfig_applyMethod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1209,7 +1209,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupAddParametersConfig(rName string) string {
+func testAccParameterGroupConfig_addParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1243,7 +1243,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupOnlyConfig(rName string) string {
+func testAccParameterGroupConfig_only(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1253,7 +1253,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func createParameterGroupsExceedDefaultLimit(rName string) string {
+func testAccParameterGroupConfig_exceedDefaultLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1473,7 +1473,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func updateParameterGroupsExceedDefaultLimit(rName string) string {
+func testAccParameterGroupConfig_updateExceedDefaultLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1693,7 +1693,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupIncludeDefaultConfig(rName string) string {
+func testAccParameterGroupConfig_includeDefault(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1708,7 +1708,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupUpdateParametersInitialConfig(rName string) string {
+func testAccParameterGroupConfig_updateParametersInitial(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1732,7 +1732,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupUpdateParametersUpdatedConfig(rName string) string {
+func testAccParameterGroupConfig_updateParametersUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
@@ -1756,7 +1756,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func testAccParameterGroupUpperCaseConfig(rName, paramName string) string {
+func testAccParameterGroupConfig_upperCase(rName, paramName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name   = %[1]q
