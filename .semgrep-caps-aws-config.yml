@@ -377,7 +377,6 @@ rules:
         - internal/service/dax
         - internal/service/directconnect
         - internal/service/dms
-        - internal/service/dynamodb
         - internal/service/ecr
         - internal/service/ecrpublic
         - internal/service/ecs

@@ -21,7 +21,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableBasicDataSourceConfig(rName),
+				Config: testAccTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "read_capacity", resourceName, "read_capacity"),
@@ -45,7 +45,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccTableBasicDataSourceConfig(tableName string) string {
+func testAccTableDataSourceConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
