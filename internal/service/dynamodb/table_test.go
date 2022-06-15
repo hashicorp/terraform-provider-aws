@@ -1299,7 +1299,7 @@ func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_lSI(rName, "lsi-original"),
+				Config: testAccTableConfig_lsi(rName, "lsi-original"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 				),
@@ -1310,7 +1310,7 @@ func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{ // Change name of local secondary index
-				Config: testAccTableConfig_lSI(rName, "lsi-changed"),
+				Config: testAccTableConfig_lsi(rName, "lsi-changed"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 				),
@@ -1531,7 +1531,7 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicacmK(rName),
+				Config: testAccTableConfig_replicaCMK(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
@@ -2629,7 +2629,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicacmK(rName string) string {
+func testAccTableConfig_replicaCMK(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2712,7 +2712,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_lSI(rName, lsiName string) string {
+func testAccTableConfig_lsi(rName, lsiName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
