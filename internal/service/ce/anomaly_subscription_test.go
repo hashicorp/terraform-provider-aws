@@ -25,7 +25,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAnomalySubscriptionDestroy,
@@ -40,7 +40,8 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "subscriber.#"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "100"),
 				),
 			},
@@ -189,6 +190,11 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAnomalySubscriptionConfig_Subscriber2(rName, address1, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
@@ -197,6 +203,11 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subscriber.1.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.1.address", address2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAnomalySubscriptionConfig_SubscriberSNS(rName),
