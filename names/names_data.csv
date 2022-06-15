@@ -64,7 +64,7 @@ cloudtrail,cloudtrail,cloudtrail,cloudtrail,,cloudtrail,,,CloudTrail,CloudTrail,
 cloudwatch,cloudwatch,cloudwatch,cloudwatch,,cloudwatch,,,CloudWatch,CloudWatch,,1,aws_cloudwatch_(?!(event_|log_|query_)),aws_cloudwatch_,,cloudwatch_dashboard;cloudwatch_metric_;cloudwatch_composite_,CloudWatch,Amazon,,,,,
 application-insights,applicationinsights,applicationinsights,applicationinsights,,applicationinsights,,,ApplicationInsights,ApplicationInsights,,1,,aws_applicationinsights_,,applicationinsights_,CloudWatch Application Insights,Amazon,,,,,
 evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidently,Evidently,CloudWatchEvidently,,1,,aws_evidently_,,evidently_,CloudWatch Evidently,Amazon,,,,,
-logs,logs,cloudwatchlogs,cloudwatchlogs,,logs,,cloudwatchlogs,Logs,CloudWatchLogs,,1,aws_cloudwatch_(log_|query_),aws_logs_,,cloudwatch_log_;cloudwatch_query_,CloudWatch Logs,Amazon,,,,,
+logs,logs,cloudwatchlogs,cloudwatchlogs,,logs,,cloudwatchlog;cloudwatchlogs,Logs,CloudWatchLogs,,1,aws_cloudwatch_(log_|query_),aws_logs_,,cloudwatch_log_;cloudwatch_query_,CloudWatch Logs,Amazon,,,,,
 rum,rum,cloudwatchrum,rum,,rum,,cloudwatchrum,RUM,CloudWatchRUM,,1,,aws_rum_,,rum_,CloudWatch RUM,Amazon,,,,,
 synthetics,synthetics,synthetics,synthetics,,synthetics,,,Synthetics,Synthetics,,1,,aws_synthetics_,,synthetics_,CloudWatch Synthetics,Amazon,,,,,
 codeartifact,codeartifact,codeartifact,codeartifact,,codeartifact,,,CodeArtifact,CodeArtifact,,1,,aws_codeartifact_,,codeartifact_,CodeArtifact,AWS,,,,,
@@ -115,7 +115,7 @@ ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryServic
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,1,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,,,,
-,,,,,ec2ebs,ec2,,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,x,,,Part of EC2
+,,,,,ec2ebs,ec2,,EC2EBS,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,x,,,Part of EC2
 ebs,ebs,ebs,ebs,,ebs,,,EBS,EBS,,1,,aws_ebs_,,changewhenimplemented,EBS (Elastic Block Store),Amazon,,,,,
 ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot),aws_ec2_,ec2_,ami;availability_zone;ec2_availability_;ec2_capacity_;ec2_fleet;ec2_host;ec2_instance_;ec2_serial_;ec2_spot_;ec2_tag;eip;instance;key_pair;launch_template;placement_group;spot_,EC2 (Elastic Compute Cloud),Amazon,,,,,
 imagebuilder,imagebuilder,imagebuilder,imagebuilder,,imagebuilder,,,ImageBuilder,Imagebuilder,,1,,aws_imagebuilder_,,imagebuilder_,EC2 Image Builder,Amazon,,,,,
@@ -206,7 +206,7 @@ kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,
 lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,1,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,,aws_lambda_,,lambda_,Lambda,AWS,,,,,
 ,,,,,,,,,,,,,,,,Launch Wizard,AWS,x,,,,No SDK support
-lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice,LexModels,LexModelBuildingService,,1,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,
+lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,
 lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexmodelsv2,,lexv2models,LexModelsV2,LexModelsV2,,1,,aws_lexmodelsv2_,,lexmodelsv2_,Lex Models V2,Amazon,,,,,
 lex-runtime,lexruntime,lexruntimeservice,lexruntimeservice,,lexruntime,,lexruntimeservice,LexRuntime,LexRuntimeService,,1,,aws_lexruntime_,,lexruntime_,Lex Runtime,Amazon,,,,,
 lexv2-runtime,lexv2runtime,lexruntimev2,lexruntimev2,,lexruntimev2,,lexv2runtime,LexRuntimeV2,LexRuntimeV2,,1,,aws_lexruntimev2_,,lexruntimev2_,Lex Runtime V2,Amazon,,,,,
@@ -223,7 +223,7 @@ macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,aws_macie_,,macie_,Macie Classi
 ,,,,,,,,,,,,,,,,Mainframe Modernization,AWS,x,,,,No SDK support
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,,,,
 grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,
-kafka,kafka,kafka,kafka,,kafka,,,Kafka,Kafka,,1,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,
+kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,,1,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,
 kafkaconnect,kafkaconnect,kafkaconnect,kafkaconnect,,kafkaconnect,,,KafkaConnect,KafkaConnect,,1,aws_mskconnect_,aws_kafkaconnect_,,mskconnect_,Managed Streaming for Kafka Connect,Amazon,,,,,
 ,,,,,,,,,,,,,,,,Management Console,AWS,x,,,,No SDK support
 marketplace-catalog,marketplacecatalog,marketplacecatalog,marketplacecatalog,,marketplacecatalog,,,MarketplaceCatalog,MarketplaceCatalog,,1,,aws_marketplacecatalog_,,marketplace_catalog_,Marketplace Catalog,AWS,,,,,
@@ -231,7 +231,7 @@ marketplacecommerceanalytics,marketplacecommerceanalytics,marketplacecommerceana
 marketplace-entitlement,marketplaceentitlement,marketplaceentitlementservice,marketplaceentitlementservice,,marketplaceentitlement,,marketplaceentitlementservice,MarketplaceEntitlement,MarketplaceEntitlementService,,1,,aws_marketplaceentitlement_,,marketplaceentitlement_,Marketplace Entitlement,AWS,,,,,
 meteringmarketplace,meteringmarketplace,marketplacemetering,marketplacemetering,,marketplacemetering,,meteringmarketplace,MarketplaceMetering,MarketplaceMetering,,1,,aws_marketplacemetering_,,marketplacemetering_,Marketplace Metering,AWS,,,,,
 memorydb,memorydb,memorydb,memorydb,,memorydb,,,MemoryDB,MemoryDB,,1,,aws_memorydb_,,memorydb_,MemoryDB for Redis,Amazon,,,,,
-,,,,,meta,,,,,,,aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$,aws_meta_,,arn;ip_ranges;billing_service_account;default_tags;partition;region;service\.,Meta Data Sources,,x,x,,,Not an AWS service (metadata)
+,,,,,meta,,,Meta,,,,aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$,aws_meta_,,arn;ip_ranges;billing_service_account;default_tags;partition;region;service\.,Meta Data Sources,,x,x,,,Not an AWS service (metadata)
 mgh,mgh,migrationhub,migrationhub,,mgh,,migrationhub,MgH,MigrationHub,,1,,aws_mgh_,,mgh_,MgH (Migration Hub),AWS,,,,,
 ,,,,,,,,,,,,,,,,Microservice Extractor for .NET,AWS,x,,,,No SDK support
 migrationhub-config,migrationhubconfig,migrationhubconfig,migrationhubconfig,,migrationhubconfig,,,MigrationHubConfig,MigrationHubConfig,,1,,aws_migrationhubconfig_,,migrationhubconfig_,Migration Hub Config,AWS,,,,,
@@ -255,7 +255,7 @@ opsworks,opsworks,opsworks,opsworks,,opsworks,,,OpsWorks,OpsWorks,,1,,aws_opswor
 opsworks-cm,opsworkscm,opsworkscm,opsworkscm,,opsworkscm,,,OpsWorksCM,OpsWorksCM,,1,,aws_opsworkscm_,,opsworkscm_,OpsWorks CM,AWS,,,,,
 organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,,1,,aws_organizations_,,organizations_,Organizations,AWS,,,,,
 outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,aws_outposts_,,outposts_,Outposts,AWS,,,,,
-,,,,,ec2outposts,ec2,,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,x,,,Part of EC2
+,,,,,ec2outposts,ec2,,EC2Outposts,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,x,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,aws_panorama_,,panorama_,Panorama,AWS,,,,,
 ,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,No SDK support
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,aws_personalize_,,personalize_,Personalize,Amazon,,,,,
@@ -340,18 +340,18 @@ timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrit
 transcribe,transcribe,transcribeservice,transcribe,,transcribe,,transcribeservice,Transcribe,TranscribeService,,1,,aws_transcribe_,,transcribe_,Transcribe,Amazon,,,,,
 ,,transcribestreamingservice,transcribestreaming,,transcribestreaming,,transcribestreamingservice,TranscribeStreaming,TranscribeStreamingService,,1,,aws_transcribestreaming_,,transcribestreaming_,Transcribe Streaming,Amazon,,,,,
 transfer,transfer,transfer,transfer,,transfer,,,Transfer,Transfer,,1,,aws_transfer_,,transfer_,Transfer Family,AWS,,,,,
-,,,,,transitgateway,ec2,,,,,,aws_ec2_transit_gateway,aws_transitgateway_,transitgateway_,ec2_transit_gateway,Transit Gateway,AWS,x,x,,,Part of EC2
+,,,,,transitgateway,ec2,,TransitGateway,,,,aws_ec2_transit_gateway,aws_transitgateway_,transitgateway_,ec2_transit_gateway,Transit Gateway,AWS,x,x,,,Part of EC2
 translate,translate,translate,translate,,translate,,,Translate,Translate,,1,,aws_translate_,,translate_,Translate,Amazon,,,,,
 ,,,,,,,,,,,,,,,,Trusted Advisor,AWS,x,,,,Part of Support
-,,,,,vpc,ec2,,,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_peering_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,x,,,Part of EC2
-,,,,,ipam,ec2,,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,x,,,Part of EC2
-,,,,,vpnclient,ec2,,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,x,,,Part of EC2
-,,,,,vpnsite,ec2,,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,x,,,Part of EC2
+,,,,,vpc,ec2,,VPC,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_peering_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,x,,,Part of EC2
+,,,,,ipam,ec2,,IPAM,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,x,,,Part of EC2
+,,,,,vpnclient,ec2,,ClientVPN,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,x,,,Part of EC2
+,,,,,vpnsite,ec2,,SiteVPN,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,x,,,Part of EC2
 wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,1,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,
 waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,aws_waf_,,waf_,WAF Classic,AWS,,,,,
 waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,
 ,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,No SDK support
-,,,,,wavelength,ec2,,,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,x,,,Part of EC2
+,,,,,wavelength,ec2,,Wavelength,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,x,,,Part of EC2
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,1,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,
 wellarchitected,wellarchitected,wellarchitected,wellarchitected,,wellarchitected,,,WellArchitected,WellArchitected,,1,,aws_wellarchitected_,,wellarchitected_,Well-Architected Tool,AWS,,,,,
 workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,aws_workdocs_,,workdocs_,WorkDocs,Amazon,,,,,

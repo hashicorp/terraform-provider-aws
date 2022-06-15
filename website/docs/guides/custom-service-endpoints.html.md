@@ -219,7 +219,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
-  <li><code>kafka</code></li>
+  <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
   <li><code>keyspaces</code></li>
@@ -233,14 +233,14 @@ provider "aws" {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
-  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code>)</li>
+  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexmodelsv2</code> (or <code>lexv2models</code>)</li>
   <li><code>lexruntime</code> (or <code>lexruntimeservice</code>)</li>
   <li><code>lexruntimev2</code> (or <code>lexv2runtime</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
-  <li><code>logs</code> (or <code>cloudwatchlogs</code>)</li>
+  <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutequipment</code></li>
   <li><code>lookoutmetrics</code></li>
   <li><code>lookoutvision</code> (or <code>lookoutforvision</code>)</li>
