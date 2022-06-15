@@ -27,7 +27,7 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
+				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
@@ -56,7 +56,7 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
+				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystem(), fsResourceName),
@@ -79,7 +79,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 		CheckDestroy:      testAccCheckBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupPolicyConfig(rName, "DISABLED"),
+				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
@@ -92,7 +92,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupPolicyConfig(rName, "ENABLED"),
+				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
@@ -100,7 +100,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBackupPolicyConfig(rName, "DISABLED"),
+				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
@@ -164,7 +164,7 @@ func testAccCheckBackupPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBackupPolicyConfig(rName, status string) string {
+func testAccBackupPolicyConfig_basic(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q

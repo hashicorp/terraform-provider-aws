@@ -32,7 +32,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig(region),
+				Config: testAccReplicationConfigurationConfig_basic(region),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -70,7 +70,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig(region),
+				Config: testAccReplicationConfigurationConfig_basic(region),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceReplicationConfiguration(), resourceName),
@@ -102,7 +102,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationFullConfig(alternateRegion),
+				Config: testAccReplicationConfigurationConfig_full(alternateRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -169,7 +169,7 @@ func testAccCheckReplicationConfigurationDestroy(s *terraform.State, provider *s
 	return nil
 }
 
-func testAccReplicationConfigurationConfig(region string) string {
+func testAccReplicationConfigurationConfig_basic(region string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {}
 
@@ -183,7 +183,7 @@ resource "aws_efs_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationConfigurationFullConfig(region string) string {
+func testAccReplicationConfigurationConfig_full(region string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider = "awsalternate"

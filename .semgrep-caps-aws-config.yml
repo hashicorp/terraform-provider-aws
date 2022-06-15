@@ -381,7 +381,6 @@ rules:
         - internal/service/ecr
         - internal/service/ecrpublic
         - internal/service/ecs
-        - internal/service/efs
         - internal/service/elasticache
         - internal/service/elasticbeanstalk
         - internal/service/elasticsearch
