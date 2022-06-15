@@ -2,7 +2,7 @@
 
 Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
 
-Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
+Comprehensive code examples and information about resource import support can be found in the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/resources/import).
 
 - _Resource Code Implementation_: In the resource code (e.g., `internal/service/{service}/{thing}.go`), implementation of `Importer` `State` function
 - _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`), implementation of `TestStep`s with `ImportState: true`
