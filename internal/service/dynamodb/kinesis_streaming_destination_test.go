@@ -27,7 +27,7 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
+				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", rName))),
@@ -54,7 +54,7 @@ func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
+				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
@@ -78,7 +78,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 		CheckDestroy:      testAccCheckKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamingDestinationBasicConfig(rName),
+				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
@@ -89,7 +89,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 	})
 }
 
-func testAccKinesisStreamingDestinationBasicConfig(rName string) string {
+func testAccKinesisStreamingDestinationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q

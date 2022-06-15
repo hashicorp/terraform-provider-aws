@@ -35,7 +35,7 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemBasicConfig(tableName, hashKey, itemContent),
+				Config: testAccTableItemConfig_basic(tableName, hashKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -70,7 +70,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemContent),
+				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -114,7 +114,7 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemWithMultipleItemsConfig(tableName, hashKey, rangeKey, firstItem, secondItem),
+				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test2", &conf2),
@@ -157,7 +157,7 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemWithWonkyItemsConfig(rName, hashKey, rangeKey, item),
+				Config: testAccTableItemConfig_wonky(rName, hashKey, rangeKey, item),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
 					testAccCheckTableItemCount(rName, 1),
@@ -199,7 +199,7 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemBasicConfig(tableName, hashKey, itemBefore),
+				Config: testAccTableItemConfig_basic(tableName, hashKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -209,7 +209,7 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableItemBasicConfig(tableName, hashKey, itemAfter),
+				Config: testAccTableItemConfig_basic(tableName, hashKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -247,7 +247,7 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemBefore),
+				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -258,7 +258,7 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, itemAfter),
+				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(tableName, 1),
@@ -293,7 +293,7 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTableItemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemBasicConfig(rName, hashKey, itemContent),
+				Config: testAccTableItemConfig_basic(rName, hashKey, itemContent),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableItemExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
@@ -388,7 +388,7 @@ func testAccCheckTableItemCount(tableName string, count int64) resource.TestChec
 	}
 }
 
-func testAccTableItemBasicConfig(tableName, hashKey, item string) string {
+func testAccTableItemConfig_basic(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -413,7 +413,7 @@ ITEM
 `, tableName, hashKey, hashKey, item)
 }
 
-func testAccItemWithRangeKeyConfig(tableName, hashKey, rangeKey, item string) string {
+func testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -445,7 +445,7 @@ ITEM
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, item)
 }
 
-func testAccItemWithMultipleItemsConfig(tableName, hashKey, rangeKey, firstItem, secondItem string) string {
+func testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -487,7 +487,7 @@ ITEM
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, firstItem, secondItem)
 }
 
-func testAccItemWithWonkyItemsConfig(tableName, hashKey, rangeKey, item string) string {
+func testAccTableItemConfig_wonky(tableName, hashKey, rangeKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
