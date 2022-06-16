@@ -64,7 +64,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceTypeFilters(t *t
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesDataSourceConfig_reTypeFilters(rName),
+				Config: testAccResourcesDataSourceConfig_resourceTypeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -87,7 +87,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceARNList(t *testi
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesDataSourceConfig_reARNList(rName),
+				Config: testAccResourcesDataSourceConfig_resourceARNList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -118,7 +118,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccResourcesDataSourceConfig_reTypeFilters(rName string) string {
+func testAccResourcesDataSourceConfig_resourceTypeFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -136,7 +136,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccResourcesDataSourceConfig_reARNList(rName string) string {
+func testAccResourcesDataSourceConfig_resourceARNList(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
