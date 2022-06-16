@@ -25,7 +25,7 @@ func testAccRoutingControl_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlConfig_InDefaultControlPanel(rName),
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,7 +55,7 @@ func testAccRoutingControl_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlConfig_InDefaultControlPanel(rName),
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceRoutingControl(), resourceName),
@@ -77,7 +77,7 @@ func testAccRoutingControl_nonDefaultControlPanel(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlConfig_InNonDefaultControlPanel(rName),
+				Config: testAccRoutingControlConfig_inNonDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -137,7 +137,7 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 `, rName)
 }
 
-func testAccRoutingControlConfig_InDefaultControlPanel(rName string) string {
+func testAccRoutingControlConfig_inDefaultPanel(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBase(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
@@ -156,7 +156,7 @@ resource "aws_route53recoverycontrolconfig_control_panel" "test" {
 `, rName)
 }
 
-func testAccRoutingControlConfig_InNonDefaultControlPanel(rName string) string {
+func testAccRoutingControlConfig_inNonDefaultPanel(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBase(rName),
 		testAccControlPanelBase(rName),

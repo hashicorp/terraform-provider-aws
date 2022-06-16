@@ -59,7 +59,6 @@ rules:
         - internal/service/resourcegroups
         - internal/service/resourcegroupstaggingapi
         - internal/service/route53domains
-        - internal/service/route53recoverycontrolconfig
         - internal/service/s3
         - internal/service/s3control
         - internal/service/s3outposts
