@@ -30,7 +30,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig(busName),
+				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
@@ -45,7 +45,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig(busNameModified),
+				Config: testAccBusConfig_basic(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v2),
 					testAccCheckBusRecreated(&v1, &v2),
@@ -56,7 +56,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBusConfig_Tags1(busNameModified, "key", "value"),
+				Config: testAccBusConfig_tags1(busNameModified, "key", "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
@@ -81,7 +81,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig_Tags1(busName, "key1", "value"),
+				Config: testAccBusConfig_tags1(busName, "key1", "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -94,7 +94,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_Tags2(busName, "key1", "updated", "key2", "added"),
+				Config: testAccBusConfig_tags2(busName, "key1", "updated", "key2", "added"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
@@ -104,7 +104,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBusConfig_Tags1(busName, "key2", "added"),
+				Config: testAccBusConfig_tags1(busName, "key2", "added"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
@@ -113,7 +113,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBusConfig(busName),
+				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v4),
 					testAccCheckBusNotRecreated(&v3, &v4),
@@ -132,7 +132,7 @@ func TestAccEventsBus_default(t *testing.T) {
 		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBusConfig("default"),
+				Config:      testAccBusConfig_basic("default"),
 				ExpectError: regexp.MustCompile(`cannot be 'default'`),
 			},
 		},
@@ -152,7 +152,7 @@ func TestAccEventsBus_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig(busName),
+				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceBus(), resourceName),
@@ -258,7 +258,7 @@ func testAccCheckBusNotRecreated(i, j *eventbridge.DescribeEventBusOutput) resou
 	}
 }
 
-func testAccBusConfig(name string) string {
+func testAccBusConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -266,7 +266,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name)
 }
 
-func testAccBusConfig_Tags1(name, key, value string) string {
+func testAccBusConfig_tags1(name, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -278,7 +278,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name, key, value)
 }
 
-func testAccBusConfig_Tags2(name, key1, value1, key2, value2 string) string {
+func testAccBusConfig_tags2(name, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
