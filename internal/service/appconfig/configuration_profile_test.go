@@ -28,7 +28,7 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileNameConfig(rName),
+				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
@@ -61,7 +61,7 @@ func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileNameConfig(rName),
+				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceConfigurationProfile(), resourceName),
@@ -83,7 +83,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileValidatorConfig_JSON(rName),
+				Config: testAccConfigurationProfileConfig_validatorJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
@@ -98,7 +98,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationProfileValidatorConfig_NoJSONContent(rName),
+				Config: testAccConfigurationProfileConfig_validatorNoJSONContent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
@@ -115,7 +115,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 			},
 			{
 				// Test Validator Removal
-				Config: testAccConfigurationProfileNameConfig(rName),
+				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
@@ -136,7 +136,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileValidatorConfig_Lambda(rName),
+				Config: testAccConfigurationProfileConfig_validatorLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
@@ -153,7 +153,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 			},
 			{
 				// Test Validator Removal
-				Config: testAccConfigurationProfileNameConfig(rName),
+				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
@@ -174,7 +174,7 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileValidatorConfig_Multiple(rName),
+				Config: testAccConfigurationProfileConfig_validatorMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
@@ -209,14 +209,14 @@ func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileNameConfig(rName),
+				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccConfigurationProfileNameConfig(rNameUpdated),
+				Config: testAccConfigurationProfileConfig_name(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
@@ -243,7 +243,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileDescriptionConfig(rName, rName),
+				Config: testAccConfigurationProfileConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -255,7 +255,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationProfileDescriptionConfig(rName, description),
+				Config: testAccConfigurationProfileConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -281,7 +281,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileTags1(rName, "key1", "value1"),
+				Config: testAccConfigurationProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -294,7 +294,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationProfileTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigurationProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -303,7 +303,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationProfileTags1(rName, "key2", "value2"),
+				Config: testAccConfigurationProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -387,9 +387,9 @@ func testAccCheckConfigurationProfileExists(resourceName string) resource.TestCh
 	}
 }
 
-func testAccConfigurationProfileNameConfig(rName string) string {
+func testAccConfigurationProfileConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
@@ -399,9 +399,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName))
 }
 
-func testAccConfigurationProfileDescriptionConfig(rName, description string) string {
+func testAccConfigurationProfileConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationDescriptionConfig(rName, description),
+		testAccApplicationConfig_description(rName, description),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
@@ -412,9 +412,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName, description))
 }
 
-func testAccConfigurationProfileValidatorConfig_JSON(rName string) string {
+func testAccConfigurationProfileConfig_validatorJSON(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
@@ -442,9 +442,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName))
 }
 
-func testAccConfigurationProfileValidatorConfig_NoJSONContent(rName string) string {
+func testAccConfigurationProfileConfig_validatorNoJSONContent(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
@@ -492,9 +492,9 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccConfigurationProfileValidatorConfig_Lambda(rName string) string {
+func testAccConfigurationProfileConfig_validatorLambda(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		testAccApplicationLambdaBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
@@ -510,9 +510,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName))
 }
 
-func testAccConfigurationProfileValidatorConfig_Multiple(rName string) string {
+func testAccConfigurationProfileConfig_validatorMultiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		testAccApplicationLambdaBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
@@ -538,9 +538,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName))
 }
 
-func testAccConfigurationProfileTags1(rName, tagKey1, tagValue1 string) string {
+func testAccConfigurationProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
@@ -554,9 +554,9 @@ resource "aws_appconfig_configuration_profile" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccConfigurationProfileTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConfigurationProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationNameConfig(rName),
+		testAccApplicationConfig_name(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
