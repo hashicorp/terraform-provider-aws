@@ -28,7 +28,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostBasicConfig(rName),
+				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
@@ -59,7 +59,7 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostBasicConfig(rName),
+				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
@@ -82,7 +82,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostVPCConfig(rName),
+				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
@@ -205,7 +205,7 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccHostBasicConfig(rName string) string {
+func testAccHostConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
@@ -215,7 +215,7 @@ resource "aws_codestarconnections_host" "test" {
 `, rName)
 }
 
-func testAccHostVPCConfig(rName string) string {
+func testAccHostConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
 		testAccHostVPCBaseConfig(rName),
 		fmt.Sprintf(`

@@ -20,7 +20,6 @@ rules:
         - internal/service/cloudhsmv2
         - internal/service/cloudtrail
         - internal/service/cloudwatch
-        - internal/service/codestarconnections
         - internal/service/cognitoidp
         - internal/service/configservice
         - internal/service/dax
