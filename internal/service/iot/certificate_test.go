@@ -68,7 +68,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificate_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccCertificateConfig_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
@@ -129,7 +129,7 @@ resource "aws_iot_certificate" "foo_cert" {
 }
 `
 
-func testAccCertificate_existingCertificate(pem string) string {
+func testAccCertificateConfig_existingCertificate(pem string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "foo_cert" {
   active          = true
