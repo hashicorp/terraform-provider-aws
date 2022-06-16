@@ -57,7 +57,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	})
 }
 
-func TestAccIoTCertificate_Keys_existing_certificate(t *testing.T) {
+func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
 
@@ -68,7 +68,7 @@ func TestAccIoTCertificate_Keys_existing_certificate(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCertificate_existing_certificate, acctest.TLSPEMEscapeNewlines(certificate)),
+				Config: testAccCertificate_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
@@ -129,9 +129,11 @@ resource "aws_iot_certificate" "foo_cert" {
 }
 `
 
-var testAccCertificate_existing_certificate = `
+func testAccCertificate_existingCertificate(pem string) string {
+	return fmt.Sprintf(`
 resource "aws_iot_certificate" "foo_cert" {
   active          = true
   certificate_pem = "%[1]s"
 }
-`
+`, pem)
+}
