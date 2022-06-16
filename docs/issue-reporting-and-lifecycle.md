@@ -36,7 +36,7 @@ issues of each type.
    out the reason why the feature would be important and how it would benefit
    Terraform users.
 
-### [Questions](https://github.com/hashicorp/terraform-provider-aws/issues/new?labels=question&template=Question.md)
+### Questions
 
 - __Search for answers in Terraform documentation__: We're happy to answer
    questions in GitHub Issues, but it helps reduce issue churn and maintainer
