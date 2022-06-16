@@ -329,7 +329,7 @@ func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 		CheckDestroy:      testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfigApplicationCodeConfiguration(rName, "SELECT 1;\n"),
+				Config: testAccApplicationConfig_applicationCodeConfiguration(rName, "SELECT 1;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -360,7 +360,7 @@ func TestAccKinesisAnalyticsV2Application_ApplicationCode_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccApplicationConfigApplicationCodeConfiguration(rName, "SELECT 2;\n"),
+				Config: testAccApplicationConfig_applicationCodeConfiguration(rName, "SELECT 2;\n"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
@@ -4389,7 +4389,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
+func testAccApplicationConfig_applicationCodeConfiguration(rName, textContent string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
 		fmt.Sprintf(`
