@@ -1,10 +1,10 @@
-# Changelog Process
+# Changelog process
 
 HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOG.md that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 
 We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the changelog, guidance follows on what changes do.
 
-## Changelog Format
+## Changelog format
 
 The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory with the naming convention `{PR-NUMBER}.txt`. For example, to create a changelog entry for pull request 1234, there should be a file named `.changelog/1234.txt`.
 
@@ -26,7 +26,7 @@ resource/aws_example_thing: Add `not_broken` attribute
 ```
 ``````
 
-## Pull Request Types to CHANGELOG
+## Pull request types to CHANGELOG
 
 The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
 
@@ -92,7 +92,7 @@ resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being depre
 ```
 ``````
 
-#### Breaking Changes and Removals
+#### Breaking changes and removals
 
 A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
 
@@ -103,7 +103,7 @@ resource/aws_lambda_alias: Resource import no longer converts Lambda Function na
 ``````
 
 
-#### Region Validation Support
+#### Region validation support
 
 ``````markdown
 ```release-note:note
