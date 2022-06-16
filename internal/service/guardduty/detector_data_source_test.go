@@ -16,11 +16,11 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorDataSourceConfig_basicRe(),
+				Config: testAccDetectorDataSourceConfig_basicResource(),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccDetectorDataSourceConfig_basicRe2(),
+				Config: testAccDetectorDataSourceConfig_basicResource2(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_guardduty_detector.test", "id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr("data.aws_guardduty_detector.test", "status", "ENABLED"),
@@ -51,13 +51,13 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccDetectorDataSourceConfig_basicRe() string {
+func testAccDetectorDataSourceConfig_basicResource() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 `
 }
 
-func testAccDetectorDataSourceConfig_basicRe2() string {
+func testAccDetectorDataSourceConfig_basicResource2() string {
 	return `
 resource "aws_guardduty_detector" "test" {}
 
