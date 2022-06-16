@@ -15,7 +15,6 @@ rules:
         - internal/service/appconfig
         - internal/service/autoscaling
         - internal/service/ce
-        - internal/service/cloudcontrol
         - internal/service/cloudfront
         - internal/service/cloudhsmv2
         - internal/service/cloudtrail

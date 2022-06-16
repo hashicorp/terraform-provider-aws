@@ -22,7 +22,7 @@ func TestAccCloudControlResourceDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSourceConfig(rName),
+				Config: testAccResourceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "properties", resourceName, "properties"),
@@ -33,7 +33,7 @@ func TestAccCloudControlResourceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccResourceDataSourceConfig(rName string) string {
+func testAccResourceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudcontrolapi_resource" "test" {
   type_name = "AWS::Logs::LogGroup"
