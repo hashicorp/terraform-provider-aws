@@ -178,7 +178,7 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleConfig_eventTypeIds1(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 				),
@@ -189,13 +189,13 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleConfig_eventTypeIds2(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "2"),
 				),
 			},
 			{
-				Config: testAccNotificationRuleConfig_eventTypeIds3(rName),
+				Config: testAccNotificationRuleConfig_eventTypeIDs3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 				),
@@ -389,7 +389,7 @@ resource "aws_codestarnotifications_notification_rule" "test" {
 `, rName)
 }
 
-func testAccNotificationRuleConfig_eventTypeIds1(rName string) string {
+func testAccNotificationRuleConfig_eventTypeIDs1(rName string) string {
 	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
@@ -407,7 +407,7 @@ resource "aws_codestarnotifications_notification_rule" "test" {
 `, rName)
 }
 
-func testAccNotificationRuleConfig_eventTypeIds2(rName string) string {
+func testAccNotificationRuleConfig_eventTypeIDs2(rName string) string {
 	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
@@ -426,7 +426,7 @@ resource "aws_codestarnotifications_notification_rule" "test" {
 `, rName)
 }
 
-func testAccNotificationRuleConfig_eventTypeIds3(rName string) string {
+func testAccNotificationRuleConfig_eventTypeIDs3(rName string) string {
 	return testAccNotificationRuleBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codestarnotifications_notification_rule" "test" {
   detail_type = "BASIC"
