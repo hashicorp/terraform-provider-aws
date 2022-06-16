@@ -31,7 +31,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_basic(),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -67,7 +67,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_basic(),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
@@ -94,7 +94,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_subdirectory(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_subdirectory("/fsx/subdirectory1/"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_subdirectory("/fsx/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/subdirectory1/"),
@@ -125,7 +125,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_tags1("key1", "value1"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -139,7 +139,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 				ImportStateIdFunc: testAccLocationFSxOpenZFSImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -148,7 +148,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationfsxOpenZFSFileSystemConfig_tags1("key1", "value1"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -218,7 +218,7 @@ func testAccLocationFSxOpenZFSImportStateID(resourceName string) resource.Import
 	}
 }
 
-func testAccLocationfsxOpenZFSFileSystemConfig_basic() string {
+func testAccLocationFSxOpenZFSFileSystemConfig_basic() string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), `
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -235,7 +235,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `)
 }
 
-func testAccLocationfsxOpenZFSFileSystemConfig_subdirectory(subdirectory string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_subdirectory(subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -253,7 +253,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `, subdirectory))
 }
 
-func testAccLocationfsxOpenZFSFileSystemConfig_tags1(key1, value1 string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_tags1(key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -274,7 +274,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `, key1, value1))
 }
 
-func testAccLocationfsxOpenZFSFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn

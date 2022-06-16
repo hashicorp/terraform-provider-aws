@@ -285,7 +285,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsGid(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -298,7 +298,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsGid(rName, "INT_VALUE"),
+				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "INT_VALUE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -1071,7 +1071,7 @@ resource "aws_datasync_task" "test" {
 `, rName, bytesPerSecond))
 }
 
-func testAccTaskConfig_defaultSyncOptionsGid(rName, gid string) string {
+func testAccTaskConfig_defaultSyncOptionsGID(rName, gid string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
