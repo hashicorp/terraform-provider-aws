@@ -25,7 +25,7 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyConfig(rName),
+				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -68,7 +68,7 @@ func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyConfig(rName),
+				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceCachePolicy(), resourceName),
@@ -90,7 +90,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyItemsConfig(rName),
+				Config: testAccCachePolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
@@ -128,7 +128,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCachePolicyItemsUpdatedConfig(rName),
+				Config: testAccCachePolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
@@ -171,7 +171,7 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyZeroTTLsConfig(rName),
+				Config: testAccCachePolicyConfig_zeroTTLs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -250,7 +250,7 @@ func testAccCheckCachePolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCachePolicyConfig(rName string) string {
+func testAccCachePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name = %[1]q
@@ -272,7 +272,7 @@ resource "aws_cloudfront_cache_policy" "test" {
 `, rName)
 }
 
-func testAccCachePolicyItemsConfig(rName string) string {
+func testAccCachePolicyConfig_items(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name        = %[1]q
@@ -313,7 +313,7 @@ resource "aws_cloudfront_cache_policy" "test" {
 `, rName)
 }
 
-func testAccCachePolicyItemsUpdatedConfig(rName string) string {
+func testAccCachePolicyConfig_itemsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name        = %[1]q
@@ -350,7 +350,7 @@ resource "aws_cloudfront_cache_policy" "test" {
 `, rName)
 }
 
-func testAccCachePolicyZeroTTLsConfig(rName string) string {
+func testAccCachePolicyConfig_zeroTTLs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name = %[1]q
