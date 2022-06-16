@@ -685,9 +685,19 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("port", rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
 	} else {
-		d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-		d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-		d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
+			if rgp.NodeGroups[0].PrimaryEndpoint.Port != nil {
+				d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			}
+
+			if rgp.NodeGroups[0].PrimaryEndpoint.Address != nil {
+				d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
+			}
+		}
+
+		if rgp.NodeGroups[0].ReaderEndpoint != nil && rgp.NodeGroups[0].ReaderEndpoint.Address != nil {
+			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+		}
 	}
 
 	d.Set("user_group_ids", rgp.UserGroupIds)
