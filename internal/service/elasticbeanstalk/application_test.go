@@ -26,7 +26,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkAppConfig(rName),
+				Config: testAccApplicationConfig_app(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists(resourceName, &app),
 				),
@@ -51,7 +51,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkAppConfig(rName),
+				Config: testAccApplicationConfig_app(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
 					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role"),
@@ -61,7 +61,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfigWithMaxAge(rName),
+				Config: testAccApplicationConfig_appMaxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.#", "1"),
@@ -74,7 +74,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfigWithMaxCount(rName),
+				Config: testAccApplicationConfig_appMaxCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
 					resource.TestCheckResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.#", "1"),
@@ -87,7 +87,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfig(rName),
+				Config: testAccApplicationConfig_app(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists("aws_elastic_beanstalk_application.tftest", &app),
 					resource.TestCheckNoResourceAttr("aws_elastic_beanstalk_application.tftest", "appversion_lifecycle.0.service_role"),
@@ -112,7 +112,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkAppConfigWithTags(rName, "test1", "test2"),
+				Config: testAccApplicationConfig_appTags(rName, "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -121,7 +121,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfigWithTags(rName, "updateTest1", "updateTest2"),
+				Config: testAccApplicationConfig_appTags(rName, "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -130,7 +130,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfigWithAddTags(rName, "updateTest1", "updateTest2", "addTest3"),
+				Config: testAccApplicationConfig_appAddTags(rName, "updateTest1", "updateTest2", "addTest3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -140,7 +140,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkAppConfigWithTags(rName, "updateTest1", "updateTest2"),
+				Config: testAccApplicationConfig_appTags(rName, "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -214,7 +214,7 @@ func testAccCheckBeanstalkAppExists(n string, app *elasticbeanstalk.ApplicationD
 	}
 }
 
-func testAccBeanstalkAppConfig(rName string) string {
+func testAccApplicationConfig_app(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "%s"
@@ -275,7 +275,7 @@ EOF
 `, rName)
 }
 
-func testAccBeanstalkAppConfigWithMaxAge(rName string) string {
+func testAccApplicationConfig_appMaxAge(rName string) string {
 	return testAccBeanstalkAppServiceRole(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "%s"
@@ -290,7 +290,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 `, rName)
 }
 
-func testAccBeanstalkAppConfigWithMaxCount(rName string) string {
+func testAccApplicationConfig_appMaxCount(rName string) string {
 	return testAccBeanstalkAppServiceRole(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "%s"
@@ -305,7 +305,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 `, rName)
 }
 
-func testAccBeanstalkAppConfigWithTags(rName, tag1, tag2 string) string {
+func testAccApplicationConfig_appTags(rName, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "%s"
@@ -319,7 +319,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 `, rName, tag1, tag2)
 }
 
-func testAccBeanstalkAppConfigWithAddTags(rName, tag1, tag2, tag3 string) string {
+func testAccApplicationConfig_appAddTags(rName, tag1, tag2, tag3 string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "%s"

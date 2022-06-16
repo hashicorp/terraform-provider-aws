@@ -25,7 +25,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_basic(t *testing.T) 
 		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfig(sdkacctest.RandInt()),
+				Config: testAccApplicationVersionConfig_basic(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.default", &appVersion),
 				),
@@ -45,7 +45,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_duplicateLabels(t *t
 		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfig_duplicateLabel(sdkacctest.RandInt()),
+				Config: testAccApplicationVersionConfig_duplicateLabel(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.first", &firstAppVersion),
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.second", &secondAppVersion),
@@ -66,7 +66,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "test1", "test2"),
+				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -75,7 +75,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
+				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -84,7 +84,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithAddTags(sdkacctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
+				Config: testAccApplicationVersionConfig_addTags(sdkacctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -94,7 +94,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
+				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -171,7 +171,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 	}
 }
 
-func testAccBeanstalkApplicationVersionConfig(randInt int) string {
+func testAccApplicationVersionConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%d"
@@ -197,7 +197,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
 `, randInt, randInt, randInt)
 }
 
-func testAccBeanstalkApplicationVersionConfig_duplicateLabel(randInt int) string {
+func testAccApplicationVersionConfig_duplicateLabel(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%d"
@@ -235,7 +235,7 @@ resource "aws_elastic_beanstalk_application_version" "second" {
 `, randInt, randInt, randInt, randInt, randInt)
 }
 
-func testAccBeanstalkApplicationVersionConfigWithTags(randInt int, tag1, tag2 string) string {
+func testAccApplicationVersionConfig_tags(randInt int, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%[1]d"
@@ -266,7 +266,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
 `, randInt, tag1, tag2)
 }
 
-func testAccBeanstalkApplicationVersionConfigWithAddTags(randInt int, tag1, tag2, tag3 string) string {
+func testAccApplicationVersionConfig_addTags(randInt int, tag1, tag2, tag3 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket-%[1]d"

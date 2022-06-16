@@ -38,7 +38,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvConfig(rName),
+				Config: testAccEnvironmentConfig_env(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
@@ -76,7 +76,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tier(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkWorkerEnvConfig(rName),
+				Config: testAccEnvironmentConfig_workerEnv(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvTier(resourceName, &app),
 					resource.TestMatchResourceAttr(resourceName, "queues.0", beanstalkQueuesNameRegexp),
@@ -110,7 +110,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcEnvironmentConfig_cnamePrefix(rName),
+				Config: testAccEnvironmentConfig_testAcCNAMEPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					resource.TestMatchResourceAttr(resourceName, "cname", beanstalkCnameRegexp),
@@ -142,7 +142,7 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigTemplate(rName, 1),
+				Config: testAccEnvironmentConfig_template(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvConfigValue(resourceName, "1"),
@@ -159,14 +159,14 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccBeanstalkConfigTemplate(rName, 2),
+				Config: testAccEnvironmentConfig_template(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvConfigValue(resourceName, "2"),
 				),
 			},
 			{
-				Config: testAccBeanstalkConfigTemplate(rName, 3),
+				Config: testAccEnvironmentConfig_template(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvConfigValue(resourceName, "3"),
@@ -189,7 +189,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_resource(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkResourceOptionSetting(rName),
+				Config: testAccEnvironmentConfig_resourceOptionSetting(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 				),
@@ -220,7 +220,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkTagsTemplate(rName, "test1", "test2"),
+				Config: testAccEnvironmentConfig_tagsTemplate(rName, "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"firstTag": "test1", "secondTag": "test2"}),
@@ -236,14 +236,14 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccBeanstalkTagsTemplate(rName, "test2", "test1"),
+				Config: testAccEnvironmentConfig_tagsTemplate(rName, "test2", "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"firstTag": "test2", "secondTag": "test1"}),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnvConfig(rName),
+				Config: testAccEnvironmentConfig_env(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{}),
@@ -266,19 +266,19 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvTemplate_change(t *testing.T
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnv_TemplateChange_stack(rName),
+				Config: testAccEnvironmentConfig_envTemplateChangeStack(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnv_TemplateChange_temp(rName),
+				Config: testAccEnvironmentConfig_envTemplateChangeTemp(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnv_TemplateChange_stack(rName),
+				Config: testAccEnvironmentConfig_envTemplateChangeStack(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 				),
@@ -300,28 +300,28 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvSettings_update(t *testing.T
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvConfig(rName),
+				Config: testAccEnvironmentConfig_env(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccVerifyBeanstalkConfig(&app, []string{}),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnvConfig_settings(rName),
+				Config: testAccEnvironmentConfig_envSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccVerifyBeanstalkConfig(&app, []string{"ENV_STATIC", "ENV_UPDATE"}),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnvConfig_settings(rName),
+				Config: testAccEnvironmentConfig_envSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccVerifyBeanstalkConfig(&app, []string{"ENV_STATIC", "ENV_UPDATE"}),
 				),
 			},
 			{
-				Config: testAccBeanstalkEnvConfig(rName),
+				Config: testAccEnvironmentConfig_env(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					testAccVerifyBeanstalkConfig(&app, []string{}),
@@ -344,7 +344,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) 
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvApplicationVersionConfig(rName),
+				Config: testAccEnvironmentConfig_envApplicationVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed(resourceName, &app),
 				),
@@ -359,7 +359,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccBeanstalkEnvApplicationVersionConfigUpdate(rName),
+				Config: testAccEnvironmentConfig_envApplicationVersionUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkApplicationVersionDeployed(resourceName, &app),
 				),
@@ -416,7 +416,7 @@ func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_platformARN(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkEnvDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkEnvConfig_platform_arn(rName),
+				Config: testAccEnvironmentConfig_envPlatformARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists(resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
@@ -819,7 +819,7 @@ resource "aws_iam_instance_profile" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvConfig(rName string) string {
+func testAccEnvironmentConfig_env(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -865,7 +865,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvConfig_platform_arn(rName string) string {
+func testAccEnvironmentConfig_envPlatformARN(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application  = aws_elastic_beanstalk_application.test.name
@@ -911,7 +911,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvConfig_settings(rName string) string {
+func testAccEnvironmentConfig_envSettings(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -996,7 +996,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkWorkerEnvConfig(rName string) string {
+func testAccEnvironmentConfig_workerEnv(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1043,7 +1043,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAcEnvironmentConfig_cnamePrefix(rName string) string {
+func testAccEnvironmentConfig_testAcCNAMEPrefix(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1090,7 +1090,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkConfigTemplate(rName string, cfgTplValue int) string {
+func testAccEnvironmentConfig_template(rName string, cfgTplValue int) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application   = aws_elastic_beanstalk_application.test.name
@@ -1148,7 +1148,7 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
 `, rName, cfgTplValue)
 }
 
-func testAccBeanstalkResourceOptionSetting(rName string) string {
+func testAccEnvironmentConfig_resourceOptionSetting(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1215,7 +1215,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkTagsTemplate(rName, firstTag, secondTag string) string {
+func testAccEnvironmentConfig_tagsTemplate(rName, firstTag, secondTag string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1266,7 +1266,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName, firstTag, secondTag)
 }
 
-func testAccBeanstalkEnv_TemplateChange_stack(rName string) string {
+func testAccEnvironmentConfig_envTemplateChangeStack(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application         = aws_elastic_beanstalk_application.test.name
@@ -1318,7 +1318,7 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnv_TemplateChange_temp(rName string) string {
+func testAccEnvironmentConfig_envTemplateChangeTemp(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application   = aws_elastic_beanstalk_application.test.name
@@ -1370,7 +1370,7 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvApplicationVersionConfig(rName string) string {
+func testAccEnvironmentConfig_envApplicationVersion(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1434,7 +1434,7 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName)
 }
 
-func testAccBeanstalkEnvApplicationVersionConfigUpdate(rName string) string {
+func testAccEnvironmentConfig_envApplicationVersionUpdate(rName string) string {
 	return testAccBeanstalkEnvConfigBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

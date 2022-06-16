@@ -24,7 +24,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) 
 		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig(sdkacctest.RandString(5)),
+				Config: testAccConfigurationTemplateConfig_basic(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
@@ -43,7 +43,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig_VPC(sdkacctest.RandString(5)),
+				Config: testAccConfigurationTemplateConfig_vpc(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
@@ -62,7 +62,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkConfigurationTemplateConfig_Setting(sdkacctest.RandString(5)),
+				Config: testAccConfigurationTemplateConfig_setting(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 					resource.TestCheckResourceAttr(
@@ -148,7 +148,7 @@ func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticb
 	}
 }
 
-func testAccBeanstalkConfigurationTemplateConfig(r string) string {
+func testAccConfigurationTemplateConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "tf-test-%s"
@@ -163,7 +163,7 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 `, r, r)
 }
 
-func testAccBeanstalkConfigurationTemplateConfig_VPC(name string) string {
+func testAccConfigurationTemplateConfig_vpc(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
@@ -208,7 +208,7 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 `, name, name)
 }
 
-func testAccBeanstalkConfigurationTemplateConfig_Setting(name string) string {
+func testAccConfigurationTemplateConfig_setting(name string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "tf-test-%s"
