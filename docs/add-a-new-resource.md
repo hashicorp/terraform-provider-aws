@@ -40,18 +40,18 @@ You will need at minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
-- Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
+- Argument Tests - All arguments should be tested in a pragmatic way. Ensure that each argument can be initially set, updated, and cleared, as applicable. Depending on the logic and interaction of arguments, this may take one to several separate tests. 
 
 ### Create documentation for the resource
 
-Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
+Add a file covering the use of the new resource in `website/docs/r/<service>_<name>.md`. Add more examples if it is complex or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. Link to AWS Documentation where appropriate, particularly for values which are likely to change.
 
 ### Ensure format and lint checks are passing locally
 
-Run `go fmt` to format your code, and install and run all linters to detect and resolve any structural issues with the implementation or documentation.
+Format your code and check linters to detect various issues.
 
 ```sh
-go fmt
+make fmt
 make tools     # install linters and dependencies
 make lint      # run provider linters
 make docs-lint # run documentation linters
