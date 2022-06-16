@@ -33,7 +33,7 @@ func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T
 		CheckDestroy:      testAccCheckGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayAssociationProposalConfig_basicVPNGateway(rName, rBgpAsn),
+				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(resourceName, &proposal),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -44,7 +44,7 @@ func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T
 				),
 			},
 			{
-				Config:            testAccGatewayAssociationProposalConfig_basicVPNGateway(rName, rBgpAsn),
+				Config:            testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -69,7 +69,7 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 		CheckDestroy:      testAccCheckGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn),
+				Config: testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(resourceName, &proposal),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -82,7 +82,7 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 				),
 			},
 			{
-				Config:            testAccGatewayAssociationProposalConfig_basicVPNGateway(rName, rBgpAsn),
+				Config:            testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -105,7 +105,7 @@ func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayAssociationProposalConfig_basicVPNGateway(rName, rBgpAsn),
+				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(resourceName, &proposal),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
@@ -337,7 +337,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName, rBgpAsn))
 }
 
-func testAccGatewayAssociationProposalConfig_basicVPNGateway(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationProposalConfig_basicVPN(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(testAccGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn), `
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = aws_dx_gateway.test.id
@@ -348,7 +348,7 @@ resource "aws_dx_gateway_association_proposal" "test" {
 }
 
 func testAccGatewayAssociationProposalConfig_endOfLifeVPN(rName string, rBgpAsn int) string {
-	return acctest.ConfigCompose(testAccGatewayAssociationProposalConfig_basicVPNGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
@@ -362,7 +362,7 @@ resource "aws_dx_gateway_association" "test" {
 }
 
 func testAccGatewayAssociationProposalConfig_endOfLifeTgw(rName string, rBgpAsn int) string {
-	return acctest.ConfigCompose(testAccGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn), `
+	return acctest.ConfigCompose(testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway_association" "test" {
@@ -375,7 +375,7 @@ resource "aws_dx_gateway_association" "test" {
 `)
 }
 
-func testAccGatewayAssociationProposalConfig_basicTransitGateway(rName string, rBgpAsn int) string {
+func testAccGatewayAssociationProposalConfig_basicTransit(rName string, rBgpAsn int) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   provider = "awsalternate"

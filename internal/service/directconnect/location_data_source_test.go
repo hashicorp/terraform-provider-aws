@@ -17,7 +17,7 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDxLocationConfig_basic,
+				Config: testAccLocationDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_providers.#"),
@@ -29,7 +29,7 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceDxLocationConfig_basic = `
+const testAccLocationDataSourceConfig_basic = `
 data "aws_dx_locations" "test" {}
 
 locals {
