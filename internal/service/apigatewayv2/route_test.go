@@ -437,7 +437,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteConfig_routeKey(rName, "GET /path"),
+				Config: testAccRouteConfig_key(rName, "GET /path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
@@ -453,7 +453,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteConfig_routeKey(rName, "POST /new/path"),
+				Config: testAccRouteConfig_key(rName, "POST /new/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
@@ -721,7 +721,7 @@ resource "aws_apigatewayv2_route" "test" {
 `)
 }
 
-func testAccRouteConfig_routeKey(rName, routeKey string) string {
+func testAccRouteConfig_key(rName, routeKey string) string {
 	return acctest.ConfigCompose(
 		testAccRouteConfig_apiHTTP(rName),
 		fmt.Sprintf(`

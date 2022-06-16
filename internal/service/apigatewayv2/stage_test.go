@@ -122,7 +122,7 @@ func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_defaultHTTPStage(rName),
+				Config: testAccStageConfig_defaultHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -869,7 +869,7 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_routeSettingsHTTPWithRoute(rName, "GET /first"),
+				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "GET /first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -900,7 +900,7 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStageConfig_routeSettingsHTTPWithRoute(rName, "POST /second"),
+				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "POST /second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -953,7 +953,7 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_stageVariables(rName),
+				Config: testAccStageConfig_variables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -1196,7 +1196,7 @@ resource "aws_apigatewayv2_stage" "test" {
 `, rName))
 }
 
-func testAccStageConfig_defaultHTTPStage(rName string) string {
+func testAccStageConfig_defaultHTTP(rName string) string {
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiHTTP(rName),
 		`
@@ -1455,7 +1455,7 @@ resource "aws_apigatewayv2_stage" "test" {
 `, rName))
 }
 
-func testAccStageConfig_routeSettingsHTTPWithRoute(rName, routeKey string) string {
+func testAccStageConfig_routeSettingsHTTPRoute(rName, routeKey string) string {
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiHTTP(rName),
 		fmt.Sprintf(`
@@ -1485,7 +1485,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `, rName, routeKey))
 }
 
-func testAccStageConfig_stageVariables(rName string) string {
+func testAccStageConfig_variables(rName string) string {
 	return acctest.ConfigCompose(
 		testAccStageConfig_apiWebSocket(rName),
 		fmt.Sprintf(`

@@ -89,7 +89,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentTriggersConfig(rName, false),
+				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &apiId, &deployment1),
 				),
@@ -98,14 +98,14 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccDeploymentTriggersConfig(rName, false),
+				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &apiId, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 				),
 			},
 			{
-				Config: testAccDeploymentTriggersConfig(rName, false),
+				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &apiId, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
@@ -119,7 +119,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"triggers"},
 			},
 			{
-				Config: testAccDeploymentTriggersConfig(rName, true),
+				Config: testAccDeploymentConfig_triggers(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &apiId, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
@@ -238,7 +238,7 @@ resource "aws_apigatewayv2_deployment" "test" {
 `, description)
 }
 
-func testAccDeploymentTriggersConfig(rName string, apiKeyRequired bool) string {
+func testAccDeploymentConfig_triggers(rName string, apiKeyRequired bool) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q

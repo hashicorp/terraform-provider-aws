@@ -130,7 +130,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 		CheckDestroy:      testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.domainName"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
@@ -138,7 +138,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.apiId"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
@@ -281,7 +281,7 @@ resource "aws_apigatewayv2_api_mapping" "test" {
 `
 }
 
-func testAccAPIMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
+func testAccAPIMappingConfig_key(rName, certificateArn, apiMappingKey string) string {
 	return testAccAPIMappingConfig_base(rName, certificateArn) + testAccStageConfig_basicWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = aws_apigatewayv2_api.test.id

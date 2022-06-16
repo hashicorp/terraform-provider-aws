@@ -291,7 +291,7 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIConfig_OpenAPI(rName),
+				Config: testAccAPIConfig_open(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -311,7 +311,7 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body"},
 			},
 			{
-				Config: testAccAPIConfig_UpdatedOpenAPIYAML(rName),
+				Config: testAccAPIConfig_updatedOpenYAML(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
@@ -338,7 +338,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIConfig_OpenAPIYAML_tags(rName),
+				Config: testAccAPIConfig_openYAMLTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -357,7 +357,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body"},
 			},
 			{
-				Config: testAccAPIConfig_OpenAPIYAML_tagsUpdated(rName),
+				Config: testAccAPIConfig_openYAMLTagsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
@@ -383,7 +383,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIConfig_OpenAPIYAML_corsConfiguration(rName),
+				Config: testAccAPIConfig_openYAMLCorsConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -402,7 +402,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body"},
 			},
 			{
-				Config: testAccAPIConfig_OpenAPIYAML_corsConfigurationUpdated(rName),
+				Config: testAccAPIConfig_openYAMLCorsConfigurationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
@@ -411,7 +411,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAPIConfig_OpenAPIYAML_corsConfigurationUpdated2(rName),
+				Config: testAccAPIConfig_openYAMLCorsConfigurationUpdated2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
@@ -440,7 +440,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIConfig_OpenAPIYAML(rName),
+				Config: testAccAPIConfig_openYAML(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
@@ -460,7 +460,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body"},
 			},
 			{
-				Config: testAccAPIConfig_UpdatedOpenAPI2(rName),
+				Config: testAccAPIConfig_updatedOpen2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "description test"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
@@ -494,12 +494,12 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Invalid body should not be accepted when fail_on_warnings is enabled
 			{
-				Config:      testAccAPIConfig_FailOnWarnings(rName, "fail_on_warnings = true"),
+				Config:      testAccAPIConfig_failOnWarnings(rName, "fail_on_warnings = true"),
 				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Warnings do not break the deployment when fail_on_warnings is disabled
 			{
-				Config: testAccAPIConfig_FailOnWarnings(rName, "fail_on_warnings = false"),
+				Config: testAccAPIConfig_failOnWarnings(rName, "fail_on_warnings = false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAPIExists(resourceName, &v),
@@ -516,7 +516,7 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 			},
 			// fail_on_warnings should be optional and false by default
 			{
-				Config: testAccAPIConfig_FailOnWarnings(rName, ""),
+				Config: testAccAPIConfig_failOnWarnings(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAPIExists(resourceName, &v),
@@ -1007,7 +1007,7 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAPIConfig_OpenAPI(rName string) string {
+func testAccAPIConfig_open(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1037,7 +1037,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML(rName string) string {
+func testAccAPIConfig_openYAML(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1061,7 +1061,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML_corsConfiguration(rName string) string {
+func testAccAPIConfig_openYAMLCorsConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1094,7 +1094,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML_corsConfigurationUpdated(rName string) string {
+func testAccAPIConfig_openYAMLCorsConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1123,7 +1123,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML_corsConfigurationUpdated2(rName string) string {
+func testAccAPIConfig_openYAMLCorsConfigurationUpdated2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1156,7 +1156,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML_tags(rName string) string {
+func testAccAPIConfig_openYAMLTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1187,7 +1187,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_OpenAPIYAML_tagsUpdated(rName string) string {
+func testAccAPIConfig_openYAMLTagsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1220,7 +1220,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_UpdatedOpenAPIYAML(rName string) string {
+func testAccAPIConfig_updatedOpenYAML(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1244,7 +1244,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_UpdatedOpenAPI2(rName string) string {
+func testAccAPIConfig_updatedOpen2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = "%s"
@@ -1277,7 +1277,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAPIConfig_FailOnWarnings(rName string, failOnWarnings string) string {
+func testAccAPIConfig_failOnWarnings(rName string, failOnWarnings string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name          = %[1]q

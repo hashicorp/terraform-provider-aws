@@ -22,7 +22,7 @@ func TestAccAPIGatewayV2APIDataSource_http(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIHTTPDataSourceConfig(rName),
+				Config: testAccAPIDataSourceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_endpoint", resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_key_selection_expression", resourceName, "api_key_selection_expression"),
@@ -62,7 +62,7 @@ func TestAccAPIGatewayV2APIDataSource_webSocket(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIWebSocketDataSourceConfig(rName),
+				Config: testAccAPIDataSourceConfig_webSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_endpoint", resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_key_selection_expression", resourceName, "api_key_selection_expression"),
@@ -84,7 +84,7 @@ func TestAccAPIGatewayV2APIDataSource_webSocket(t *testing.T) {
 	})
 }
 
-func testAccAPIHTTPDataSourceConfig(rName string) string {
+func testAccAPIDataSourceConfig_http(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   description   = "test description"
@@ -110,7 +110,7 @@ data "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAPIWebSocketDataSourceConfig(rName string) string {
+func testAccAPIDataSourceConfig_webSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"

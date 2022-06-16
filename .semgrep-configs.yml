@@ -10,7 +10,6 @@ rules:
       exclude:
         - internal/service/acmpca
         - internal/service/apigateway
-        - internal/service/apigatewayv2
         - internal/service/appautoscaling
         - internal/service/appconfig
         - internal/service/autoscaling

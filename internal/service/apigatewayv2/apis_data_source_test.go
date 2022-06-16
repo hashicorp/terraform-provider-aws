@@ -23,7 +23,7 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsNameDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -46,7 +46,7 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
@@ -70,7 +70,7 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIsTagsDataSourceConfig(rName1, rName2),
+				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
@@ -113,7 +113,7 @@ resource "aws_apigatewayv2_api" "test3" {
 `, rName1, rName2)
 }
 
-func testAccAPIsNameDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_name(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`
@@ -129,7 +129,7 @@ data "aws_apigatewayv2_apis" "test2" {
 `)
 }
 
-func testAccAPIsProtocolTypeDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_protocolType(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		fmt.Sprintf(`
@@ -147,7 +147,7 @@ data "aws_apigatewayv2_apis" "test2" {
 `, rName1, rName2))
 }
 
-func testAccAPIsTagsDataSourceConfig(rName1, rName2 string) string {
+func testAccAPIsDataSourceConfig_tags(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccAPIsBaseDataSourceConfig(rName1, rName2),
 		`
