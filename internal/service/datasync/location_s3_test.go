@@ -31,7 +31,7 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Config(rName),
+				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS31),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
@@ -69,7 +69,7 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3StorageClassConfig(rName),
+				Config: testAccLocationS3Config_storageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS31),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -103,7 +103,7 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Config(rName),
+				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS31),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName),
@@ -126,7 +126,7 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationS3Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Tags1Config(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS31),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -140,7 +140,7 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"s3_bucket_arn"},
 			},
 			{
-				Config: testAccLocationS3Tags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationS3Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS32),
 					testAccCheckLocationS3NotRecreated(&locationS31, &locationS32),
@@ -150,7 +150,7 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationS3Tags1Config(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(resourceName, &locationS33),
 					testAccCheckLocationS3NotRecreated(&locationS32, &locationS33),
@@ -273,7 +273,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccLocationS3Config(rName string) string {
+func testAccLocationS3Config_basic(rName string) string {
 	return testAccLocationS3BaseConfig(rName) + `
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn
@@ -286,7 +286,7 @@ resource "aws_datasync_location_s3" "test" {
 `
 }
 
-func testAccLocationS3StorageClassConfig(rName string) string {
+func testAccLocationS3Config_storageClass(rName string) string {
 	return testAccLocationS3BaseConfig(rName) + `
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn    = aws_s3_bucket.test.arn
@@ -300,7 +300,7 @@ resource "aws_datasync_location_s3" "test" {
 `
 }
 
-func testAccLocationS3Tags1Config(rName, key1, value1 string) string {
+func testAccLocationS3Config_tags1(rName, key1, value1 string) string {
 	return testAccLocationS3BaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn
@@ -317,7 +317,7 @@ resource "aws_datasync_location_s3" "test" {
 `, key1, value1)
 }
 
-func testAccLocationS3Tags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccLocationS3Config_tags2(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationS3BaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn

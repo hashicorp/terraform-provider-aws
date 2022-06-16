@@ -29,7 +29,6 @@ rules:
         - internal/service/codestarnotifications
         - internal/service/cognitoidp
         - internal/service/configservice
-        - internal/service/datasync
         - internal/service/dax
         - internal/service/directconnect
         - internal/service/dms
