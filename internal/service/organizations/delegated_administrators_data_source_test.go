@@ -25,7 +25,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorsDataSourceConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
@@ -53,7 +53,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorsMultipleDataSourceConfig(servicePrincipal, servicePrincipal2),
+				Config: testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal, servicePrincipal2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
@@ -80,7 +80,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *t
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorsServicePrincipalDataSourceConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorsDataSourceConfig_servicePrincipal(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delegated_administrators.0.id", dataSourceIdentity, "account_id"),
@@ -102,7 +102,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorsEmptyDataSourceConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorsDataSourceConfig_empty(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_administrators.#", "0"),
 				),
@@ -111,7 +111,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
 	})
 }
 
-func testAccDelegatedAdministratorsEmptyDataSourceConfig(servicePrincipal string) string {
+func testAccDelegatedAdministratorsDataSourceConfig_empty(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_organizations_delegated_administrators" "test" {
   service_principal = %[1]q
@@ -119,7 +119,7 @@ data "aws_organizations_delegated_administrators" "test" {
 `, servicePrincipal)
 }
 
-func testAccDelegatedAdministratorsDataSourceConfig(servicePrincipal string) string {
+func testAccDelegatedAdministratorsDataSourceConfig_basic(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
@@ -134,7 +134,7 @@ data "aws_organizations_delegated_administrators" "test" {}
 `, servicePrincipal)
 }
 
-func testAccDelegatedAdministratorsMultipleDataSourceConfig(servicePrincipal, servicePrincipal2 string) string {
+func testAccDelegatedAdministratorsDataSourceConfig_multiple(servicePrincipal, servicePrincipal2 string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
@@ -154,7 +154,7 @@ data "aws_organizations_delegated_administrators" "test" {}
 `, servicePrincipal, servicePrincipal2)
 }
 
-func testAccDelegatedAdministratorsServicePrincipalDataSourceConfig(servicePrincipal string) string {
+func testAccDelegatedAdministratorsDataSourceConfig_servicePrincipal(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"

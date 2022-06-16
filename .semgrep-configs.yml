@@ -38,7 +38,6 @@ rules:
         - internal/service/kinesis
         - internal/service/lambda
         - internal/service/networkmanager
-        - internal/service/organizations
         - internal/service/ram
         - internal/service/resourcegroups
         - internal/service/route53domains
