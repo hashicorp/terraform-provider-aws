@@ -16,25 +16,25 @@ func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedZoneIDConfig_basic,
+				Config: testAccHostedZoneIdDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", "id", tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccHostedZoneIDConfig_explicitRegion,
+				Config: testAccHostedZoneIdDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.regional", "id", "Z32O12XQLNTSW2"),
 				),
 			},
 			{
-				Config: testAccHostedZoneIDConfig_explicitNetwork,
+				Config: testAccHostedZoneIdDataSourceConfig_explicitNetwork,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", "id", tfelbv2.HostedZoneIdPerRegionNLBMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccHostedZoneIDConfig_explicitNetworkRegion,
+				Config: testAccHostedZoneIdDataSourceConfig_explicitNetworkRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network-regional", "id", "Z2IFOLAFXWLO4F"),
 				),
@@ -43,25 +43,25 @@ func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccHostedZoneIDConfig_basic = `
+const testAccHostedZoneIdDataSourceConfig_basic = `
 data "aws_lb_hosted_zone_id" "main" {}
 `
 
 //lintignore:AWSAT003
-const testAccHostedZoneIDConfig_explicitRegion = `
+const testAccHostedZoneIdDataSourceConfig_explicitRegion = `
 data "aws_lb_hosted_zone_id" "regional" {
   region = "eu-west-1"
 }
 `
 
-const testAccHostedZoneIDConfig_explicitNetwork = `
+const testAccHostedZoneIdDataSourceConfig_explicitNetwork = `
 data "aws_lb_hosted_zone_id" "network" {
   load_balancer_type = "network"
 }
 `
 
 //lintignore:AWSAT003
-const testAccHostedZoneIDConfig_explicitNetworkRegion = `
+const testAccHostedZoneIdDataSourceConfig_explicitNetworkRegion = `
 data "aws_lb_hosted_zone_id" "network-regional" {
   region             = "eu-west-1"
   load_balancer_type = "network"
