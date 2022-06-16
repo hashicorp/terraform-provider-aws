@@ -27,7 +27,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, "name"),
@@ -57,7 +57,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplicationSnapshot(), resourceName),
@@ -81,7 +81,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 		CheckDestroy:      testAccCheckApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationSnapshotConfig(rName),
+				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), applicationResourceName),
@@ -140,6 +140,6 @@ func testAccCheckApplicationSnapshotExists(n string, v *kinesisanalyticsv2.Snaps
 	}
 }
 
-func testAccApplicationSnapshotConfig(rName string) string {
-	return testAccApplicationConfigStartSnapshotableFlinkApplication(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "", false)
+func testAccApplicationSnapshotConfig_basic(rName string) string {
+	return testAccApplicationConfig_startSnapshotableFlink(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "", false)
 }

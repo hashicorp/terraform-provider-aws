@@ -53,7 +53,6 @@ rules:
         - internal/service/iam
         - internal/service/iot
         - internal/service/kinesis
-        - internal/service/kinesisanalyticsv2
         - internal/service/lambda
         - internal/service/networkmanager
         - internal/service/organizations
