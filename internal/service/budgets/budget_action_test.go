@@ -27,7 +27,7 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 		CheckDestroy:      testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionBasicConfig(rName),
+				Config: testAccBudgetActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
@@ -67,7 +67,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 		CheckDestroy:      testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionBasicConfig(rName),
+				Config: testAccBudgetActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
@@ -139,7 +139,7 @@ func testAccBudgetActionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBudgetActionBasicConfig(rName string) string {
+func testAccBudgetActionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name        = %[1]q
