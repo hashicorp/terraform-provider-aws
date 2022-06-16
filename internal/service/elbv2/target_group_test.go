@@ -1508,7 +1508,7 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1553,14 +1553,14 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aBasic(rNameAfter),
+				Config: testAccTargetGroupConfig_albBasic(rNameAfter),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
@@ -1582,14 +1582,14 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdatedPort(rName),
+				Config: testAccTargetGroupConfig_albUpdatedPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "port", "442"),
@@ -1611,14 +1611,14 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdatedProtocol(rName),
+				Config: testAccTargetGroupConfig_albUpdatedProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
@@ -1640,13 +1640,13 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdatedVPC(rName),
+				Config: testAccTargetGroupConfig_albUpdatedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &after),
 				),
@@ -1667,7 +1667,7 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aGeneratedName(rName),
+				Config: testAccTargetGroupConfig_albGeneratedName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 				),
@@ -1688,7 +1688,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aLambda(rName),
+				Config: testAccTargetGroupConfig_albLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
@@ -1723,7 +1723,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aLambdaMultiValueHeadersEnabled(rName, true),
+				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
@@ -1743,7 +1743,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 				},
 			},
 			{
-				Config: testAccTargetGroupConfig_aLambdaMultiValueHeadersEnabled(rName, false),
+				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
@@ -1751,7 +1751,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aLambdaMultiValueHeadersEnabled(rName, true),
+				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
@@ -1772,15 +1772,15 @@ func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTargetGroupConfig_aMissingPort(rName),
+				Config:      testAccTargetGroupConfig_albMissingPort(rName),
 				ExpectError: regexp.MustCompile(`port should be set when target type is`),
 			},
 			{
-				Config:      testAccTargetGroupConfig_aMissingProtocol(rName),
+				Config:      testAccTargetGroupConfig_albMissingProtocol(rName),
 				ExpectError: regexp.MustCompile(`protocol should be set when target type is`),
 			},
 			{
-				Config:      testAccTargetGroupConfig_aMissingVPC(rName),
+				Config:      testAccTargetGroupConfig_albMissingVPC(rName),
 				ExpectError: regexp.MustCompile(`vpc_id should be set when target type is`),
 			},
 		},
@@ -1799,7 +1799,7 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aNamePrefix(rName),
+				Config: testAccTargetGroupConfig_albNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
@@ -1821,14 +1821,14 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aUpdateSlowStart(rName, 30),
+				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "30"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdateSlowStart(rName, 60),
+				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "60"),
@@ -1850,7 +1850,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1858,7 +1858,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdateTags(rName),
+				Config: testAccTargetGroupConfig_albUpdateTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -1882,7 +1882,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aBasic(rName),
+				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1906,7 +1906,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aUpdateHealthCheck(rName),
+				Config: testAccTargetGroupConfig_albUpdateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1945,7 +1945,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aLoadBalancingAlgorithm(rName, false, ""),
+				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1954,7 +1954,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aLoadBalancingAlgorithm(rName, true, "round_robin"),
+				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1963,7 +1963,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
+				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1987,7 +1987,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckATargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_aStickiness(rName, false, false),
+				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -2008,7 +2008,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aStickiness(rName, true, true),
+				Config: testAccTargetGroupConfig_albStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -2033,7 +2033,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_aStickiness(rName, true, false),
+				Config: testAccTargetGroupConfig_albStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckATargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -3207,7 +3207,7 @@ resource "aws_vpc" "test" {
 `, rName, healthCheckBlock)
 }
 
-func testAccTargetGroupConfig_aBasic(rName string) string {
+func testAccTargetGroupConfig_albBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3247,7 +3247,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aGeneratedName(rName string) string {
+func testAccTargetGroupConfig_albGeneratedName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   port     = 80
@@ -3273,7 +3273,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_aLambda(rName string) string {
+func testAccTargetGroupConfig_albLambda(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name        = %[1]q
@@ -3281,7 +3281,7 @@ resource "aws_alb_target_group" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aLambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
+func testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   lambda_multi_value_headers_enabled = %[1]t
@@ -3291,7 +3291,7 @@ resource "aws_alb_target_group" "test" {
 `, lambdaMultiValueHadersEnabled, rName)
 }
 
-func testAccTargetGroupConfig_aLoadBalancingAlgorithm(rName string, nonDefault bool, algoType string) string {
+func testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName string, nonDefault bool, algoType string) string {
 	var algoTypeParam string
 
 	if nonDefault {
@@ -3317,7 +3317,7 @@ resource "aws_vpc" "test" {
 }`, rName, algoTypeParam)
 }
 
-func testAccTargetGroupConfig_aMissingPort(rName string) string {
+func testAccTargetGroupConfig_albMissingPort(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3330,7 +3330,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aMissingProtocol(rName string) string {
+func testAccTargetGroupConfig_albMissingProtocol(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name   = %[1]q
@@ -3343,7 +3343,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aMissingVPC(rName string) string {
+func testAccTargetGroupConfig_albMissingVPC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3353,7 +3353,7 @@ resource "aws_alb_target_group" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_aNamePrefix(rName string) string {
+func testAccTargetGroupConfig_albNamePrefix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name_prefix = "tf-"
@@ -3371,7 +3371,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_aStickiness(rName string, addStickinessBlock bool, enabled bool) string {
+func testAccTargetGroupConfig_albStickiness(rName string, addStickinessBlock bool, enabled bool) string {
 	var stickinessBlock string
 
 	if addStickinessBlock {
@@ -3415,7 +3415,7 @@ resource "aws_vpc" "test" {
 }`, rName, stickinessBlock)
 }
 
-func testAccTargetGroupConfig_aUpdateHealthCheck(rName string) string {
+func testAccTargetGroupConfig_albUpdateHealthCheck(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3451,7 +3451,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aUpdateSlowStart(rName string, slowStartDuration int) string {
+func testAccTargetGroupConfig_albUpdateSlowStart(rName string, slowStartDuration int) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3492,7 +3492,7 @@ resource "aws_vpc" "test" {
 }`, rName, slowStartDuration)
 }
 
-func testAccTargetGroupConfig_aUpdateTags(rName string) string {
+func testAccTargetGroupConfig_albUpdateTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3533,7 +3533,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aUpdatedPort(rName string) string {
+func testAccTargetGroupConfig_albUpdatedPort(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3573,7 +3573,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aUpdatedProtocol(rName string) string {
+func testAccTargetGroupConfig_albUpdatedProtocol(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -3621,7 +3621,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_aUpdatedVPC(rName string) string {
+func testAccTargetGroupConfig_albUpdatedVPC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
