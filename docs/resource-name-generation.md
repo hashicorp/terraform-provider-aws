@@ -1,4 +1,4 @@
-# Adding Resource Name Generation Support
+# Adding resource name generation support
 
 Terraform AWS Provider resources can use shared logic to support and test name generation, where the operator can choose between an expected naming value, a generated naming value with a prefix, or a fully generated name.
 
@@ -8,7 +8,7 @@ Implementing name generation support for Terraform AWS Provider resources requir
 - _Resource Name Generation Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`), implementation of new acceptance test functions and configurations to exercise new naming logic.
 - _Resource Name Generation Documentation Implementation_: In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`), addition of `name_prefix` argument and update of `name` argument description.
 
-## Resource Name Generation Code Implementation
+## Resource name generation code implementation
 
 - In the resource Go file (e.g., `internal/service/{service}/{thing}.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/create"`
 - In the resource schema, add the new `name_prefix` attribute and adjust the `name` attribute to be `Optional`, `Computed`, and `ConflictsWith` the `name_prefix` attribute. Ensure to keep any existing schema fields on `name` such as `ValidateFunc`. E.g.
@@ -45,7 +45,7 @@ d.Set("name", resp.Name)
 d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 ```
 
-## Resource Name Generation Testing Implementation
+## Resource name generation testing implementation
 
 - In the resource testing (e.g., `internal/service/{service}/{thing}_test.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/create"`
 - In the resource testing, implement two new tests named `_Name_Generated` and `_NamePrefix` with associated configurations, that verifies creating the resource without `name` and `name_prefix` arguments (for the former) and with only the `name_prefix` argument (for the latter). E.g.
@@ -62,7 +62,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
     CheckDestroy: testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
-        Config: testAccThingNameGeneratedConfig(),
+        Config: testAccThingConfig_nameGenerated(),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
           create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -90,7 +90,7 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
     CheckDestroy: testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
-        Config: testAccThingNamePrefixConfig("tf-acc-test-prefix-"),
+        Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
           create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
