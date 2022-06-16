@@ -37,7 +37,6 @@ rules:
         - internal/service/elb
         - internal/service/elbv2
         - internal/service/globalaccelerator
-        - internal/service/guardduty
         - internal/service/iam
         - internal/service/kinesis
         - internal/service/lambda
