@@ -25,7 +25,7 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecycleHookConfig(rName),
+				Config: testAccLifecycleHookConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_group_name", rName),
@@ -55,7 +55,7 @@ func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecycleHookConfig(rName),
+				Config: testAccLifecycleHookConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
@@ -145,7 +145,7 @@ func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccLifecycleHookConfig(rName string) string {
+func testAccLifecycleHookConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
