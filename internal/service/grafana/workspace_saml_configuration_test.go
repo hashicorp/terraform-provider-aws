@@ -13,7 +13,7 @@ import (
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 )
 
-func testAccWorkspaceSamlConfiguration_basic(t *testing.T) {
+func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_saml_configuration.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
@@ -25,9 +25,9 @@ func testAccWorkspaceSamlConfiguration_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_basic(rName),
+				Config: testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
+					testAccCheckWorkspaceSAMLConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
@@ -41,7 +41,7 @@ func testAccWorkspaceSamlConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
+func testAccWorkspaceSAMLConfiguration_loginValidity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_saml_configuration.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
@@ -53,9 +53,9 @@ func testAccWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_loginValidity(rName),
+				Config: testAccWorkspaceSAMLConfigurationConfig_providerLoginValidity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
+					testAccCheckWorkspaceSAMLConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
@@ -70,7 +70,7 @@ func testAccWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceSamlConfiguration_assertions(t *testing.T) {
+func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_saml_configuration.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
@@ -82,9 +82,9 @@ func testAccWorkspaceSamlConfiguration_assertions(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName),
+				Config: testAccWorkspaceSAMLConfigurationConfig_providerAssertions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
+					testAccCheckWorkspaceSAMLConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
@@ -105,8 +105,8 @@ func testAccWorkspaceSamlConfiguration_assertions(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_basic(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
@@ -116,8 +116,8 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
 `)
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_loginValidity(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSAMLConfigurationConfig_providerLoginValidity(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values       = ["admin"]
   editor_role_values      = ["editor"]
@@ -128,8 +128,8 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
 `)
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSAMLConfigurationConfig_providerAssertions(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
@@ -145,7 +145,7 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
 `)
 }
 
-func testAccCheckWorkspaceSamlConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckWorkspaceSAMLConfigurationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
