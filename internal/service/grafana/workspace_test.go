@@ -34,9 +34,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccWorkspaceSamlConfiguration_basic,
-			"loginValidity": testAccWorkspaceSamlConfiguration_loginValidity,
-			"assertions":    testAccWorkspaceSamlConfiguration_assertions,
+			"basic":         testAccWorkspaceSAMLConfiguration_basic,
+			"loginValidity": testAccWorkspaceSAMLConfiguration_loginValidity,
+			"assertions":    testAccWorkspaceSAMLConfiguration_assertions,
 		},
 		"RoleAssociation": {
 			"usersAdmin":           testAccRoleAssociation_usersAdmin,
