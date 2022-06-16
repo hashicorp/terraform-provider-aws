@@ -76,7 +76,7 @@ func TestAccIAMUserLoginProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfig_Required(rName, testPubKey1),
+				Config: testAccUserLoginProfileConfig_required(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					testDecryptPasswordAndTest(resourceName, "aws_iam_access_key.test", testPrivKey1),
@@ -114,7 +114,7 @@ func TestAccIAMUserLoginProfile_keybase(t *testing.T) {
 		CheckDestroy:      testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfig_Required(rName, "keybase:terraformacctest"),
+				Config: testAccUserLoginProfileConfig_required(rName, "keybase:terraformacctest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_password"),
@@ -149,7 +149,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccUserLoginProfileConfig_Required(rName, "keybase:terraform_nope"),
+				Config:      testAccUserLoginProfileConfig_required(rName, "keybase:terraform_nope"),
 				ExpectError: regexp.MustCompile(`Error retrieving Public Key`),
 			},
 		},
@@ -167,7 +167,7 @@ func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccUserLoginProfileConfig_Required(rName, "lolimnotakey"),
+				Config:      testAccUserLoginProfileConfig_required(rName, "lolimnotakey"),
 				ExpectError: regexp.MustCompile(`Error encrypting Password`),
 			},
 		},
@@ -187,7 +187,7 @@ func TestAccIAMUserLoginProfile_passwordLength(t *testing.T) {
 		CheckDestroy:      testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfig_PasswordLength(rName, testPubKey1, 128),
+				Config: testAccUserLoginProfileConfig_passwordLength(rName, testPubKey1, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "128"),
@@ -221,7 +221,7 @@ func TestAccIAMUserLoginProfile_nogpg(t *testing.T) {
 		CheckDestroy:      testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfigNoGPG(rName),
+				Config: testAccUserLoginProfileConfig_noGPG(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
@@ -256,7 +256,7 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserLoginProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfig_Required(rName, testPubKey1),
+				Config: testAccUserLoginProfileConfig_required(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
@@ -416,7 +416,7 @@ resource "aws_iam_access_key" "test" {
 `, rName)
 }
 
-func testAccUserLoginProfileConfig_PasswordLength(rName, pgpKey string, passwordLength int) string {
+func testAccUserLoginProfileConfig_passwordLength(rName, pgpKey string, passwordLength int) string {
 	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "test" {
   user            = aws_iam_user.test.name
@@ -429,7 +429,7 @@ EOF
 `, passwordLength, pgpKey))
 }
 
-func testAccUserLoginProfileConfig_Required(rName, pgpKey string) string {
+func testAccUserLoginProfileConfig_required(rName, pgpKey string) string {
 	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_user_login_profile" "test" {
   user = aws_iam_user.test.name
@@ -441,7 +441,7 @@ EOF
 `, pgpKey))
 }
 
-func testAccUserLoginProfileConfigNoGPG(rName string) string {
+func testAccUserLoginProfileConfig_noGPG(rName string) string {
 	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), `
 resource "aws_iam_user_login_profile" "test" {
   user = aws_iam_user.test.name

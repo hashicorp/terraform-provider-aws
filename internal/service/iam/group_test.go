@@ -30,7 +30,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(groupName),
+				Config: testAccGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName, "/"),
@@ -42,7 +42,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroup2Config(groupName2),
+				Config: testAccGroupConfig_2(groupName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName2, &conf),
 					testAccCheckGroupAttributes(&conf, groupName2, "/funnypath/"),
@@ -66,14 +66,14 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(groupName),
+				Config: testAccGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
-				Config: testAccGroupConfig(groupName2),
+				Config: testAccGroupConfig_basic(groupName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName2, "/"),
@@ -152,7 +152,7 @@ func testAccCheckGroupAttributes(group *iam.GetGroupOutput, name string, path st
 	}
 }
 
-func testAccGroupConfig(groupName string) string {
+func testAccGroupConfig_basic(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "test" {
   name = "%s"
@@ -161,7 +161,7 @@ resource "aws_iam_group" "test" {
 `, groupName)
 }
 
-func testAccGroup2Config(groupName string) string {
+func testAccGroupConfig_2(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "test2" {
   name = "%s"
