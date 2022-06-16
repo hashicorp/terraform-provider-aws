@@ -62,3 +62,5 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.inlinehilite
+  - toc:
+      permalink: "#"

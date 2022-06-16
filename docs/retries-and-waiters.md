@@ -14,7 +14,7 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry()` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
 
-This guide goes beyond the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
+This guide goes beyond the [Terraform Plugin SDK v2 documentation](https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
 
 ### State Change Configuration and Functions
 

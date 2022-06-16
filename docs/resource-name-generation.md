@@ -107,7 +107,7 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   })
 }
 
-func testAccThingNameGeneratedConfig() string {
+func testAccThingConfig_nameGenerated() string {
   return fmt.Sprintf(`
 resource "aws_service_thing" "test" {
   # ... other configuration ...
@@ -115,7 +115,7 @@ resource "aws_service_thing" "test" {
 `)
 }
 
-func testAccThingNamePrefixConfig(namePrefix string) string {
+func testAccThingConfig_namePrefix(namePrefix string) string {
   return fmt.Sprintf(`
 resource "aws_service_thing" "test" {
   # ... other configuration ...
@@ -126,7 +126,7 @@ resource "aws_service_thing" "test" {
 }
 ```
 
-## Resource Name Generation Documentation Implementation
+## Resource name generation documentation implementation
 
 - In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`), add the following to the arguments reference:
 
@@ -140,7 +140,7 @@ resource "aws_service_thing" "test" {
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 ```
 
-## Resource Name Generation With Suffix
+## Resource name generation with suffix
 
 Some generated resource names require a fixed suffix (for example Amazon SNS FIFO topic names must end in `.fifo`).
 In these cases use `create.NameWithSuffix()` in the resource `Create` function and `create.NamePrefixFromNameWithSuffix()` in the resource `Read` function, e.g.
