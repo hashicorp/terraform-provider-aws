@@ -706,10 +706,14 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("user_group_ids", rgp.UserGroupIds)
 
 	// Tags cannot be read when the replication group is not Available
+	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
+
 	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group to be available (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
+
+	log.Printf("[DEBUG] Listing tags for ElastiCache Replication Group (%s)", d.Id())
 
 	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
 
@@ -735,8 +739,10 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
+
 	// This section reads settings that require checking the underlying cache clusters
-	if rgp.NodeGroups != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
+	if rgp.NodeGroups != nil && rgp.NodeGroups[0] != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
 		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
 
 		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
