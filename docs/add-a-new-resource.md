@@ -2,7 +2,7 @@
 
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
 
-Each resource should be submitted for review in isolation, pull requests containing multiple resources are harder to review and the maintainers will normally ask for them to be broken apart.
+Each resource should be submitted for review in isolation. Pull requests containing multiple resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
 Please use the [skaff](https://github.com/hashicorp/terraform-provider-aws/blob/main/skaff/README.md) tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
@@ -18,13 +18,9 @@ For a new resources use a branch named `f-{resource name}` for example: `f-ec2-v
 
 ### Name the resource
 
-Either by creating the file manually, or using `skaff` to generate a template.
+Create the resource file using `skaff` to generate a template or manually.
 
-All resources should be named with the following pattern: `aws_<service>_<name>`
-
-Where `<service>` is the AWS short service name that matches the key in the `serviceData` map in the `conns` package (created via the [Adding a new Service](add-a-new-service.md))
-
-Where `<name>` represents the conceptual infrastructure represented by the create, read, update, and delete methods of the service API. It should be a singular noun. For example, in an API that has methods such as `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name of the resource would end in `_thing`.
+See the [Naming Guide](/naming/#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
 ### Fill out the Resource Schema
 

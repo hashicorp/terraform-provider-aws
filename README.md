@@ -34,7 +34,7 @@ https://registry.terraform.io/providers/hashicorp/aws/latest/docs
 
 ## Roadmap
 
-Our roadmap for expanding support in Terraform for AWS resources can be found in our [Roadmap](ROADMAP.md) which is published quarterly. 
+Our roadmap for expanding support in Terraform for AWS resources can be found in our [Roadmap](ROADMAP.md) which is published quarterly.
 
 ## Frequently Asked Questions
 
