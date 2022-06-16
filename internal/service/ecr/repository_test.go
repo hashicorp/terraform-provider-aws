@@ -225,7 +225,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRepositoryConfig_encryptionAes256(rName),
+				Config: testAccRepositoryConfig_encryptionAES256(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
@@ -424,7 +424,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryConfig_encryptionAes256(rName string) string {
+func testAccRepositoryConfig_encryptionAES256(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
