@@ -22,7 +22,6 @@ rules:
         - internal/service/cloudwatch
         - internal/service/codepipeline
         - internal/service/codestarconnections
-        - internal/service/codestarnotifications
         - internal/service/cognitoidp
         - internal/service/configservice
         - internal/service/dax
