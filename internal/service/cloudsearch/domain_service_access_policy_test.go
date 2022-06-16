@@ -25,7 +25,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainServiceAccessPolicyConfig(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -51,7 +51,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 		CheckDestroy:      testAccDomainServiceAccessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainServiceAccessPolicyConfig(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -63,7 +63,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainServiceAccessPolicyConfigUpdated(rName),
+				Config: testAccDomainServiceAccessPolicyConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainServiceAccessPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
@@ -120,7 +120,7 @@ func testAccDomainServiceAccessPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDomainServiceAccessPolicyConfig(rName string) string {
+func testAccDomainServiceAccessPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = %[1]q
@@ -148,7 +148,7 @@ POLICY
 `, rName)
 }
 
-func testAccDomainServiceAccessPolicyConfigUpdated(rName string) string {
+func testAccDomainServiceAccessPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudsearch_domain" "test" {
   name = %[1]q

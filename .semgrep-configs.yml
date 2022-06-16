@@ -19,7 +19,6 @@ rules:
         - internal/service/cloudcontrol
         - internal/service/cloudfront
         - internal/service/cloudhsmv2
-        - internal/service/cloudsearch
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/codepipeline
