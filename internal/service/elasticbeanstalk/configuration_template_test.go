@@ -21,12 +21,12 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
+		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_basic(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
 			},
 		},
@@ -40,12 +40,12 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
+		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_vpc(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 				),
 			},
 		},
@@ -59,12 +59,12 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBeanstalkConfigurationTemplateDestroy,
+		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_setting(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
+					testAccCheckConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template", &config),
 					resource.TestCheckResourceAttr(
 						"aws_elastic_beanstalk_configuration_template.tf_template", "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_elastic_beanstalk_configuration_template.tf_template", "setting.*", map[string]string{
@@ -76,7 +76,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 	})
 }
 
-func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error {
+func testAccCheckConfigurationTemplateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -118,7 +118,7 @@ func testAccCheckBeanstalkConfigurationTemplateDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
+func testAccCheckConfigurationTemplateExists(n string, config *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
 		rs, ok := s.RootModule().Resources[n]

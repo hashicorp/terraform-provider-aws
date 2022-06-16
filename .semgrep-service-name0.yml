@@ -1347,6 +1347,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)Batch"
     severity: WARNING
+  - id: beanstalk-in-func-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in func name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: beanstalk-in-const-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in const name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
+    severity: WARNING
+  - id: beanstalk-in-var-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in var name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
+    severity: WARNING
   - id: budgets-in-func-name
     languages:
       - go
@@ -2839,34 +2882,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConnect"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-const-name
-    languages:
-      - go
-    message: Do not use "Connect" in const name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-    severity: WARNING
-  - id: connect-in-var-name
-    languages:
-      - go
-    message: Do not use "Connect" in var name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
     severity: WARNING

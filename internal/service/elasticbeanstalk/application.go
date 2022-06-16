@@ -225,7 +225,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	var app *elasticbeanstalk.ApplicationDescription
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -240,7 +240,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 	}
 	if err != nil {
 		if app == nil {
@@ -292,7 +292,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -304,7 +304,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
@@ -312,7 +312,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
+func getApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
 	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{
 		ApplicationNames: []*string{aws.String(id)},
 	})

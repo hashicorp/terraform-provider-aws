@@ -166,7 +166,7 @@ provider "aws" {
   <li><code>efs</code></li>
   <li><code>eks</code></li>
   <li><code>elasticache</code></li>
-  <li><code>elasticbeanstalk</code></li>
+  <li><code>elasticbeanstalk</code> (or <code>beanstalk</code>)</li>
   <li><code>elasticinference</code></li>
   <li><code>elasticsearch</code> (or <code>es</code> or <code>elasticsearchservice</code>)</li>
   <li><code>elastictranscoder</code></li>

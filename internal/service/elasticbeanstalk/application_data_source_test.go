@@ -48,7 +48,7 @@ func testAccApplicationDataSourceConfig_basic(rName string) string {
 data "aws_elastic_beanstalk_application" "test" {
   name = aws_elastic_beanstalk_application.tftest.name
 }
-`, testAccApplicationConfig_appMaxAge(rName))
+`, testAccApplicationConfig_maxAge(rName))
 }
 
 func testAccCheckEKSClusterDestroy(s *terraform.State) error {

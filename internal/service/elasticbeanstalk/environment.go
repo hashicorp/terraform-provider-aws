@@ -283,7 +283,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.VersionLabel = aws.String(version)
 	}
 
-	// Get the current time to filter getBeanstalkEnvironmentErrors messages
+	// Get the current time to filter getEnvironmentErrors messages
 	t := time.Now()
 	log.Printf("[DEBUG] Elastic Beanstalk Environment create opts: %s", createOpts)
 	resp, err := conn.CreateEnvironment(&createOpts)
@@ -310,7 +310,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become ready: %w", d.Id(), err)
 	}
 
-	envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
+	envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if hasChange {
-		// Get the current time to filter getBeanstalkEnvironmentErrors messages
+		// Get the current time to filter getEnvironmentErrors messages
 		t := time.Now()
 		log.Printf("[DEBUG] Elastic Beanstalk Environment update opts: %s", updateOpts)
 		_, err := conn.UpdateEnvironment(&updateOpts)
@@ -455,7 +455,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 				d.Id(), err)
 		}
 
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
+		envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 		if err != nil {
 			return err
 		}
@@ -468,7 +468,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		// Get the current time to filter getBeanstalkEnvironmentErrors messages
+		// Get the current time to filter getEnvironmentErrors messages
 		t := time.Now()
 		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk environment (%s) tags: %s", arn, err)
@@ -489,7 +489,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become ready: %w", d.Id(), err)
 		}
 
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, d.Id(), t)
+		envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 		if err != nil {
 			return err
 		}
@@ -863,7 +863,7 @@ func environmentStateRefreshFunc(conn *elasticbeanstalk.ElasticBeanstalk, enviro
 			return -1, "failed", fmt.Errorf("Error finding Elastic Beanstalk Environment, environment not found")
 		}
 
-		envErrors, err := getBeanstalkEnvironmentErrors(conn, environmentID, t)
+		envErrors, err := getEnvironmentErrors(conn, environmentID, t)
 		if err != nil {
 			return -1, "failed", err
 		}
@@ -1033,7 +1033,7 @@ func (e beanstalkEnvironmentErrors) Less(i, j int) bool {
 	return e[i].eventDate.Before(*e[j].eventDate)
 }
 
-func getBeanstalkEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, environmentId string, t time.Time) (*multierror.Error, error) {
+func getEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, environmentId string, t time.Time) (*multierror.Error, error) {
 	environmentErrors, err := conn.DescribeEvents(&elasticbeanstalk.DescribeEventsInput{
 		EnvironmentId: aws.String(environmentId),
 		Severity:      aws.String("ERROR"),
