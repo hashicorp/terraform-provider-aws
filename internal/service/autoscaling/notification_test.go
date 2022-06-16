@@ -26,7 +26,7 @@ func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfig_aSGBasic(rName),
+				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
@@ -48,7 +48,7 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 		CheckDestroy:      testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfig_aSGBasic(rName),
+				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
@@ -56,7 +56,7 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 			},
 
 			{
-				Config: testAccNotificationConfig_aSGUpdate(rName),
+				Config: testAccNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName, "barfoo-terraform-test-" + rName}, &asgn),
 					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
@@ -78,7 +78,7 @@ func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
 		CheckDestroy:      testAccCheckASGNDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationConfig_aSGPagination(),
+				Config: testAccNotificationConfig_pagination(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists(resourceName,
 						[]string{
@@ -217,7 +217,7 @@ func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeN
 	}
 }
 
-func testAccNotificationConfig_aSGBasic(rName string) string {
+func testAccNotificationConfig_basic(rName string) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
@@ -264,7 +264,7 @@ resource "aws_autoscaling_notification" "example" {
 `, rName, rName, rName)
 }
 
-func testAccNotificationConfig_aSGUpdate(rName string) string {
+func testAccNotificationConfig_update(rName string) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
@@ -328,7 +328,7 @@ resource "aws_autoscaling_notification" "example" {
 `, rName, rName, rName, rName)
 }
 
-func testAccNotificationConfig_aSGPagination() string {
+func testAccNotificationConfig_pagination() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
