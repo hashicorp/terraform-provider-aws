@@ -36,7 +36,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
@@ -86,7 +86,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodepipelineConfig_basicUpdated(name),
+				Config: testAccCodePipelineConfig_basicUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p2),
 
@@ -141,7 +141,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceCodePipeline(), resourceName),
@@ -168,7 +168,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_emptyStageArtifacts(name),
+				Config: testAccCodePipelineConfig_emptyStageArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
@@ -210,7 +210,7 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_deployServiceRole(name),
+				Config: testAccCodePipelineConfig_deployServiceRole(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "stage.2.name", "Deploy"),
@@ -243,7 +243,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_tags(name, "tag1value", "tag2value"),
+				Config: testAccCodePipelineConfig_tags(name, "tag1value", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -258,7 +258,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodepipelineConfig_tags(name, "tag1valueUpdate", "tag2valueUpdate"),
+				Config: testAccCodePipelineConfig_tags(name, "tag1valueUpdate", "tag2valueUpdate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -273,7 +273,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodepipelineConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -302,7 +302,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
@@ -316,7 +316,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccCodepipelineConfig_multiregion(name),
+				Config:            testAccCodePipelineConfig_multiregion(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -344,7 +344,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
@@ -358,7 +358,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCodepipelineConfig_multiregionUpdated(name),
+				Config: testAccCodePipelineConfig_multiregionUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
@@ -372,7 +372,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccCodepipelineConfig_multiregionUpdated(name),
+				Config:            testAccCodePipelineConfig_multiregionUpdated(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -400,7 +400,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
@@ -412,7 +412,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCodepipelineConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
@@ -426,7 +426,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCodepipelineConfig_backToBasic(name),
+				Config: testAccCodePipelineConfig_backToBasic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
@@ -438,7 +438,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccCodepipelineConfig_backToBasic(name),
+				Config:            testAccCodePipelineConfig_backToBasic(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -463,7 +463,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_namespace(name),
+				Config: testAccCodePipelineConfig_namespace(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &p1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
@@ -496,7 +496,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodepipelineConfig_gitHubv1SourceAction(name, githubToken),
+				Config: testAccCodePipelineConfig_gitHubv1SourceAction(name, githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &v),
 
@@ -524,7 +524,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodepipelineConfig_gitHubv1SourceActionUpdated(name, githubToken),
+				Config: testAccCodePipelineConfig_gitHubv1SourceActionUpdated(name, githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &v),
 
@@ -749,7 +749,7 @@ EOF
 `, rName)
 }
 
-func testAccCodepipelineConfig_basic(rName string) string {
+func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -812,7 +812,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodepipelineConfig_basicUpdated(rName string) string {
+func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -876,7 +876,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodepipelineConfig_emptyStageArtifacts(rName string) string {
+func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -986,7 +986,7 @@ EOF
 `, rName)
 }
 
-func testAccCodepipelineConfig_deployServiceRole(rName string) string {
+func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRoleWithAssumeRole(rName),
@@ -1072,7 +1072,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodepipelineConfig_tags(rName, tag1, tag2 string) string {
+func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1141,7 +1141,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tag1, tag2))
 }
 
-func testAccCodepipelineConfig_multiregion(rName string) string {
+func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1235,7 +1235,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodepipelineConfig_multiregionUpdated(rName string) string {
+func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1329,10 +1329,10 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodepipelineConfig_backToBasic(rName string) string {
+func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
-		testAccCodepipelineConfig_basic(rName),
+		testAccCodePipelineConfig_basic(rName),
 	)
 }
 
@@ -1368,7 +1368,7 @@ resource "aws_s3_bucket_acl" "%[1]s" {
 `, bucket, rName, provider)
 }
 
-func testAccCodepipelineConfig_namespace(rName string) string {
+func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1441,7 +1441,7 @@ resource "aws_s3_bucket_acl" "foo_acl" {
 `, rName))
 }
 
-func testAccCodepipelineConfig_gitHubv1SourceAction(rName, githubToken string) string {
+func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1500,7 +1500,7 @@ resource "aws_codepipeline" "test" {
 `, rName, githubToken))
 }
 
-func testAccCodepipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string {
+func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
