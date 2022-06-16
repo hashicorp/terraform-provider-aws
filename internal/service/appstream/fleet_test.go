@@ -44,7 +44,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -79,7 +79,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleet(), resourceName),
@@ -110,7 +110,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteConfig(rName, description, fleetType, instanceType),
+				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -122,7 +122,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetCompleteConfig(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
+				Config: testAccFleetConfig_complete(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -162,7 +162,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -174,7 +174,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -215,7 +215,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -230,7 +230,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -303,7 +303,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFleetConfig(name, instanceType string) string {
+func testAccFleetConfig_basic(name, instanceType string) string {
 	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
@@ -318,7 +318,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, instanceType)
 }
 
-func testAccFleetCompleteConfig(name, description, fleetType, instanceType string) string {
+func testAccFleetConfig_complete(name, description, fleetType, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -359,7 +359,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, description, fleetType, instanceType))
 }
 
-func testAccFleetCompleteWithoutStoppingConfig(name, description, fleetType, instanceType, displayName string) string {
+func testAccFleetConfig_completeNoStopping(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -397,7 +397,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, description, fleetType, instanceType, displayName))
 }
 
-func testAccFleetWithTagsConfig(name, description, fleetType, instanceType, displayName string) string {
+func testAccFleetConfig_tags(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
