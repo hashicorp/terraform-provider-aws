@@ -42,7 +42,7 @@ func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportDataSourceConfig_httpstage(rName),
+				Config: testAccExportDataSourceConfig_httpStage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_id", "aws_apigatewayv2_route.test", "api_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "stage_name", "aws_apigatewayv2_stage.test", "name"),
@@ -86,7 +86,7 @@ data "aws_apigatewayv2_export" "test" {
 `)
 }
 
-func testAccExportDataSourceConfig_httpstage(rName string) string {
+func testAccExportDataSourceConfig_httpStage(rName string) string {
 	return acctest.ConfigCompose(testAccExportHTTPDataSourceConfigBase(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id        = aws_apigatewayv2_deployment.test.api_id
