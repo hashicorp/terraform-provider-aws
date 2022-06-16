@@ -30,7 +30,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHDFSConfig_basic(rName),
+				Config: testAccLocationHdfsConfig_hDFSBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -68,7 +68,7 @@ func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHDFSConfig_basic(rName),
+				Config: testAccLocationHdfsConfig_hDFSBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
@@ -92,7 +92,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationHDFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationHdfsConfig_hDFSTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(resourceName, &locationHDFS1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,7 +105,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationHDFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationHdfsConfig_hDFSTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(resourceName, &locationHDFS2),
 					testAccCheckLocationHDFSNotRecreated(&locationHDFS1, &locationHDFS2),
@@ -115,7 +115,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationHdfsConfig_hDFSTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(resourceName, &locationHDFS3),
 					testAccCheckLocationHDFSNotRecreated(&locationHDFS2, &locationHDFS3),
@@ -278,7 +278,7 @@ resource "aws_datasync_agent" "test" {
 `, rName))
 }
 
-func testAccLocationHDFSConfig_basic(rName string) string {
+func testAccLocationHdfsConfig_hDFSBasic(rName string) string {
 	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
@@ -293,7 +293,7 @@ resource "aws_datasync_location_hdfs" "test" {
 `, rName)
 }
 
-func testAccLocationHDFSConfig_tags1(rName, key1, value1 string) string {
+func testAccLocationHdfsConfig_hDFSTags1(rName, key1, value1 string) string {
 	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
@@ -312,7 +312,7 @@ resource "aws_datasync_location_hdfs" "test" {
 `, rName, key1, value1)
 }
 
-func testAccLocationHDFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
+func testAccLocationHdfsConfig_hDFSTags2(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationHDFSConfig_base(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]

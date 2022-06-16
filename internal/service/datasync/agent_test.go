@@ -29,7 +29,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAgentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig(rName),
+				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
@@ -63,7 +63,7 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAgentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig(rName),
+				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
@@ -87,14 +87,14 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 		CheckDestroy:      testAccCheckAgentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentNameConfig(rName1, rName1),
+				Config: testAccAgentConfig_name(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
-				Config: testAccAgentNameConfig(rName1, rName2),
+				Config: testAccAgentConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -122,7 +122,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAgentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentTags1Config(rName, "key1", "value1"),
+				Config: testAccAgentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -136,7 +136,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
 			},
 			{
-				Config: testAccAgentTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAgentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent2),
 					testAccCheckAgentNotRecreated(&agent1, &agent2),
@@ -146,7 +146,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAgentTags1Config(rName, "key1", "value1"),
+				Config: testAccAgentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent3),
 					testAccCheckAgentNotRecreated(&agent2, &agent3),
@@ -173,7 +173,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 		CheckDestroy:      testAccCheckAgentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentVPCEndpointIDConfig(rName),
+				Config: testAccAgentConfig_vpcEndpointID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "1"),
@@ -339,7 +339,7 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-func testAccAgentConfig(rName string) string {
+func testAccAgentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), `
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
@@ -347,7 +347,7 @@ resource "aws_datasync_agent" "test" {
 `)
 }
 
-func testAccAgentNameConfig(rName, agentName string) string {
+func testAccAgentConfig_name(rName, agentName string) string {
 	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
@@ -356,7 +356,7 @@ resource "aws_datasync_agent" "test" {
 `, agentName))
 }
 
-func testAccAgentTags1Config(rName, key1, value1 string) string {
+func testAccAgentConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
@@ -368,7 +368,7 @@ resource "aws_datasync_agent" "test" {
 `, key1, value1))
 }
 
-func testAccAgentTags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccAgentConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
@@ -381,7 +381,7 @@ resource "aws_datasync_agent" "test" {
 `, key1, value1, key2, value2))
 }
 
-func testAccAgentVPCEndpointIDConfig(rName string) string {
+func testAccAgentConfig_vpcEndpointID(rName string) string {
 	return acctest.ConfigCompose(testAccAgentAgentBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   name                  = %[1]q
