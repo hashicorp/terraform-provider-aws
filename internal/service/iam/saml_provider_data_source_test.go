@@ -22,7 +22,7 @@ func TestAccIAMSAMLProviderDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSAMLProviderDataSourceConfig(rName, idpEntityID),
+				Config: testAccSAMLProviderDataSourceConfig_basic(rName, idpEntityID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "create_date"),
@@ -35,7 +35,7 @@ func TestAccIAMSAMLProviderDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSAMLProviderDataSourceConfig(rName, idpEntityID string) string {
+func testAccSAMLProviderDataSourceConfig_basic(rName, idpEntityID string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q

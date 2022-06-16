@@ -30,7 +30,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupPolicyAttachConfig(groupName, policyName),
+				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName}, &out),
@@ -55,7 +55,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3),
+				Config: testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
@@ -118,7 +118,7 @@ func testAccCheckGroupPolicyAttachmentAttributes(policies []string, out *iam.Lis
 	}
 }
 
-func testAccGroupPolicyAttachConfig(groupName, policyName string) string {
+func testAccGroupPolicyAttachmentConfig_attach(groupName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -151,7 +151,7 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 `, groupName, policyName)
 }
 
-func testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3 string) string {
+func testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"

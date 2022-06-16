@@ -30,7 +30,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig(rName),
+				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -58,7 +58,7 @@ func TestAccIAMRole_basicWithDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleWithDescriptionConfig(rName),
+				Config: testAccRoleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -71,7 +71,7 @@ func TestAccIAMRole_basicWithDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleWithUpdatedDescriptionConfig(rName),
+				Config: testAccRoleConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
@@ -79,7 +79,7 @@ func TestAccIAMRole_basicWithDescription(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleConfig(rName),
+				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
@@ -101,7 +101,7 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleNameGeneratedConfig(),
+				Config: testAccRoleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -128,7 +128,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleNamePrefixConfig(acctest.ResourcePrefix),
+				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
@@ -156,7 +156,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePre(rName),
+				Config: testAccRoleConfig_pre(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 				),
@@ -167,7 +167,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRolePost(rName),
+				Config: testAccRoleConfig_post(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 				),
@@ -206,7 +206,7 @@ func TestAccIAMRole_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig(rName),
+				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), resourceName),
@@ -229,7 +229,7 @@ func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_force_detach_policies(rName),
+				Config: testAccRoleConfig_forceDetachPolicies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
 					testAccAddRolePolicy(resourceName),
@@ -336,7 +336,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			},
 			// Test removal
 			{
-				Config: testAccRoleConfig(rName),
+				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
@@ -417,7 +417,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyInlineConfig(rName, policyName1),
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
@@ -426,7 +426,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRolePolicyInlineUpdateConfig(rName, policyName2, policyName3),
+				Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
@@ -434,7 +434,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRolePolicyInlineUpdateDownConfig(rName, policyName3),
+				Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
@@ -464,7 +464,7 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyInlineActionOrderConfig(rName),
+				Config: testAccRoleConfig_policyInlineActionOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
@@ -473,15 +473,15 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccRolePolicyInlineActionOrderConfig(rName),
+				Config:   testAccRoleConfig_policyInlineActionOrder(rName),
 				PlanOnly: true,
 			},
 			{
-				Config:   testAccRolePolicyInlineActionNewOrderConfig(rName),
+				Config:   testAccRoleConfig_policyInlineActionNewOrder(rName),
 				PlanOnly: true,
 			},
 			{
-				Config:             testAccRolePolicyInlineActionOrderActualDiffConfig(rName),
+				Config:             testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -501,7 +501,7 @@ func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyEmptyInlineConfig(rName),
+				Config: testAccRoleConfig_policyEmptyInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 				),
@@ -525,7 +525,7 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyManagedConfig(rName, policyName1),
+				Config: testAccRoleConfig_policyManaged(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -533,14 +533,14 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRolePolicyManagedUpdateConfig(rName, policyName1, policyName2, policyName3),
+				Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
 				),
 			},
 			{
-				Config: testAccRolePolicyManagedUpdateDownConfig(rName, policyName1, policyName2, policyName3),
+				Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
@@ -570,7 +570,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyDetachManagedPolicy(&role, policyName),
@@ -578,7 +578,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
@@ -603,7 +603,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyInlineConfig(rName, policyName),
+				Config: testAccRoleConfig_policyInline(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyRemoveInlinePolicy(&role, policyName),
@@ -611,7 +611,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyInlineConfig(rName, policyName),
+				Config: testAccRoleConfig_policyInline(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
@@ -637,7 +637,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyExtraManagedConfig(rName, policyName1, policyName2),
+				Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAttachManagedPolicy(&role, policyName2),
@@ -645,7 +645,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyExtraManagedConfig(rName, policyName1, policyName2),
+				Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
@@ -671,7 +671,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyInlineConfig(rName, policyName1),
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAddInlinePolicy(&role, policyName2),
@@ -679,7 +679,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyInlineConfig(rName, policyName1),
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
@@ -706,21 +706,21 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyNoInlineConfig(rName),
+				Config: testAccRoleConfig_policyNoInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAddInlinePolicy(&role, policyName1),
 				),
 			},
 			{
-				Config: testAccRolePolicyNoInlineConfig(rName),
+				Config: testAccRoleConfig_policyNoInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAddInlinePolicy(&role, policyName2),
 				),
 			},
 			{
-				Config: testAccRolePolicyNoInlineConfig(rName),
+				Config: testAccRoleConfig_policyNoInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyRemoveInlinePolicy(&role, policyName1),
@@ -746,14 +746,14 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyNoManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyNoManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAttachManagedPolicy(&role, policyName),
 				),
 			},
 			{
-				Config: testAccRolePolicyNoManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyNoManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyDetachManagedPolicy(&role, policyName),
@@ -778,7 +778,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyEmptyInlineConfig(rName),
+				Config: testAccRoleConfig_policyEmptyInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAddInlinePolicy(&role, policyName),
@@ -786,7 +786,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyEmptyInlineConfig(rName),
+				Config: testAccRoleConfig_policyEmptyInline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 				),
@@ -810,7 +810,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyEmptyManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 					testAccCheckRolePolicyAttachManagedPolicy(&role, policyName),
@@ -818,7 +818,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccRolePolicyEmptyManagedConfig(rName, policyName),
+				Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &role),
 				),
@@ -1095,7 +1095,7 @@ EOF
 `, rName, permissionsBoundary)
 }
 
-func testAccRoleConfig(rName string) string {
+func testAccRoleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1125,7 +1125,7 @@ EOF
 `, rName)
 }
 
-func testAccRoleWithDescriptionConfig(rName string) string {
+func testAccRoleConfig_description(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1156,7 +1156,7 @@ EOF
 `, rName)
 }
 
-func testAccRoleWithUpdatedDescriptionConfig(rName string) string {
+func testAccRoleConfig_updatedDescription(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1187,7 +1187,7 @@ EOF
 `, rName)
 }
 
-func testAccRoleNameGeneratedConfig() string {
+func testAccRoleConfig_nameGenerated() string {
 	return `
 data "aws_partition" "current" {}
 
@@ -1216,7 +1216,7 @@ EOF
 `
 }
 
-func testAccRoleNamePrefixConfig(rName string) string {
+func testAccRoleConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1246,7 +1246,7 @@ EOF
 `, rName)
 }
 
-func testAccRolePre(rName string) string {
+func testAccRoleConfig_pre(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1300,7 +1300,7 @@ resource "aws_iam_instance_profile" "role_update_test" {
 `, rName)
 }
 
-func testAccRolePost(rName string) string {
+func testAccRoleConfig_post(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1380,7 +1380,7 @@ POLICY
 `, rName)
 }
 
-func testAccRoleConfig_force_detach_policies(rName string) string {
+func testAccRoleConfig_forceDetachPolicies(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1513,7 +1513,7 @@ EOF
 `, rName)
 }
 
-func testAccRolePolicyInlineConfig(roleName, policyName string) string {
+func testAccRoleConfig_policyInline(roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1558,7 +1558,7 @@ EOF
 `, roleName, policyName)
 }
 
-func testAccRolePolicyInlineUpdateConfig(roleName, policyName2, policyName3 string) string {
+func testAccRoleConfig_policyInlineUpdate(roleName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1622,7 +1622,7 @@ EOF
 `, roleName, policyName2, policyName3)
 }
 
-func testAccRolePolicyInlineUpdateDownConfig(roleName, policyName3 string) string {
+func testAccRoleConfig_policyInlineUpdateDown(roleName, policyName3 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1667,7 +1667,7 @@ EOF
 `, roleName, policyName3)
 }
 
-func testAccRolePolicyInlineActionOrderConfig(roleName string) string {
+func testAccRoleConfig_policyInlineActionOrder(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1707,7 +1707,7 @@ resource "aws_iam_role" "test" {
 `, roleName)
 }
 
-func testAccRolePolicyInlineActionOrderActualDiffConfig(roleName string) string {
+func testAccRoleConfig_policyInlineActionOrderActualDiff(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1746,7 +1746,7 @@ resource "aws_iam_role" "test" {
 `, roleName)
 }
 
-func testAccRolePolicyInlineActionNewOrderConfig(roleName string) string {
+func testAccRoleConfig_policyInlineActionNewOrder(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1786,7 +1786,7 @@ resource "aws_iam_role" "test" {
 `, roleName)
 }
 
-func testAccRolePolicyManagedConfig(roleName, policyName string) string {
+func testAccRoleConfig_policyManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1833,7 +1833,7 @@ EOF
 `, policyName, roleName)
 }
 
-func testAccRolePolicyManagedUpdateConfig(roleName, policyName1, policyName2, policyName3 string) string {
+func testAccRoleConfig_policyManagedUpdate(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1920,7 +1920,7 @@ EOF
 `, policyName1, policyName2, policyName3, roleName)
 }
 
-func testAccRolePolicyManagedUpdateDownConfig(roleName, policyName1, policyName2, policyName3 string) string {
+func testAccRoleConfig_policyManagedUpdateDown(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2007,7 +2007,7 @@ EOF
 `, policyName1, policyName2, policyName3, roleName)
 }
 
-func testAccRolePolicyExtraManagedConfig(roleName, policyName1, policyName2 string) string {
+func testAccRoleConfig_policyExtraManaged(roleName, policyName1, policyName2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2089,7 +2089,7 @@ func testAccRolePolicyExtraInlineConfig() string {
 }`
 }
 
-func testAccRolePolicyNoInlineConfig(roleName string) string {
+func testAccRoleConfig_policyNoInline(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2115,7 +2115,7 @@ EOF
 `, roleName)
 }
 
-func testAccRolePolicyNoManagedConfig(roleName, policyName string) string {
+func testAccRoleConfig_policyNoManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2161,7 +2161,7 @@ EOF
 `, roleName, policyName)
 }
 
-func testAccRolePolicyEmptyInlineConfig(roleName string) string {
+func testAccRoleConfig_policyEmptyInline(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2189,7 +2189,7 @@ EOF
 `, roleName)
 }
 
-func testAccRolePolicyEmptyManagedConfig(roleName, policyName string) string {
+func testAccRoleConfig_policyEmptyManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

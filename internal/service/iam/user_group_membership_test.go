@@ -16,14 +16,11 @@ import (
 )
 
 func TestAccIAMUserGroupMembership_basic(t *testing.T) {
-	rString := sdkacctest.RandString(8)
-	userName1 := fmt.Sprintf("tf-acc-ugm-basic-user1-%s", rString)
-	userName2 := fmt.Sprintf("tf-acc-ugm-basic-user2-%s", rString)
-	groupName1 := fmt.Sprintf("tf-acc-ugm-basic-group1-%s", rString)
-	groupName2 := fmt.Sprintf("tf-acc-ugm-basic-group2-%s", rString)
-	groupName3 := fmt.Sprintf("tf-acc-ugm-basic-group3-%s", rString)
-
-	usersAndGroupsConfig := testAccUserGroupMembershipUsersAndGroupsConfig(userName1, userName2, groupName1, groupName2, groupName3)
+	userName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	groupName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	groupName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	groupName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -33,7 +30,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// simplest test
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipInitConfig,
+				Config: testAccUserGroupMembershipConfig_init(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1}, []string{groupName2, groupName3}),
@@ -56,7 +53,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 			},
 			// test adding an additional group to an existing resource
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipAddOneConfig,
+				Config: testAccUserGroupMembershipConfig_addOne(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName2}, []string{groupName3}),
@@ -64,7 +61,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 			},
 			// test adding multiple resources for the same user, and resources with the same groups for another user
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipAddAllConfig,
+				Config: testAccUserGroupMembershipConfig_addAll(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -76,7 +73,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 			},
 			// test that nothing happens when we apply the same config again
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipAddAllConfig,
+				Config: testAccUserGroupMembershipConfig_addAll(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -88,7 +85,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 			},
 			// test removing a group
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipRemoveGroupConfig,
+				Config: testAccUserGroupMembershipConfig_remove(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -100,7 +97,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 			},
 			// test removing a resource
 			{
-				Config: usersAndGroupsConfig + testAccUserGroupMembershipDeleteResourceConfig,
+				Config: testAccUserGroupMembershipConfig_deleteResource(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
@@ -198,43 +195,50 @@ func testAccUserGroupMembershipImportStateIdFunc(resourceName string) resource.I
 }
 
 // users and groups for all other tests
-func testAccUserGroupMembershipUsersAndGroupsConfig(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+func testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user1" {
-  name          = "%s"
+  name          = %[1]q
   force_destroy = true
 }
 
 resource "aws_iam_user" "user2" {
-  name          = "%s"
+  name          = %[2]q
   force_destroy = true
 }
 
 resource "aws_iam_group" "group1" {
-  name = "%s"
+  name = %[3]q
 }
 
 resource "aws_iam_group" "group2" {
-  name = "%s"
+  name = %[4]q
 }
 
 resource "aws_iam_group" "group3" {
-  name = "%s"
+  name = %[5]q
 }
 `, userName1, userName2, groupName1, groupName2, groupName3)
 }
 
 // associate users and groups
-const testAccUserGroupMembershipInitConfig = `
+func testAccUserGroupMembershipConfig_init(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3),
+		`
 resource "aws_iam_user_group_membership" "user1_test1" {
   user = aws_iam_user.user1.name
   groups = [
     aws_iam_group.group1.name,
   ]
 }
-`
+`)
+}
 
-const testAccUserGroupMembershipAddOneConfig = `
+func testAccUserGroupMembershipConfig_addOne(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3),
+		`
 resource "aws_iam_user_group_membership" "user1_test1" {
   user = aws_iam_user.user1.name
   groups = [
@@ -242,9 +246,13 @@ resource "aws_iam_user_group_membership" "user1_test1" {
     aws_iam_group.group2.name,
   ]
 }
-`
+`)
+}
 
-const testAccUserGroupMembershipAddAllConfig = `
+func testAccUserGroupMembershipConfig_addAll(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3),
+		`
 resource "aws_iam_user_group_membership" "user1_test1" {
   user = aws_iam_user.user1.name
   groups = [
@@ -274,10 +282,14 @@ resource "aws_iam_user_group_membership" "user2_test2" {
     aws_iam_group.group3.name,
   ]
 }
-`
+`)
+}
 
 // test removing a group
-const testAccUserGroupMembershipRemoveGroupConfig = `
+func testAccUserGroupMembershipConfig_remove(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3),
+		`
 resource "aws_iam_user_group_membership" "user1_test1" {
   user = aws_iam_user.user1.name
   groups = [
@@ -305,10 +317,14 @@ resource "aws_iam_user_group_membership" "user2_test2" {
     aws_iam_group.group2.name,
   ]
 }
-`
+`)
+}
 
 // test deleting an entity
-const testAccUserGroupMembershipDeleteResourceConfig = `
+func testAccUserGroupMembershipConfig_deleteResource(userName1, userName2, groupName1, groupName2, groupName3 string) string {
+	return acctest.ConfigCompose(
+		testAccUserGroupMembershipConfig_base(userName1, userName2, groupName1, groupName2, groupName3),
+		`
 resource "aws_iam_user_group_membership" "user1_test1" {
   user = aws_iam_user.user1.name
   groups = [
@@ -329,4 +345,5 @@ resource "aws_iam_user_group_membership" "user2_test1" {
     aws_iam_group.group1.name,
   ]
 }
-`
+`)
+}

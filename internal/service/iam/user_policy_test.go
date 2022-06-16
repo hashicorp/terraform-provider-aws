@@ -74,7 +74,7 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyConfig(rName),
+				Config: testAccUserPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(resourceName, &out),
 					testAccCheckUserPolicyDisappears(&out),
@@ -236,14 +236,14 @@ func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyOrderConfig(rName),
+				Config: testAccUserPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicy(userResourceName, policyResourceName),
 					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 				),
 			},
 			{
-				Config:   testAccUserPolicyNewOrderConfig(rName),
+				Config:   testAccUserPolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -402,7 +402,7 @@ resource "aws_iam_user" "test" {
 `, rName, path)
 }
 
-func testAccUserPolicyConfig(rName string) string {
+func testAccUserPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -477,7 +477,7 @@ resource "aws_iam_user_policy" "test2" {
 `, rName, policy1, policy2))
 }
 
-func testAccUserPolicyOrderConfig(rName string) string {
+func testAccUserPolicyConfig_order(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -504,7 +504,7 @@ EOF
 `, rName))
 }
 
-func testAccUserPolicyNewOrderConfig(rName string) string {
+func testAccUserPolicyConfig_newOrder(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
