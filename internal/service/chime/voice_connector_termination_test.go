@@ -26,7 +26,7 @@ func TestAccChimeVoiceConnectorTermination_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
@@ -55,7 +55,7 @@ func TestAccChimeVoiceConnectorTermination_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorTermination(), resourceName),
@@ -77,13 +77,13 @@ func TestAccChimeVoiceConnectorTermination_update(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorTerminationUpdated(name),
+				Config: testAccVoiceConnectorTerminationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
@@ -102,7 +102,7 @@ func TestAccChimeVoiceConnectorTermination_update(t *testing.T) {
 	})
 }
 
-func testAccVoiceConnectorTerminationConfig(name string) string {
+func testAccVoiceConnectorTerminationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -118,7 +118,7 @@ resource "aws_chime_voice_connector_termination" "test" {
 `, name)
 }
 
-func testAccVoiceConnectorTerminationUpdated(name string) string {
+func testAccVoiceConnectorTerminationConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
