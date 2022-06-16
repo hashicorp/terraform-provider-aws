@@ -4,7 +4,7 @@ New resources are required when AWS adds a new service, or adds new features wit
 
 Each resource should be submitted for review in isolation, pull requests containing multiple resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
-Please use the `skaff` tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
+Please use the [skaff](https://github.com/hashicorp/terraform-provider-aws/blob/main/skaff/README.md) tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
 ## Prerequisites
 
