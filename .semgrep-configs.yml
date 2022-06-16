@@ -21,7 +21,6 @@ rules:
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/codestarconnections
-        - internal/service/codestarnotifications
         - internal/service/cognitoidp
         - internal/service/configservice
         - internal/service/dax
