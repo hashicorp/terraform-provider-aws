@@ -18,7 +18,7 @@ There are two main types of a Cost Anomaly Monitor: `DIMENSIONAL` and `CUSTOM`.
 
 ```terraform
 resource "aws_ce_anomaly_monitor" "service_monitor" {
-  name      = "AWSServiceMonitor"
+  name              = "AWSServiceMonitor"
   monitor_type      = "DIMENSIONAL"
   monitor_dimension = "SERVICE"
 }
@@ -28,7 +28,7 @@ resource "aws_ce_anomaly_monitor" "service_monitor" {
 
 ```terraform
 resource "aws_ce_anomaly_monitor" "test" {
-  name = "AWSCustomAnomalyMonitor"
+  name         = "AWSCustomAnomalyMonitor"
   monitor_type = "CUSTOM"
 
   specification = <<JSON
