@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,7 +68,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var results []*iam.Policy
 
 	// Handle IAM eventual consistency
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		results, err = FindPolicies(conn, arn, name, pathPrefix)
 
@@ -138,7 +138,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var policyVersionOutput *iam.GetPolicyVersionOutput
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		policyVersionOutput, err = conn.GetPolicyVersion(policyVersionInput)
 

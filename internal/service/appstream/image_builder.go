@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -116,6 +116,7 @@ func ResourceImageBuilder() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"image_arn", "image_name"},
+				ValidateFunc: verify.ValidARN,
 			},
 			"image_name": {
 				Type:         schema.TypeString,
@@ -204,6 +205,10 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.EnableDefaultInternetAccess = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("image_arn"); ok {
+		input.ImageArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_name"); ok {
 		input.ImageName = aws.String(v.(string))
 	}
@@ -213,7 +218,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConfig = expandAppStreamImageBuilderVpcConfig(v.([]interface{}))
+		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -276,7 +281,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "domain_join_info", d.Id(), err))
 	}
 
-	if err = d.Set("vpc_config", flattenVpcConfig(imageBuilder.VpcConfig)); err != nil {
+	if err = d.Set("vpc_config", flattenVPCConfig(imageBuilder.VpcConfig)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
 	}
 
@@ -319,6 +324,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn
 
+	log.Printf("[DEBUG] Deleting AppStream Image Builder: (%s)", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
 	})
@@ -341,7 +347,7 @@ func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func expandAppStreamImageBuilderVpcConfig(tfList []interface{}) *appstream.VpcConfig {
+func expandImageBuilderVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	if len(tfList) == 0 {
 		return nil
 	}

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,7 +20,7 @@ func TestAccConnectContactFlow_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccContactFlow_basic,
 		"filename":   testAccContactFlow_filename,
-		"disappears": testAccContactFlow_disappears_ConnectInstance,
+		"disappears": testAccContactFlow_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -38,13 +38,13 @@ func testAccContactFlow_basic(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Created"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -63,7 +63,7 @@ func testAccContactFlow_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Updated"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -87,13 +87,13 @@ func testAccContactFlow_filename(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -115,7 +115,7 @@ func testAccContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -131,26 +131,24 @@ func testAccContactFlow_filename(t *testing.T) {
 	})
 }
 
-// Can't delete an contact flow. Test deletion of entire connect instance
-func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
+func testAccContactFlow_disappears(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
-	instanceResourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -211,15 +209,17 @@ func testAccCheckContactFlowDestroy(s *terraform.State) error {
 			InstanceId:    aws.String(instanceID),
 		}
 
-		_, experr := conn.DescribeContactFlow(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeContactFlow(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -234,7 +234,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccContactFlowBasicConfig(rName, rName2, label string) string {
+func testAccContactFlowConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowBaseConfig(rName),
 		fmt.Sprintf(`

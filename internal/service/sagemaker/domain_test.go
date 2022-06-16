@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,13 +23,13 @@ func testAccDomain_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainBasicConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
@@ -61,13 +61,13 @@ func testAccDomain_kms(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKMSConfig(rName),
+				Config: testAccDomainConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
@@ -89,13 +89,13 @@ func testAccDomain_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTags1Config(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -109,7 +109,7 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -118,7 +118,7 @@ func testAccDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainTags1Config(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,13 +135,13 @@ func testAccDomain_securityGroup(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSecurityGroup1Config(rName),
+				Config: testAccDomainConfig_securityGroup1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -155,7 +155,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainSecurityGroup2Config(rName),
+				Config: testAccDomainConfig_securityGroup2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -172,13 +172,13 @@ func testAccDomain_sharingSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSharingSettingsConfig(rName),
+				Config: testAccDomainConfig_sharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -204,13 +204,13 @@ func testAccDomain_tensorboardAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTensorBoardAppSettingsConfig(rName),
+				Config: testAccDomainConfig_tensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -235,13 +235,13 @@ func testAccDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTensorBoardAppSettingsWithImageConfig(rName),
+				Config: testAccDomainConfig_tensorBoardAppSettingsImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -267,13 +267,13 @@ func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsConfig(rName),
+				Config: testAccDomainConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -298,13 +298,13 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsLifecycleConfig(rName),
+				Config: testAccDomainConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -312,6 +312,7 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", "arn"),
 				),
 			},
 			{
@@ -336,13 +337,13 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsCustomImageConfig(rName, baseImage),
+				Config: testAccDomainConfig_kernelGatewayAppSettingsCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -363,19 +364,59 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 	})
 }
 
+func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_kernelGatewayAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccDomain_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainJupyterServerAppSettingsConfig(rName),
+				Config: testAccDomainConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -400,13 +441,13 @@ func testAccDomain_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainBasicConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDomain(), resourceName),
@@ -432,7 +473,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Domain (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
 		}
 
 		domainArn := aws.StringValue(domain.DomainArn)
@@ -517,7 +558,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccDomainBasicConfig(rName string) string {
+func testAccDomainConfig_basic(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -536,7 +577,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKMSConfig(rName string) string {
+func testAccDomainConfig_kms(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test"
@@ -561,7 +602,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainSecurityGroup1Config(rName string) string {
+func testAccDomainConfig_securityGroup1(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = "%[1]s"
@@ -585,7 +626,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainSecurityGroup2Config(rName string) string {
+func testAccDomainConfig_securityGroup2(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -613,7 +654,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -636,7 +677,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDomainTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -660,7 +701,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainSharingSettingsConfig(rName string) string {
+func testAccDomainConfig_sharingSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -696,7 +737,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTensorBoardAppSettingsConfig(rName string) string {
+func testAccDomainConfig_tensorBoardAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -721,7 +762,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTensorBoardAppSettingsWithImageConfig(rName string) string {
+func testAccDomainConfig_tensorBoardAppSettingsImage(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
@@ -752,7 +793,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainJupyterServerAppSettingsConfig(rName string) string {
+func testAccDomainConfig_jupyterServerAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -777,7 +818,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsConfig(rName string) string {
+func testAccDomainConfig_kernelGatewayAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -802,7 +843,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsLifecycleConfig(rName string) string {
+func testAccDomainConfig_kernelGatewayAppSettingsLifecycle(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
@@ -821,7 +862,8 @@ resource "aws_sagemaker_domain" "test" {
 
     kernel_gateway_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.micro"
+        instance_type        = "ml.t3.micro"
+        lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
       }
 
       lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.test.arn]
@@ -835,7 +877,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsCustomImageConfig(rName, baseImage string) string {
+func testAccDomainConfig_kernelGatewayAppSettingsCustomImage(rName, baseImage string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
@@ -869,6 +911,59 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     kernel_gateway_app_settings {
+      custom_image {
+        app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+        image_name            = aws_sagemaker_image_version.test.image_name
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, baseImage)
+}
+
+func testAccDomainConfig_kernelGatewayAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage string) string {
+	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+    }
+  }
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type               = "ml.t3.micro"
+        sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
+      }
+
       custom_image {
         app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
         image_name            = aws_sagemaker_image_version.test.image_name

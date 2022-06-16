@@ -97,6 +97,10 @@ func ResourcePrivateVirtualInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"sitelink_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vlan": {
@@ -140,6 +144,7 @@ func resourcePrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 		NewPrivateVirtualInterface: &directconnect.NewPrivateVirtualInterface{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
+			EnableSiteLink:       aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
 			VirtualInterfaceName: aws.String(d.Get("name").(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
@@ -172,7 +177,7 @@ func resourcePrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
-	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := privateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -184,7 +189,7 @@ func resourcePrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -214,6 +219,7 @@ func resourcePrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set("name", vif.VirtualInterfaceName)
+	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 
@@ -238,11 +244,11 @@ func resourcePrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 }
 
 func resourcePrivateVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
+	if err := virtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
-	if err := dxPrivateVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := privateVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return err
 	}
 
@@ -250,13 +256,13 @@ func resourcePrivateVirtualInterfaceUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourcePrivateVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	return virtualInterfaceDelete(d, meta)
 }
 
 func resourcePrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -271,8 +277,8 @@ func resourcePrivateVirtualInterfaceImport(d *schema.ResourceData, meta interfac
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxPrivateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func privateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

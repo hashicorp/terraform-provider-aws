@@ -1,0 +1,53 @@
+---
+subcategory: "{{ .Service }}"
+layout: "aws"
+page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceLower }}"
+description: |-
+  Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+---
+
+# Resource: aws_{{ .ServicePackage }}_{{ .ResourceLower }}
+
+Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" "example" {
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `example_arg` - (Required) Concise argument description.
+
+The following arguments are optional:
+
+* `optional_arg` - (Optional) Concise argument description.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - ARN of the {{ .Resource }}.
+* `example_attribute` - Concise description.
+
+## Timeouts
+
+`aws_{{ .ServicePackage }}_{{ .ResourceLower }}` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+* `create` - (Optional, Default: `60m`)
+* `update` - (Optional, Default: `180m`)
+* `delete` - (Optional, Default: `90m`)
+
+## Import
+
+{{ .Service }} {{ .Resource }} can be imported using the `example_id_arg`, e.g.,
+
+```
+$ terraform import aws_{{ .ServicePackage }}_{{ .ResourceLower }}.example rft-8012925589
+```

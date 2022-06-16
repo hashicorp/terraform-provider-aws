@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -235,7 +235,7 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Re-provision ALL accounts after making the above changes
-	if err := provisionSsoAdminPermissionSet(conn, arn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, arn, instanceArn); err != nil {
 		return err
 	}
 
@@ -274,7 +274,7 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
+func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
 	input := &ssoadmin.ProvisionPermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(arn),
@@ -282,7 +282,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.Retry(permissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.ProvisionPermissionSet(input)
 

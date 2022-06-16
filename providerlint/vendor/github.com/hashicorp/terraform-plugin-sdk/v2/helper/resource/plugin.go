@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -14,27 +13,119 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	testing "github.com/mitchellh/go-testing-interface"
 )
 
-type providerFactories struct {
-	legacy  map[string]func() (*schema.Provider, error)
-	protov5 map[string]func() (tfprotov5.ProviderServer, error)
-	protov6 map[string]func() (tfprotov6.ProviderServer, error)
+// protov5ProviderFactory is a function which is called to start a protocol
+// version 5 provider server.
+type protov5ProviderFactory func() (tfprotov5.ProviderServer, error)
+
+// protov5ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 5 provider servers.
+type protov5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf protov5ProviderFactories) merge(otherPfs ...protov5ProviderFactories) protov5ProviderFactories {
+	result := make(protov5ProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
 }
 
-func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, factories providerFactories) error {
+// protov6ProviderFactory is a function which is called to start a protocol
+// version 6 provider server.
+type protov6ProviderFactory func() (tfprotov6.ProviderServer, error)
+
+// protov6ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 6 provider servers.
+type protov6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf protov6ProviderFactories) merge(otherPfs ...protov6ProviderFactories) protov6ProviderFactories {
+	result := make(protov6ProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
+}
+
+// sdkProviderFactory is a function which is called to start a SDK provider
+// server.
+type sdkProviderFactory func() (*schema.Provider, error)
+
+// protov6ProviderFactories is a mapping of provider addresses to provider
+// factory for protocol version 6 provider servers.
+type sdkProviderFactories map[string]func() (*schema.Provider, error)
+
+// merge combines provider factories.
+//
+// In case of an overlapping entry, the later entry will overwrite the previous
+// value.
+func (pf sdkProviderFactories) merge(otherPfs ...sdkProviderFactories) sdkProviderFactories {
+	result := make(sdkProviderFactories)
+
+	for name, providerFactory := range pf {
+		result[name] = providerFactory
+	}
+
+	for _, otherPf := range otherPfs {
+		for name, providerFactory := range otherPf {
+			result[name] = providerFactory
+		}
+	}
+
+	return result
+}
+
+type providerFactories struct {
+	legacy  sdkProviderFactories
+	protov5 protov5ProviderFactories
+	protov6 protov6ProviderFactories
+}
+
+func runProviderCommand(ctx context.Context, t testing.T, f func() error, wd *plugintest.WorkingDir, factories *providerFactories) error {
 	// don't point to this as a test failure location
 	// point to whatever called it
 	t.Helper()
+
+	// This should not happen, but prevent panics just in case.
+	if factories == nil {
+		err := fmt.Errorf("Provider factories are missing to run Terraform command. Please report this bug in the testing framework.")
+		logging.HelperResourceError(ctx, err.Error())
+		return err
+	}
 
 	// Run the providers in the same process as the test runner using the
 	// reattach behavior in Terraform. This ensures we get test coverage
 	// and enables the use of delve as a debugger.
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// this is needed so Terraform doesn't default to expecting protocol 4;
@@ -42,8 +133,13 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 	// plugins.
 	os.Setenv("PLUGIN_PROTOCOL_VERSIONS", "5")
 
-	// Terraform doesn't need to reach out to Checkpoint during testing.
-	wd.Setenv("CHECKPOINT_DISABLE", "1")
+	// Acceptance testing does not need to call checkpoint as the output
+	// is not accessible, nor desirable if explicitly using
+	// TF_ACC_TERRAFORM_PATH or TF_ACC_TERRAFORM_VERSION environment variables.
+	//
+	// Avoid calling (tfexec.Terraform).SetEnv() as it will stop copying
+	// os.Environ() and prevents TF_VAR_ environment variable usage.
+	os.Setenv("CHECKPOINT_DISABLE", "1")
 
 	// Terraform 0.12.X and 0.13.X+ treat namespaceless providers
 	// differently in terms of what namespace they default to. So we're
@@ -52,12 +148,12 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 	// the host or namespace using environment variables.
 	var namespaces []string
 	host := "registry.terraform.io"
-	if v := os.Getenv("TF_ACC_PROVIDER_NAMESPACE"); v != "" {
+	if v := os.Getenv(EnvTfAccProviderNamespace); v != "" {
 		namespaces = append(namespaces, v)
 	} else {
 		namespaces = append(namespaces, "-", "hashicorp")
 	}
-	if v := os.Getenv("TF_ACC_PROVIDER_HOST"); v != "" {
+	if v := os.Getenv(EnvTfAccProviderHost); v != "" {
 		host = v
 	}
 
@@ -69,11 +165,16 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 		// providerName may be returned as terraform-provider-foo, and
 		// we need just foo. So let's fix that.
 		providerName = strings.TrimPrefix(providerName, "terraform-provider-")
+		providerAddress := getProviderAddr(providerName)
+
+		logging.HelperResourceDebug(ctx, "Creating sdkv2 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
 
 		provider, err := factory()
 		if err != nil {
 			return fmt.Errorf("unable to create provider %q from factory: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Created sdkv2 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
 
 		// keep track of the running factory, so we can make sure it's
 		// shut down.
@@ -93,13 +194,19 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        providerAddress,
 		}
 
-		// let's actually start the provider server
+		logging.HelperResourceDebug(ctx, "Starting sdkv2 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		config, closeCh, err := plugin.DebugServe(ctx, opts)
 		if err != nil {
 			return fmt.Errorf("unable to serve provider %q: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Started sdkv2 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		tfexecConfig := tfexec.ReattachConfig{
 			Protocol:        config.Protocol,
 			ProtocolVersion: config.ProtocolVersion,
@@ -134,6 +241,7 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 		// providerName may be returned as terraform-provider-foo, and
 		// we need just foo. So let's fix that.
 		providerName = strings.TrimPrefix(providerName, "terraform-provider-")
+		providerAddress := getProviderAddr(providerName)
 
 		// If the user has supplied the same provider in both
 		// ProviderFactories and ProtoV5ProviderFactories, they made a
@@ -147,10 +255,14 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 			}
 		}
 
+		logging.HelperResourceDebug(ctx, "Creating tfprotov5 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		provider, err := factory()
 		if err != nil {
 			return fmt.Errorf("unable to create provider %q from factory: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Created tfprotov5 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
 
 		// keep track of the running factory, so we can make sure it's
 		// shut down.
@@ -170,13 +282,19 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        providerAddress,
 		}
 
-		// let's actually start the provider server
+		logging.HelperResourceDebug(ctx, "Starting tfprotov5 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		config, closeCh, err := plugin.DebugServe(ctx, opts)
 		if err != nil {
 			return fmt.Errorf("unable to serve provider %q: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Started tfprotov5 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		tfexecConfig := tfexec.ReattachConfig{
 			Protocol:        config.Protocol,
 			ProtocolVersion: config.ProtocolVersion,
@@ -212,6 +330,7 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 		// providerName may be returned as terraform-provider-foo, and
 		// we need just foo. So let's fix that.
 		providerName = strings.TrimPrefix(providerName, "terraform-provider-")
+		providerAddress := getProviderAddr(providerName)
 
 		// If the user has already registered this provider in
 		// ProviderFactories or ProtoV5ProviderFactories, they made a
@@ -225,10 +344,14 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 			}
 		}
 
+		logging.HelperResourceDebug(ctx, "Creating tfprotov6 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		provider, err := factory()
 		if err != nil {
 			return fmt.Errorf("unable to create provider %q from factory: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Created tfprotov6 provider instance", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
 
 		// keep track of the running factory, so we can make sure it's
 		// shut down.
@@ -244,13 +367,18 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 				Output: ioutil.Discard,
 			}),
 			NoLogOutputOverride: true,
+			UseTFLogSink:        t,
+			ProviderAddr:        providerAddress,
 		}
 
-		// let's actually start the provider server
+		logging.HelperResourceDebug(ctx, "Starting tfprotov6 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
+
 		config, closeCh, err := plugin.DebugServe(ctx, opts)
 		if err != nil {
 			return fmt.Errorf("unable to serve provider %q: %w", providerName, err)
 		}
+
+		logging.HelperResourceDebug(ctx, "Started tfprotov6 provider instance server", map[string]interface{}{logging.KeyProviderAddress: providerAddress})
 
 		tfexecConfig := tfexec.ReattachConfig{
 			Protocol:        config.Protocol,
@@ -283,25 +411,34 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 
 	// set the working directory reattach info that will tell Terraform how to
 	// connect to our various running servers.
-	wd.SetReattachInfo(reattachInfo)
+	wd.SetReattachInfo(ctx, reattachInfo)
+
+	logging.HelperResourceTrace(ctx, "Calling wrapped Terraform CLI command")
 
 	// ok, let's call whatever Terraform command the test was trying to
 	// call, now that we know it'll attach back to those servers we just
 	// started.
 	err := f()
 	if err != nil {
-		log.Printf("[WARN] Got error running Terraform: %s", err)
+		logging.HelperResourceWarn(ctx, "Error running Terraform CLI command", map[string]interface{}{logging.KeyError: err})
 	}
+
+	logging.HelperResourceTrace(ctx, "Called wrapped Terraform CLI command")
+	logging.HelperResourceDebug(ctx, "Stopping providers")
 
 	// cancel the servers so they'll return. Otherwise, this closeCh won't
 	// get closed, and we'll hang here.
 	cancel()
+
+	logging.HelperResourceTrace(ctx, "Waiting for providers to stop")
 
 	// wait for the servers to actually shut down; it may take a moment for
 	// them to clean up, or whatever.
 	// TODO: add a timeout here?
 	// PC: do we need one? The test will time out automatically...
 	wg.Wait()
+
+	logging.HelperResourceTrace(ctx, "Providers have successfully stopped")
 
 	// once we've run the Terraform command, let's remove the reattach
 	// information from the WorkingDir's environment. The WorkingDir will
@@ -315,4 +452,18 @@ func runProviderCommand(t testing.T, f func() error, wd *plugintest.WorkingDir, 
 	// return any error returned from the orchestration code running
 	// Terraform commands
 	return err
+}
+
+func getProviderAddr(name string) string {
+	host := "registry.terraform.io"
+	namespace := "hashicorp"
+	if v := os.Getenv(EnvTfAccProviderNamespace); v != "" {
+		namespace = v
+	}
+	if v := os.Getenv(EnvTfAccProviderHost); v != "" {
+		host = v
+	}
+	return strings.TrimSuffix(host, "/") + "/" +
+		strings.TrimSuffix(namespace, "/") + "/" +
+		name
 }

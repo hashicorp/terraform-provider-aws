@@ -16,12 +16,12 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ecs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckServiceDataSourceConfig(rName),
+				Config: testAccServiceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
@@ -35,7 +35,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceDataSourceConfig(rName string) string {
+func testAccServiceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q

@@ -2,11 +2,11 @@ package rds
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -15,15 +15,15 @@ func DataSourceEventCategories() *schema.Resource {
 		Read: dataSourceEventCategoriesRead,
 
 		Schema: map[string]*schema.Schema{
-			"source_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"event_categories": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+			},
+			"source_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(rds.SourceType_Values(), false),
 			},
 		},
 	}
@@ -32,35 +32,45 @@ func DataSourceEventCategories() *schema.Resource {
 func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	req := &rds.DescribeEventCategoriesInput{}
+	input := &rds.DescribeEventCategoriesInput{}
 
-	if sourceType := d.Get("source_type").(string); sourceType != "" {
-		req.SourceType = aws.String(sourceType)
+	if v, ok := d.GetOk("source_type"); ok {
+		input.SourceType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Describe Event Categories %s\n", req)
-	resp, err := conn.DescribeEventCategories(req)
+	output, err := findEventCategoriesMaps(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading RDS Event Categories: %w", err)
 	}
 
-	if resp == nil || len(resp.EventCategoriesMapList) == 0 {
-		return fmt.Errorf("Event Categories not found")
-	}
+	var eventCategories []string
 
-	eventCategories := make([]string, 0)
-
-	for _, eventMap := range resp.EventCategoriesMapList {
-		for _, v := range eventMap.EventCategories {
-			eventCategories = append(eventCategories, aws.StringValue(v))
-		}
+	for _, v := range output {
+		eventCategories = append(eventCategories, aws.StringValueSlice(v.EventCategories)...)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	if err := d.Set("event_categories", eventCategories); err != nil {
-		return fmt.Errorf("Error setting Event Categories: %w", err)
-	}
+	d.Set("event_categories", eventCategories)
 
 	return nil
 
+}
+
+func findEventCategoriesMaps(conn *rds.RDS, input *rds.DescribeEventCategoriesInput) ([]*rds.EventCategoriesMap, error) {
+	var output []*rds.EventCategoriesMap
+
+	page, err := conn.DescribeEventCategories(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range page.EventCategoriesMapList {
+		if v != nil {
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
 }

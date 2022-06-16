@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,6 +36,10 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
@@ -43,13 +48,19 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("resource_policy").(string), err)
+	}
+
 	name := d.Get("model_package_group_name").(string)
 	input := &sagemaker.PutModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(name),
-		ResourcePolicy:        aws.String(d.Get("resource_policy").(string)),
+		ResourcePolicy:        aws.String(policy),
 	}
 
-	_, err := conn.PutModelPackageGroupPolicy(input)
+	_, err = conn.PutModelPackageGroupPolicy(input)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker Model Package Group Policy %s: %w", name, err)
 	}
@@ -74,7 +85,14 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("model_package_group_name", d.Id())
-	d.Set("resource_policy", mpg.ResourcePolicy)
+
+	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.StringValue(mpg.ResourcePolicy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("resource_policy", policyToSet)
 
 	return nil
 }

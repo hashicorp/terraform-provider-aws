@@ -95,17 +95,25 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header": {
-							Type:     schema.TypeString,
+						"items": {
+							Type:     schema.TypeSet,
 							Computed: true,
-						},
-						"override": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"override": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -242,6 +250,21 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
+			"server_timing_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"sampling_rate": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+					}},
+			},
 		},
 	}
 }
@@ -257,30 +280,24 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		name := d.Get("name").(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
-		for {
-			output, err := conn.ListResponseHeadersPolicies(input)
-
-			if err != nil {
-				return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
+		err := ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
-			for _, policySummary := range output.ResponseHeadersPolicyList.Items {
+			for _, policySummary := range page.ResponseHeadersPolicyList.Items {
 				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.StringValue(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
 					responseHeadersPolicyID = aws.StringValue(responseHeadersPolicy.Id)
 
-					break
+					return false
 				}
 			}
 
-			if responseHeadersPolicyID != "" {
-				break
-			}
+			return !lastPage
+		})
 
-			if nextMarker := aws.StringValue(output.ResponseHeadersPolicyList.NextMarker); nextMarker == "" {
-				break
-			} else {
-				input.Marker = aws.String(nextMarker)
-			}
+		if err != nil {
+			return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
 		}
 
 		if responseHeadersPolicyID == "" {
@@ -320,6 +337,14 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		}
 	} else {
 		d.Set("security_headers_config", nil)
+	}
+
+	if apiObject.ServerTimingHeadersConfig != nil {
+		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting server_timing_headers_config: %w", err)
+		}
+	} else {
+		d.Set("server_timing_headers_config", nil)
 	}
 
 	return nil

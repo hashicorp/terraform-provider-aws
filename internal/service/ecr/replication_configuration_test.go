@@ -11,17 +11,32 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccECRReplicationConfiguration_basic(t *testing.T) {
+func TestAccECRReplicationConfiguration_serial(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"basic":            testAccReplicationConfiguration_basic,
+		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
+	}
+
+	for name, testFunc := range testFuncs {
+		testFunc := testFunc
+
+		t.Run(name, func(t *testing.T) {
+			testFunc(t)
+		})
+	}
+}
+
+func testAccReplicationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_ecr_replication_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReplicationConfigurationDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfiguration(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -30,6 +45,7 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
 					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
 				),
 			},
 			{
@@ -38,7 +54,7 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationMultipleRegionConfiguration(acctest.AlternateRegion(), acctest.ThirdRegion()),
+				Config: testAccReplicationConfigurationConfig_multipleRegion(acctest.AlternateRegion(), acctest.ThirdRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -49,10 +65,11 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.1.region", acctest.ThirdRegion()),
 					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.1.registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
 				),
 			},
 			{
-				Config: testAccReplicationConfiguration(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -61,6 +78,65 @@ func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
 					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
+	resourceName := "aws_ecr_replication_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckReplicationConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter", "a-prefix"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter_type", "PREFIX_MATCH"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicationConfigurationConfig_repositoryFilterMultiple(acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter", "a-prefix"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter_type", "PREFIX_MATCH"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.1.filter", "a-second-prefix"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.1.filter_type", "PREFIX_MATCH"),
+				),
+			},
+			{
+				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter", "a-prefix"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.0.filter_type", "PREFIX_MATCH"),
 				),
 			},
 		},
@@ -109,7 +185,7 @@ func testAccCheckReplicationConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccReplicationConfiguration(region string) string {
+func testAccReplicationConfigurationConfig_basic(region string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -126,7 +202,7 @@ resource "aws_ecr_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationMultipleRegionConfiguration(region1, region2 string) string {
+func testAccReplicationConfigurationConfig_multipleRegion(region1, region2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -147,4 +223,53 @@ resource "aws_ecr_replication_configuration" "test" {
   }
 }
 `, region1, region2)
+}
+
+func testAccReplicationConfigurationConfig_repositoryFilter(region string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_ecr_replication_configuration" "test" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = %[1]q
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      repository_filter {
+        filter      = "a-prefix"
+        filter_type = "PREFIX_MATCH"
+      }
+    }
+  }
+}
+`, region)
+}
+
+func testAccReplicationConfigurationConfig_repositoryFilterMultiple(region string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_ecr_replication_configuration" "test" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = %[1]q
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      repository_filter {
+        filter      = "a-prefix"
+        filter_type = "PREFIX_MATCH"
+      }
+
+      repository_filter {
+        filter      = "a-second-prefix"
+        filter_type = "PREFIX_MATCH"
+      }
+    }
+  }
+}
+`, region)
 }

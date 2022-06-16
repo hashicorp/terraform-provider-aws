@@ -24,7 +24,15 @@ type stateFilter struct {
 // parseResourceAddress.
 func (f *stateFilter) filter(fs ...string) ([]*stateFilterResult, error) {
 	// Parse all the addresses
-	as := make([]*resourceAddress, len(fs))
+	var as []*resourceAddress
+
+	if len(fs) == 0 {
+		// If we weren't given any filters, then we list all
+		as = []*resourceAddress{{Index: -1}}
+	} else {
+		as = make([]*resourceAddress, len(fs))
+	}
+
 	for i, v := range fs {
 		a, err := parseResourceAddress(v)
 		if err != nil {
@@ -32,11 +40,6 @@ func (f *stateFilter) filter(fs ...string) ([]*stateFilterResult, error) {
 		}
 
 		as[i] = a
-	}
-
-	// If we weren't given any filters, then we list all
-	if len(fs) == 0 {
-		as = append(as, &resourceAddress{Index: -1})
 	}
 
 	// Filter each of the address. We keep track of this in a map to

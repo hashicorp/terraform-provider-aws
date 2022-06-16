@@ -1,11 +1,12 @@
 package athena
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -82,13 +83,13 @@ func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetNamedQuery(input)
+	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, d.Id()) && !d.IsNewResource() {
+		log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, d.Id()) {
-			log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error getting Athena Named Query (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", resp.NamedQuery.Name)

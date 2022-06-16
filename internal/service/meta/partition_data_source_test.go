@@ -13,12 +13,12 @@ import (
 
 func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSPartitionConfig_basic,
+				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartition("data.aws_partition.current"),
 					testAccCheckDNSSuffix("data.aws_partition.current"),
@@ -65,6 +65,6 @@ func testAccCheckDNSSuffix(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAWSPartitionConfig_basic = `
+const testAccPartitionDataSourceConfig_basic = `
 data "aws_partition" "current" {}
 `

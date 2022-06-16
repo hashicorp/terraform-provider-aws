@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_regions"
 description: |-

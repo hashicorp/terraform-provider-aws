@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -18,6 +19,11 @@ func init() {
 	resource.AddTestSweepers("aws_emr_cluster", &resource.Sweeper{
 		Name: "aws_emr_cluster",
 		F:    sweepClusters,
+	})
+
+	resource.AddTestSweepers("aws_emr_studio", &resource.Sweeper{
+		Name: "aws_emr_studio",
+		F:    sweepStudios,
 	})
 }
 
@@ -73,4 +79,47 @@ func sweepClusters(region string) error {
 	}
 
 	return nil
+}
+
+func sweepStudios(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).EMRConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var sweeperErrs *multierror.Error
+	input := &emr.ListStudiosInput{}
+
+	err = conn.ListStudiosPages(input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, studio := range page.Studios {
+			r := ResourceStudio()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(studio.StudioId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EMR Studios sweep for %s: %s", region, sweeperErrs)
+		return nil
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EMR Studios for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

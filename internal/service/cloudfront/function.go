@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -167,7 +167,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			IfMatch: aws.String(etag),
 		}
 
-		log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
+		log.Printf("[INFO] Updating CloudFront Function: %s", d.Id())
 		output, err := conn.UpdateFunction(input)
 
 		if err != nil {

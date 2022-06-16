@@ -24,12 +24,12 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccARNDataSourceConfig(testARN.String()),
+				Config: testAccARNDataSourceConfig_basic(testARN.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccARNDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account", testARN.AccountID),
@@ -54,7 +54,7 @@ func testAccARNDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccARNDataSourceConfig(arn string) string {
+func testAccARNDataSourceConfig_basic(arn string) string {
 	return fmt.Sprintf(`
 data "aws_arn" "test" {
   arn = %q

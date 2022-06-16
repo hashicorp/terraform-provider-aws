@@ -37,6 +37,10 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"username": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -98,7 +102,7 @@ func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
+	d.Set("auth", flattenProxyAuths(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("endpoint", dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)

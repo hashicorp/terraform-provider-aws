@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,14 +16,15 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
+	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
+// testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
+		"InvalidParameterValueException: The AppStream 2.0 user pool feature",
 	)
 }
 
@@ -49,6 +50,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -116,6 +118,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
 			},
 			{
@@ -127,6 +130,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
 			},
 			{
@@ -346,6 +350,7 @@ resource "aws_appstream_fleet" "test" {
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+  stream_view                        = "DESKTOP"
 
   vpc_config {
     subnet_ids = aws_subnet.test.*.id

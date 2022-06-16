@@ -5,14 +5,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
@@ -43,7 +43,7 @@ func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.Virtua
 	}
 }
 
-func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
+func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -106,7 +106,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
-		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
+		params.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
 	}
 
 	if len(tags) > 0 {
@@ -140,7 +140,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -157,7 +157,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", resp.RegexPatternSet.ARN)
 	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("regular_expression", flattenWafv2RegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
+	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
 		return fmt.Errorf("Error setting regular_expression: %s", err)
 	}
 
@@ -194,7 +194,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
-		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
+		params.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -230,7 +230,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRegexPatternSet(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -249,7 +249,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandWafv2RegexPatternSet(l []interface{}) []*wafv2.Regex {
+func expandRegexPatternSet(l []interface{}) []*wafv2.Regex {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -259,13 +259,13 @@ func expandWafv2RegexPatternSet(l []interface{}) []*wafv2.Regex {
 		if regexPattern == nil {
 			continue
 		}
-		regexPatterns = append(regexPatterns, expandWafv2Regex(regexPattern.(map[string]interface{})))
+		regexPatterns = append(regexPatterns, expandRegex(regexPattern.(map[string]interface{})))
 	}
 
 	return regexPatterns
 }
 
-func expandWafv2Regex(m map[string]interface{}) *wafv2.Regex {
+func expandRegex(m map[string]interface{}) *wafv2.Regex {
 	if m == nil {
 		return nil
 	}
@@ -275,7 +275,7 @@ func expandWafv2Regex(m map[string]interface{}) *wafv2.Regex {
 	}
 }
 
-func flattenWafv2RegexPatternSet(r []*wafv2.Regex) interface{} {
+func flattenRegexPatternSet(r []*wafv2.Regex) interface{} {
 	if r == nil {
 		return []interface{}{}
 	}

@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hashicorp/go-version"
 )
 
-// PlanFormatVersions represents versions of the JSON plan format that
-// are supported by this package.
-var PlanFormatVersions = []string{"0.1", "0.2"}
+// PlanFormatVersionConstraints defines the versions of the JSON plan format
+// that are supported by this package.
+var PlanFormatVersionConstraints = ">= 0.1, < 2.0"
 
 // ResourceMode is a string representation of the resource type found
 // in certain fields in the plan.
@@ -53,6 +55,19 @@ type Plan struct {
 
 	// The Terraform configuration used to make the plan.
 	Config *Config `json:"configuration,omitempty"`
+
+	// RelevantAttributes represents any resource instances and their
+	// attributes which may have contributed to the planned changes
+	RelevantAttributes []ResourceAttribute `json:"relevant_attributes,omitempty"`
+}
+
+// ResourceAttribute describes a full path to a resource attribute
+type ResourceAttribute struct {
+	// Resource describes resource instance address (e.g. null_resource.foo)
+	Resource string `json:"resource"`
+	// Attribute describes the attribute path using a lossy representation
+	// of cty.Path. (e.g. ["id"] or ["objects", 0, "val"]).
+	Attribute []json.RawMessage `json:"attribute"`
 }
 
 // Validate checks to ensure that the plan is present, and the
@@ -66,9 +81,19 @@ func (p *Plan) Validate() error {
 		return errors.New("unexpected plan input, format version is missing")
 	}
 
-	if !isStringInSlice(PlanFormatVersions, p.FormatVersion) {
-		return fmt.Errorf("unsupported plan format version: expected %q, got %q",
-			PlanFormatVersions, p.FormatVersion)
+	constraint, err := version.NewConstraint(PlanFormatVersionConstraints)
+	if err != nil {
+		return fmt.Errorf("invalid version constraint: %w", err)
+	}
+
+	version, err := version.NewVersion(p.FormatVersion)
+	if err != nil {
+		return fmt.Errorf("invalid format version %q: %w", p.FormatVersion, err)
+	}
+
+	if !constraint.Check(version) {
+		return fmt.Errorf("unsupported plan format version: %q does not satisfy %q",
+			version, constraint)
 	}
 
 	return nil

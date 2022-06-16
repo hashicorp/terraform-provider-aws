@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +41,6 @@ func ResourceApplication() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
@@ -226,7 +225,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	var app *elasticbeanstalk.ApplicationDescription
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -241,7 +240,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), conn)
+		app, err = getApplication(d.Id(), conn)
 	}
 	if err != nil {
 		if app == nil {
@@ -293,7 +292,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -305,7 +304,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getBeanstalkApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
@@ -313,12 +312,12 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
+func getApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
 	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{
 		ApplicationNames: []*string{aws.String(id)},
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "InvalidBeanstalkAppID.NotFound", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
 			return nil, nil
 		}
 		return nil, err

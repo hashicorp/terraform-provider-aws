@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -99,7 +99,7 @@ func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{
 	tg, err := resourceProxyDefaultTargetGroupGet(conn, d.Id())
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -118,7 +118,7 @@ func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{
 	d.Set("name", tg.TargetGroupName)
 
 	cpc := tg.ConnectionPoolConfig
-	d.Set("connection_pool_config", flattenDbProxyTargetGroupConnectionPoolConfig(cpc))
+	d.Set("connection_pool_config", flattenProxyTargetGroupConnectionPoolConfig(cpc))
 
 	return nil
 }
@@ -141,7 +141,7 @@ func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("connection_pool_config"); ok {
-		params.ConnectionPoolConfig = expandDbProxyConnectionPoolConfig(v.([]interface{}))
+		params.ConnectionPoolConfig = expandProxyConnectionPoolConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Update DB Proxy default target group: %#v", params)
@@ -165,7 +165,7 @@ func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta in
 	return resourceProxyDefaultTargetGroupRead(d, meta)
 }
 
-func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {
+func expandProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {
 	if len(configs) < 1 {
 		return nil
 	}
@@ -183,7 +183,7 @@ func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoo
 	return result
 }
 
-func flattenDbProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigurationInfo) []interface{} {
+func flattenProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigurationInfo) []interface{} {
 	if cpc == nil {
 		return []interface{}{}
 	}
@@ -227,7 +227,7 @@ func resourceProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName string)
 		tg, err := resourceProxyDefaultTargetGroupGet(conn, proxyName)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 				return 42, "", nil
 			}
 			return 42, "", err

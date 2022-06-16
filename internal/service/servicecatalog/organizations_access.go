@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -15,6 +15,10 @@ func ResourceOrganizationsAccess() *schema.Resource {
 		Create: resourceOrganizationsAccessCreate,
 		Read:   resourceOrganizationsAccessRead,
 		Delete: resourceOrganizationsAccessDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(OrganizationsAccessStableTimeout),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -56,7 +60,7 @@ func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{})
 func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitOrganizationsAccessStable(conn)
+	output, err := WaitOrganizationsAccessStable(conn, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		// theoretically this should not be possible

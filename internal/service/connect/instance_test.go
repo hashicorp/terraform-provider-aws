@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -37,13 +37,13 @@ func testAccInstance_basic(t *testing.T) {
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBasicConfig(rName),
+				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
@@ -66,7 +66,7 @@ func testAccInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceBasicFlippedConfig(rName),
+				Config: testAccInstanceConfig_basicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
@@ -90,14 +90,16 @@ func testAccInstance_directory(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
+	domainName := acctest.RandomDomainName()
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDirectoryConfig(rName),
+				Config: testAccInstanceConfig_directory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeExistingDirectory),
@@ -120,13 +122,13 @@ func testAccInstance_saml(t *testing.T) {
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceSAMLConfig(rName),
+				Config: testAccInstanceConfig_saml(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeSaml),
 					testAccCheckInstanceExists(resourceName, &v),
@@ -186,19 +188,21 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			InstanceId: aws.String(instanceID),
 		}
 
-		_, connectErr := conn.DescribeInstance(input)
-		// Verify the error is what we want
-		if connectErr != nil {
-			if awsErr, ok := connectErr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return connectErr
+		_, err := conn.DescribeInstance(input)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
-func testAccInstanceBasicConfig(rName string) string {
+func testAccInstanceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -209,7 +213,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceBasicFlippedConfig(rName string) string {
+func testAccInstanceConfig_basicFlipped(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   auto_resolve_best_voices_enabled = false
@@ -224,7 +228,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceDirectoryConfig(rName string) string {
+func testAccInstanceConfig_directory(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -261,7 +265,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = %[2]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
@@ -278,10 +282,10 @@ resource "aws_connect_instance" "test" {
   inbound_calls_enabled    = true
   outbound_calls_enabled   = true
 }
-`, rName)
+`, rName, domain)
 }
 
-func testAccInstanceSAMLConfig(rName string) string {
+func testAccInstanceConfig_saml(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "SAML"

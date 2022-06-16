@@ -8,11 +8,13 @@ import (
 func TestAccGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":              testAccDetector_basic,
-			"datasources_s3logs": testAccDetector_datasources_s3logs,
-			"tags":               testAccDetector_tags,
-			"datasource_basic":   testAccDetectorDataSource_basic,
-			"datasource_id":      testAccDetectorDataSource_ID,
+			"basic":                             testAccDetector_basic,
+			"datasources_s3logs":                testAccDetector_datasources_s3logs,
+			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
+			"datasources_all":                   testAccDetector_datasources_all,
+			"tags":                              testAccDetector_tags,
+			"datasource_basic":                  testAccDetectorDataSource_basic,
+			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
 		"Filter": {
 			"basic":      testAccFilter_basic,

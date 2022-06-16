@@ -152,7 +152,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 		recent := d.Get("most_recent").(bool)
 		log.Printf("[DEBUG] aws_db_cluster_snapshot - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
-			snapshot = mostRecentDbClusterSnapshot(resp.DBClusterSnapshots)
+			snapshot = mostRecentClusterSnapshot(resp.DBClusterSnapshots)
 		} else {
 			return errors.New("Your query returned more than one result. Please try a more specific search criteria.")
 		}
@@ -211,7 +211,7 @@ func (a rdsClusterSnapshotSort) Less(i, j int) bool {
 	return (*a[i].SnapshotCreateTime).Before(*a[j].SnapshotCreateTime)
 }
 
-func mostRecentDbClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBClusterSnapshot {
+func mostRecentClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBClusterSnapshot {
 	sortedSnapshots := snapshots
 	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]

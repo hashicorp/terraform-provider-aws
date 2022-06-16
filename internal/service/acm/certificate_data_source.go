@@ -25,6 +25,14 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"certificate": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"certificate_chain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"statuses": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -39,14 +47,9 @@ func DataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						acm.KeyAlgorithmEcPrime256v1,
-						acm.KeyAlgorithmEcSecp384r1,
-						acm.KeyAlgorithmEcSecp521r1,
-						acm.KeyAlgorithmRsa1024,
-						acm.KeyAlgorithmRsa2048,
-						acm.KeyAlgorithmRsa4096,
-					}, false),
+					ValidateFunc: validation.StringInSlice(
+						acm.KeyAlgorithm_Values(), false,
+					),
 				},
 			},
 			"types": {
@@ -140,7 +143,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 					// At this point, we already have a candidate certificate
 					// Check if we are filtering by most recent and update if necessary
 					if filterMostRecent {
-						matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 						if err != nil {
 							return err
 						}
@@ -160,7 +163,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		// At this point, we already have a candidate certificate
 		// Check if we are filtering by most recent and update if necessary
 		if filterMostRecent {
-			matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 			if err != nil {
 				return err
 			}
@@ -174,12 +177,29 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
+	// Get the certificate data if the status is issued
+	var certOutput *acm.GetCertificateOutput
+	if aws.StringValue(matchedCertificate.Status) == acm.CertificateStatusIssued {
+		getCertInput := acm.GetCertificateInput{
+			CertificateArn: matchedCertificate.CertificateArn,
+		}
+		certOutput, err = conn.GetCertificate(&getCertInput)
+		if err != nil {
+			return fmt.Errorf("error getting ACM certificate (%s): %w", aws.StringValue(matchedCertificate.CertificateArn), err)
+		}
+	}
+	if certOutput != nil {
+		d.Set("certificate", certOutput.Certificate)
+		d.Set("certificate_chain", certOutput.CertificateChain)
+	} else {
+		d.Set("certificate", nil)
+		d.Set("certificate_chain", nil)
+	}
+
 	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
-
 	tags, err := ListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
-
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
 	}
@@ -191,7 +211,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mostRecentAcmCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
+func mostRecentCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
 	if aws.StringValue(i.Status) != aws.StringValue(j.Status) {
 		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
 	}

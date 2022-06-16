@@ -34,7 +34,6 @@ func ResourceJobQueue() *schema.Resource {
 			"compute_environments": {
 				Type:     schema.TypeList,
 				Required: true,
-				MaxItems: 3,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
@@ -46,6 +45,11 @@ func ResourceJobQueue() *schema.Resource {
 			"priority": {
 				Type:     schema.TypeInt,
 				Required: true,
+			},
+			"scheduling_policy_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"state": {
 				Type:         schema.TypeString,
@@ -75,6 +79,10 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		State:                   aws.String(d.Get("state").(string)),
 	}
 
+	if v, ok := d.GetOk("scheduling_policy_arn"); ok {
+		input.SchedulingPolicyArn = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -88,7 +96,7 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+		Refresh:    jobQueueRefreshStatusFunc(conn, name),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -139,6 +147,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", jq.JobQueueName)
 	d.Set("priority", jq.Priority)
+	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
 	tags := KeyValueTags(jq.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -158,7 +167,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 
-	if d.HasChanges("compute_environments", "priority", "state") {
+	if d.HasChanges("compute_environments", "priority", "scheduling_policy_arn", "state") {
 		name := d.Get("name").(string)
 		updateInput := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
@@ -166,6 +175,22 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			Priority:                aws.Int64(int64(d.Get("priority").(int))),
 			State:                   aws.String(d.Get("state").(string)),
 		}
+		// After a job queue is created, you can replace but can't remove the fair share scheduling policy
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/batch/#CreateJobQueueInput
+		if d.HasChange("scheduling_policy_arn") {
+			if v, ok := d.GetOk("scheduling_policy_arn"); ok {
+				updateInput.SchedulingPolicyArn = aws.String(v.(string))
+			} else {
+				return fmt.Errorf("Cannot remove the fair share scheduling policy")
+			}
+		} else {
+			// if a queue is a FIFO queue, SchedulingPolicyArn should not be set. Error is "Only fairshare queue can have scheduling policy"
+			// hence, check for scheduling_policy_arn and set it in the inputs only if it exists already
+			if v, ok := d.GetOk("scheduling_policy_arn"); ok {
+				updateInput.SchedulingPolicyArn = aws.String(v.(string))
+			}
+		}
+
 		_, err := conn.UpdateJobQueue(updateInput)
 		if err != nil {
 			return err
@@ -173,7 +198,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
 			Target:     []string{batch.JQStatusValid},
-			Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+			Refresh:    jobQueueRefreshStatusFunc(conn, name),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -236,7 +261,7 @@ func DeleteJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -258,7 +283,7 @@ func DisableJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -289,7 +314,7 @@ func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	return nil, nil
 }
 
-func batchJobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := GetJobQueue(conn, sn)
 		if err != nil {

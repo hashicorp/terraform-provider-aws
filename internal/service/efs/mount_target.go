@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -44,14 +44,11 @@ func ResourceMountTarget() *schema.Resource {
 			},
 
 			"ip_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.IsIPv4Address,
-					validation.StringIsEmpty,
-				),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"security_groups": {
@@ -193,7 +190,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 			// The EFS mount target could not be found,
 			// which would indicate that it might be
 			// already deleted.
@@ -287,7 +284,7 @@ func WaitForDeleteMountTarget(conn *efs.EFS, id string, timeout time.Duration) e
 				MountTargetId: aws.String(id),
 			})
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, efs.ErrCodeMountTargetNotFound, "") {
+				if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 					return nil, "", nil
 				}
 

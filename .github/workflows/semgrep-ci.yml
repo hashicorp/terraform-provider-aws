@@ -1,0 +1,77 @@
+name: Semgrep Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - internal/**
+      - .semgrep*yml
+      - .github/workflows/semgrep-ci.yml
+      - .github/scripts/semgrep.sh
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+       fetch-depth: 0
+    - name: semgrep
+      uses: returntocorp/semgrep-action@v1
+  naming_cac:
+    name: Semgrep Naming Scan Caps/AWS/EC2
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh caps-aws-ec2
+  naming_tests:
+    name: Semgrep Test Configs Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh configs
+  naming_semgrep0:
+    name: Semgrep Service Name Scan A-C
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh service-name0
+  naming_semgrep1:
+    name: Semgrep Service Name Scan C-I
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh service-name1
+  naming_semgrep2:
+    name: Semgrep Service Name Scan I-Q
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh service-name2
+  naming_semgrep3:
+    name: Semgrep Service Name Scan Q-Z
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh service-name3

@@ -13,6 +13,8 @@ Provides a CodeBuild Report Groups Resource.
 ## Example Usage
 
 ```terraform
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   description             = "my test kms key"
   deletion_window_in_days = 7
@@ -26,7 +28,7 @@ resource "aws_kms_key" "example" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

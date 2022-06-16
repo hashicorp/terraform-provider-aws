@@ -22,13 +22,13 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -51,10 +51,10 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBSubnetGroupConfig_namePrefix,
@@ -72,10 +72,10 @@ func TestAccRDSSubnetGroup_generatedName(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBSubnetGroupConfig_generatedName,
@@ -98,10 +98,10 @@ func TestAccRDSSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	resourceName := "aws_db_subnet_group.underscores"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces,
@@ -128,13 +128,13 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -217,7 +217,7 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 	}
 }
 
-func testAccDBSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

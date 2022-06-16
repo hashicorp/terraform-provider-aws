@@ -15,10 +15,10 @@ import (
 
 func TestAccIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificate_csr,
@@ -37,10 +37,10 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 
 func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificate_keys_certificate,
@@ -50,6 +50,31 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "certificate_pem"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "public_key"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "private_key"),
+					resource.TestCheckResourceAttr("aws_iot_certificate.foo_cert", "active", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTCertificate_Keys_existing_certificate(t *testing.T) {
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateDestroy_basic,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccCertificate_existing_certificate, acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
+					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "certificate_pem"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "public_key"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "private_key"),
 					resource.TestCheckResourceAttr("aws_iot_certificate.foo_cert", "active", "true"),
 				),
 			},
@@ -101,5 +126,12 @@ resource "aws_iot_certificate" "foo_cert" {
 var testAccCertificate_keys_certificate = `
 resource "aws_iot_certificate" "foo_cert" {
   active = true
+}
+`
+
+var testAccCertificate_existing_certificate = `
+resource "aws_iot_certificate" "foo_cert" {
+  active          = true
+  certificate_pem = "%[1]s"
 }
 `

@@ -2,12 +2,14 @@ package sqs
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceQueue() *schema.Resource {
@@ -60,8 +62,14 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, queueURL)
 
+	if verify.CheckISOErrorTagsUnsupported(err) {
+		// Some partitions may not support tagging, giving error
+		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for SQS Queue (%s): %w", queueURL, err)
+		return fmt.Errorf("failed listing tags for SQS Queue (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
