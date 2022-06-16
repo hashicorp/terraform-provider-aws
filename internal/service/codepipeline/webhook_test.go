@@ -172,7 +172,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1value", "tag2value", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1value", "tag2value", githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -182,7 +182,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -400,7 +400,7 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookWithTagsConfig(rName, tag1, tag2, githubToken string) string {
+func testAccWebhookConfig_tags(rName, tag1, tag2, githubToken string) string {
 	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q
