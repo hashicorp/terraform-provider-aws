@@ -26,7 +26,7 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEKSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationDataSourceConfig_Basic(rName),
+				Config: testAccApplicationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
@@ -41,14 +41,14 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccApplicationDataSourceConfig_Basic(rName string) string {
+func testAccApplicationDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 %s
 
 data "aws_elastic_beanstalk_application" "test" {
   name = aws_elastic_beanstalk_application.tftest.name
 }
-`, testAccBeanstalkAppConfigWithMaxAge(rName))
+`, testAccApplicationConfig_maxAge(rName))
 }
 
 func testAccCheckEKSClusterDestroy(s *terraform.State) error {
