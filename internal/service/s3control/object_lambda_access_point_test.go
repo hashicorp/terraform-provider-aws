@@ -28,7 +28,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -69,7 +69,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), resourceName),
@@ -94,7 +94,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 		CheckDestroy:      testAccCheckObjectLambdaAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointOptionalsConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_optionals(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -122,7 +122,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObjectLambdaAccessPointConfig(rName),
+				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -219,7 +219,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -250,7 +250,7 @@ resource "aws_s3control_object_lambda_access_point" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointOptionalsConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_optionals(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
