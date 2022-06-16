@@ -45,7 +45,7 @@ func TestAccDirectConnectConnectionAssociation_lagOnConnection(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionAssociationConfig_lagOnConnection(rName),
+				Config: testAccConnectionAssociationConfig_lagOn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAssociationExists(resourceName),
 				),
@@ -151,7 +151,7 @@ resource "aws_dx_connection_association" "test" {
 `, rName)
 }
 
-func testAccConnectionAssociationConfig_lagOnConnection(rName string) string {
+func testAccConnectionAssociationConfig_lagOn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
