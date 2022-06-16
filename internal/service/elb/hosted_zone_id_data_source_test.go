@@ -16,13 +16,13 @@ func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostedZoneIDDataSourceConfig_basic,
+				Config: testAccHostedZoneIdDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", tfelb.HostedZoneIdPerRegionMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion,
+				Config: testAccHostedZoneIdDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.regional", "id", "Z32O12XQLNTSW2"),
 				),
@@ -31,12 +31,12 @@ func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccHostedZoneIDDataSourceConfig_basic = `
+const testAccHostedZoneIdDataSourceConfig_basic = `
 data "aws_elb_hosted_zone_id" "main" {}
 `
 
 //lintignore:AWSAT003
-const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
+const testAccHostedZoneIdDataSourceConfig_explicitRegion = `
 data "aws_elb_hosted_zone_id" "regional" {
   region = "eu-west-1"
 }
