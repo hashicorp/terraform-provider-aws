@@ -25,7 +25,7 @@ func testAccWorkspaceSamlConfiguration_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_basic(rName),
+				Config: testAccWorkspaceSamlConfigurationConfig_providerBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
@@ -53,7 +53,7 @@ func testAccWorkspaceSamlConfiguration_loginValidity(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_loginValidity(rName),
+				Config: testAccWorkspaceSamlConfigurationConfig_providerLoginValidity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
@@ -82,7 +82,7 @@ func testAccWorkspaceSamlConfiguration_assertions(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName),
+				Config: testAccWorkspaceSamlConfigurationConfig_providerAssertions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSamlConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
@@ -105,8 +105,8 @@ func testAccWorkspaceSamlConfiguration_assertions(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_basic(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSamlConfigurationConfig_providerBasic(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
@@ -116,8 +116,8 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
 `)
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_loginValidity(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSamlConfigurationConfig_providerLoginValidity(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values       = ["admin"]
   editor_role_values      = ["editor"]
@@ -128,8 +128,8 @@ resource "aws_grafana_workspace_saml_configuration" "test" {
 `)
 }
 
-func testAccWorkspaceSamlConfigurationConfigProvider_assertions(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), `
+func testAccWorkspaceSamlConfigurationConfig_providerAssertions(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), `
 resource "aws_grafana_workspace_saml_configuration" "test" {
   admin_role_values  = ["admin"]
   editor_role_values = ["editor"]
