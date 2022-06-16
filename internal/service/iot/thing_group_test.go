@@ -27,7 +27,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfig(rName),
+				Config: testAccThingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexp.MustCompile(fmt.Sprintf("thinggroup/%s$", rName))),
@@ -63,7 +63,7 @@ func TestAccIoTThingGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfig(rName),
+				Config: testAccThingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), resourceName),
@@ -86,7 +86,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccThingGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -99,7 +99,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccThingGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccThingGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -108,7 +108,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccThingGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccThingGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -133,7 +133,7 @@ func TestAccIoTThingGroup_parentGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfigParentGroup(rName),
+				Config: testAccThingGroupConfig_parent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_group_name", parentResourceName, "name"),
@@ -167,7 +167,7 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 		CheckDestroy:      testAccCheckThingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupConfigProperties(rName),
+				Config: testAccThingGroupConfig_properties(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
@@ -184,7 +184,7 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccThingGroupConfigPropertiesUpdated(rName),
+				Config: testAccThingGroupConfig_propertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(resourceName, &thingGroup),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
@@ -249,7 +249,7 @@ func testAccCheckThingGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccThingGroupConfig(rName string) string {
+func testAccThingGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q
@@ -257,7 +257,7 @@ resource "aws_iot_thing_group" "test" {
 `, rName)
 }
 
-func testAccThingGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccThingGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q
@@ -269,7 +269,7 @@ resource "aws_iot_thing_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccThingGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccThingGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q
@@ -282,7 +282,7 @@ resource "aws_iot_thing_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccThingGroupConfigParentGroup(rName string) string {
+func testAccThingGroupConfig_parent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "grandparent" {
   name = "%[1]s-grandparent"
@@ -302,7 +302,7 @@ resource "aws_iot_thing_group" "test" {
 `, rName)
 }
 
-func testAccThingGroupConfigProperties(rName string) string {
+func testAccThingGroupConfig_properties(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q
@@ -320,7 +320,7 @@ resource "aws_iot_thing_group" "test" {
 `, rName)
 }
 
-func testAccThingGroupConfigPropertiesUpdated(rName string) string {
+func testAccThingGroupConfig_propertiesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q

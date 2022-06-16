@@ -26,7 +26,7 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -60,7 +60,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
@@ -83,7 +83,7 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerSigningDisabledConfig(rName),
+				Config: testAccAuthorizerConfig_signingDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -115,7 +115,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -129,7 +129,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAuthorizerUpdatedConfig(rName),
+				Config: testAccAuthorizerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -229,7 +229,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAuthorizerBasicConfig(rName string) string {
+func testAccAuthorizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
@@ -243,7 +243,7 @@ resource "aws_iot_authorizer" "test" {
 `, rName))
 }
 
-func testAccAuthorizerUpdatedConfig(rName string) string {
+func testAccAuthorizerConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
@@ -261,7 +261,7 @@ resource "aws_iot_authorizer" "test" {
 `, rName))
 }
 
-func testAccAuthorizerSigningDisabledConfig(rName string) string {
+func testAccAuthorizerConfig_signingDisabled(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q

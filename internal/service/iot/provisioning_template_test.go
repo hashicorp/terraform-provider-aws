@@ -27,7 +27,7 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisioningTemplateConfig(rName),
+				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					testAccCheckProvisioningTemplateNumVersions(rName, 1),
@@ -61,7 +61,7 @@ func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisioningTemplateConfig(rName),
+				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceProvisioningTemplate(), resourceName),
@@ -83,7 +83,7 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisioningTemplateConfigTags1(rName, "key1", "value1"),
+				Config: testAccProvisioningTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,7 +97,7 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProvisioningTemplateConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProvisioningTemplateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -107,7 +107,7 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProvisioningTemplateConfigTags1(rName, "key2", "value2"),
+				Config: testAccProvisioningTemplateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -130,7 +130,7 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisioningTemplateConfig(rName),
+				Config: testAccProvisioningTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					testAccCheckProvisioningTemplateNumVersions(rName, 1),
@@ -150,7 +150,7 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProvisioningTemplateUpdatedConfig(rName),
+				Config: testAccProvisioningTemplateConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisioningTemplateExists(resourceName),
 					testAccCheckProvisioningTemplateNumVersions(rName, 2),
@@ -284,7 +284,7 @@ resource "aws_iot_policy" "test" {
 `, rName)
 }
 
-func testAccProvisioningTemplateConfig(rName string) string {
+func testAccProvisioningTemplateConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q
@@ -316,7 +316,7 @@ resource "aws_iot_provisioning_template" "test" {
 `, rName))
 }
 
-func testAccProvisioningTemplateConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccProvisioningTemplateConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q
@@ -352,7 +352,7 @@ resource "aws_iot_provisioning_template" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccProvisioningTemplateConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccProvisioningTemplateConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q
@@ -389,7 +389,7 @@ resource "aws_iot_provisioning_template" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccProvisioningTemplateUpdatedConfig(rName string) string {
+func testAccProvisioningTemplateConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q

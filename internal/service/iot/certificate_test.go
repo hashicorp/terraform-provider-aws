@@ -21,7 +21,7 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificate_csr,
+				Config: testAccCertificateConfig_csr,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "csr"),
@@ -43,7 +43,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 		CheckDestroy:      testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificate_keys_certificate,
+				Config: testAccCertificateConfig_keys,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
@@ -116,14 +116,14 @@ func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
 	return nil
 }
 
-var testAccCertificate_csr = `
+var testAccCertificateConfig_csr = `
 resource "aws_iot_certificate" "foo_cert" {
   csr    = file("test-fixtures/iot-csr.pem")
   active = true
 }
 `
 
-var testAccCertificate_keys_certificate = `
+var testAccCertificateConfig_keys = `
 resource "aws_iot_certificate" "foo_cert" {
   active = true
 }
