@@ -21,7 +21,7 @@ func TestAccNetworkManagerGlobalNetworkDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalNetworkDataSourceConfig(rName),
+				Config: testAccGlobalNetworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
@@ -33,7 +33,7 @@ func TestAccNetworkManagerGlobalNetworkDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccGlobalNetworkDataSourceConfig(rName string) string {
+func testAccGlobalNetworkDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = "test"

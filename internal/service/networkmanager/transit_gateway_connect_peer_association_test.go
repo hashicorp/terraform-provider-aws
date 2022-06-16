@@ -42,7 +42,7 @@ func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 				),
@@ -67,7 +67,7 @@ func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayConnectPeerAssociation(), resourceName),
@@ -90,7 +90,7 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), connetPeerResourceName),
@@ -160,7 +160,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 	}
 }
 
-func testAccTransitGatewayConnectPeerAssociationConfig(rName string) string {
+func testAccTransitGatewayConnectPeerAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

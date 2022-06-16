@@ -20,7 +20,7 @@ func TestAccNetworkManagerConnectionDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDataSourceConfig(rName),
+				Config: testAccConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connected_device_id", resourceName, "connected_device_id"),
@@ -36,8 +36,8 @@ func TestAccNetworkManagerConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectionDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccConnectionDescriptionAndLinksConfig(rName), `
+func testAccConnectionDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccConnectionConfig_descriptionAndLinks(rName), `
 data "aws_networkmanager_connection" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
   connection_id     = aws_networkmanager_connection.test.id
