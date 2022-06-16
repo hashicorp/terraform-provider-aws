@@ -26,7 +26,7 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceConfig(rName),
+				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -62,7 +62,7 @@ func TestAccNetworkManagerDevice_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceConfig(rName),
+				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceDevice(), resourceName),
@@ -84,7 +84,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceConfigTags1(rName, "key1", "value1"),
+				Config: testAccDeviceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -98,7 +98,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -107,7 +107,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeviceConfigTags1(rName, "key2", "value2"),
+				Config: testAccDeviceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -131,7 +131,7 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceAllAttributesConfig(rName),
+				Config: testAccDeviceConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -153,7 +153,7 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceAllAttributesUpdatedConfig(rName),
+				Config: testAccDeviceConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -258,7 +258,7 @@ func testAccCheckDeviceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDeviceConfig(rName string) string {
+func testAccDeviceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -272,7 +272,7 @@ resource "aws_networkmanager_device" "test" {
 `, rName)
 }
 
-func testAccDeviceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -290,7 +290,7 @@ resource "aws_networkmanager_device" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -309,7 +309,7 @@ resource "aws_networkmanager_device" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDeviceAllAttributesConfig(rName string) string {
+func testAccDeviceConfig_allAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -356,7 +356,7 @@ resource "aws_networkmanager_device" "test" {
 `, rName)
 }
 
-func testAccDeviceAllAttributesUpdatedConfig(rName string) string {
+func testAccDeviceConfig_allAttributesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

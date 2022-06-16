@@ -44,7 +44,7 @@ func testAccTransitGatewayRegistration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRegistrationConfig(rName),
+				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(resourceName),
 				),
@@ -69,7 +69,7 @@ func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRegistrationConfig(rName),
+				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
@@ -92,7 +92,7 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRegistrationConfig(rName),
+				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
@@ -115,7 +115,7 @@ func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRegistrationCrossRegionConfig(rName),
+				Config: testAccTransitGatewayRegistrationConfig_crossRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(resourceName),
 				),
@@ -187,7 +187,7 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 		return nil
 	}
 }
-func testAccTransitGatewayRegistrationConfig(rName string) string {
+func testAccTransitGatewayRegistrationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -208,7 +208,7 @@ resource "aws_networkmanager_transit_gateway_registration" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayRegistrationCrossRegionConfig(rName string) string {
+func testAccTransitGatewayRegistrationConfig_crossRegion(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
