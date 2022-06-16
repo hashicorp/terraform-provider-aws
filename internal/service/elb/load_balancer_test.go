@@ -82,7 +82,7 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
-	lbName := fmt.Sprintf("Tf-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -91,10 +91,10 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 		CheckDestroy:      testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccLoadBalancerFullRangeOfCharacters, lbName),
+				Config: testAccLoadBalancerConfig_fullRangeOfCharacters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -1134,7 +1134,8 @@ resource "aws_elb" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccLoadBalancerFullRangeOfCharacters = `
+func testAccLoadBalancerConfig_fullRangeOfCharacters(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1145,7 +1146,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elb" "test" {
-  name               = "%s"
+  name               = %[1]q
   availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
@@ -1155,7 +1156,8 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 }
-`
+`, rName)
+}
 
 const testAccLoadBalancerConfig_accessLogs = `
 data "aws_availability_zones" "available" {

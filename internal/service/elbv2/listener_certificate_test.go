@@ -233,7 +233,7 @@ func testAccCheckListenerCertificateNotExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate string) string {
+func testAccListenerCertificateConfig_base(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -298,7 +298,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerCertificateConfig_basic(rName, key, certificate string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
+	return testAccListenerCertificateConfig_base(rName, key, certificate) + `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
   listener_arn    = aws_lb_listener.test.arn
@@ -376,7 +376,7 @@ resource "aws_lb_listener_certificate" "test" {
 }
 
 func testAccListenerCertificateConfig_multiple(rName string, keys, certificates []string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, keys[0], certificates[0]) + fmt.Sprintf(`
+	return testAccListenerCertificateConfig_base(rName, keys[0], certificates[0]) + fmt.Sprintf(`
 resource "aws_lb_listener_certificate" "default" {
   listener_arn    = aws_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.test.arn
