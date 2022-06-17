@@ -10,7 +10,6 @@ rules:
       exclude:
         - internal/service/apigateway
         - internal/service/appautoscaling
-        - internal/service/ce
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/cognitoidp
