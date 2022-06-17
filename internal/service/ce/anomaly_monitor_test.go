@@ -118,7 +118,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -131,7 +131,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -140,7 +140,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -166,7 +166,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig_Dimensional(rName),
+				Config: testAccAnomalyMonitorConfig_dimensional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -264,7 +264,7 @@ JSON
 `, rName)
 }
 
-func testAccAnomalyMonitorConfig_Tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccAnomalyMonitorConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -294,7 +294,7 @@ JSON
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAnomalyMonitorConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAnomalyMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -325,7 +325,7 @@ JSON
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAnomalyMonitorConfig_Dimensional(rName string) string {
+func testAccAnomalyMonitorConfig_dimensional(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name              = %[1]q
