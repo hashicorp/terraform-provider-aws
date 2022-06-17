@@ -552,6 +552,9 @@ var tmpl = `{{- range .Services }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}
+            {{- if eq .ServiceAlias "CloudTrail" }}
+            - pattern-not-regex: ^testAccCloudTrailConfig_.*
+            {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
 {{- end }}

@@ -8,7 +8,6 @@ rules:
       include:
         - internal/service/**/*_test.go
       exclude:
-        - internal/service/cloudtrail
         - internal/service/cognitoidp
         - internal/service/dax
         - internal/service/elasticache
