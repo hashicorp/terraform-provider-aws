@@ -16,7 +16,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Resource:** `aws_ce_anomaly_monitor` ([#251777](https://github.com/hashicorp/terraform-provider-aws/issues/251777))
+* **New Resource:** `aws_ce_anomaly_monitor` ([#25177](https://github.com/hashicorp/terraform-provider-aws/issues/25177))
 * **New Resource:** `aws_emrserverless_application` ([#25144](https://github.com/hashicorp/terraform-provider-aws/issues/25144))
 
 ENHANCEMENTS:
