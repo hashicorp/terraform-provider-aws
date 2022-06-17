@@ -1,4 +1,9 @@
 ## 4.20.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ce_anomaly_monitor` ([#25177](https://github.com/hashicorp/terraform-provider-aws/issues/25177))
+
 ## 4.19.0 (June 17, 2022)
 
 FEATURES:
