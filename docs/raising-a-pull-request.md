@@ -56,6 +56,19 @@ Check your code with the linters:
 $ make lint
 ```
 
+We use [Semgrep](https://semgrep.dev/docs/) to check for other code standards.
+This can be run directly on the command line, i.e.,
+
+```console
+$ semgrep
+```
+
+or it can be run using Docker via the Makefile, i.e.,
+
+```console
+$ make semgrep
+```
+
 `gofmt` will also fix many simple formatting issues for you. The Makefile includes a target for this:
 
 ```console
@@ -134,7 +147,6 @@ This Contribution Guide also includes separate sections on topics such as [Error
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- __Avoids CustomizeDiff__: Usage of `CustomizeDiff` is generally discouraged.
 - __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN) should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
 
   ```go
