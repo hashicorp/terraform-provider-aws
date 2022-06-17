@@ -22,15 +22,14 @@ Please note: We take Terraform's security and our users' trust very seriously. I
 
 ## Quick Starts
 
-- [Using the provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [Provider development](https://hashicorp.github.io/terraform-provider-aws/)
+- [Using the provider][provider-docs]
+- [Provider development][contrib-guide]
 
 ## Documentation
 
 Full, comprehensive documentation is available on the Terraform Registry:
 
 https://registry.terraform.io/providers/hashicorp/aws/latest/docs
-
 
 ## Roadmap
 
@@ -44,4 +43,7 @@ Responses to our most frequently asked questions can be found in our [FAQ](https
 
 The Terraform AWS Provider is the work of thousands of contributors. We appreciate your help!
 
-To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider](https://hashicorp.github.io/terraform-provider-aws/)
+To contribute, please read the contribution guidelines: [Contributing to Terraform - AWS Provider][contrib-guide]
+
+[contrib-guide]: https://hashicorp.github.io/terraform-provider-aws/
+[provider-docs]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs

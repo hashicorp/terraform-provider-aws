@@ -34,7 +34,7 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 
 	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
 	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
-	// otherwise we mark the attribute as "Computed" only when their is a known diff (excluding an empty map)
+	// otherwise we mark the attribute as "Computed" only when there is a known diff (excluding an empty map)
 	// or a change for "tags_all".
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005

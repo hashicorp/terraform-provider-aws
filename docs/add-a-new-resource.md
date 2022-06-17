@@ -40,7 +40,7 @@ You will need at minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
-- Argument Tests - All arguments should be tested in a pragmatic way. Ensure that each argument can be initially set, updated, and cleared, as applicable. Depending on the logic and interaction of arguments, this may take one to several separate tests. 
+- Argument Tests - All arguments should be tested in a pragmatic way. Ensure that each argument can be initially set, updated, and cleared, as applicable. Depending on the logic and interaction of arguments, this may take one to several separate tests.
 
 ### Create documentation for the resource
 
