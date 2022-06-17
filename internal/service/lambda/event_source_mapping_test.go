@@ -1068,7 +1068,7 @@ func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMapping
 	}
 }
 
-func testAccEventSourceMappingKinesisConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_kinesisBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1128,7 +1128,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingSQSConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_sqsBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1180,7 +1180,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingDynamoDBConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_dynamoDBBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1243,7 +1243,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingKafkaConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_kafkaBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1336,7 +1336,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccEventSourceMappingActiveMQConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_activeMQBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1439,7 +1439,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingRabbitMQConfig_base(rName string) string {
+func testAccEventSourceMappingConfig_rabbitMQBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1526,7 +1526,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                  = 100
   enabled                     = true
@@ -1539,7 +1539,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisBatchWindow(rName string, batchWindow int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 100
   maximum_batching_window_in_seconds = %[1]d
@@ -1552,7 +1552,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisParallelizationFactor(rName string, parallelizationFactor int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
   parallelization_factor = %[1]d
@@ -1565,7 +1565,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisTumblingWindowInSeconds(rName string, tumblingWindowInSeconds int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                 = 100
   tumbling_window_in_seconds = %[1]d
@@ -1578,7 +1578,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName string, maximumRetryAttempts int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
   maximum_retry_attempts = %[1]d
@@ -1591,7 +1591,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisBisectBatch(rName string, bisectBatch bool) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                     = 100
   bisect_batch_on_function_error = %[1]t
@@ -1604,7 +1604,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisMaximumRecordAgeInSeconds(rName string, maximumRecordAgeInSeconds int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                    = 100
   maximum_record_age_in_seconds = %[1]d
@@ -1617,7 +1617,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisDestination(rName string, topicName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -1643,7 +1643,7 @@ func testAccEventSourceMappingConfig_kinesisBatchSize(rName, batchSize string) s
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[1]s
   enabled           = true
@@ -1655,7 +1655,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_kinesisUpdateFunctionName(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingKinesisConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
@@ -1679,7 +1679,7 @@ func testAccEventSourceMappingConfig_sqsBatchSize(rName, batchSize string) strin
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size       = %[1]s
   enabled          = true
@@ -1690,7 +1690,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsUpdateFunctionName(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
@@ -1709,7 +1709,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsBatchWindow(rName string, batchWindow int64) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 10
   maximum_batching_window_in_seconds = %[1]d
@@ -1725,7 +1725,7 @@ func testAccEventSourceMappingConfig_msk(rName, batchSize string) string {
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingKafkaConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1757,7 +1757,7 @@ func testAccEventSourceMappingConfig_selfManagedKafka(rName, batchSize, kafkaBoo
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingKafkaConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[2]s
   enabled           = false
@@ -1792,7 +1792,7 @@ func testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, batchSize string) 
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingDynamoDBConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[1]s
   enabled           = true
@@ -1804,7 +1804,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_dynamoDBFunctionResponseTypes(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingDynamoDBConfig_base(rName), `
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -1818,7 +1818,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_dynamoDBNoFunctionResponseTypes(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingDynamoDBConfig_base(rName), `
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -1834,7 +1834,7 @@ func testAccEventSourceMappingConfig_activeMQ(rName, batchSize string) string {
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingActiveMQConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_activeMQBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size       = %[1]s
   event_source_arn = aws_mq_broker.test.arn
@@ -1855,7 +1855,7 @@ func testAccEventSourceMappingConfig_rabbitMQ(rName, batchSize string) string {
 		batchSize = "null"
 	}
 
-	return acctest.ConfigCompose(testAccEventSourceMappingRabbitMQConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_rabbitMQBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size       = %[1]s
   event_source_arn = aws_mq_broker.test.arn
@@ -1925,7 +1925,7 @@ func testAccPreCheckSecretsManager(t *testing.T) {
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria1(rName string, pattern1 string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn
   function_name    = aws_lambda_function.test.arn
@@ -1940,7 +1940,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria2(rName string, pattern1, pattern2 string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn
   function_name    = aws_lambda_function.test.arn
@@ -1959,7 +1959,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria3(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingSQSConfig_base(rName), `
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn
   function_name    = aws_lambda_function.test.arn
