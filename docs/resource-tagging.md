@@ -2,51 +2,117 @@
 
 AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the [AWS Tagging Strategy page](https://aws.amazon.com/answers/account-management/aws-tagging-strategies/) for more information about tagging at a high level.
 
-As of version 3.38.0 of the Terraform AWS Provider, resources that previously implemented tagging support via the argument `tags`, now support provider-wide default tagging.
+The Terraform AWS Provider supports default tags configured on the provider in addition to tags configured on the resource.
+Implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
 
-Thus, for in-flight and future contributions, implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
-
-- _Generated Service Tagging Code_: Each service has a `generate.go` file where generator directives live. Through these directives and their flags, you can customize code generation for the service. You can find the code that the tagging generator generates in a `tags_gen.go` file in a service, such as `internal/service/ec2/tags_gen.go`. Unlike previously, you should generally _not_ need to edit the generator code (i.e., in `internal/generate/tags`).
-- _Resource Tagging Code Implementation_: In the resource code (e.g., `internal/service/{service}/{thing}.go`), implementation of `tags` and `tags_all` schema attributes, along with implementation of `CustomizeDiff` in the resource definition and handling in `Create`, `Read`, and `Update` functions.
-- _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
-- _Resource Tagging Documentation Implementation_: In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`), addition of `tags` argument and `tags_all` attribute.
+- _Generated Service Tagging Code_: Each service has a `generate.go` file where generator directives live.
+  Through these directives and their flags, you can customize code generation for the service.
+  You can find the code that the tagging generator generates in a `tags_gen.go` file in a service, such as `internal/service/ec2/tags_gen.go`.
+  You should generally _not_ need to edit the generator code itself (i.e., in `internal/generate/tags`).
+- _Resource Tagging Code Implementation_: In the resource code (e.g., `internal/service/{service}/{thing}.go`),
+  implementation of `tags` and `tags_all` schema attributes,
+  along with implementation of `CustomizeDiff` in the resource definition and handling in `Create`, `Read`, and `Update` functions.
+- _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g., `internal/service/{service}/{thing}_test.go`),
+  implementation of new acceptance test function and configurations to exercise new tagging logic.
+- _Resource Tagging Documentation Implementation_: In the resource documentation (e.g., `website/docs/r/service_thing.html.markdown`),
+  addition of `tags` argument and `tags_all` attributes.
 
 ## Generating Tag Code for a Service
 
-This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
+This step is generally only necessary for the first implementation and may have been previously completed.
 
-More details about this code generation, including fixes for potential error messages in this process, can be found in the [generate documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
+More details about this code generation,
+including fixes for potential error messages in this process,
+can be found in the [`generate` package documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
 
-- Open the AWS Go SDK documentation for the service, e.g., for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
-- Use the AWS Go SDK to determine which types of tagging code to generate. There are three main types of tagging code you can generate: service tags, list tags, and update tags. These are not mutually exclusive and some services use more than one.
-- Determine if a service already has a `generate.go` file (e.g., `internal/service/eks/generate.go`). If none exists, follow the example of other `generate.go` files in many other services. This is a very simple file, perhaps 3-5 lines long, and must _only_ contain generate directives at the very top of the file and a package declaration (e.g., `package eks`) -- _nothing else_.
-- Check for a tagging code directive: `//go:generate go run ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
-- If the service supports service tags, determine the service's "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure (`[]service.Tag` `struct` with `Key` and `Value` fields).
+The generator will create several types of tagging-related code.
+All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
+and the function `Tags`, which converts from the common format back to the service-specific structs.
+In addition, many services have separate functions to list or update tags, so the corresponding `ListTags` and `UpdateTags` can be generated.
+Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
-    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap`. If the type is `struct`, add a  `-ServiceTagsSlice` flag.
-    - If you use the `-ServiceTagsSlice` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
-    - In summary, you may need to include one or more of the following flags with `-ServiceTagsSlice` in order to properly customize the generated code: `-TagKeyType`, `TagPackage`, `TagResTypeElem`, `TagType`, `TagType2`, `TagTypeAddBoolElem`, `TagTypeAddBoolElemSnake`, `TagTypeIDElem`, `TagTypeKeyElem`, and `TagTypeValElem`.
+If the service directory does not contain a `generate.go` file, create one.
+This file must only contain generate directives and a package declaration (e.g., `package eks`).
+For examples of the `generate.go` file, many service directories contain one, e.g., `internal/service/eks/generate.go`.
 
+If the `generate.go` file does not contain a generate directive for tagging code, i.e., `//go:generate go run ../../generate/tags/main.go`, add it.
+Note that without flags, the directive itself will not do anything useful.
+You must not include more than one `generate/tags/main.go` directive, as subsequent directives will overwrite previous directives.
+To generate multiple types of tag code, use multiple flags with the directive.
 
-- If the service supports listing tags (usually a `ListTags` or `ListTagsForResource` API call), follow these guidelines.
+### Generating Tagging Types
 
-    - Add a new flag to the tagging directive (see above): `-ListTags`.
-    - If the API list operation is not exactly `ListTagsForResource`, include the `-ListTagsOp` flag with the name of the operation (e.g., `-ListTagsOp=DescribeTags`).
-    - If the API list tags operation identifying element is not exactly `ResourceArn`, include the `-ListTagsInIDElem` flag with the name of the element (e.g., `-ListTagsInIDElem=ResourceARN`).
-    - If the API list tags operation identifying element needs a slice, include the `-ListTagsInIDNeedSlice` flag with a `yes` value (e.g., `-ListTagsInIDNeedSlice=yes`).
-    - If the API list tags operation output element is not exactly `Tags`, include the `-ListTagsOutTagsElem` flag with the name of the element (e.g., `-ListTagsOutTagsElem=TagList`).
-    - In summary, you may need to include one or more of the following flags with `-ListTags` in order to properly customize the generated code: `ListTagsInFiltIDName`, `ListTagsInIDElem`, `ListTagsInIDNeedSlice`, `ListTagsOp`, `ListTagsOutTagsElem`, `TagPackage`, `TagResTypeElem`, and `TagTypeIDElem`.
+Determine how the service implements tagging:
+Some services will use a simple map style (`map[string]*string` in Go),
+while others will have a separate structure, often a `[]service.Tag` struct with `Key` and `Value` fields.
 
-- If the service API supports updating tags (usually `TagResource` and `UntagResource` API calls), follow these guidelines.
+If the service uses the simple map style, pass the flag `-ServiceTagsMap`.
 
-    - Add a new flag to the tagging directive (see above): `-UpdateTags`.
-    - If the API tag operation is not exactly `TagResource`, include the `-TagOp` flag with the name of the operation (e.g., `-TagOp=AddTags`).
-    - If the API untag operation is not exactly `UntagResource`, include the `-UntagOp` flag with the name of the operation (e.g., `-UntagOp=RemoveTags`).
-    - If the API operation identifying element is not exactly `ResourceArn`, include the `-TagInIDElem` flag with the name of the element (e.g., `-TagInIDElem=ResourceARN`).
-    - If the API untag operation tags input element is not exactly `TagKeys`, include the `-UntagInTagsElem` flag with the name of the element (e.g., `-UntagInTagsElem=Keys`).
-    - In summary, you may need to include one or more of the following flags with `-UpdateTags` in order to properly customize the generated code: `TagInCustomVal`, `TagInIDElem`, `TagInIDNeedSlice`, `TagInTagsElem`, `TagOp`, `TagOpBatchSize`, `TagPackage`, `TagResTypeElem`, `TagTypeAddBoolElem`, `TagTypeIDElem`, `UntagInCustomVal`, `UntagInNeedTagKeyType`, `UntagInNeedTagType`, `UntagInTagsElem`, and `UntagOp`.
+If the service uses a slice of structs, pass the flag `-ServiceTagsSlice`.
+If the name of the tag struct is not `Tag`, pass the flag `-TagType=<struct name>`.
+Note that the struct name is used without the package name.
+For example, the AppMesh service uses the struct `TagRef`, so the flag is `-TagType=TagRef`.
+If the key and value fields on the struct are not `Key` and `Value`,
+specify the names using the flags `-TagTypeKeyElem` and `-TagTypeValElem` respectively.
+For example, the KMS service uses the struct `Tag`, but the key and value fields are `TagKey` and `TagValue`,
+so the flags are `-TagTypeKeyElem=TagKey` and `-TagTypeValElem=TagValue`.
 
-- Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
+Some services, such as EC2 and Auto Scaling, return a different type depending on the API call used to retrieve the tag.
+To indicate the additional type, include the flag `-TagType2=<struct name>`.
+For example, the Auto Scaling uses the struct `Tag` as part of resource calls, but returns the struct `TagDescription` from the `DescribeTags` API call. The flag used is `-TagType2=TagDescription`.
+
+For more details on flags for generating service keys, see the
+[documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
+
+### Generating Standalone Tag Listing Functions
+
+If the service API uses a standalone function to retrieve tags instead of including them with the resource (usually a `ListTags` or `ListTagsForResource` API call), pass the flag `-ListTags`.
+
+If the API call is not `ListTagsForResource`, pass the flag `-ListTagsOp=<API call name>`.
+Note that this does not include the package name.
+For example, the Auto Scaling service uses the API call `DescribeTags`, so the flag is `-ListTagsOp=DescribeTags`.
+
+If the API call uses a field other than `ResourceArn` to identify the resource, pass the flag `-ListTagsInIDElem=<field name>`.
+For example, the CloudWatch service uses the field `ResourceARN`, so the flag is `-ListTagsInIDElem=ResourceARN`.
+Some API calls take a slice of identifiers instead of a single identifier.
+In this case, pass the flag `-ListTagsInIDNeedSlice=yes`.
+
+If the field containing the tags in the result of the API call is not named `Tags`, pass the flag `-ListTagsOutTagsElem=<struct name>`.
+For example, the CloudTrail service returns a nested structure, where the resulting flag is `-ListTagsOutTagsElem=ResourceTagList[0].TagsList`.
+
+In some cases, it can be useful to retrieve single tags.
+Pass the flag `-GetTag` to generate a function to do so.
+
+For more details on flags for generating tag listing functions, see the
+[documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
+
+### Generating Standalone Tag Updating Functions
+
+If the service API uses a standalone function to update tags instead of including them when updating the resource (usually a `TagResource` and `UntagResource` API call), pass the flag `-UpdateTags`.
+
+If the API call to add tags is not `TagResource`, pass the flag `-TagOp=<API call name>`.
+Note that this does not include the package name.
+For example, the ElastiCache service uses the API call `AddTagsToResource`, so the flag is `-TagOp=AddTagsToResource`.
+
+If the API call to add tags uses a field other than `ResourceArn` to identify the resource, pass the flag `-TagInIDElem=<field name>`.
+For example, the EC2 service uses the field `Resources`, so the flag is `-TagInIDElem=Resources`.
+Some API calls take a slice of identifiers instead of a single identifier.
+In this case, pass the flag `-TagInIDNeedSlice=yes`.
+
+If the API call to remove tags is not `UntagResource`, pass the flag `-UntagOp=<API call name>`.
+Note that this does not include the package name.
+For example, the ElastiCache service uses the API call `RemoveTagsFromResource`, so the flag is `-UntagOp=RemoveTagsFromResource`.
+
+If the API call to remove tags uses a field other than `ResourceArn` to identify the resource, pass the flag `-UntagInTagsElem=<field name>`.
+For example, the Route 53 service uses the field `Keys`, so the flag is `-UntagInTagsElem=Keys`.
+
+For more details on flags for generating tag updating functions, see the
+[documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
+
+#### Running Code generation
+
+Run the command `make gen` to run the code generators for the project.
+To ensure that the code compiles, run `make test`.
 
 ## Resource Tagging Code Implementation
 
