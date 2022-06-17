@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -298,7 +299,6 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 				Config: testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
 						"encrypted":   "true",
@@ -393,7 +393,6 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_iamProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "iam_instance_profile"),
 				),
 			},
@@ -594,6 +593,192 @@ func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigNull(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigFalse(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigTrue(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigNull(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigFalse(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigTrue(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_configuration.test"
+	groupResourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckGroupExists(groupResourceName, &group),
+					testAccCheckGroupHealthyInstanceCount(&group, 1),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
@@ -663,6 +848,27 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceHasPublicIPAddress(group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		instanceID := aws.StringValue(group.Instances[idx].InstanceId)
+		instance, err := tfec2.FindInstanceByID(conn, instanceID)
+
+		if err != nil {
+			return err
+		}
+
+		hasPublicIPAddress := aws.StringValue(instance.PublicIpAddress) != ""
+
+		if hasPublicIPAddress != expected {
+			return fmt.Errorf("%s has public IP address; got %t, expected %t", instanceID, hasPublicIPAddress, expected)
+		}
 
 		return nil
 	}
@@ -827,10 +1033,9 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t3.nano"
-  associate_public_ip_address = false
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.nano"
 
   root_block_device {
     encrypted   = true
@@ -915,8 +1120,6 @@ resource "aws_launch_configuration" "test" {
   image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type        = "t2.nano"
   iam_instance_profile = aws_iam_instance_profile.test.name
-
-  associate_public_ip_address = true
 }
 `, rName))
 }
@@ -984,7 +1187,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_ebsNoDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
 
@@ -999,7 +1202,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_userData(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   user_data     = "foo:-with-character's"
@@ -1010,10 +1213,63 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_userDataBase64(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix      = %[1]q
+  name             = %[1]q
   image_id         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type    = "t2.micro"
   user_data_base64 = base64encode("hello world")
 }
 `, rName))
+}
+
+func testAccLaunchConfigurationConfig_associatePublicIPAddress(rName string, subnetMapPublicIPOnLaunch bool, associatePublicIPAddress string) string {
+	if associatePublicIPAddress == "" {
+		associatePublicIPAddress = "null"
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[1]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  name                        = %[1]q
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  associate_public_ip_address = %[3]s
+}
+
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier  = [aws_subnet.test.id]
+  max_size             = 1
+  min_size             = 1
+  desired_capacity     = 1
+  name                 = %[1]q
+  launch_configuration = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName, subnetMapPublicIPOnLaunch, associatePublicIPAddress))
 }
