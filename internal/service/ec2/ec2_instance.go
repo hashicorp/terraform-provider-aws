@@ -476,6 +476,12 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"get_password_data_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      15,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
 			"password_data": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -1191,7 +1197,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(d, aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
 			return err
 		}
@@ -2363,7 +2369,7 @@ func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
 	return nil
 }
 
-func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
+func getInstancePasswordData(d *schema.ResourceData, instanceID string, conn *ec2.EC2) (string, error) {
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
@@ -2371,7 +2377,7 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 	input := &ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(time.Duration(d.Get("get_password_data_timeout").(int))*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(input)
 

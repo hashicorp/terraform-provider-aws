@@ -373,7 +373,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(*instance.InstanceId, conn)
+		passwordData, err := getInstancePasswordData(d, *instance.InstanceId, conn)
 		if err != nil {
 			return err
 		}

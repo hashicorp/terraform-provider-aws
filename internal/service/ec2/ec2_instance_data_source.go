@@ -391,7 +391,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(d, aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
 			return err
 		}
