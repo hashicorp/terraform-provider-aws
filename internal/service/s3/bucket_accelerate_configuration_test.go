@@ -121,7 +121,7 @@ func TestAccS3BucketAccelerateConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_accelerateConfigurationAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketConfig_acceleration(rName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
@@ -151,7 +151,7 @@ func TestAccS3BucketAccelerateConfiguration_migrate_withChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_accelerateConfigurationAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketConfig_acceleration(rName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),

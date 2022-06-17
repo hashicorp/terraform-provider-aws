@@ -349,7 +349,7 @@ func TestAccS3BucketPolicy_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_policyBasic(rName, partition),
+				Config: testAccBucketConfig_policy(rName, partition),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					testAccCheckBucketPolicy(bucketResourceName, testAccBucketPolicy(rName, partition)),
@@ -379,7 +379,7 @@ func TestAccS3BucketPolicy_migrate_withChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_policyBasic(rName, partition),
+				Config: testAccBucketConfig_policy(rName, partition),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					testAccCheckBucketPolicy(bucketResourceName, testAccBucketPolicy(rName, partition)),

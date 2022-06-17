@@ -242,7 +242,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_accelerateConfigurationAcceleration(bucketName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketConfig_acceleration(bucketName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
@@ -255,7 +255,7 @@ func TestAccS3Bucket_Basic_acceleration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccBucketConfig_accelerateConfigurationAcceleration(bucketName, s3.BucketAccelerateStatusSuspended),
+				Config: testAccBucketConfig_acceleration(bucketName, s3.BucketAccelerateStatusSuspended),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_status", s3.BucketAccelerateStatusSuspended),
@@ -308,7 +308,7 @@ func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_requestPaymentConfigurationPayer(bucketName, s3.PayerBucketOwner),
+				Config: testAccBucketConfig_requestPayer(bucketName, s3.PayerBucketOwner),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", s3.PayerBucketOwner),
@@ -321,7 +321,7 @@ func TestAccS3Bucket_Basic_requestPayer(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketConfig_requestPaymentConfigurationPayer(bucketName, s3.PayerRequester),
+				Config: testAccBucketConfig_requestPayer(bucketName, s3.PayerRequester),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", s3.PayerRequester),
@@ -669,7 +669,7 @@ func TestAccS3Bucket_Manage_lifecycleExpireMarkerOnly(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_lifecycleConfigurationExpireMarker(bucketName),
+				Config: testAccBucketConfig_lifecycleExpireMarker(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.id", "id1"),
@@ -707,7 +707,7 @@ func TestAccS3Bucket_Manage_lifecycleRuleExpirationEmptyBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_lifecycleRuleExpirationEmptyConfigurationBlock(rName),
+				Config: testAccBucketConfig_lifecycleRuleExpirationEmptyBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 				),
@@ -784,7 +784,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_objectLockConfigurationEnabledNoDefaultRetention(bucketName),
+				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
@@ -800,7 +800,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccBucketConfig_objectLockConfigurationEnabledDefaultRetention(bucketName),
+				Config: testAccBucketConfig_objectLockEnabledDefaultRetention(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
@@ -864,7 +864,7 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccBucketConfig_objectLockConfigurationEnabledNoDefaultRetention(bucketName),
+				Config:   testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
 				PlanOnly: true,
 			},
 		},
@@ -940,7 +940,7 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketVersioningConfig_basic(bucketName, true),
+				Config: testAccBucketConfig_versioning(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -955,7 +955,7 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketVersioningConfig_basic(bucketName, false),
+				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -984,7 +984,7 @@ func TestAccS3Bucket_Manage_versioningDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketVersioningConfig_basic(bucketName, false),
+				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -1013,7 +1013,7 @@ func TestAccS3Bucket_Manage_MFADeleteDisabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketVersioningConfig_mfaDelete(bucketName, false),
+				Config: testAccBucketConfig_versioningMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
@@ -1100,7 +1100,7 @@ func TestAccS3Bucket_Replication_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_replicationSseKMSEncryptedObjects(bucketName),
+				Config: testAccBucketConfig_replicationSSEKMSEncryptedObjects(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
@@ -1343,7 +1343,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAccessControlTranslation(t *test
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "versioning"},
 			},
 			{
-				Config: testAccBucketConfig_replicationSseKMSEncryptedObjectsAndAccessControlTranslation(bucketName),
+				Config: testAccBucketConfig_replicationSSEKMSEncryptedObjectsAndAccessControlTranslation(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
@@ -1557,7 +1557,7 @@ func TestAccS3Bucket_Replication_schemaV2(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_replicationConfigurationV2PrefixAndTags(bucketName),
+				Config: testAccBucketConfig_replicationV2PrefixAndTags(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
@@ -1872,7 +1872,7 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_corsConfigurationBasic(bucketName),
+				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -1898,7 +1898,7 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccBucketConfig_corsConfigurationBasic(bucketName),
+				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -1948,7 +1948,7 @@ func TestAccS3Bucket_Security_corsDelete(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_corsConfigurationBasic(bucketName),
+				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					deleteBucketCors(resourceName),
@@ -2034,7 +2034,7 @@ func TestAccS3Bucket_Security_logging(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_loggingBasic(bucketName),
+				Config: testAccBucketConfig_logging(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
@@ -2093,7 +2093,7 @@ func TestAccS3Bucket_Security_enableDefaultEncryptionWhenAES256IsUsed(t *testing
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_serverSideEncryptionConfigurationDefaultDefaultKey(bucketName, s3.ServerSideEncryptionAes256),
+				Config: testAccBucketConfig_defaultEncryptionDefaultKey(bucketName, s3.ServerSideEncryptionAes256),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
@@ -2124,7 +2124,7 @@ func TestAccS3Bucket_Security_disableDefaultEncryptionWhenDefaultEncryptionIsEna
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_serverSideEncryptionConfigurationDefaultDefaultKey(bucketName, s3.ServerSideEncryptionAwsKms),
+				Config: testAccBucketConfig_defaultEncryptionDefaultKey(bucketName, s3.ServerSideEncryptionAwsKms),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 				),
@@ -2160,7 +2160,7 @@ func TestAccS3Bucket_Security_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_policyBasic(bucketName, partition),
+				Config: testAccBucketConfig_policy(bucketName, partition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					testAccCheckBucketPolicy(resourceName, testAccBucketPolicy(bucketName, partition)),
@@ -2216,7 +2216,7 @@ func TestAccS3Bucket_Web_simple(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_basic(bucketName),
+				Config: testAccBucketConfig_website(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
@@ -2318,7 +2318,7 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_andRoutingRules(bucketName),
+				Config: testAccBucketConfig_websiteAndRoutingRules(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "website.#", "1"),
@@ -2939,7 +2939,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_accelerateConfigurationAcceleration(bucketName, acceleration string) string {
+func testAccBucketConfig_acceleration(bucketName, acceleration string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket              = %[1]q
@@ -2957,7 +2957,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, acl)
 }
 
-func testAccBucketConfig_corsConfigurationBasic(bucketName string) string {
+func testAccBucketConfig_cors(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3002,7 +3002,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_serverSideEncryptionConfigurationDefaultDefaultKey(bucketName, sseAlgorithm string) string {
+func testAccBucketConfig_defaultEncryptionDefaultKey(bucketName, sseAlgorithm string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3210,7 +3210,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_lifecycleConfigurationExpireMarker(bucketName string) string {
+func testAccBucketConfig_lifecycleExpireMarker(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3229,7 +3229,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_lifecycleRuleExpirationEmptyConfigurationBlock(rName string) string {
+func testAccBucketConfig_lifecycleRuleExpirationEmptyBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3258,7 +3258,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_loggingBasic(bucketName string) string {
+func testAccBucketConfig_logging(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
@@ -3287,7 +3287,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_policyBasic(bucketName, partition string) string {
+func testAccBucketConfig_policy(bucketName, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -3684,7 +3684,7 @@ resource "aws_s3_bucket" "source" {
 `, bucketName))
 }
 
-func testAccBucketConfig_replicationSseKMSEncryptedObjects(bucketName string) string {
+func testAccBucketConfig_replicationSSEKMSEncryptedObjects(bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketConfig_ReplicationBase(bucketName),
 		fmt.Sprintf(`
@@ -3727,7 +3727,7 @@ resource "aws_s3_bucket" "source" {
 `, bucketName))
 }
 
-func testAccBucketConfig_replicationSseKMSEncryptedObjectsAndAccessControlTranslation(bucketName string) string {
+func testAccBucketConfig_replicationSSEKMSEncryptedObjectsAndAccessControlTranslation(bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketConfig_ReplicationBase(bucketName),
 		fmt.Sprintf(`
@@ -4001,7 +4001,7 @@ resource "aws_s3_bucket" "source" {
 `, bucketName))
 }
 
-func testAccBucketConfig_replicationConfigurationV2PrefixAndTags(bucketName string) string {
+func testAccBucketConfig_replicationV2PrefixAndTags(bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketConfig_ReplicationBase(bucketName),
 		fmt.Sprintf(`
@@ -4214,7 +4214,7 @@ resource "aws_s3_bucket" "source" {
 `, bucketName))
 }
 
-func testAccBucketConfig_requestPaymentConfigurationPayer(bucketName, requestPayer string) string {
+func testAccBucketConfig_requestPayer(bucketName, requestPayer string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -4223,7 +4223,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, requestPayer)
 }
 
-func testAccBucketVersioningConfig_basic(bucketName string, enabled bool) string {
+func testAccBucketConfig_versioning(bucketName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4235,7 +4235,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, enabled)
 }
 
-func testAccBucketVersioningConfig_mfaDelete(bucketName string, mfaDelete bool) string {
+func testAccBucketConfig_versioningMFADelete(bucketName string, mfaDelete bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4260,7 +4260,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName, mfaDelete)
 }
 
-func testAccBucketWebsiteConfigurationConfig_basic(bucketName string) string {
+func testAccBucketConfig_website(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4313,7 +4313,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketWebsiteConfigurationConfig_andRoutingRules(bucketName string) string {
+func testAccBucketConfig_websiteAndRoutingRules(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4490,7 +4490,7 @@ resource "aws_s3_bucket_acl" "test6" {
 `, randInt)
 }
 
-func testAccBucketConfig_objectLockConfigurationEnabledNoDefaultRetention(bucketName string) string {
+func testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -4500,7 +4500,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_objectLockConfigurationEnabledDefaultRetention(bucketName string) string {
+func testAccBucketConfig_objectLockEnabledDefaultRetention(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

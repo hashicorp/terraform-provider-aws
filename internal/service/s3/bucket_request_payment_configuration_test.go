@@ -118,7 +118,7 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketRequestPaymentConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_requestPaymentConfigurationPayer(rName, s3.PayerRequester),
+				Config: testAccBucketConfig_requestPayer(rName, s3.PayerRequester),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", s3.PayerRequester),
@@ -147,7 +147,7 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_withChange(t *testing.T)
 		CheckDestroy:      testAccCheckBucketRequestPaymentConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_requestPaymentConfigurationPayer(rName, s3.PayerRequester),
+				Config: testAccBucketConfig_requestPayer(rName, s3.PayerRequester),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "request_payer", s3.PayerRequester),

@@ -28,7 +28,7 @@ func TestAccS3BucketCorsConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketCORSConfigurationConfig_basic2(rName),
+				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketCorsConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
@@ -61,7 +61,7 @@ func TestAccS3BucketCorsConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketCorsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketCORSConfigurationConfig_basic2(rName),
+				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketCorsConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketCorsConfiguration(), resourceName),
@@ -122,7 +122,7 @@ func TestAccS3BucketCorsConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketCORSConfigurationConfig_basic2(rName),
+				Config: testAccBucketCORSConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketCorsConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -232,7 +232,7 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_corsConfigurationBasic(bucketName),
+				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
@@ -274,7 +274,7 @@ func TestAccS3BucketCorsConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_corsConfigurationBasic(bucketName),
+				Config: testAccBucketConfig_cors(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
@@ -384,7 +384,7 @@ func testAccCheckBucketCorsConfigurationExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccBucketCORSConfigurationConfig_basic2(rName string) string {
+func testAccBucketCORSConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

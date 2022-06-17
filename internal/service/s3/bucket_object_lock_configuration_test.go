@@ -114,7 +114,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_objectLockConfigurationEnabledDefaultRetention(rName),
+				Config: testAccBucketConfig_objectLockEnabledDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
@@ -151,7 +151,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectLockConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_objectLockConfigurationEnabledNoDefaultRetention(rName),
+				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
