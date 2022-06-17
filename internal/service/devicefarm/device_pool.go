@@ -127,7 +127,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	devicePool, err := FindDevicePoolByArn(conn, d.Id())
+	devicePool, err := FindDevicePoolByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Device Pool (%s) not found, removing from state", d.Id())
