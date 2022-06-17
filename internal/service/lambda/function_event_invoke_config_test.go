@@ -602,7 +602,7 @@ func testAccCheckFunctionEventInvokeExistsConfig(resourceName string) resource.T
 	}
 }
 
-func testAccFunctionEventInvokeConfig_base(rName string) string {
+func testAccFunctionEventInvokeConfigConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -647,7 +647,7 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSNSTopic(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSNSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSNSFullAccess"
   role       = aws_iam_role.test.id
@@ -672,7 +672,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSQSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSQSFullAccess"
   role       = aws_iam_role.test.id
@@ -697,7 +697,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSNSTopic(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSNSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSNSFullAccess"
   role       = aws_iam_role.test.id
@@ -722,7 +722,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSQSQueue(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSQSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSQSFullAccess"
   role       = aws_iam_role.test.id
@@ -747,7 +747,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_name(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
 }
@@ -755,7 +755,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_nameARN(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.arn
 }
@@ -763,7 +763,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_qualifierNameARN(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.arn
   qualifier     = "$LATEST"
@@ -772,7 +772,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_maximumAgeInSeconds(rName string, maximumEventAgeInSeconds int) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name                = aws_lambda_function.test.function_name
   maximum_event_age_in_seconds = %[1]d
@@ -781,7 +781,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName string, maximumRetryAttempts int) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + fmt.Sprintf(`
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + fmt.Sprintf(`
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name          = aws_lambda_function.test.function_name
   maximum_retry_attempts = %[1]d
@@ -790,7 +790,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_qualifierAliasName(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_alias" "test" {
   function_name    = aws_lambda_function.test.function_name
   function_version = aws_lambda_function.test.version
@@ -805,7 +805,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_qualifierVersion(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = aws_lambda_function.test.version
@@ -814,7 +814,7 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 }
 
 func testAccFunctionEventInvokeConfigConfig_qualifierLatest(rName string) string {
-	return testAccFunctionEventInvokeConfig_base(rName) + `
+	return testAccFunctionEventInvokeConfigConfig_base(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = "$LATEST"
