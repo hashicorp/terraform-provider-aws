@@ -112,6 +112,40 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_tagAdd(t *testing.T) {
+	var output costexplorer.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryWithoutTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccCostCategoryWithTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_disappears(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
@@ -374,4 +408,53 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, method)
+}
+
+func testAccCostCategoryWithTag(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = "%[1]s-1"
+  rule_version = "CostCategoryExpression.v1"
+
+  rule {
+    value = "production"
+
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+
+    type = "REGULAR"
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccCostCategoryWithoutTag(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = "%[1]s-1"
+  rule_version = "CostCategoryExpression.v1"
+
+  rule {
+    value = "production"
+
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+
+    type = "REGULAR"
+  }
+}
+`, rName)
 }
