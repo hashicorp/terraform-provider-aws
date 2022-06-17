@@ -34,7 +34,7 @@ func TestAccLambdaAliasDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAliasBaseDataSourceConfig(rName string) string {
+func testAccAliasDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -109,7 +109,7 @@ resource "aws_lambda_alias" "test" {
 }
 
 func testAccAliasDataSourceConfig_basic(rName string) string {
-	return testAccAliasBaseDataSourceConfig(rName) + `
+	return testAccAliasDataSourceConfig_base(rName) + `
 data "aws_lambda_alias" "test" {
   name          = aws_lambda_alias.test.name
   function_name = aws_lambda_alias.test.function_name

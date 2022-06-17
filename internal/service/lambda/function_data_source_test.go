@@ -275,7 +275,7 @@ func testAccImageLatestPreCheck(t *testing.T) {
 	}
 }
 
-func testAccFunctionBaseDataSourceConfig(rName string) string {
+func testAccFunctionDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "lambda" {
   name = %[1]q
@@ -335,7 +335,7 @@ EOF
 }
 
 func testAccFunctionDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -351,7 +351,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_version(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -369,7 +369,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_alias(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -393,7 +393,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_layers(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
@@ -416,7 +416,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -474,7 +474,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_environment(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -497,7 +497,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_fileSystems(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -592,7 +592,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_image(rName, imageID string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   image_uri     = %q
   function_name = %q
@@ -612,7 +612,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_architectures(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -629,7 +629,7 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_ephemeralStorage(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionBaseDataSourceConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
