@@ -39,7 +39,7 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientCertificateConfig_basic_updated,
+				Config: testAccClientCertificateConfig_basicUpdated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
@@ -61,7 +61,7 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientCertificateTags1Config("key1", "value1"),
+				Config: testAccClientCertificateConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -74,7 +74,7 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientCertificateTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccClientCertificateConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -83,7 +83,7 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClientCertificateTags1Config("key2", "value2"),
+				Config: testAccClientCertificateConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -179,13 +179,13 @@ resource "aws_api_gateway_client_certificate" "test" {
 }
 `
 
-const testAccClientCertificateConfig_basic_updated = `
+const testAccClientCertificateConfig_basicUpdated = `
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
 
-func testAccClientCertificateTags1Config(tagKey1, tagValue1 string) string {
+func testAccClientCertificateConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
@@ -197,7 +197,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccClientCertificateTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClientCertificateConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"

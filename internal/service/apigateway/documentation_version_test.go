@@ -31,7 +31,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationVersionBasicConfig(version, apiName),
+				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
@@ -66,7 +66,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
+				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
@@ -80,7 +80,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentationVersionAllFieldsConfig(version, apiName, stageName, uDescription),
+				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, uDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
@@ -108,7 +108,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationVersionBasicConfig(version, apiName),
+				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
@@ -182,7 +182,7 @@ func testAccCheckDocumentationVersionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDocumentationVersionBasicConfig(version, apiName string) string {
+func testAccDocumentationVersionConfig_basic(version, apiName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"
@@ -205,7 +205,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, version, apiName)
 }
 
-func testAccDocumentationVersionAllFieldsConfig(version, apiName, stageName, description string) string {
+func testAccDocumentationVersionConfig_allFields(version, apiName, stageName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"

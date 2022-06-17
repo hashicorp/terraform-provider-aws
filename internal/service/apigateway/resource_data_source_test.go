@@ -23,7 +23,7 @@ func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceDataSourceConfig(rName),
+				Config: testAccResourceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "parent_id", dataSourceName1, "parent_id"),
@@ -37,7 +37,7 @@ func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccResourceDataSourceConfig(r string) string {
+func testAccResourceDataSourceConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "example" {
   name = "%s_example"
