@@ -299,7 +299,6 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 				Config: testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
 						"encrypted":   "true",
@@ -394,7 +393,6 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_iamProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "iam_instance_profile"),
 				),
 			},
@@ -1035,10 +1033,9 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t3.nano"
-  associate_public_ip_address = false
+  name_prefix   = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.nano"
 
   root_block_device {
     encrypted   = true
@@ -1123,8 +1120,6 @@ resource "aws_launch_configuration" "test" {
   image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type        = "t2.nano"
   iam_instance_profile = aws_iam_instance_profile.test.name
-
-  associate_public_ip_address = true
 }
 `, rName))
 }
