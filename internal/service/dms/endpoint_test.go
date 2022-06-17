@@ -280,7 +280,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccEndpointConfig_s3Config(rName),
+				Config: testAccEndpointConfig_s3Update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
@@ -1126,7 +1126,7 @@ func TestAccDMSEndpoint_SQLServer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SQLServer(rName),
+				Config: testAccEndpointConfig_sqlServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -1153,7 +1153,7 @@ func TestAccDMSEndpoint_SQLServer_secretID(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SQLServerSecretID(rName),
+				Config: testAccEndpointConfig_sqlServerSecretID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -1179,14 +1179,14 @@ func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_SQLServer(rName),
+				Config: testAccEndpointConfig_sqlServer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_SQLServerUpdate(rName),
+				Config: testAccEndpointConfig_sqlServerUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
@@ -1987,7 +1987,7 @@ EOF
 `, rName)
 }
 
-func testAccEndpointConfig_s3Config(rName string) string {
+func testAccEndpointConfig_s3Update(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2704,7 +2704,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SQLServer(rName string) string {
+func testAccEndpointConfig_sqlServer(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -2727,7 +2727,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SQLServerUpdate(rName string) string {
+func testAccEndpointConfig_sqlServerUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
@@ -2750,7 +2750,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_SQLServerSecretID(rName string) string {
+func testAccEndpointConfig_sqlServerSecretID(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id                     = %[1]q
