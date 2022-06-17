@@ -194,10 +194,9 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
