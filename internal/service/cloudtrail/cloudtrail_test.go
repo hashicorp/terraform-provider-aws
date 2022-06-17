@@ -62,7 +62,7 @@ func testAcc_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", fmt.Sprintf("trail/%s", rName)),
@@ -78,7 +78,7 @@ func testAcc_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_modified(rName),
+				Config: testAccCloudTrailConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "prefix"),
@@ -108,7 +108,7 @@ func testAcc_cloudWatch(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_cloudWatch(rName),
+				Config: testAccCloudTrailConfig_cloudWatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_group_arn"),
@@ -121,7 +121,7 @@ func testAcc_cloudWatch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_cloudWatchModified(rName),
+				Config: testAccCloudTrailConfig_cloudWatchModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_group_arn"),
@@ -149,7 +149,7 @@ func testAcc_enableLogging(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_enableLogging(rName, true),
+				Config: testAccCloudTrailConfig_enableLogging(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					// AWS will create the trail with logging turned off.
@@ -165,7 +165,7 @@ func testAcc_enableLogging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_enableLogging(rName, false),
+				Config: testAccCloudTrailConfig_enableLogging(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					testAccCheckLoggingEnabled(resourceName, false),
@@ -179,7 +179,7 @@ func testAcc_enableLogging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					testAccCheckLoggingEnabled(resourceName, true),
@@ -203,7 +203,7 @@ func testAcc_multiRegion(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
@@ -212,7 +212,7 @@ func testAcc_multiRegion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_multiRegion(rName),
+				Config: testAccCloudTrailConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "true"),
@@ -226,7 +226,7 @@ func testAcc_multiRegion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
@@ -250,7 +250,7 @@ func testAcc_organization(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_organization(rName),
+				Config: testAccCloudTrailConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "true"),
@@ -264,7 +264,7 @@ func testAcc_organization(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
@@ -288,7 +288,7 @@ func testAcc_logValidation(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_logValidation(rName),
+				Config: testAccCloudTrailConfig_logValidation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
@@ -303,7 +303,7 @@ func testAcc_logValidation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_logValidationModified(rName),
+				Config: testAccCloudTrailConfig_logValidationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
@@ -330,7 +330,7 @@ func testAcc_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_kmsKey(rName),
+				Config: testAccCloudTrailConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
@@ -362,7 +362,7 @@ func testAcc_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_tags(rName),
+				Config: testAccCloudTrailConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -379,7 +379,7 @@ func testAcc_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_tagsModified(rName),
+				Config: testAccCloudTrailConfig_tagsModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -392,7 +392,7 @@ func testAcc_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_tagsModifiedAgain(rName),
+				Config: testAccCloudTrailConfig_tagsModifiedAgain(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -417,7 +417,7 @@ func testAcc_globalServiceEvents(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_globalServiceEvents(rName),
+				Config: testAccCloudTrailConfig_globalServiceEvents(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
@@ -443,7 +443,7 @@ func testAcc_eventSelector(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_eventSelector(rName),
+				Config: testAccCloudTrailConfig_eventSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
@@ -462,7 +462,7 @@ func testAcc_eventSelector(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_eventSelectorReadWriteType(rName),
+				Config: testAccCloudTrailConfig_eventSelectorReadWriteType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
@@ -470,7 +470,7 @@ func testAcc_eventSelector(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_eventSelectorModified(rName),
+				Config: testAccCloudTrailConfig_eventSelectorModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
@@ -494,7 +494,7 @@ func testAcc_eventSelector(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_eventSelectorNone(rName),
+				Config: testAccCloudTrailConfig_eventSelectorNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
 				),
@@ -514,7 +514,7 @@ func testAcc_eventSelectorDynamoDB(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_eventSelectorDynamoDB(rName),
+				Config: testAccCloudTrailConfig_eventSelectorDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
@@ -540,7 +540,7 @@ func testAcc_eventSelectorExclude(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_eventSelectorExcludeKMS(rName),
+				Config: testAccCloudTrailConfig_eventSelectorExcludeKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
@@ -554,7 +554,7 @@ func testAcc_eventSelectorExclude(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_eventSelectorExcludeKMSAndRDSData(rName),
+				Config: testAccCloudTrailConfig_eventSelectorExcludeKMSAndRDSData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
@@ -569,7 +569,7 @@ func testAcc_eventSelectorExclude(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_eventSelectorNone(rName),
+				Config: testAccCloudTrailConfig_eventSelectorNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
 				),
@@ -589,7 +589,7 @@ func testAcc_insightSelector(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_insightSelector(rName),
+				Config: testAccCloudTrailConfig_insightSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
@@ -601,7 +601,7 @@ func testAcc_insightSelector(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudtrailConfig_insightSelectorMulti(rName),
+				Config: testAccCloudTrailConfig_insightSelectorMulti(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
@@ -609,14 +609,14 @@ func testAcc_insightSelector(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_insightSelector(rName),
+				Config: testAccCloudTrailConfig_insightSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
 				),
 			},
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "0"),
 				),
@@ -636,7 +636,7 @@ func testAcc_advanced_event_selector(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_advancedEventSelector(rName),
+				Config: testAccCloudTrailConfig_advancedEventSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "s3Custom"),
@@ -735,7 +735,7 @@ func testAcc_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudtrailConfig_basic(rName),
+				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(resourceName, &trail),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
@@ -911,7 +911,7 @@ resource "aws_s3_bucket_policy" "test" {
 `, rName)
 }
 
-func testAccCloudtrailConfig_basic(rName string) string {
+func testAccCloudTrailConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -923,7 +923,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_modified(rName string) string {
+func testAccCloudTrailConfig_modified(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -937,7 +937,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_enableLogging(rName string, enableLogging bool) string {
+func testAccCloudTrailConfig_enableLogging(rName string, enableLogging bool) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -952,7 +952,7 @@ resource "aws_cloudtrail" "test" {
 `, rName, enableLogging))
 }
 
-func testAccCloudtrailConfig_cloudWatch(rName string) string {
+func testAccCloudTrailConfig_cloudWatch(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1009,7 +1009,7 @@ resource "aws_iam_role_policy" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_cloudWatchModified(rName string) string {
+func testAccCloudTrailConfig_cloudWatchModified(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1070,7 +1070,7 @@ resource "aws_iam_role_policy" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_multiRegion(rName string) string {
+func testAccCloudTrailConfig_multiRegion(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1083,7 +1083,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_organization(rName string) string {
+func testAccCloudTrailConfig_organization(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = ["cloudtrail.${data.aws_partition.current.dns_suffix}"]
@@ -1100,7 +1100,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_logValidation(rName string) string {
+func testAccCloudTrailConfig_logValidation(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1115,7 +1115,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_logValidationModified(rName string) string {
+func testAccCloudTrailConfig_logValidationModified(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1128,7 +1128,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_kmsKey(rName string) string {
+func testAccCloudTrailConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -1162,7 +1162,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_globalServiceEvents(rName string) string {
+func testAccCloudTrailConfig_globalServiceEvents(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1175,7 +1175,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_tags(rName string) string {
+func testAccCloudTrailConfig_tags(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1192,7 +1192,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_tagsModified(rName string) string {
+func testAccCloudTrailConfig_tagsModified(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1210,7 +1210,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_tagsModifiedAgain(rName string) string {
+func testAccCloudTrailConfig_tagsModifiedAgain(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1222,7 +1222,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelector(rName string) string {
+func testAccCloudTrailConfig_eventSelector(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1253,7 +1253,7 @@ resource "aws_s3_bucket" "test2" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorReadWriteType(rName string) string {
+func testAccCloudTrailConfig_eventSelectorReadWriteType(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1270,7 +1270,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorModified(rName string) string {
+func testAccCloudTrailConfig_eventSelectorModified(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1349,7 +1349,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorNone(rName string) string {
+func testAccCloudTrailConfig_eventSelectorNone(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1361,7 +1361,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorDynamoDB(rName string) string {
+func testAccCloudTrailConfig_eventSelectorDynamoDB(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1398,7 +1398,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorExcludeKMS(rName string) string {
+func testAccCloudTrailConfig_eventSelectorExcludeKMS(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1416,7 +1416,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_eventSelectorExcludeKMSAndRDSData(rName string) string {
+func testAccCloudTrailConfig_eventSelectorExcludeKMSAndRDSData(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1437,7 +1437,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_insightSelector(rName string) string {
+func testAccCloudTrailConfig_insightSelector(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1454,7 +1454,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_insightSelectorMulti(rName string) string {
+func testAccCloudTrailConfig_insightSelectorMulti(rName string) string {
 	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
@@ -1475,7 +1475,7 @@ resource "aws_cloudtrail" "test" {
 `, rName))
 }
 
-func testAccCloudtrailConfig_advancedEventSelector(rName string) string {
+func testAccCloudTrailConfig_advancedEventSelector(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first

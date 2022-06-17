@@ -2012,6 +2012,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudTrail"
+            - pattern-not-regex: ^testAccCloudTrailConfig_.*
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: cloudtrail-in-test-name
