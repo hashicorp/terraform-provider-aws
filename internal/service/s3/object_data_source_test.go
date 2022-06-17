@@ -252,7 +252,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectDataSourceConfig_objectLockLegalHoldOff(rInt),
+				Config: testAccObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
@@ -287,7 +287,7 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectDataSourceConfig_objectLockLegalHoldOn(rInt, retainUntilDate),
+				Config: testAccObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
@@ -323,13 +323,13 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName, &rObj),
 				),
 			},
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExistsDataSource(dataSourceName1, &dsObj1),
@@ -377,14 +377,14 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName1, &rObj1),
 					testAccCheckObjectExists(resourceName2, &rObj2),
 				),
 			},
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 
@@ -420,7 +420,7 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectSingleSlashAsKeyDataSourceConfig(rName),
+				Config: testAccObjectDataSourceConfig_singleSlashAsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 				),
@@ -616,7 +616,7 @@ data "aws_s3_object" "obj" {
 `, randInt)
 }
 
-func testAccObjectDataSourceConfig_objectLockLegalHoldOff(randInt int) string {
+func testAccObjectDataSourceConfig_lockLegalHoldOff(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -646,7 +646,7 @@ data "aws_s3_object" "obj" {
 `, randInt)
 }
 
-func testAccObjectDataSourceConfig_objectLockLegalHoldOn(randInt int, retainUntilDate string) string {
+func testAccObjectDataSourceConfig_lockLegalHoldOn(randInt int, retainUntilDate string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -759,7 +759,7 @@ data "aws_s3_object" "obj3" {
 	return resources, both
 }
 
-func testAccObjectSingleSlashAsKeyDataSourceConfig(rName string) string {
+func testAccObjectDataSourceConfig_singleSlashAsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
