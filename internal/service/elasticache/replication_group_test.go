@@ -2000,7 +2000,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_globalIdBasic(rName),
+				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					testAccCheckReplicationGroupParameterGroup(&rg, &pg),
@@ -2014,7 +2014,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 				),
 			},
 			{
-				Config:                  testAccReplicationGroupConfig_globalIdBasic(rName),
+				Config:                  testAccReplicationGroupConfig_globalIDBasic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2053,7 +2053,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_globalIdFull(rName, initialNumCacheClusters),
+				Config: testAccReplicationGroupConfig_globalIDFull(rName, initialNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg1),
 					testAccCheckReplicationGroupParameterGroup(&rg1, &pg1),
@@ -2074,14 +2074,14 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				),
 			},
 			{
-				Config:                  testAccReplicationGroupConfig_globalIdBasic(rName),
+				Config:                  testAccReplicationGroupConfig_globalIDBasic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_globalIdFull(rName, updatedNumCacheClusters),
+				Config: testAccReplicationGroupConfig_globalIDFull(rName, updatedNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg2),
 					testAccCheckReplicationGroupParameterGroup(&rg2, &pg2),
@@ -2114,7 +2114,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_globalIdBasic(rName),
+				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
@@ -2151,7 +2151,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_globalIdClusterMode(rName, 2, 1),
+				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 2, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg1),
 					testAccCheckReplicationGroupParameterGroup(&rg1, &pg1),
@@ -2167,14 +2167,14 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				),
 			},
 			{
-				Config:                  testAccReplicationGroupConfig_globalIdBasic(rName),
+				Config:                  testAccReplicationGroupConfig_globalIDBasic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_globalIdClusterMode(rName, 1, 3),
+				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 1, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg2),
 					testAccCheckReplicationGroupParameterGroup(&rg2, &pg2),
@@ -2209,7 +2209,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 		CheckDestroy:      testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReplicationGroupConfig_globalIdClusterModeNumNodeOnSecondary(rName),
+				Config:      testAccReplicationGroupConfig_globalIDClusterModeNumNodeOnSecondary(rName),
 				ExpectError: regexp.MustCompile(`"global_replication_group_id": conflicts with cluster_mode.0.num_node_groups`),
 			},
 		},
@@ -3452,7 +3452,7 @@ resource "aws_elasticache_replication_group" "primary" {
 	)
 }
 
-func testAccReplicationGroupConfig_globalIdBasic(rName string) string {
+func testAccReplicationGroupConfig_globalIDBasic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
@@ -3491,7 +3491,7 @@ resource "aws_elasticache_replication_group" "primary" {
 	)
 }
 
-func testAccReplicationGroupConfig_globalIdFull(rName string, numCacheClusters int) string {
+func testAccReplicationGroupConfig_globalIDFull(rName string, numCacheClusters int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
@@ -3543,7 +3543,7 @@ resource "aws_elasticache_replication_group" "primary" {
 	)
 }
 
-func testAccReplicationGroupConfig_globalIdClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
+func testAccReplicationGroupConfig_globalIDClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
@@ -3593,7 +3593,7 @@ resource "aws_elasticache_replication_group" "primary" {
 	)
 }
 
-func testAccReplicationGroupConfig_globalIdClusterModeNumNodeOnSecondary(rName string) string {
+func testAccReplicationGroupConfig_globalIDClusterModeNumNodeOnSecondary(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
