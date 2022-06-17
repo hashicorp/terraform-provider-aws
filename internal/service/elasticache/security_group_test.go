@@ -25,7 +25,7 @@ func TestAccElastiCacheSecurityGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -85,7 +85,7 @@ func testAccCheckSecurityGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccSecurityGroupConfig(rName string) string {
+func testAccSecurityGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
