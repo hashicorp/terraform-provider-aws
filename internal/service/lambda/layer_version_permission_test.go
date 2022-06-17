@@ -26,7 +26,7 @@ func TestAccLambdaLayerVersionPermission_basic_byARN(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLayerVersionPermission_basic_arn(rName),
+				Config: testAccLayerVersionPermission_basic_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
@@ -55,7 +55,7 @@ func TestAccLambdaLayerVersionPermission_basic_byName(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLayerVersionPermission_basic_name(rName),
+				Config: testAccLayerVersionPermission_basic_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
@@ -84,7 +84,7 @@ func TestAccLambdaLayerVersionPermission_org(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLayerVersionPermission_org(rName),
+				Config: testAccLayerVersionPermission_org(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
@@ -114,7 +114,7 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLayerVersionPermission_account(rName),
+				Config: testAccLayerVersionPermission_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
@@ -143,7 +143,7 @@ func TestAccLambdaLayerVersionPermission_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLayerVersionPermission_account(rName),
+				Config: testAccLayerVersionPermission_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceLayerVersionPermission(), resourceName),
@@ -156,7 +156,7 @@ func TestAccLambdaLayerVersionPermission_disappears(t *testing.T) {
 
 // Creating Lambda layer and Lambda layer permissions
 
-func testLayerVersionPermission_basic_arn(layerName string) string {
+func testAccLayerVersionPermission_basic_arn(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -173,7 +173,7 @@ resource "aws_lambda_layer_version_permission" "test" {
 `, layerName)
 }
 
-func testLayerVersionPermission_basic_name(layerName string) string {
+func testAccLayerVersionPermission_basic_name(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -190,7 +190,7 @@ resource "aws_lambda_layer_version_permission" "test" {
 `, layerName)
 }
 
-func testLayerVersionPermission_org(layerName string) string {
+func testAccLayerVersionPermission_org(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -208,7 +208,7 @@ resource "aws_lambda_layer_version_permission" "test" {
 `, layerName)
 }
 
-func testLayerVersionPermission_account(layerName string) string {
+func testAccLayerVersionPermission_account(layerName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

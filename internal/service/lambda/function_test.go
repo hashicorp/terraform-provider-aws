@@ -1774,7 +1774,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3Config(bucketName, roleName, funcName),
+				Config: testAccFunctionConfig_s3Simple(bucketName, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2021,7 +2021,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2042,7 +2042,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -3315,7 +3315,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccS3Config(bucketName, roleName, funcName string) string {
+func testAccFunctionConfig_s3Simple(bucketName, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "%s"
@@ -3523,7 +3523,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, key, path, path, roleName, funcName)
 }
 
-func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path string) string {
+func testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
