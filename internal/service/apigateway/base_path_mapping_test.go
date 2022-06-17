@@ -152,7 +152,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 					testAccCheckBasePathExists(resourceName, &conf),
 					testAccCheckBasePathBasePathAttribute(&conf, "(none)"),
 					testAccCheckBasePathStageAttribute(&conf, "test2"),
-					testAccCheckRestAPIIdAttributeHasChanged(&conf, &confFirst),
+					testAccCheckRestAPIIDAttributeHasChanged(&conf, &confFirst),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test2"),
 				),
 			},
@@ -282,7 +282,7 @@ func testAccCheckBasePathStageAttribute(conf *apigateway.BasePathMapping, basePa
 	}
 }
 
-func testAccCheckRestAPIIdAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.RestApiId == nil {
 			return fmt.Errorf("attribute RestApiId should not be nil")
