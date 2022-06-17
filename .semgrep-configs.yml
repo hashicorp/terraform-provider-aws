@@ -18,7 +18,6 @@ rules:
         - internal/service/kinesis
         - internal/service/lambda
         - internal/service/ram
-        - internal/service/s3
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"

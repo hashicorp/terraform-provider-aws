@@ -33,7 +33,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryConfig(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_basic(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
@@ -109,7 +109,7 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryEncryptWithSSEKMSConfig(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_encryptSSEKMS(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
@@ -209,7 +209,7 @@ resource "aws_s3_bucket_acl" "test" {
 `, name)
 }
 
-func testAccBucketInventoryConfig(bucketName, inventoryName string) string {
+func testAccBucketInventoryConfig_basic(bucketName, inventoryName string) string {
 	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -270,7 +270,7 @@ resource "aws_s3_bucket_inventory" "test" {
 `, inventoryName)
 }
 
-func testAccBucketInventoryEncryptWithSSEKMSConfig(bucketName, inventoryName string) string {
+func testAccBucketInventoryConfig_encryptSSEKMS(bucketName, inventoryName string) string {
 	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test S3 inventory SSE-KMS encryption: %[1]s"
