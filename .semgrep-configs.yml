@@ -7,8 +7,6 @@ rules:
     paths:
       include:
         - internal/service/**/*_test.go
-      exclude:
-        - internal/service/ram
     patterns:
       - pattern-inside: "[]resource.TestStep{ ... }"
       - pattern: "{..., $KEY:$VALUE, ...}"

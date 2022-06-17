@@ -34,7 +34,7 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -48,7 +48,7 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccResourceShareAccepterBasic(rName),
+				Config:            testAccResourceShareAccepterConfig_basic(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -72,7 +72,7 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
@@ -99,7 +99,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterResourceAssociation(rName),
+				Config: testAccResourceShareAccepterConfig_association(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -113,7 +113,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccResourceShareAccepterResourceAssociation(rName),
+				Config:            testAccResourceShareAccepterConfig_association(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -175,7 +175,7 @@ func testAccCheckResourceShareAccepterExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccResourceShareAccepterBasic(rName string) string {
+func testAccResourceShareAccepterConfig_basic(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
@@ -203,8 +203,8 @@ data "aws_caller_identity" "receiver" {}
 `, rName)
 }
 
-func testAccResourceShareAccepterResourceAssociation(rName string) string {
-	return acctest.ConfigCompose(testAccResourceShareAccepterBasic(rName), fmt.Sprintf(`
+func testAccResourceShareAccepterConfig_association(rName string) string {
+	return acctest.ConfigCompose(testAccResourceShareAccepterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
   provider = "awsalternate"
 
