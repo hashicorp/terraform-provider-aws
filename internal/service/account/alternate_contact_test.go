@@ -28,12 +28,12 @@ func TestAccAccountAlternateContact_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccountAlternateContactDestroy,
+		CheckDestroy:      testAccAlternateContactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccountAlternateContactConfig(rName1, emailAddress1),
+				Config: testAccAlternateContactConfig_basic(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAlternateContactExists(resourceName),
+					testAccCheckAlternateContactExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
@@ -48,9 +48,9 @@ func TestAccAccountAlternateContact_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccountAlternateContactConfig(rName2, emailAddress2),
+				Config: testAccAlternateContactConfig_basic(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAlternateContactExists(resourceName),
+					testAccCheckAlternateContactExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
@@ -73,12 +73,12 @@ func TestAccAccountAlternateContact_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccountAlternateContactDestroy,
+		CheckDestroy:      testAccAlternateContactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccountAlternateContactConfig(rName, emailAddress),
+				Config: testAccAlternateContactConfig_basic(rName, emailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAlternateContactExists(resourceName),
+					testAccCheckAlternateContactExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfaccount.ResourceAlternateContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,12 +105,12 @@ func TestAccAccountAlternateContact_accountID(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccountAlternateContactDestroy,
+		CheckDestroy:      testAccAlternateContactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccountAlternateContactOrganizationConfig(rName1, emailAddress1),
+				Config: testAccAlternateContactConfig_organization(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAlternateContactExists(resourceName),
+					testAccCheckAlternateContactExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
@@ -125,9 +125,9 @@ func TestAccAccountAlternateContact_accountID(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccountAlternateContactOrganizationConfig(rName2, emailAddress2),
+				Config: testAccAlternateContactConfig_organization(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountAlternateContactExists(resourceName),
+					testAccCheckAlternateContactExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
@@ -140,7 +140,7 @@ func TestAccAccountAlternateContact_accountID(t *testing.T) {
 	})
 }
 
-func testAccountAlternateContactDestroy(s *terraform.State) error {
+func testAccAlternateContactDestroy(s *terraform.State) error {
 	ctx := context.TODO()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
@@ -172,7 +172,7 @@ func testAccountAlternateContactDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAccountAlternateContactExists(n string) resource.TestCheckFunc {
+func testAccCheckAlternateContactExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -202,7 +202,7 @@ func testAccCheckAccountAlternateContactExists(n string) resource.TestCheckFunc 
 	}
 }
 
-func testAccountAlternateContactConfig(rName, emailAddress string) string {
+func testAccAlternateContactConfig_basic(rName, emailAddress string) string {
 	return fmt.Sprintf(`
 resource "aws_account_alternate_contact" "test" {
   alternate_contact_type = "OPERATIONS"
@@ -215,7 +215,7 @@ resource "aws_account_alternate_contact" "test" {
 `, rName, emailAddress)
 }
 
-func testAccountAlternateContactOrganizationConfig(rName, emailAddress string) string {
+func testAccAlternateContactConfig_organization(rName, emailAddress string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "test" {
   provider = "awsalternate"

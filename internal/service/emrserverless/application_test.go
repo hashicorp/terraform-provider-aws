@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEMRApplication_basic(t *testing.T) {
+func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,7 +52,7 @@ func TestAccEMRApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccEMRApplication_initialCapacity(t *testing.T) {
+func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -98,7 +98,7 @@ func TestAccEMRApplication_initialCapacity(t *testing.T) {
 	})
 }
 
-func TestAccEMRApplication_maxCapacity(t *testing.T) {
+func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -135,7 +135,7 @@ func TestAccEMRApplication_maxCapacity(t *testing.T) {
 	})
 }
 
-func TestAccEMRApplication_network(t *testing.T) {
+func TestAccEMRServerlessApplication_network(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -164,7 +164,7 @@ func TestAccEMRApplication_network(t *testing.T) {
 	})
 }
 
-func TestAccEMRApplication_disappears(t *testing.T) {
+func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -188,7 +188,7 @@ func TestAccEMRApplication_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEMRApplication_tags(t *testing.T) {
+func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	var application emrserverless.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

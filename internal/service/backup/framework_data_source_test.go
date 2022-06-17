@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccBackupFrameworkDataSource_basic(t *testing.T) {
+func testAccFrameworkDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -67,7 +67,7 @@ func testAccBackupFrameworkDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBackupFrameworkDataSource_controlScopeTag(t *testing.T) {
+func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))

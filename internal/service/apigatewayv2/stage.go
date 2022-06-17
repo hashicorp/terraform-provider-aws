@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	apigatewayv2DefaultStageName = "$default"
+	defaultStageName = "$default"
 )
 
 func ResourceStage() *schema.Resource {
@@ -321,7 +321,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	case apigatewayv2.ProtocolTypeWebsocket:
 		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 	case apigatewayv2.ProtocolTypeHttp:
-		if stageName == apigatewayv2DefaultStageName {
+		if stageName == defaultStageName {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
 		} else {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))

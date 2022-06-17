@@ -23,7 +23,7 @@ func TestAccACMPCAPolicy_Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig(),
+				Config: testAccPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -85,7 +85,7 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPolicyConfig() string {
+func testAccPolicyConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 

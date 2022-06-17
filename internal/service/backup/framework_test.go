@@ -17,16 +17,16 @@ import (
 func TestAccBackupFramework_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			"basic":                        testAccBackupFramework_basic,
-			"disappears":                   testAccBackupFramework_disappears,
-			"UpdateTags":                   testAccBackupFramework_updateTags,
-			"UpdateControlScope":           testAccBackupFramework_updateControlScope,
-			"UpdateControlInputParameters": testAccBackupFramework_updateControlInputParameters,
-			"UpdateControls":               testAccBackupFramework_updateControls,
+			"basic":                        testAccFramework_basic,
+			"disappears":                   testAccFramework_disappears,
+			"UpdateTags":                   testAccFramework_updateTags,
+			"UpdateControlScope":           testAccFramework_updateControlScope,
+			"UpdateControlInputParameters": testAccFramework_updateControlInputParameters,
+			"UpdateControls":               testAccFramework_updateControls,
 		},
 		"DataSource": {
-			"basic":           testAccBackupFrameworkDataSource_basic,
-			"ControlScopeTag": testAccBackupFrameworkDataSource_controlScopeTag,
+			"basic":           testAccFrameworkDataSource_basic,
+			"ControlScopeTag": testAccFrameworkDataSource_controlScopeTag,
 		},
 	}
 
@@ -43,7 +43,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 	}
 }
 
-func testAccBackupFramework_basic(t *testing.T) {
+func testAccFramework_basic(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -58,7 +58,7 @@ func testAccBackupFramework_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, originalDescription),
+				Config: testAccFrameworkConfig_basic(rName, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -82,7 +82,7 @@ func testAccBackupFramework_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, updatedDescription),
+				Config: testAccFrameworkConfig_basic(rName, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -104,7 +104,7 @@ func testAccBackupFramework_basic(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_updateTags(t *testing.T) {
+func testAccFramework_updateTags(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -118,7 +118,7 @@ func testAccBackupFramework_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -142,7 +142,7 @@ func testAccBackupFramework_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_tags(rName, description),
+				Config: testAccFrameworkConfig_tags(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -167,7 +167,7 @@ func testAccBackupFramework_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_tagsUpdated(rName, description),
+				Config: testAccFrameworkConfig_tagsUpdated(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -191,7 +191,7 @@ func testAccBackupFramework_updateTags(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_updateControlScope(t *testing.T) {
+func testAccFramework_updateControlScope(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -207,7 +207,7 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -231,7 +231,7 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_controlScopeComplianceResourceId(rName, description),
+				Config: testAccFrameworkConfig_controlScopeComplianceResourceID(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -257,7 +257,7 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_controlScopeTag(rName, description, originalControlScopeTagValue),
+				Config: testAccFrameworkConfig_controlScopeTag(rName, description, originalControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -281,7 +281,7 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_controlScopeTag(rName, description, updatedControlScopeTagValue),
+				Config: testAccFrameworkConfig_controlScopeTag(rName, description, updatedControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -303,7 +303,7 @@ func testAccBackupFramework_updateControlScope(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
+func testAccFramework_updateControlInputParameters(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -319,7 +319,7 @@ func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
+				Config: testAccFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -353,7 +353,7 @@ func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
+				Config: testAccFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -385,7 +385,7 @@ func testAccBackupFramework_updateControlInputParameters(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_updateControls(t *testing.T) {
+func testAccFramework_updateControls(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -399,7 +399,7 @@ func testAccBackupFramework_updateControls(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -423,7 +423,7 @@ func testAccBackupFramework_updateControls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupFrameworkConfig_controls(rName, description),
+				Config: testAccFrameworkConfig_controls(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -463,7 +463,7 @@ func testAccBackupFramework_updateControls(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_disappears(t *testing.T) {
+func testAccFramework_disappears(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
@@ -477,7 +477,7 @@ func testAccBackupFramework_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFrameworkDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(resourceName, &framework),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceFramework(), resourceName),
@@ -549,7 +549,7 @@ func testAccCheckFrameworkExists(name string, framework *backup.DescribeFramewor
 	}
 }
 
-func testAccBackupFrameworkConfig_basic(rName, label string) string {
+func testAccFrameworkConfig_basic(rName, label string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -572,7 +572,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label)
 }
 
-func testAccBackupFrameworkConfig_tags(rName, label string) string {
+func testAccFrameworkConfig_tags(rName, label string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -596,7 +596,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label)
 }
 
-func testAccBackupFrameworkConfig_tagsUpdated(rName, label string) string {
+func testAccFrameworkConfig_tagsUpdated(rName, label string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -621,7 +621,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label)
 }
 
-func testAccBackupFrameworkConfig_controlScopeComplianceResourceId(rName, label string) string {
+func testAccFrameworkConfig_controlScopeComplianceResourceID(rName, label string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -663,7 +663,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label)
 }
 
-func testAccBackupFrameworkConfig_controlScopeTag(rName, label, controlScopeTagValue string) string {
+func testAccFrameworkConfig_controlScopeTag(rName, label, controlScopeTagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -686,7 +686,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label, controlScopeTagValue)
 }
 
-func testAccBackupFrameworkConfig_controlInputParameter(rName, label, requiredRetentionDaysValue string) string {
+func testAccFrameworkConfig_controlInputParameter(rName, label, requiredRetentionDaysValue string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q
@@ -718,7 +718,7 @@ resource "aws_backup_framework" "test" {
 `, rName, label, requiredRetentionDaysValue)
 }
 
-func testAccBackupFrameworkConfig_controls(rName, label string) string {
+func testAccFrameworkConfig_controls(rName, label string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_framework" "test" {
   name        = %[1]q

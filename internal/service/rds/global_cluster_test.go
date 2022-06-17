@@ -101,7 +101,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig(rName),
+				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
@@ -135,7 +135,7 @@ func TestAccRDSGlobalCluster_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig(rName),
+				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					testAccCheckGlobalClusterDisappears(&globalCluster1),
@@ -158,7 +158,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterDatabaseNameConfig(rName, "database1"),
+				Config: testAccGlobalClusterConfig_databaseName(rName, "database1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "database1"),
@@ -170,7 +170,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalClusterDatabaseNameConfig(rName, "database2"),
+				Config: testAccGlobalClusterConfig_databaseName(rName, "database2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
@@ -193,7 +193,7 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterDeletionProtectionConfig(rName, true),
+				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
@@ -205,7 +205,7 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalClusterDeletionProtectionConfig(rName, false),
+				Config: testAccGlobalClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
@@ -228,7 +228,7 @@ func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineConfig(rName, "aurora"),
+				Config: testAccGlobalClusterConfig_engine(rName, "aurora"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
@@ -255,7 +255,7 @@ func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora"),
+				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
@@ -286,15 +286,15 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				//Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.4"),
+				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				//Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-postgresql", "13.5"),
+				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
@@ -326,13 +326,13 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				Config: testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
@@ -367,13 +367,13 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.5"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.7"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
@@ -403,13 +403,13 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rNameGlobal, rNamePrimary, rNameSecondary, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora", "5.6.mysql_aurora.1.23.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 				),
 			},
 			{
-				Config: testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.10.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
@@ -432,7 +432,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-mysql"),
+				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora-mysql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
@@ -459,7 +459,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterEngineVersionConfig(rName, "aurora-postgresql"),
+				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora-postgresql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
@@ -487,7 +487,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterSourceClusterIdentifierConfig(rName),
+				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
@@ -516,7 +516,7 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterSourceClusterIdentifierStorageEncryptedConfig(rName),
+				Config: testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
@@ -544,7 +544,7 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 		CheckDestroy:      testAccCheckGlobalClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterStorageEncryptedConfig(rName, true),
+				Config: testAccGlobalClusterConfig_storageEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
@@ -556,7 +556,7 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalClusterStorageEncryptedConfig(rName, false),
+				Config: testAccGlobalClusterConfig_storageEncrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
@@ -682,7 +682,7 @@ func testAccPreCheckGlobalCluster(t *testing.T) {
 	}
 }
 
-func testAccGlobalClusterConfig(rName string) string {
+func testAccGlobalClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
@@ -690,7 +690,7 @@ resource "aws_rds_global_cluster" "test" {
 `, rName)
 }
 
-func testAccGlobalClusterDatabaseNameConfig(rName, databaseName string) string {
+func testAccGlobalClusterConfig_databaseName(rName, databaseName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   database_name             = %[1]q
@@ -699,7 +699,7 @@ resource "aws_rds_global_cluster" "test" {
 `, databaseName, rName)
 }
 
-func testAccGlobalClusterDeletionProtectionConfig(rName string, deletionProtection bool) string {
+func testAccGlobalClusterConfig_deletionProtection(rName string, deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   deletion_protection       = %[1]t
@@ -708,7 +708,7 @@ resource "aws_rds_global_cluster" "test" {
 `, deletionProtection, rName)
 }
 
-func testAccGlobalClusterEngineConfig(rName, engine string) string {
+func testAccGlobalClusterConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   engine                    = %[1]q
@@ -717,7 +717,7 @@ resource "aws_rds_global_cluster" "test" {
 `, engine, rName)
 }
 
-func testAccGlobalClusterEngineVersionConfig(rName, engine string) string {
+func testAccGlobalClusterConfig_engineVersion(rName, engine string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
@@ -731,7 +731,7 @@ resource "aws_rds_global_cluster" "test" {
 `, engine, rName)
 }
 
-func testAccGlobalClusterWithPrimaryEngineVersionConfig(rName, engine, engineVersion string) string {
+func testAccGlobalClusterConfig_primaryEngineVersion(rName, engine, engineVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -777,7 +777,7 @@ resource "aws_rds_cluster_instance" "test" {
 `, engine, engineVersion, rName)
 }
 
-func testAccGlobalClusterEngineVersionUpgradeMultiRegionConfig(rNameGlobal, rNamePrimary, rNameSecondary, engine, engineVersion string) string {
+func testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, engine, engineVersion string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -884,7 +884,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 `, rNameGlobal, engine, engineVersion, rNamePrimary, rNameSecondary))
 }
 
-func testAccGlobalClusterSourceClusterIdentifierConfig(rName string) string {
+func testAccGlobalClusterConfig_sourceClusterID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "aurora-postgresql"
@@ -913,7 +913,7 @@ resource "aws_rds_global_cluster" "test" {
 `, rName)
 }
 
-func testAccGlobalClusterSourceClusterIdentifierStorageEncryptedConfig(rName string) string {
+func testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "aurora-postgresql"
@@ -943,7 +943,7 @@ resource "aws_rds_global_cluster" "test" {
 `, rName)
 }
 
-func testAccGlobalClusterStorageEncryptedConfig(rName string, storageEncrypted bool) string {
+func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q

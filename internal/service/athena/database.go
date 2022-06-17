@@ -213,7 +213,7 @@ func expandResultConfiguration(d *schema.ResourceData) *athena.ResultConfigurati
 	}
 
 	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
-		resultConfig.AclConfiguration = expandResultConfigurationAclConfig(v.([]interface{}))
+		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
 	}
 
 	return resultConfig
@@ -237,7 +237,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *athena.Enc
 	return encryptionConfig
 }
 
-func expandResultConfigurationAclConfig(config []interface{}) *athena.AclConfiguration {
+func expandResultConfigurationACLConfig(config []interface{}) *athena.AclConfiguration {
 	if len(config) <= 0 {
 		return nil
 	}

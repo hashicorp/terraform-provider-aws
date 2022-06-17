@@ -19,7 +19,7 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDataSourceConfig(groupName),
+				Config: testAccGroupDataSourceConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -43,7 +43,7 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithUserDataSourceConfig(groupName, userName, groupMemberShipName, userCount),
+				Config: testAccGroupDataSourceConfig_user(groupName, userName, groupMemberShipName, userCount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -60,7 +60,7 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 	})
 }
 
-func testAccGroupDataSourceConfig(name string) string {
+func testAccGroupDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -73,7 +73,7 @@ data "aws_iam_group" "test" {
 `, name)
 }
 
-func testAccGroupWithUserDataSourceConfig(groupName, userName, membershipName string, userCount int) string {
+func testAccGroupDataSourceConfig_user(groupName, userName, membershipName string, userCount int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"

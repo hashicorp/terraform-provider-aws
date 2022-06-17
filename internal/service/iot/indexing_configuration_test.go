@@ -32,7 +32,7 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 		CheckDestroy:      acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexingConfigurationConfig,
+				Config: testAccIndexingConfigurationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
@@ -66,7 +66,7 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 		CheckDestroy:      acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexingConfigurationAllAttributesConfig,
+				Config: testAccIndexingConfigurationConfig_allAttributes,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
@@ -102,7 +102,7 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 	})
 }
 
-const testAccIndexingConfigurationConfig = `
+const testAccIndexingConfigurationConfig_basic = `
 resource "aws_iot_indexing_configuration" "test" {
   thing_group_indexing_configuration {
     thing_group_indexing_mode = "OFF"
@@ -114,7 +114,7 @@ resource "aws_iot_indexing_configuration" "test" {
 }
 `
 
-const testAccIndexingConfigurationAllAttributesConfig = `
+const testAccIndexingConfigurationConfig_allAttributes = `
 resource "aws_iot_indexing_configuration" "test" {
   thing_group_indexing_configuration {
     thing_group_indexing_mode = "ON"

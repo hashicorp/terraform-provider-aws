@@ -21,7 +21,7 @@ func TestAccIAMRoleDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleDataSourceConfig(roleName),
+				Config: testAccRoleDataSourceConfig_basic(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "assume_role_policy", resourceName, "assume_role_policy"),
@@ -68,7 +68,7 @@ func TestAccIAMRoleDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccRoleDataSourceConfig(roleName string) string {
+func testAccRoleDataSourceConfig_basic(roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

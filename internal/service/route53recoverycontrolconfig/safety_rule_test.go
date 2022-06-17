@@ -25,7 +25,7 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,7 +55,7 @@ func testAccSafetyRule_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleAssertionConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceSafetyRule(), resourceName),
@@ -77,7 +77,7 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 		CheckDestroy:      testAccCheckSafetyRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlSafetyRuleGatingConfig(rName),
+				Config: testAccSafetyRuleConfig_routingControlGating(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -138,7 +138,7 @@ func testAccCheckSafetyRuleExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRoutingControlSafetyRuleAssertionConfig(rName string) string {
+func testAccSafetyRuleConfig_routingControlAssertion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
@@ -170,7 +170,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
 `, rName)
 }
 
-func testAccRoutingControlSafetyRuleGatingConfig(rName string) string {
+func testAccSafetyRuleConfig_routingControlGating(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q

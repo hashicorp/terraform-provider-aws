@@ -26,12 +26,12 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -61,10 +61,10 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
-					testAccCheckBatchJobQueueDisappears(&jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueDisappears(&jobQueue1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,13 +82,13 @@ func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
-					testAccCheckBatchJobQueueComputeEnvironmentOrderUpdate(&jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueComputeEnvironmentOrderUpdate(&jobQueue1),
 				),
 			},
 			{
@@ -109,19 +109,19 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigPriority(rName, 1),
+				Config: testAccJobQueueConfig_priority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
 					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
 				),
 			},
 			{
-				Config: testAccBatchJobQueueConfigPriority(rName, 2),
+				Config: testAccJobQueueConfig_priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue2),
+					testAccCheckJobQueueExists(resourceName, &jobQueue2),
 					resource.TestCheckResourceAttr(resourceName, "priority", "2"),
 				),
 			},
@@ -145,13 +145,13 @@ func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
 				// last variable selects the scheduling policy's arn. In this case, the first scheduling policy's arn.
-				Config: testAccBatchJobQueueConfigSchedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "first"),
+				Config: testAccJobQueueConfig_schedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
 				),
 			},
@@ -162,9 +162,9 @@ func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
 			},
 			{
 				// test switching the scheduling_policy_arn by changing the last variable to select the second scheduling policy's arn.
-				Config: testAccBatchJobQueueConfigSchedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "second"),
+				Config: testAccJobQueueConfig_schedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue2),
+					testAccCheckJobQueueExists(resourceName, &jobQueue2),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
 				),
 			},
@@ -181,19 +181,19 @@ func TestAccBatchJobQueue_state(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateDisabled),
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueExists(resourceName, &jobQueue1),
 					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateDisabled),
 				),
 			},
 			{
-				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue2),
+					testAccCheckJobQueueExists(resourceName, &jobQueue2),
 					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateEnabled),
 				),
 			},
@@ -215,12 +215,12 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchJobQueueDestroy,
+		CheckDestroy:      testAccCheckJobQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchJobQueueConfigTags1(rName, "key1", "value1"),
+				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					testAccCheckJobQueueExists(resourceName, &jobQueue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -231,18 +231,18 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBatchJobQueueConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccJobQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					testAccCheckJobQueueExists(resourceName, &jobQueue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccBatchJobQueueConfigTags1(rName, "key2", "value2"),
+				Config: testAccJobQueueConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					testAccCheckJobQueueExists(resourceName, &jobQueue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -251,7 +251,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
+func testAccCheckJobQueueExists(n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		log.Printf("State: %#v", s.RootModule().Resources)
@@ -278,7 +278,7 @@ func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resourc
 	}
 }
 
-func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
+func testAccCheckJobQueueDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_queue" {
 			continue
@@ -295,7 +295,7 @@ func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
+func testAccCheckJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 		name := aws.StringValue(jobQueue.JobQueueName)
@@ -309,11 +309,11 @@ func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resourc
 	}
 }
 
-// testAccCheckBatchJobQueueComputeEnvironmentOrderUpdate simulates the change of a Compute Environment Order
+// testAccCheckJobQueueComputeEnvironmentOrderUpdate simulates the change of a Compute Environment Order
 // An external update to the Batch Job Queue (e.g. console) may trigger changes to the value of the Order
 // parameter that do not affect the operation of the queue itself, but the resource logic needs to handle.
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
-func testAccCheckBatchJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
+func testAccCheckJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
@@ -343,7 +343,7 @@ func testAccCheckBatchJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQ
 	}
 }
 
-func testAccBatchJobQueueConfigBase(rName string) string {
+func testAccJobQueueConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -441,9 +441,9 @@ resource "aws_batch_compute_environment" "test" {
 `, rName)
 }
 
-func testAccBatchJobQueueConfigPriority(rName string, priority int) string {
+func testAccJobQueueConfig_priority(rName string, priority int) string {
 	return acctest.ConfigCompose(
-		testAccBatchJobQueueConfigBase(rName),
+		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -454,7 +454,7 @@ resource "aws_batch_job_queue" "test" {
 `, rName, priority))
 }
 
-func testAccBatchJobQueueSchedulingPolicy(rName string, rName2 string) string {
+func testAccJobQueueSchedulingPolicy(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test1" {
   name = %[1]q
@@ -486,10 +486,10 @@ resource "aws_batch_scheduling_policy" "test2" {
 `, rName, rName2)
 }
 
-func testAccBatchJobQueueConfigSchedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
+func testAccJobQueueConfig_schedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
 	return acctest.ConfigCompose(
-		testAccBatchJobQueueConfigBase(rName),
-		testAccBatchJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
+		testAccJobQueueConfigBase(rName),
+		testAccJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
 		fmt.Sprintf(`
 locals {
   select_scheduling_policy = %[2]q
@@ -505,9 +505,9 @@ resource "aws_batch_job_queue" "test" {
 `, rName, selectSchedulingPolicy))
 }
 
-func testAccBatchJobQueueConfigState(rName string, state string) string {
+func testAccJobQueueConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccBatchJobQueueConfigBase(rName),
+		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -518,9 +518,9 @@ resource "aws_batch_job_queue" "test" {
 `, rName, state))
 }
 
-func testAccBatchJobQueueConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccJobQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccBatchJobQueueConfigBase(rName),
+		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -535,9 +535,9 @@ resource "aws_batch_job_queue" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccBatchJobQueueConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccJobQueueConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccBatchJobQueueConfigBase(rName),
+		testAccJobQueueConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]

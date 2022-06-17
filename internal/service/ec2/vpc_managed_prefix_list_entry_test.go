@@ -46,6 +46,34 @@ func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 	})
 }
 
+func TestAccVPCManagedPrefixListEntry_ipv4Multiple(t *testing.T) {
+	var entry ec2.PrefixListEntry
+	resourceName1 := "aws_ec2_managed_prefix_list_entry.test1"
+	resourceName2 := "aws_ec2_managed_prefix_list_entry.test2"
+	resourceName3 := "aws_ec2_managed_prefix_list_entry.test3"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPrefixListEntryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCManagedPrefixListEntryConfig_ipv4Multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckManagedPrefixListEntryExists(resourceName1, &entry),
+					testAccCheckManagedPrefixListEntryExists(resourceName2, &entry),
+					testAccCheckManagedPrefixListEntryExists(resourceName3, &entry),
+					resource.TestCheckResourceAttr(resourceName1, "cidr", "10.0.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName2, "cidr", "10.0.1.0/24"),
+					resource.TestCheckResourceAttr(resourceName3, "cidr", "10.0.2.0/24"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
@@ -254,6 +282,34 @@ resource "aws_ec2_managed_prefix_list" "test" {
 
 resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "10.0.0.0/8"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+`, rName)
+}
+
+func testAccVPCManagedPrefixListEntryConfig_ipv4Multiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test1" {
+  cidr           = "10.0.0.0/24"
+  description    = "description 1"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test2" {
+  cidr           = "10.0.1.0/24"
+  description    = "description 2"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test3" {
+  cidr           = "10.0.2.0/24"
+  description    = "description 3"
   prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
