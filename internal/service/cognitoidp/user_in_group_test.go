@@ -29,7 +29,7 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserInGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigUserInGroup_basic(rName),
+				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
@@ -52,7 +52,7 @@ func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserInGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigUserInGroup_basic(rName),
+				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
@@ -63,7 +63,7 @@ func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigUserInGroup_basic(rName string) string {
+func testAccUserInGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
