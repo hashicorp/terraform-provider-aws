@@ -9,7 +9,6 @@ rules:
         - internal/service/**/*_test.go
       exclude:
         - internal/service/cognitoidp
-        - internal/service/dax
         - internal/service/elasticache
         - internal/service/lambda
         - internal/service/ram
