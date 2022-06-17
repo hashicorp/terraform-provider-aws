@@ -10,7 +10,6 @@ rules:
       exclude:
         - internal/service/appautoscaling
         - internal/service/cloudtrail
-        - internal/service/cloudwatch
         - internal/service/cognitoidp
         - internal/service/dax
         - internal/service/dms
