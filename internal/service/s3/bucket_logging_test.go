@@ -27,7 +27,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
@@ -56,7 +56,7 @@ func TestAccS3BucketLogging_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketLogging(), resourceName),
@@ -79,7 +79,7 @@ func TestAccS3BucketLogging_update(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketLoggingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 				),
@@ -168,7 +168,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
@@ -231,7 +231,7 @@ func TestAccS3BucketLogging_TargetGrantByEmail(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
@@ -288,7 +288,7 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLoggingConfig_basic2(rName),
+				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
@@ -450,7 +450,7 @@ func testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName string) resourc
 	}
 }
 
-func testAccBucketLoggingConfig_basic2(rName string) string {
+func testAccBucketLoggingConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"

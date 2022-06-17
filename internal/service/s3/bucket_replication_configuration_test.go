@@ -459,7 +459,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationConfig_rTC(rName),
+				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -1338,7 +1338,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`)
 }
 
-func testAccBucketReplicationConfigurationConfig_rTC(rName string) string {
+func testAccBucketReplicationConfigurationConfig_rtc(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		`

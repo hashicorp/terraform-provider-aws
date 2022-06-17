@@ -1204,7 +1204,7 @@ func TestAccS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_keyEnabled2(rName, "stuff"),
+				Config: testAccBucketObjectConfig_objectKeyEnabled(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -1227,7 +1227,7 @@ func TestAccS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_keyEnabled(rName, "stuff"),
+				Config: testAccBucketObjectConfig_bucketKeyEnabled(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -2054,7 +2054,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectConfig_keyEnabled2(rName string, content string) string {
+func testAccBucketObjectConfig_objectKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
@@ -2075,7 +2075,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectConfig_keyEnabled(rName string, content string) string {
+func testAccBucketObjectConfig_bucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"

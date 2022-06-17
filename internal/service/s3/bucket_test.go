@@ -1665,7 +1665,7 @@ func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_replicationV2RTCNo(bucketName),
+				Config: testAccBucketConfig_replicationV2RTCNotConfigured(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(resourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
@@ -4184,7 +4184,7 @@ resource "aws_s3_bucket" "source" {
 `, bucketName))
 }
 
-func testAccBucketConfig_replicationV2RTCNo(bucketName string) string {
+func testAccBucketConfig_replicationV2RTCNotConfigured(bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketConfig_ReplicationBase(bucketName),
 		fmt.Sprintf(`

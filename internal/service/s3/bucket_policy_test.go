@@ -45,7 +45,7 @@ func TestAccS3BucketPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_basic2(name),
+				Config: testAccBucketPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("aws_s3_bucket.bucket"),
 					testAccCheckBucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText),
@@ -91,7 +91,7 @@ func TestAccS3BucketPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_basic2(name),
+				Config: testAccBucketPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					testAccCheckBucketHasPolicy(bucketResourceName, expectedPolicyText),
@@ -133,7 +133,7 @@ func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_basic2(name),
+				Config: testAccBucketPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					testAccCheckBucketHasPolicy(bucketResourceName, expectedPolicyText),
@@ -196,7 +196,7 @@ func TestAccS3BucketPolicy_policyUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_basic2(name),
+				Config: testAccBucketPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("aws_s3_bucket.bucket"),
 					testAccCheckBucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText1),
@@ -431,7 +431,7 @@ func testAccCheckBucketHasPolicy(n string, expectedPolicyText string) resource.T
 	}
 }
 
-func testAccBucketPolicyConfig_basic2(bucketName string) string {
+func testAccBucketPolicyConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q

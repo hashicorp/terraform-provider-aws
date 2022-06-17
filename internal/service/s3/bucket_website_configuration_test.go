@@ -26,7 +26,7 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_basic2(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
@@ -56,7 +56,7 @@ func TestAccS3BucketWebsiteConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_basic2(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketWebsiteConfiguration(), resourceName),
@@ -78,7 +78,7 @@ func TestAccS3BucketWebsiteConfiguration_update(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketWebsiteConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_basic2(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 				),
@@ -238,7 +238,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_MultipleRules(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketWebsiteConfigurationConfig_basic2(rName),
+				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(resourceName),
 				),
@@ -597,7 +597,7 @@ func testAccCheckBucketWebsiteConfigurationExists(resourceName string) resource.
 	}
 }
 
-func testAccBucketWebsiteConfigurationConfig_basic2(rName string) string {
+func testAccBucketWebsiteConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
