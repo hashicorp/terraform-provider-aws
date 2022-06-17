@@ -1033,7 +1033,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
 
@@ -1187,7 +1187,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_ebsNoDevice(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
 
@@ -1202,7 +1202,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_userData(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix   = %[1]q
+  name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   user_data     = "foo:-with-character's"
@@ -1213,7 +1213,7 @@ resource "aws_launch_configuration" "test" {
 func testAccLaunchConfigurationConfig_userDataBase64(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name_prefix      = %[1]q
+  name             = %[1]q
   image_id         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type    = "t2.micro"
   user_data_base64 = base64encode("hello world")
