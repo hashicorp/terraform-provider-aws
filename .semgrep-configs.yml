@@ -12,7 +12,6 @@ rules:
         - internal/service/cloudtrail
         - internal/service/cloudwatch
         - internal/service/cognitoidp
-        - internal/service/configservice
         - internal/service/dax
         - internal/service/dms
         - internal/service/elasticache

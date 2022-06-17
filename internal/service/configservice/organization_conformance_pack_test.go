@@ -28,7 +28,7 @@ func testAccOrganizationConformancePack_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
@@ -61,7 +61,7 @@ func testAccOrganizationConformancePack_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
@@ -84,7 +84,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackExcludedAccounts1Config(rName),
+				Config: testAccOrganizationConformancePackConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
@@ -97,7 +97,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccOrganizationConformancePackExcludedAccounts2Config(rName),
+				Config: testAccOrganizationConformancePackConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
@@ -110,7 +110,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
@@ -133,13 +133,13 @@ func testAccOrganizationConformancePack_forceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rNameUpdated),
+				Config: testAccOrganizationConformancePackConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &after),
 					testAccCheckOrganizationConformancePackRecreated(&before, &after),
@@ -175,7 +175,7 @@ func testAccOrganizationConformancePack_inputParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackInputParameterConfig(rName, pKey, pValue),
+				Config: testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
@@ -208,7 +208,7 @@ func testAccOrganizationConformancePack_S3Delivery(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackConfig_s3Delivery(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
@@ -237,7 +237,7 @@ func testAccOrganizationConformancePack_S3Template(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, rName),
+				Config: testAccOrganizationConformancePackConfig_s3Template(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
@@ -270,13 +270,13 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
+				Config: testAccOrganizationConformancePackConfig_inputParameter(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccOrganizationConformancePackUpdateInputParameterConfig(rName, "TestKey1", "TestKey2"),
+				Config: testAccOrganizationConformancePackConfig_updateInputParameter(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
@@ -297,7 +297,7 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"template_body"},
 			},
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
@@ -321,7 +321,7 @@ func testAccOrganizationConformancePack_updateS3Delivery(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackConfig_s3Delivery(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
@@ -329,7 +329,7 @@ func testAccOrganizationConformancePack_updateS3Delivery(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationConformancePackS3DeliveryConfig(rName, updatedBucketName),
+				Config: testAccOrganizationConformancePackConfig_s3Delivery(rName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", updatedBucketName),
@@ -359,13 +359,13 @@ func testAccOrganizationConformancePack_updateS3Template(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, rName),
+				Config: testAccOrganizationConformancePackConfig_s3Template(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccOrganizationConformancePackS3TemplateConfig(rName, bucketName),
+				Config: testAccOrganizationConformancePackConfig_s3Template(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
@@ -392,13 +392,13 @@ func testAccOrganizationConformancePack_updateTemplateBody(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConformancePackBasicConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
-				Config: testAccOrganizationConformancePackUpdateConfig(rName),
+				Config: testAccOrganizationConformancePackConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(resourceName, &pack),
 				),
@@ -520,7 +520,7 @@ resource "aws_organizations_organization" "test" {
 `, rName)
 }
 
-func testAccOrganizationConformancePackBasicConfig(rName string) string {
+func testAccOrganizationConformancePackConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -541,7 +541,7 @@ EOT
 `, rName))
 }
 
-func testAccOrganizationConformancePackInputParameterConfig(rName, pKey, pValue string) string {
+func testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -571,7 +571,7 @@ EOT
 `, rName, pKey, pValue))
 }
 
-func testAccOrganizationConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
+func testAccOrganizationConformancePackConfig_updateInputParameter(rName, pName1, pName2 string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -608,7 +608,7 @@ EOT
 `, rName, pName1, pName2))
 }
 
-func testAccOrganizationConformancePackS3DeliveryConfig(rName, bName string) string {
+func testAccOrganizationConformancePackConfig_s3Delivery(rName, bName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -641,7 +641,7 @@ resource "aws_s3_bucket_acl" "test" {
 `, rName, bName))
 }
 
-func testAccOrganizationConformancePackS3TemplateConfig(rName, bName string) string {
+func testAccOrganizationConformancePackConfig_s3Template(rName, bName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -678,7 +678,7 @@ EOT
 `, rName, bName))
 }
 
-func testAccOrganizationConformancePackUpdateConfig(rName string) string {
+func testAccOrganizationConformancePackConfig_update(rName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -699,7 +699,7 @@ EOT
 `, rName))
 }
 
-func testAccOrganizationConformancePackExcludedAccounts1Config(rName string) string {
+func testAccOrganizationConformancePackConfig_excludedAccounts1(rName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
@@ -723,7 +723,7 @@ EOT
 `, rName))
 }
 
-func testAccOrganizationConformancePackExcludedAccounts2Config(rName string) string {
+func testAccOrganizationConformancePackConfig_excludedAccounts2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccOrganizationConformancePackBase(rName),
 		fmt.Sprintf(`
