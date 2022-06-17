@@ -414,7 +414,7 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_resourceIdForceNew1(rName),
+				Config: testAccPolicyConfig_resourceIDForceNew1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
@@ -423,7 +423,7 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceIdForceNew2(rName),
+				Config: testAccPolicyConfig_resourceIDForceNew2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
@@ -1013,7 +1013,7 @@ resource "aws_appautoscaling_policy" "foobar_in" {
 `, randClusterName, randPolicyNamePrefix, randPolicyNamePrefix)
 }
 
-func testAccPolicyResourceIdForceNewBaseConfig(rName string) string {
+func testAccPolicyConfig_resourceIDForceNewBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -1055,8 +1055,8 @@ resource "aws_ecs_service" "test2" {
 `, rName)
 }
 
-func testAccPolicyConfig_resourceIdForceNew1(rName string) string {
-	return testAccPolicyResourceIdForceNewBaseConfig(rName) + fmt.Sprintf(`
+func testAccPolicyConfig_resourceIDForceNew1(rName string) string {
+	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
@@ -1104,8 +1104,8 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccPolicyConfig_resourceIdForceNew2(rName string) string {
-	return testAccPolicyResourceIdForceNewBaseConfig(rName) + fmt.Sprintf(`
+func testAccPolicyConfig_resourceIDForceNew2(rName string) string {
+	return testAccPolicyConfig_resourceIDForceNewBase(rName) + fmt.Sprintf(`
 resource "aws_appautoscaling_target" "test" {
   max_capacity       = 4
   min_capacity       = 0
