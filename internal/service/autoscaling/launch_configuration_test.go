@@ -612,7 +612,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
 				),
 			},
 			{
@@ -643,7 +643,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
 				),
 			},
 			{
@@ -674,7 +674,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
 				),
 			},
 			{
@@ -705,7 +705,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
 				),
 			},
 			{
@@ -736,7 +736,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
 				),
 			},
 			{
@@ -767,7 +767,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckGroupExists(groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIpAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
 				),
 			},
 			{
@@ -853,7 +853,7 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckInstanceHasPublicIpAddress(group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
+func testAccCheckInstanceHasPublicIPAddress(group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
