@@ -124,14 +124,14 @@ func TestAccCECostCategory_tagAdd(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryWithoutTag(rName),
+				Config: testAccCostCategoryConfig_WithoutTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccCostCategoryWithTag(rName),
+				Config: testAccCostCategoryConfig_WithTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -410,7 +410,7 @@ resource "aws_ce_cost_category" "test" {
 `, rName, method)
 }
 
-func testAccCostCategoryWithTag(rName string) string {
+func testAccCostCategoryConfig_WithTag(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = "%[1]s-1"
@@ -436,7 +436,7 @@ resource "aws_ce_cost_category" "test" {
 `, rName)
 }
 
-func testAccCostCategoryWithoutTag(rName string) string {
+func testAccCostCategoryConfig_WithoutTag(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = "%[1]s-1"
