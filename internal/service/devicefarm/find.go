@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDevicepoolByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.DevicePool, error) {
+func FindDevicePoolByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.DevicePool, error) {
 
 	input := &devicefarm.GetDevicePoolInput{
 		Arn: aws.String(arn),

@@ -104,19 +104,18 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaxDevices = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm DevicePool: %s", name)
+	log.Printf("[DEBUG] Creating DeviceFarm Device Pool: %s", name)
 	out, err := conn.CreateDevicePool(input)
 	if err != nil {
-		return fmt.Errorf("Error creating DeviceFarm DevicePool: %w", err)
+		return fmt.Errorf("Error creating DeviceFarm Device Pool: %w", err)
 	}
 
 	arn := aws.StringValue(out.DevicePool.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm DevicePool: %s", arn)
 	d.SetId(arn)
 
 	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating DeviceFarm DevicePool (%s) tags: %w", arn, err)
+		if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+			return fmt.Errorf("error adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -128,16 +127,16 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	devicePool, err := FindDevicepoolByArn(conn, d.Id())
+	devicePool, err := FindDevicePoolByArn(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DeviceFarm DevicePool (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DeviceFarm Device Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DeviceFarm DevicePool (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading DeviceFarm Device Pool (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(devicePool.Arn)
@@ -160,7 +159,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DeviceFarm DevicePool (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for DeviceFarm Device Pool (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -205,10 +204,10 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm DevicePool: %s", d.Id())
+		log.Printf("[DEBUG] Updating DeviceFarm Device Pool: %s", d.Id())
 		_, err := conn.UpdateDevicePool(input)
 		if err != nil {
-			return fmt.Errorf("Error Updating DeviceFarm DevicePool: %w", err)
+			return fmt.Errorf("error updating DeviceFarm Device Pool: %w", err)
 		}
 	}
 
@@ -216,7 +215,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DeviceFarm DevicePool (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating DeviceFarm Device Pool (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -230,7 +229,7 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 		Arn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting DeviceFarm DevicePool: %s", d.Id())
+	log.Printf("[DEBUG] Deleting DeviceFarm Device Pool: %s", d.Id())
 	_, err := conn.DeleteDevicePool(input)
 
 	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
@@ -238,7 +237,7 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting DeviceFarm DevicePool: %w", err)
+		return fmt.Errorf("error deleting DeviceFarm Device Pool: %w", err)
 	}
 
 	return nil
