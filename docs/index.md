@@ -6,7 +6,7 @@ The AWS Provider is the work of thousands of contributors, and is maintained by 
 
 ### Add a New AWS Service to the Provider
 
-Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and datasources required to manage configuration of the service.
+Allow Terraform (via the AWS Provider) to manage an entirely new AWS service by introducing the resources and data sources required to manage configuration of the service.
 
 - [Add Service Client](add-a-new-service.md#add-a-service-client)
 - [Perform Service Design](add-a-new-service.md#perform-service-design)
@@ -25,17 +25,17 @@ Allow the management of a logical resource within AWS by adding a new resource t
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
 
-### Add a New Datasource to the Provider
+### Add a New Data Source to the Provider
 
 Allow reading an existing AWS resource by id or filter, and allow its use within Terraform configurations.
 
 
 - [Fork the Provider](add-a-new-datasource.md#fork-the-provider-and-create-a-feature-branch)
-- [Name the Datasource](add-a-new-datasource.md#name-the-datasource)
-- [Fill out the Datasource Schema](add-a-new-datasource.md#fill-out-the-datasource-schema)
+- [Name the Data Source](add-a-new-datasource.md#name-the-data-source)
+- [Fill out the Data Source Schema](add-a-new-datasource.md#fill-out-the-data-source-schema)
 - [Implement Read Handler](add-a-new-datasource.md#implement-read-handler)
 - [Write Passing Acceptance Tests](add-a-new-datasource.md#write-passing-acceptance-tests)
-- [Create Documentation for the Datasource](add-a-new-datasource.md#create-documentation-for-the-datasource)
+- [Create Documentation for the Data Source](add-a-new-datasource.md#create-documentation-for-the-data-source)
 - [Ensure Format and Lint Checks are Passing Locally](add-a-new-datasource.md#ensure-format-and-lint-checks-are-passing-locally)
 - [Raise a Pull Request](raising-a-pull-request.md)
 - [Wait for Prioritization](prioritization.md)
@@ -47,7 +47,7 @@ New regions are immediately usable with the provider with the caveat that a conf
 - [Add a New Region](add-a-new-region.md)
 
 
-### Fix a bug, or make an enhancement to a resource or datasource
+### Fix a bug, or make an enhancement to a resource or data source
 
 These constitute the majority of pull requests submitted, many of which we address and merge regardless of priority in our regular internal gardening days.
 

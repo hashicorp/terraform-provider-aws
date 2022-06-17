@@ -48,9 +48,9 @@ go mod tidy
 
 See the [Changelog Process](changelog-process.md) document for example changelog format.
 
-## Update Region Specific values in static Datasources
+## Update Region Specific values in static Data Sources
 
-Some datasources include static values specific to regions that are not available via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
+Some data sources include static values specific to regions that are not available via a standard AWS API call. These will need to be manually updated. AWS employees can code search previous region values to find new region values in internal packages like RIPStaticConfig if they are not documented yet.
 
 - Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/service/elb/hosted_zone_id_data_source.go) and [`internal/service/elbv2/hosted_zone_id_data_source.go`](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/service/elbv2/hosted_zone_id_data_source.go)
 - Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/service/s3/hosted_zones.go)
