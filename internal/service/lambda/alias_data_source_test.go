@@ -22,7 +22,7 @@ func TestAccLambdaAliasDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasBasicDataSourceConfig(rName),
+				Config: testAccAliasDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
@@ -108,7 +108,7 @@ resource "aws_lambda_alias" "test" {
 `, rName)
 }
 
-func testAccAliasBasicDataSourceConfig(rName string) string {
+func testAccAliasDataSourceConfig_basic(rName string) string {
 	return testAccAliasBaseDataSourceConfig(rName) + `
 data "aws_lambda_alias" "test" {
   name          = aws_lambda_alias.test.name
