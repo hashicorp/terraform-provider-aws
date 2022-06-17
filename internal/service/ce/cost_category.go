@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,6 +30,7 @@ func ResourceCostCategory() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -101,7 +104,8 @@ func ResourceCostCategory() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"split_charge_rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -470,6 +474,9 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
 	}
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return names.DiagError(names.CE, "setting tags_all", ResCostCategory, d.Id(), err)
+	}
 
 	return nil
 }
@@ -497,9 +504,8 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 		}

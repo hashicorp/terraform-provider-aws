@@ -112,6 +112,40 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_tagRemove(t *testing.T) {
+	var output costexplorer.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_WithTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				Config: testAccCostCategoryConfig_WithoutTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_tagAdd(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
