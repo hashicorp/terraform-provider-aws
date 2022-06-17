@@ -6,6 +6,8 @@ We welcome issues of all kinds including feature requests, bug reports, and
 general questions. Below you'll find checklists with guidelines for well-formed
 issues of each type.
 
+We encourage opening new issues rather than commenting on closed issues if a problem has not been completely solved or causes a regression. This ensures we are able to triage it effectively.
+
 ### [Bug Reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?template=Bug_Report.md)
 
 - __Test against latest release__: Make sure you test against the latest
@@ -67,3 +69,5 @@ issues of each type.
 5. The issue is closed. Sometimes, valid issues will be closed because they are
    tracked elsewhere or non-actionable. The issue is still indexed and
    available for future viewers, or can be re-opened if necessary.
+
+6. 30 days after the issue has been closed it is locked, preventing further comments.
