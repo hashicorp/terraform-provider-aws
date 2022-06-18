@@ -460,7 +460,6 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("outpost_arn", instance.OutpostArn)
-	d.Set("private_dns_name_options", instance.PrivateDnsNameOptions)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("public_dns", instance.PublicDnsName)
@@ -614,6 +613,14 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
+	}
+
+	if instance.PrivateDnsNameOptions != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDnsNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_options", nil)
 	}
 
 	return nil

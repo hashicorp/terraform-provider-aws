@@ -508,20 +508,24 @@ func ResourceInstance() *schema.Resource {
 			"private_dns_name_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable_resource_name_dns_aaaa_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 						},
 					},
@@ -978,12 +982,19 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
+	if instance.PrivateDnsNameOptions != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDnsNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_options", nil)
+	}
+
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
-	d.Set("private_dns_name_options", instance.PrivateDnsNameOptions)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("outpost_arn", instance.OutpostArn)
@@ -3100,6 +3111,28 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 
 	if v := apiObject.AutoRecovery; v != nil {
 		tfMap["auto_recovery"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenPrivateDnsNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EnableResourceNameDnsAAAARecord; v != nil {
+		tfMap["enable_resource_name_dns_aaaa_record"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.EnableResourceNameDnsARecord; v != nil {
+		tfMap["enable_resource_name_dns_a_record"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.HostnameType; v != nil {
+		tfMap["hostname_type"] = aws.StringValue(v)
 	}
 
 	return tfMap
