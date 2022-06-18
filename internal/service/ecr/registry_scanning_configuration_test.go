@@ -37,7 +37,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryScanningConfigurationConfig(),
+				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -65,7 +65,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 		CheckDestroy:      testAccRegistryScanningConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryScanningConfigurationConfigOneRule(),
+				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -86,7 +86,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryScanningConfigurationConfigTwoRules(),
+				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
@@ -154,7 +154,7 @@ func testAccRegistryScanningConfigurationExists(name string, v *ecr.GetRegistryS
 	}
 }
 
-func testAccRegistryScanningConfigurationConfig() string {
+func testAccRegistryScanningConfigurationConfig_basic() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
   scan_type = "BASIC"
@@ -162,7 +162,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 `
 }
 
-func testAccRegistryScanningConfigurationConfigOneRule() string {
+func testAccRegistryScanningConfigurationConfig_oneRule() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
   scan_type = "BASIC"
@@ -177,7 +177,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 `
 }
 
-func testAccRegistryScanningConfigurationConfigTwoRules() string {
+func testAccRegistryScanningConfigurationConfig_twoRules() string {
 	return `
 resource "aws_ecr_registry_scanning_configuration" "test" {
   scan_type = "ENHANCED"

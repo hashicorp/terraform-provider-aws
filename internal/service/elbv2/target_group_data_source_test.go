@@ -21,7 +21,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbTargetGroupBasicDataSourceConfig(rName),
+				Config: testAccTargetGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameArn, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "arn"),
@@ -81,7 +81,7 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbTargetGroupAppCookieDataSourceConfig(rName),
+				Config: testAccTargetGroupDataSourceConfig_appCookie(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameArn, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "arn"),
@@ -123,7 +123,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbTargetGroupBackwardsCompatibilityDataSourceConfig(rName),
+				Config: testAccTargetGroupDataSourceConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameArn, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "arn"),
@@ -171,7 +171,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func testAcclbTargetGroupBasicDataSourceConfig(rName string) string {
+func testAccTargetGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb_test.id
@@ -288,7 +288,7 @@ data "aws_lb_target_group" "alb_tg_test_with_name" {
 `, rName)
 }
 
-func testAcclbTargetGroupAppCookieDataSourceConfig(rName string) string {
+func testAccTargetGroupDataSourceConfig_appCookie(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.alb_test.id
@@ -407,7 +407,7 @@ data "aws_lb_target_group" "alb_tg_test_with_arn" {
 `, rName)
 }
 
-func testAcclbTargetGroupBackwardsCompatibilityDataSourceConfig(rName string) string {
+func testAccTargetGroupDataSourceConfig_backwardsCompatibility(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_listener" "front_end" {
   load_balancer_arn = aws_alb.alb_test.id

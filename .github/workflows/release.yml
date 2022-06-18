@@ -45,7 +45,7 @@ jobs:
       hc-releases-host-staging: '${{ secrets.HC_RELEASES_HOST_STAGING }}'
       hc-releases-host-prod: '${{ secrets.HC_RELEASES_HOST_PROD }}'
     with:
-      goreleaser-release-args: --timeout 2h
+      goreleaser-release-args: --timeout 3h
       release-notes: true
       setup-go-version: '${{ needs.go-version.outputs.version }}'
       # Product Version (e.g. v1.2.3 or github.ref_name)

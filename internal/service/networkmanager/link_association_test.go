@@ -26,7 +26,7 @@ func TestAccNetworkManagerLinkAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLinkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLinkAssociationConfig(rName),
+				Config: testAccLinkAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkAssociationExists(resourceName),
 				),
@@ -51,7 +51,7 @@ func TestAccNetworkManagerLinkAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLinkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLinkAssociationConfig(rName),
+				Config: testAccLinkAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceLinkAssociation(), resourceName),
@@ -121,7 +121,7 @@ func testAccCheckLinkAssociationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccLinkAssociationConfig(rName string) string {
+func testAccLinkAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

@@ -57,6 +57,11 @@ func ResourceEBSVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -186,7 +191,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volume(%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EBS Volume (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -281,6 +286,38 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	if d.Get("final_snapshot").(bool) {
+		input := &ec2.CreateSnapshotInput{
+			TagSpecifications: tagSpecificationsFromMap(d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			VolumeId:          aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+			func() (interface{}, error) {
+				return conn.CreateSnapshot(input)
+			},
+			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
+
+		if err != nil {
+			return fmt.Errorf("creating EBS Snapshot (%s): %w", d.Id(), err)
+		}
+
+		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+			func() (interface{}, error) {
+				return nil, conn.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+					SnapshotIds: aws.StringSlice([]string{snapshotID}),
+				})
+			},
+			errCodeResourceNotReady)
+
+		if err != nil {
+			return fmt.Errorf("waiting for EBS Snapshot (%s) create: %w", snapshotID, err)
+		}
+	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),

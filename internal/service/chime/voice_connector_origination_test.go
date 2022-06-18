@@ -26,7 +26,7 @@ func TestAccChimeVoiceConnectorOrigination_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
@@ -56,7 +56,7 @@ func TestAccChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
@@ -78,14 +78,14 @@ func TestAccChimeVoiceConnectorOrigination_update(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorOriginationUpdated(name),
+				Config: testAccVoiceConnectorOriginationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
@@ -166,7 +166,7 @@ func testAccCheckVoiceConnectorOriginationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVoiceConnectorOriginationConfig(name string) string {
+func testAccVoiceConnectorOriginationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%[1]s"
@@ -186,7 +186,7 @@ resource "aws_chime_voice_connector_origination" "test" {
 `, name)
 }
 
-func testAccVoiceConnectorOriginationUpdated(name string) string {
+func testAccVoiceConnectorOriginationConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%[1]s"

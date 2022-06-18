@@ -26,14 +26,14 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingPrincipalAttachmentConfig(thingName),
+				Config: testAccThingPrincipalAttachmentConfig_basic(thingName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
 				),
 			},
 			{
-				Config: testAccThingPrincipalAttachmentUpdate1Config(thingName, thingName2),
+				Config: testAccThingPrincipalAttachmentConfig_update1(thingName, thingName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
@@ -42,7 +42,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccThingPrincipalAttachmentUpdate2Config(thingName, thingName2),
+				Config: testAccThingPrincipalAttachmentConfig_update2(thingName, thingName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
@@ -50,7 +50,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccThingPrincipalAttachmentUpdate3Config(thingName),
+				Config: testAccThingPrincipalAttachmentConfig_update3(thingName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
@@ -59,7 +59,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccThingPrincipalAttachmentUpdate4Config(thingName),
+				Config: testAccThingPrincipalAttachmentConfig_update4(thingName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
 					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert2"}),
@@ -177,7 +177,7 @@ func testAccCheckThingPrincipalAttachmentStatus(thingName string, exists bool, p
 	}
 }
 
-func testAccThingPrincipalAttachmentConfig(thingName string) string {
+func testAccThingPrincipalAttachmentConfig_basic(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -195,7 +195,7 @@ resource "aws_iot_thing_principal_attachment" "att" {
 `, thingName)
 }
 
-func testAccThingPrincipalAttachmentUpdate1Config(thingName, thingName2 string) string {
+func testAccThingPrincipalAttachmentConfig_update1(thingName, thingName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -222,7 +222,7 @@ resource "aws_iot_thing_principal_attachment" "att2" {
 `, thingName, thingName2)
 }
 
-func testAccThingPrincipalAttachmentUpdate2Config(thingName, thingName2 string) string {
+func testAccThingPrincipalAttachmentConfig_update2(thingName, thingName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -244,7 +244,7 @@ resource "aws_iot_thing_principal_attachment" "att" {
 `, thingName, thingName2)
 }
 
-func testAccThingPrincipalAttachmentUpdate3Config(thingName string) string {
+func testAccThingPrincipalAttachmentConfig_update3(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -272,7 +272,7 @@ resource "aws_iot_thing_principal_attachment" "att2" {
 `, thingName)
 }
 
-func testAccThingPrincipalAttachmentUpdate4Config(thingName string) string {
+func testAccThingPrincipalAttachmentConfig_update4(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert2" {
   csr    = file("test-fixtures/iot-csr.pem")

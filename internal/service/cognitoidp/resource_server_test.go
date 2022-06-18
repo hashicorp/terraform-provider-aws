@@ -81,7 +81,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceServerConfig_scope_update(identifier, name, poolName),
+				Config: testAccResourceServerConfig_scopeUpdate(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
@@ -211,7 +211,7 @@ resource "aws_cognito_user_pool" "main" {
 `, identifier, name, poolName)
 }
 
-func testAccResourceServerConfig_scope_update(identifier string, name string, poolName string) string {
+func testAccResourceServerConfig_scopeUpdate(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"

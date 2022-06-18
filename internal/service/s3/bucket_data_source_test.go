@@ -46,7 +46,7 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteDataSourceConfig(bucketName),
+				Config: testAccBucketDataSourceConfig_website(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "bucket", "aws_s3_bucket.bucket", "id"),
@@ -70,7 +70,7 @@ data "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWebsiteDataSourceConfig(bucketName string) string {
+func testAccBucketDataSourceConfig_website(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q

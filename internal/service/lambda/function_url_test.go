@@ -35,7 +35,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLBasicConfig(funcName, policyName, roleName),
+				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
@@ -72,7 +72,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLCorsConfig(funcName, policyName, roleName),
+				Config: testAccFunctionURLConfig_cors(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
@@ -97,7 +97,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFunctionURLCorsUpdatedConfig(funcName, policyName, roleName),
+				Config: testAccFunctionURLConfig_corsUpdated(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
@@ -137,7 +137,7 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLAliasConfig(funcName, aliasName, policyName, roleName),
+				Config: testAccFunctionURLConfig_alias(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
@@ -170,7 +170,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLTwoURLsConfig(funcName, aliasName, policyName, roleName),
+				Config: testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(latestResourceName, &conf),
 					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
@@ -266,7 +266,7 @@ func testAccCheckFunctionURLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFunctionURLBaseConfig(policyName, roleName string) string {
+func testAccFunctionURLConfig_base(policyName, roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -344,8 +344,8 @@ EOF
 `, policyName, roleName)
 }
 
-func testAccFunctionURLBasicConfig(funcName, policyName, roleName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+func testAccFunctionURLConfig_basic(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -361,8 +361,8 @@ resource "aws_lambda_function_url" "test" {
 `, funcName))
 }
 
-func testAccFunctionURLCorsConfig(funcName, policyName, roleName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+func testAccFunctionURLConfig_cors(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -387,8 +387,8 @@ resource "aws_lambda_function_url" "test" {
 `, funcName))
 }
 
-func testAccFunctionURLCorsUpdatedConfig(funcName, policyName, roleName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+func testAccFunctionURLConfig_corsUpdated(funcName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -413,8 +413,8 @@ resource "aws_lambda_function_url" "test" {
 `, funcName))
 }
 
-func testAccFunctionURLAliasConfig(funcName, aliasName, policyName, roleName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+func testAccFunctionURLConfig_alias(funcName, aliasName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
@@ -448,8 +448,8 @@ resource "aws_lambda_function_url" "test" {
 `, funcName, aliasName))
 }
 
-func testAccFunctionURLTwoURLsConfig(funcName, aliasName, policyName, roleName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLBaseConfig(policyName, roleName), fmt.Sprintf(`
+func testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q

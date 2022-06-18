@@ -26,7 +26,7 @@ func testAccOrganization_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig,
+				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
@@ -67,7 +67,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAccessPrincipals1Config("config.amazonaws.com"),
+				Config: testAccOrganizationConfig_serviceAccessPrincipals1("config.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
@@ -80,7 +80,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceAccessPrincipals2Config("config.amazonaws.com", "ds.amazonaws.com"),
+				Config: testAccOrganizationConfig_serviceAccessPrincipals2("config.amazonaws.com", "ds.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "2"),
@@ -89,7 +89,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceAccessPrincipals1Config("fms.amazonaws.com"),
+				Config: testAccOrganizationConfig_serviceAccessPrincipals1("fms.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
@@ -111,7 +111,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeServiceControlPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -124,14 +124,14 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfig,
+				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
 				),
 			},
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeAiservicesOptOutPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeAiservicesOptOutPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -139,7 +139,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeServiceControlPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -147,7 +147,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeBackupPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeBackupPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -155,7 +155,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeTagPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -168,14 +168,14 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfig,
+				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
 				),
 			},
 			{
-				Config: testAccOrganizationEnabledPolicyTypes1Config(organizations.PolicyTypeTagPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
@@ -196,7 +196,7 @@ func testAccOrganization_FeatureSet(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
@@ -222,7 +222,7 @@ func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetAll),
+				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetAll),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &beforeValue),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
@@ -234,7 +234,7 @@ func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &afterValue),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
@@ -256,7 +256,7 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &beforeValue),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
@@ -268,7 +268,7 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccOrganizationFeatureSetConfig(organizations.OrganizationFeatureSetAll),
+				Config:             testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetAll),
 				ExpectNonEmptyPlan: true, // See note below on this perpetual difference
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(resourceName, &afterValue),
@@ -341,9 +341,9 @@ func testAccCheckOrganizationExists(n string, org *organizations.Organization) r
 	}
 }
 
-const testAccOrganizationConfig = "resource \"aws_organizations_organization\" \"test\" {}"
+const testAccOrganizationConfig_basic = "resource \"aws_organizations_organization\" \"test\" {}"
 
-func testAccServiceAccessPrincipals1Config(principal1 string) string {
+func testAccOrganizationConfig_serviceAccessPrincipals1(principal1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%q]
@@ -351,7 +351,7 @@ resource "aws_organizations_organization" "test" {
 `, principal1)
 }
 
-func testAccServiceAccessPrincipals2Config(principal1, principal2 string) string {
+func testAccOrganizationConfig_serviceAccessPrincipals2(principal1, principal2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%q, %q]
@@ -359,7 +359,7 @@ resource "aws_organizations_organization" "test" {
 `, principal1, principal2)
 }
 
-func testAccOrganizationEnabledPolicyTypes1Config(policyType1 string) string {
+func testAccOrganizationConfig_enabledPolicyTypes1(policyType1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = [%[1]q]
@@ -367,7 +367,7 @@ resource "aws_organizations_organization" "test" {
 `, policyType1)
 }
 
-func testAccOrganizationFeatureSetConfig(featureSet string) string {
+func testAccOrganizationConfig_featureSet(featureSet string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   feature_set = %q

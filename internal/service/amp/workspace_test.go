@@ -24,12 +24,12 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
+				Config: testAccWorkspaceConfig_alias(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
 				),
 			},
@@ -39,15 +39,15 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAMPWorkspaceWithoutAliasConfig(),
+				Config: testAccWorkspaceConfig_noAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 				),
 			},
 			{
-				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
+				Config: testAccWorkspaceConfig_alias(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
 				),
 			},
@@ -61,12 +61,12 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMPWorkspaceWithoutAliasConfig(),
+				Config: testAccWorkspaceConfig_noAlias(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,12 +83,12 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMPWorkspaceDestroy,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMPWorkspaceWithTagsConfig(rInt),
+				Config: testAccWorkspaceConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
@@ -100,9 +100,9 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAMPWorkspaceWithTagsAddedConfig(rInt),
+				Config: testAccWorkspaceConfig_tagsAdded(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
@@ -110,9 +110,9 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAMPWorkspaceWithTagsUpdatedConfig(rInt),
+				Config: testAccWorkspaceConfig_tagsUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "abhi"),
@@ -120,9 +120,9 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAMPWorkspaceWithTagsConfig(rInt),
+				Config: testAccWorkspaceConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "mh9"),
@@ -132,7 +132,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
+func testAccCheckWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -160,7 +160,7 @@ func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
+func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -183,7 +183,7 @@ func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAMPWorkspaceWithAliasConfig(randName string) string {
+func testAccWorkspaceConfig_alias(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %q
@@ -191,14 +191,14 @@ resource "aws_prometheus_workspace" "test" {
 `, randName)
 }
 
-func testAccAMPWorkspaceWithoutAliasConfig() string {
+func testAccWorkspaceConfig_noAlias() string {
 	return `
 resource "aws_prometheus_workspace" "test" {
 }
 `
 }
 
-func testAccAMPWorkspaceWithTagsConfig(randInt int) string {
+func testAccWorkspaceConfig_tags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = "test-%d"
@@ -211,7 +211,7 @@ resource "aws_prometheus_workspace" "test" {
 `, randInt)
 }
 
-func testAccAMPWorkspaceWithTagsAddedConfig(randInt int) string {
+func testAccWorkspaceConfig_tagsAdded(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = "test-%d"
@@ -225,7 +225,7 @@ resource "aws_prometheus_workspace" "test" {
 `, randInt)
 }
 
-func testAccAMPWorkspaceWithTagsUpdatedConfig(randInt int) string {
+func testAccWorkspaceConfig_tagsUpdated(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = "test-%d"

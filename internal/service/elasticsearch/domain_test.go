@@ -38,7 +38,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
@@ -68,7 +68,7 @@ func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_DomainEndpointOptions(rName, true, "Policy-Min-TLS-1-0-2019-07"),
+				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-0-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists("aws_elasticsearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
@@ -81,7 +81,7 @@ func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_DomainEndpointOptions(rName, true, "Policy-Min-TLS-1-2-2019-07"),
+				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-2-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists("aws_elasticsearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
@@ -111,7 +111,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_CustomEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
@@ -127,7 +127,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_CustomEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
@@ -135,7 +135,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_CustomEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
@@ -158,7 +158,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
@@ -173,7 +173,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
+				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
@@ -183,7 +183,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
+				Config: testAccDomainConfig_clusterZoneAwarenessEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
@@ -192,7 +192,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain4),
 					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
@@ -217,7 +217,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWarm(rName, "ultrawarm1.medium.elasticsearch", false, 6),
+				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", false, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "false"),
@@ -226,7 +226,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigWarm(rName, "ultrawarm1.medium.elasticsearch", true, 6),
+				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", true, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
@@ -241,7 +241,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfigWarm(rName, "ultrawarm1.medium.elasticsearch", true, 7),
+				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
@@ -250,7 +250,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigWarm(rName, "ultrawarm1.large.elasticsearch", true, 7),
+				Config: testAccDomainConfig_warm(rName, "ultrawarm1.large.elasticsearch", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
@@ -274,7 +274,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_WithColdStorageOptions(rName, false, false, false),
+				Config: testAccDomainConfig_coldStorageOptions(rName, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
@@ -288,7 +288,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_WithColdStorageOptions(rName, true, true, true),
+				Config: testAccDomainConfig_coldStorageOptions(rName, true, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
@@ -311,7 +311,7 @@ func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_WithDedicatedClusterMaster(rName, false),
+				Config: testAccDomainConfig_dedicatedClusterMaster(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -323,13 +323,13 @@ func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_WithDedicatedClusterMaster(rName, true),
+				Config: testAccDomainConfig_dedicatedClusterMaster(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
 			},
 			{
-				Config: testAccDomainConfig_WithDedicatedClusterMaster(rName, false),
+				Config: testAccDomainConfig_dedicatedClusterMaster(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -379,7 +379,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(
@@ -407,7 +407,7 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigV23(rName),
+				Config: testAccDomainConfig_v23(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(
@@ -498,7 +498,7 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_vpc_update1(rName),
+				Config: testAccDomainConfig_vpcUpdate1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckNumberOfSecurityGroups(1, &domain),
@@ -511,7 +511,7 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_vpc_update2(rName),
+				Config: testAccDomainConfig_vpcUpdate2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckNumberOfSecurityGroups(2, &domain),
@@ -537,7 +537,7 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -575,7 +575,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithAutoTuneOptions(rName, autoTuneStartAtTime),
+				Config: testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(
@@ -655,7 +655,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_AdvancedSecurityOptionsIAM(rName),
+				Config: testAccDomainConfig_advancedSecurityOptionsIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, &domain),
@@ -692,7 +692,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_AdvancedSecurityOptionsDisabled(rName),
+				Config: testAccDomainConfig_advancedSecurityOptionsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(false, false, &domain),
@@ -729,7 +729,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_LogPublishingOptions(rName, elasticsearch.LogTypeIndexSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeIndexSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
@@ -764,7 +764,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_LogPublishingOptions(rName, elasticsearch.LogTypeSearchSlowLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeSearchSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
@@ -799,7 +799,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_LogPublishingOptions(rName, elasticsearch.LogTypeEsApplicationLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeEsApplicationLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
@@ -834,7 +834,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_LogPublishingOptions(rName, elasticsearch.LogTypeAuditLogs),
+				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeAuditLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
@@ -875,7 +875,7 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_CognitoOptions(rName, true),
+				Config: testAccDomainConfig_cognitoOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckCognitoOptions(true, &domain),
@@ -888,7 +888,7 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_CognitoOptions(rName, false),
+				Config: testAccDomainConfig_cognitoOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckCognitoOptions(false, &domain),
@@ -918,7 +918,7 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_CognitoOptions(rName, false),
+				Config: testAccDomainConfig_cognitoOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckCognitoOptions(false, &domain),
@@ -931,7 +931,7 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_CognitoOptions(rName, true),
+				Config: testAccDomainConfig_cognitoOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckCognitoOptions(true, &domain),
@@ -957,7 +957,7 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithPolicy(rName),
+				Config: testAccDomainConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
@@ -988,13 +988,13 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainPolicyOrderConfig(rName),
+				Config: testAccDomainConfig_policyOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 				),
 			},
 			{
-				Config:   testAccDomainPolicyNewOrderConfig(rName),
+				Config:   testAccDomainConfig_policyNewOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -1017,7 +1017,7 @@ func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.0", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1049,7 +1049,7 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestWithKey(rName, "6.0", true),
+				Config: testAccDomainConfig_encryptAtRestKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
@@ -1081,14 +1081,14 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
@@ -1096,7 +1096,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "6.7", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
@@ -1122,14 +1122,14 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "5.6", false),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "5.6", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfigWithEncryptAtRestDefaultKey(rName, "5.6", true),
+				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "5.6", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
@@ -1155,7 +1155,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					testAccCheckNodeToNodeEncrypted(true, &domain),
@@ -1187,14 +1187,14 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
@@ -1202,7 +1202,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.7", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
@@ -1228,21 +1228,21 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", true),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
 				),
 			},
 			{
-				Config: testAccDomainConfigwithNodeToNodeEncryption(rName, "6.0", false),
+				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
@@ -1268,7 +1268,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigTags1(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1282,7 +1282,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -1291,7 +1291,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfigTags1(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1318,7 +1318,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_ClusterUpdate(rName, 2, 22),
+				Config: testAccDomainConfig_clusterUpdate(rName, 2, 22),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckNumberOfInstances(2, &input),
@@ -1332,7 +1332,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_ClusterUpdate(rName, 4, 23),
+				Config: testAccDomainConfig_clusterUpdate(rName, 4, 23),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckNumberOfInstances(4, &input),
@@ -1358,7 +1358,7 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_ClusterUpdateEBSVolume(rName, 24),
+				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 24),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
@@ -1372,14 +1372,14 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_ClusterUpdateInstanceStore(rName),
+				Config: testAccDomainConfig_clusterUpdateInstanceStore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckEBSVolumeEnabled(false, &input),
 				),
 			},
 			{
-				Config: testAccDomainConfig_ClusterUpdateEBSVolume(rName, 12),
+				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 12),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
@@ -1406,7 +1406,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigWithDisabledEBSNullVolumeType(rName),
+				Config: testAccDomainConfig_disabledEBSNullVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
@@ -1440,7 +1440,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "5.5"),
+				Config: testAccDomainConfig_clusterUpdateVersion(rName, "5.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.5"),
@@ -1453,7 +1453,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "5.6"),
+				Config: testAccDomainConfig_clusterUpdateVersion(rName, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
@@ -1461,7 +1461,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_ClusterUpdateVersion(rName, "6.3"),
+				Config: testAccDomainConfig_clusterUpdateVersion(rName, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
@@ -1486,7 +1486,7 @@ func TestAccElasticsearchDomain_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
 				),
@@ -1764,7 +1764,7 @@ func testAccPreCheckIAMServiceLinkedRoleEs(t *testing.T) {
 	}
 }
 
-func testAccDomainConfig(rName string) string {
+func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1777,7 +1777,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfigWithAutoTuneOptions(rName, autoTuneStartAtTime string) string {
+func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)
@@ -1807,7 +1807,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainConfigWithDisabledEBSNullVolumeType(rName string) string {
+func testAccDomainConfig_disabledEBSNullVolumeType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)
@@ -1827,7 +1827,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_DomainEndpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
+func testAccDomainConfig_endpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1845,7 +1845,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, enforceHttps, tlsSecurityPolicy)
 }
 
-func testAccDomainConfig_CustomEndpoint(rName string, enforceHttps bool, tlsSecurityPolicy string, customEndpointEnabled bool, customEndpoint string, certKey string, certBody string) string {
+func testAccDomainConfig_customEndpoint(rName string, enforceHttps bool, tlsSecurityPolicy string, customEndpointEnabled bool, customEndpoint string, certKey string, certBody string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   private_key      = "%[6]s"
@@ -1871,7 +1871,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, enforceHttps, tlsSecurityPolicy, customEndpointEnabled, customEndpoint, acctest.TLSPEMEscapeNewlines(certKey), acctest.TLSPEMEscapeNewlines(certBody))
 }
 
-func testAccDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {
+func testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName string, availabilityZoneCount int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1894,7 +1894,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, availabilityZoneCount)
 }
 
-func testAccDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
+func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1913,7 +1913,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, zoneAwarenessEnabled)
 }
 
-func testAccDomainConfigWarm(rName, warmType string, enabled bool, warmCnt int) string {
+func testAccDomainConfig_warm(rName, warmType string, enabled bool, warmCnt int) string {
 	warmConfig := ""
 	if enabled {
 		warmConfig = fmt.Sprintf(`
@@ -1951,7 +1951,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, enabled, warmConfig)
 }
 
-func testAccDomainConfig_WithDedicatedClusterMaster(rName string, enabled bool) string {
+func testAccDomainConfig_dedicatedClusterMaster(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -1972,7 +1972,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, enabled)
 }
 
-func testAccDomainConfig_WithColdStorageOptions(rName string, dMasterEnabled bool, warmEnabled bool, csEnabled bool) string {
+func testAccDomainConfig_coldStorageOptions(rName string, dMasterEnabled bool, warmEnabled bool, csEnabled bool) string {
 	warmConfig := ""
 	if warmEnabled {
 		warmConfig = `
@@ -2017,7 +2017,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, dMasterEnabled, warmEnabled, warmConfig, coldConfig)
 }
 
-func testAccDomainConfig_ClusterUpdate(rName string, instanceInt, snapshotInt int) string {
+func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2048,7 +2048,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, instanceInt, snapshotInt)
 }
 
-func testAccDomainConfig_ClusterUpdateEBSVolume(rName string, volumeSize int) string {
+func testAccDomainConfig_clusterUpdateEBSVolume(rName string, volumeSize int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2073,7 +2073,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, volumeSize)
 }
 
-func testAccDomainConfig_ClusterUpdateVersion(rName, version string) string {
+func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2094,7 +2094,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, version)
 }
 
-func testAccDomainConfig_ClusterUpdateInstanceStore(rName string) string {
+func testAccDomainConfig_clusterUpdateInstanceStore(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2118,7 +2118,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2135,7 +2135,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2151,7 +2151,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainConfigWithPolicy(rName string) string {
+func testAccDomainConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2193,7 +2193,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainPolicyOrderConfig(rName string) string {
+func testAccDomainConfig_policyOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2244,7 +2244,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainPolicyNewOrderConfig(rName string) string {
+func testAccDomainConfig_policyNewOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2295,7 +2295,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDomainConfigWithEncryptAtRestDefaultKey(rName, version string, enabled bool) string {
+func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2319,7 +2319,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, version, enabled)
 }
 
-func testAccDomainConfigWithEncryptAtRestWithKey(rName, version string, enabled bool) string {
+func testAccDomainConfig_encryptAtRestKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -2349,7 +2349,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, version, enabled)
 }
 
-func testAccDomainConfigwithNodeToNodeEncryption(rName, version string, enabled bool) string {
+func testAccDomainConfig_nodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2403,7 +2403,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfigV23(rName string) string {
+func testAccDomainConfig_v23(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2480,7 +2480,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_vpc_update1(rName string) string {
+func testAccDomainConfig_vpcUpdate1(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2562,7 +2562,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_vpc_update2(rName string) string {
+func testAccDomainConfig_vpcUpdate2(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2746,7 +2746,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_AdvancedSecurityOptionsIAM(rName string) string {
+func testAccDomainConfig_advancedSecurityOptionsIAM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -2789,7 +2789,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_AdvancedSecurityOptionsDisabled(rName string) string {
+func testAccDomainConfig_advancedSecurityOptionsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = substr(%[1]q, 0, 28)
@@ -2859,7 +2859,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_LogPublishingOptions(rName, logType string) string {
+func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	var auditLogsConfig string
 	if logType == elasticsearch.LogTypeAuditLogs {
 		auditLogsConfig = `
@@ -2905,7 +2905,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, auditLogsConfig, logType))
 }
 
-func testAccDomainConfig_CognitoOptions(rName string, includeCognitoOptions bool) string {
+func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool) string {
 	var cognitoOptions string
 	if includeCognitoOptions {
 		cognitoOptions = `

@@ -22,7 +22,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 		CheckDestroy:      testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationDataSourceNameConfig(rName),
+				Config: testAccConfigurationDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -36,7 +36,7 @@ func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccConfigurationDataSourceNameConfig(rName string) string {
+func testAccConfigurationDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.1.0"]

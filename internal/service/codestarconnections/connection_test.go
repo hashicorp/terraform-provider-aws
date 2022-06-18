@@ -28,7 +28,7 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionBasicConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
@@ -59,7 +59,7 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionHostARNConfig(rName),
+				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
@@ -91,7 +91,7 @@ func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionBasicConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceConnection(), resourceName),
@@ -114,7 +114,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionTags1Config(rName, "key1", "value1"),
+				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +136,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConnectionTags1Config(rName, "key2", "value2"),
+				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -196,7 +196,7 @@ func testAccCheckConnectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConnectionBasicConfig(rName string) string {
+func testAccConnectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
@@ -205,7 +205,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccConnectionHostARNConfig(rName string) string {
+func testAccConnectionConfig_hostARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
@@ -220,7 +220,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccConnectionTags1Config(rName string, tagKey1 string, tagValue1 string) string {
+func testAccConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
@@ -233,7 +233,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccConnectionTags2Config(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccConnectionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q

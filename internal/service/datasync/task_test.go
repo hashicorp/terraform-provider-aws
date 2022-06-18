@@ -31,7 +31,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig(rName),
+				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`task/task-.+`)),
@@ -79,7 +79,7 @@ func TestAccDataSyncTask_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig(rName),
+				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceTask(), resourceName),
@@ -102,7 +102,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskScheduleConfig(rName, "cron(0 12 ? * SUN,WED *)"),
+				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,WED *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
@@ -115,7 +115,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskScheduleConfig(rName, "cron(0 12 ? * SUN,MON *)"),
+				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,MON *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
@@ -138,7 +138,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskCloudWatchLogGroupARNConfig(rName),
+				Config: testAccTaskConfig_cloudWatchLogGroupARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test1", "arn"),
@@ -150,7 +150,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskCloudWatchLogGroupARN2Config(rName),
+				Config: testAccTaskConfig_cloudWatchLogGroupARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test2", "arn")),
@@ -171,7 +171,7 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskExcludesConfig(rName, "/folder1|/folder2"),
+				Config: testAccTaskConfig_excludes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "1"),
@@ -185,7 +185,7 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskExcludesConfig(rName, "/test"),
+				Config: testAccTaskConfig_excludes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "1"),
@@ -209,7 +209,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsAtimeMtimeConfig(rName, "NONE", "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, "NONE", "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -223,7 +223,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsAtimeMtimeConfig(rName, "BEST_EFFORT", "PRESERVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, "BEST_EFFORT", "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -248,7 +248,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsBytesPerSecondConfig(rName, 1),
+				Config: testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -261,7 +261,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsBytesPerSecondConfig(rName, 2),
+				Config: testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -285,7 +285,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsGidConfig(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -298,7 +298,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsGidConfig(rName, "INT_VALUE"),
+				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "INT_VALUE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -322,7 +322,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsLogLevelConfig(rName, "OFF"),
+				Config: testAccTaskConfig_defaultSyncOptionsLogLevel(rName, "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -335,7 +335,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsLogLevelConfig(rName, "BASIC"),
+				Config: testAccTaskConfig_defaultSyncOptionsLogLevel(rName, "BASIC"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -359,7 +359,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsOverwriteModeConfig(rName, "NEVER"),
+				Config: testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, "NEVER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -372,7 +372,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsOverwriteModeConfig(rName, "ALWAYS"),
+				Config: testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, "ALWAYS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -396,7 +396,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsPOSIXPermissionsConfig(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -409,7 +409,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsPOSIXPermissionsConfig(rName, "PRESERVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -433,7 +433,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsPreserveDeletedFilesConfig(rName, "REMOVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, "REMOVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -446,7 +446,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsPreserveDeletedFilesConfig(rName, "PRESERVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -470,7 +470,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsPreserveDevicesConfig(rName, "PRESERVE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -483,7 +483,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsPreserveDevicesConfig(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -507,7 +507,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsTaskQueueingConfig(rName, "ENABLED"),
+				Config: testAccTaskConfig_defaultSyncOptionsQueueing(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -520,7 +520,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsTaskQueueingConfig(rName, "DISABLED"),
+				Config: testAccTaskConfig_defaultSyncOptionsQueueing(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -544,7 +544,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsTransferModeConfig(rName, "CHANGED"),
+				Config: testAccTaskConfig_defaultSyncOptionsTransferMode(rName, "CHANGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -557,7 +557,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsTransferModeConfig(rName, "ALL"),
+				Config: testAccTaskConfig_defaultSyncOptionsTransferMode(rName, "ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -581,7 +581,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsUIDConfig(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsUID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -594,7 +594,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsUIDConfig(rName, "INT_VALUE"),
+				Config: testAccTaskConfig_defaultSyncOptionsUID(rName, "INT_VALUE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -618,7 +618,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefaultSyncOptionsVerifyModeConfig(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
@@ -631,7 +631,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsVerifyModeConfig(rName, "POINT_IN_TIME_CONSISTENT"),
+				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "POINT_IN_TIME_CONSISTENT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -640,7 +640,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTaskDefaultSyncOptionsVerifyModeConfig(rName, "ONLY_FILES_TRANSFERRED"),
+				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "ONLY_FILES_TRANSFERRED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
@@ -665,7 +665,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskTags1Config(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -678,7 +678,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTaskConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
@@ -688,7 +688,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTaskTags1Config(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
@@ -948,7 +948,7 @@ resource "aws_datasync_location_nfs" "source" {
 `, rName))
 }
 
-func testAccTaskConfig(rName string) string {
+func testAccTaskConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -961,7 +961,7 @@ resource "aws_datasync_task" "test" {
 `, rName))
 }
 
-func testAccTaskScheduleConfig(rName, cron string) string {
+func testAccTaskConfig_schedule(rName, cron string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -978,7 +978,7 @@ resource "aws_datasync_task" "test" {
 `, rName, cron))
 }
 
-func testAccTaskCloudWatchLogGroupARNConfig(rName string) string {
+func testAccTaskConfig_cloudWatchLogGroupARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -996,7 +996,7 @@ resource "aws_datasync_task" "test" {
 `, rName))
 }
 
-func testAccTaskCloudWatchLogGroupARN2Config(rName string) string {
+func testAccTaskConfig_cloudWatchLogGroupARN2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1018,7 +1018,7 @@ resource "aws_datasync_task" "test" {
 `, rName))
 }
 
-func testAccTaskExcludesConfig(rName, value string) string {
+func testAccTaskConfig_excludes(rName, value string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1036,7 +1036,7 @@ resource "aws_datasync_task" "test" {
 `, rName, value))
 }
 
-func testAccTaskDefaultSyncOptionsAtimeMtimeConfig(rName, atime, mtime string) string {
+func testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, atime, mtime string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1054,7 +1054,7 @@ resource "aws_datasync_task" "test" {
 `, rName, atime, mtime))
 }
 
-func testAccTaskDefaultSyncOptionsBytesPerSecondConfig(rName string, bytesPerSecond int) string {
+func testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName string, bytesPerSecond int) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1071,7 +1071,7 @@ resource "aws_datasync_task" "test" {
 `, rName, bytesPerSecond))
 }
 
-func testAccTaskDefaultSyncOptionsGidConfig(rName, gid string) string {
+func testAccTaskConfig_defaultSyncOptionsGID(rName, gid string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1088,7 +1088,7 @@ resource "aws_datasync_task" "test" {
 `, rName, gid))
 }
 
-func testAccTaskDefaultSyncOptionsLogLevelConfig(rName, logLevel string) string {
+func testAccTaskConfig_defaultSyncOptionsLogLevel(rName, logLevel string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1110,7 +1110,7 @@ resource "aws_datasync_task" "test" {
 `, rName, logLevel))
 }
 
-func testAccTaskDefaultSyncOptionsOverwriteModeConfig(rName, overwriteMode string) string {
+func testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, overwriteMode string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1127,7 +1127,7 @@ resource "aws_datasync_task" "test" {
 `, rName, overwriteMode))
 }
 
-func testAccTaskDefaultSyncOptionsPOSIXPermissionsConfig(rName, posixPermissions string) string {
+func testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, posixPermissions string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1144,7 +1144,7 @@ resource "aws_datasync_task" "test" {
 `, rName, posixPermissions))
 }
 
-func testAccTaskDefaultSyncOptionsPreserveDeletedFilesConfig(rName, preserveDeletedFiles string) string {
+func testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, preserveDeletedFiles string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1161,7 +1161,7 @@ resource "aws_datasync_task" "test" {
 `, rName, preserveDeletedFiles))
 }
 
-func testAccTaskDefaultSyncOptionsPreserveDevicesConfig(rName, preserveDevices string) string {
+func testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, preserveDevices string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1178,7 +1178,7 @@ resource "aws_datasync_task" "test" {
 `, rName, preserveDevices))
 }
 
-func testAccTaskDefaultSyncOptionsTaskQueueingConfig(rName, taskQueueing string) string {
+func testAccTaskConfig_defaultSyncOptionsQueueing(rName, taskQueueing string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1195,7 +1195,7 @@ resource "aws_datasync_task" "test" {
 `, rName, taskQueueing))
 }
 
-func testAccTaskDefaultSyncOptionsTransferModeConfig(rName, transferMode string) string {
+func testAccTaskConfig_defaultSyncOptionsTransferMode(rName, transferMode string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1212,7 +1212,7 @@ resource "aws_datasync_task" "test" {
 `, rName, transferMode))
 }
 
-func testAccTaskDefaultSyncOptionsUIDConfig(rName, uid string) string {
+func testAccTaskConfig_defaultSyncOptionsUID(rName, uid string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1229,7 +1229,7 @@ resource "aws_datasync_task" "test" {
 `, rName, uid))
 }
 
-func testAccTaskDefaultSyncOptionsVerifyModeConfig(rName, verifyMode string) string {
+func testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, verifyMode string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1246,7 +1246,7 @@ resource "aws_datasync_task" "test" {
 `, rName, verifyMode))
 }
 
-func testAccTaskTags1Config(rName, key1, value1 string) string {
+func testAccTaskConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),
@@ -1263,7 +1263,7 @@ resource "aws_datasync_task" "test" {
 `, rName, key1, value1))
 }
 
-func testAccTaskTags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccTaskConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
 		testAccTaskDestinationLocationS3BaseConfig(rName),
 		testAccTaskSourceLocationNFSBaseConfig(rName),

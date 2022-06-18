@@ -961,6 +961,41 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_disableAPIStop(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4572,28 +4607,29 @@ func testAccCheckDetachVolumes(instance *ec2.Instance) resource.TestCheckFunc {
 		client := acctest.Provider.Meta().(*conns.AWSClient)
 		conn := client.EC2Conn
 
-		for _, bd := range instance.BlockDeviceMappings {
-			if bd.Ebs != nil && bd.Ebs.VolumeId != nil {
-				name := aws.StringValue(bd.DeviceName)
-				volID := aws.StringValue(bd.Ebs.VolumeId)
+		for _, v := range instance.BlockDeviceMappings {
+			if v.Ebs != nil && v.Ebs.VolumeId != nil {
+				deviceName := aws.StringValue(v.DeviceName)
 				instanceID := aws.StringValue(instance.InstanceId)
+				volumeID := aws.StringValue(v.Ebs.VolumeId)
 
-				// Make sure in correct state before detaching
-				if err := tfec2.WaitVolumeAttachmentAttached(conn, name, volID, instanceID); err != nil {
+				// Make sure in correct state before detaching.
+				if _, err := tfec2.WaitVolumeAttachmentCreated(conn, volumeID, instanceID, deviceName, 5*time.Minute); err != nil {
 					return err
 				}
 
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
-				d.Set("device_name", name)
-				d.Set("volume_id", volID)
+				d.Set("device_name", deviceName)
 				d.Set("instance_id", instanceID)
+				d.Set("volume_id", volumeID)
 
 				if err := r.Delete(d, client); err != nil {
 					return err
 				}
 			}
 		}
+
 		return nil
 	}
 }
@@ -5484,6 +5520,24 @@ resource "aws_instance" "test" {
   maintenance_options {
     auto_recovery = %[2]q
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, val))
+}
+
+func testAccInstanceConfig_disableAPIStop(rName string, val bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami              = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type    = "t2.small"
+  subnet_id        = aws_subnet.test.id
+  disable_api_stop = %[2]t
 
   tags = {
     Name = %[1]q

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
+func FindVaultAccessPolicyByName(conn *backup.Backup, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
 	input := &backup.GetBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(name),
 	}
@@ -33,7 +33,7 @@ func FindBackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backu
 	return output, nil
 }
 
-func FindBackupVaultByName(conn *backup.Backup, name string) (*backup.DescribeBackupVaultOutput, error) {
+func FindVaultByName(conn *backup.Backup, name string) (*backup.DescribeBackupVaultOutput, error) {
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}

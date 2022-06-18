@@ -61,7 +61,11 @@ The following arguments are supported:
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `description` - (Optional) The description of the parameter.
-* `tier` - (Optional) The tier of the parameter. If not specified, will default to `Standard`. Valid tiers are `Standard`, `Advanced`, and `Intelligent-Tiering`. For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
+* `tier` - (Optional) The parameter tier to assign to the parameter.
+  If not specified, will use the default parameter tier for the region.
+  Valid tiers are `Standard`, `Advanced`, and `Intelligent-Tiering`.
+  Downgrading an `Advanced` tier parameter to `Standard` will recreate the resource.
+  For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
 * `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `false` if the resource has not been created by terraform to avoid overwrite of existing resource and will default to `true` otherwise (terraform lifecycle rules should then be used to manage the update behavior).
 * `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.

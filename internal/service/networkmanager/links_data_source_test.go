@@ -21,7 +21,7 @@ func TestAccNetworkManagerLinksDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLinksDataSourceConfig(rName),
+				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
@@ -31,7 +31,7 @@ func TestAccNetworkManagerLinksDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLinksDataSourceConfig(rName string) string {
+func testAccLinksDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

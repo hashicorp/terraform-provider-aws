@@ -48,6 +48,7 @@ func ResourceResourceShare() *schema.Resource {
 			"permission_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,

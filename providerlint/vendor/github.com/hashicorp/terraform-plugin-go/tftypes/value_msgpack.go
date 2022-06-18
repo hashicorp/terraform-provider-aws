@@ -74,7 +74,7 @@ func msgpackUnmarshal(dec *msgpack.Decoder, typ Type, path *AttributePath) (Valu
 			if err != nil {
 				return Value{}, path.NewErrorf("couldn't decode number as int64: %w", err)
 			}
-			return NewValue(Number, big.NewFloat(float64(rv))), nil
+			return NewValue(Number, new(big.Float).SetInt64(rv)), nil
 		}
 		switch peek {
 		case msgpackCodes.Int8, msgpackCodes.Int16, msgpackCodes.Int32, msgpackCodes.Int64:
@@ -82,13 +82,13 @@ func msgpackUnmarshal(dec *msgpack.Decoder, typ Type, path *AttributePath) (Valu
 			if err != nil {
 				return Value{}, path.NewErrorf("couldn't decode number as int64: %w", err)
 			}
-			return NewValue(Number, big.NewFloat(float64(rv))), nil
+			return NewValue(Number, new(big.Float).SetInt64(rv)), nil
 		case msgpackCodes.Uint8, msgpackCodes.Uint16, msgpackCodes.Uint32, msgpackCodes.Uint64:
 			rv, err := dec.DecodeUint64()
 			if err != nil {
 				return Value{}, path.NewErrorf("couldn't decode number as uint64: %w", err)
 			}
-			return NewValue(Number, big.NewFloat(float64(rv))), nil
+			return NewValue(Number, new(big.Float).SetUint64(rv)), nil
 		case msgpackCodes.Float, msgpackCodes.Double:
 			rv, err := dec.DecodeFloat64()
 			if err != nil {

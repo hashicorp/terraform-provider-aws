@@ -26,7 +26,7 @@ func TestAccRDSSecurityGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &v),
 					testAccCheckSecurityGroupAttributes(&v),
@@ -140,7 +140,7 @@ func testAccCheckSecurityGroupExists(n string, v *rds.DBSecurityGroup) resource.
 	}
 }
 
-func testAccSecurityGroupConfig(name string) string {
+func testAccSecurityGroupConfig_basic(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`

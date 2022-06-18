@@ -187,7 +187,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("container_properties"); ok {
-		props, err := expandBatchJobContainerProperties(v.(string))
+		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
 			return err
 		}
@@ -204,7 +204,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetryStrategy = expandBatchRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -212,7 +212,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Timeout = expandBatchJobTimeout(v.([]interface{})[0].(map[string]interface{}))
+		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.RegisterJobDefinition(input)
@@ -245,7 +245,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
 
-	containerProperties, err := flattenBatchContainerProperties(jobDefinition.ContainerProperties)
+	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 
 	if err != nil {
 		return fmt.Errorf("error converting Batch Container Properties to JSON: %w", err)
@@ -261,7 +261,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []interface{}{flattenBatchRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
+		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
 			return fmt.Errorf("error setting retry_strategy: %w", err)
 		}
 	} else {
@@ -280,7 +280,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if jobDefinition.Timeout != nil {
-		if err := d.Set("timeout", []interface{}{flattenBatchJobTimeout(jobDefinition.Timeout)}); err != nil {
+		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
 			return fmt.Errorf("error setting timeout: %w", err)
 		}
 	} else {
@@ -323,14 +323,14 @@ func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandBatchJobContainerProperties(value)
+	_, err := expandJobContainerProperties(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
 	}
 	return
 }
 
-func expandBatchJobContainerProperties(rawProps string) (*batch.ContainerProperties, error) {
+func expandJobContainerProperties(rawProps string) (*batch.ContainerProperties, error) {
 	var props *batch.ContainerProperties
 
 	err := json.Unmarshal([]byte(rawProps), &props)
@@ -342,7 +342,7 @@ func expandBatchJobContainerProperties(rawProps string) (*batch.ContainerPropert
 }
 
 // Convert batch.ContainerProperties object into its JSON representation
-func flattenBatchContainerProperties(containerProperties *batch.ContainerProperties) (string, error) {
+func flattenContainerProperties(containerProperties *batch.ContainerProperties) (string, error) {
 	b, err := jsonutil.BuildJSON(containerProperties)
 
 	if err != nil {
@@ -361,7 +361,7 @@ func expandJobDefinitionParameters(params map[string]interface{}) map[string]*st
 	return jobParams
 }
 
-func expandBatchRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
+func expandRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
 	if tfMap == nil {
 		return nil
 	}
@@ -373,13 +373,13 @@ func expandBatchRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy
 	}
 
 	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EvaluateOnExit = expandBatchEvaluateOnExits(v)
+		apiObject.EvaluateOnExit = expandEvaluateOnExits(v)
 	}
 
 	return apiObject
 }
 
-func expandBatchEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
+func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 	if tfMap == nil {
 		return nil
 	}
@@ -405,7 +405,7 @@ func expandBatchEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnEx
 	return apiObject
 }
 
-func expandBatchEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
+func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -419,7 +419,7 @@ func expandBatchEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 			continue
 		}
 
-		apiObject := expandBatchEvaluateOnExit(tfMap)
+		apiObject := expandEvaluateOnExit(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -431,7 +431,7 @@ func expandBatchEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 	return apiObjects
 }
 
-func flattenBatchRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
+func flattenRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -443,13 +443,13 @@ func flattenBatchRetryStrategy(apiObject *batch.RetryStrategy) map[string]interf
 	}
 
 	if v := apiObject.EvaluateOnExit; v != nil {
-		tfMap["evaluate_on_exit"] = flattenBatchEvaluateOnExits(v)
+		tfMap["evaluate_on_exit"] = flattenEvaluateOnExits(v)
 	}
 
 	return tfMap
 }
 
-func flattenBatchEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
+func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -475,7 +475,7 @@ func flattenBatchEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]inte
 	return tfMap
 }
 
-func flattenBatchEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
+func flattenEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -487,13 +487,13 @@ func flattenBatchEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface
 			continue
 		}
 
-		tfList = append(tfList, flattenBatchEvaluateOnExit(apiObject))
+		tfList = append(tfList, flattenEvaluateOnExit(apiObject))
 	}
 
 	return tfList
 }
 
-func expandBatchJobTimeout(tfMap map[string]interface{}) *batch.JobTimeout {
+func expandJobTimeout(tfMap map[string]interface{}) *batch.JobTimeout {
 	if tfMap == nil {
 		return nil
 	}
@@ -507,7 +507,7 @@ func expandBatchJobTimeout(tfMap map[string]interface{}) *batch.JobTimeout {
 	return apiObject
 }
 
-func flattenBatchJobTimeout(apiObject *batch.JobTimeout) map[string]interface{} {
+func flattenJobTimeout(apiObject *batch.JobTimeout) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

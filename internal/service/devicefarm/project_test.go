@@ -195,7 +195,7 @@ func testAccCheckProjectExists(n string, v *devicefarm.Project) resource.TestChe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindProjectByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindProjectByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -218,7 +218,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindProjectByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindProjectByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
