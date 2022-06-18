@@ -966,24 +966,6 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	checkDisableApiStop := func(expected bool) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-			r, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-				InstanceId: v.InstanceId,
-				Attribute:  aws.String("disableApiStop"),
-			})
-			if err != nil {
-				return err
-			}
-			got := *r.DisableApiStop.Value
-			if got != expected {
-				return fmt.Errorf("expected: %t, got: %t", expected, got)
-			}
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -994,7 +976,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiStop(true),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "true"),
 				),
 			},
 			{
@@ -1007,7 +989,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					checkDisableApiStop(false),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
 				),
 			},
 		},
