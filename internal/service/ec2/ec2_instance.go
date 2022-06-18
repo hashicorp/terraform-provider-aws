@@ -2723,6 +2723,10 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		opts.PrivateDNSNameOptions = expandPrivateDnsNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	return opts, nil
 }
 
@@ -3114,6 +3118,28 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	}
 
 	return tfMap
+}
+
+func expandPrivateDnsNameOptionsRequest(tfMap map[string]interface{}) *ec2.PrivateDnsNameOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.PrivateDnsNameOptionsRequest{}
+
+	if v, ok := tfMap["enable_resource_name_dns_aaaa_record"].(bool); ok {
+		apiObject.EnableResourceNameDnsAAAARecord = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["enable_resource_name_dns_a_record"].(bool); ok {
+		apiObject.EnableResourceNameDnsARecord = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["hostname_type"].(string); ok && v != "" {
+		apiObject.HostnameType = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenPrivateDnsNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
