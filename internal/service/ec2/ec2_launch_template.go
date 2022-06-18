@@ -197,6 +197,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1042,6 +1046,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		"cpu_options",
 		"credit_specification",
 		"description",
+		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
 		"elastic_gpu_specifications",
@@ -1167,6 +1172,10 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
 		apiObject.CreditSpecification = expandCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		apiObject.DisableApiStop = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("disable_api_termination"); ok {
@@ -2165,6 +2174,7 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 			return fmt.Errorf("error setting credit_specification: %w", err)
 		}
 	} // Don't overwrite any configured value.
+	d.Set("disable_api_stop", apiObject.DisableApiStop)
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(apiObject.EbsOptimized)))

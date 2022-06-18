@@ -38,6 +38,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "0"),
@@ -425,6 +426,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "1"),
@@ -3143,6 +3145,7 @@ resource "aws_launch_template" "test" {
     auto_recovery = "disabled"
   }
 
+  disable_api_stop        = true
   disable_api_termination = true
   ebs_optimized           = false
 
