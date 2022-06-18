@@ -509,6 +509,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -516,16 +517,19 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 						},
 					},
@@ -2489,10 +2493,13 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 type awsInstanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
+	CpuOptions                        *ec2.CpuOptionsRequest
+	CreditSpecification               *ec2.CreditSpecificationRequest
 	DisableAPIStop                    *bool
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
-	Monitoring                        *ec2.RunInstancesMonitoringEnabled
+	EnclaveOptions                    *ec2.EnclaveOptionsRequest
+	HibernationOptions                *ec2.HibernationOptionsRequest
 	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
 	ImageID                           *string
 	InstanceInitiatedShutdownBehavior *string
@@ -2501,6 +2508,9 @@ type awsInstanceOpts struct {
 	Ipv6Addresses                     []*ec2.InstanceIpv6Address
 	KeyName                           *string
 	LaunchTemplate                    *ec2.LaunchTemplateSpecification
+	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
+	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
+	Monitoring                        *ec2.RunInstancesMonitoringEnabled
 	NetworkInterfaces                 []*ec2.InstanceNetworkInterfaceSpecification
 	Placement                         *ec2.Placement
 	PrivateDNSNameOptions             *ec2.PrivateDnsNameOptionsRequest
@@ -2510,12 +2520,6 @@ type awsInstanceOpts struct {
 	SpotPlacement                     *ec2.SpotPlacement
 	SubnetID                          *string
 	UserData64                        *string
-	CreditSpecification               *ec2.CreditSpecificationRequest
-	CpuOptions                        *ec2.CpuOptionsRequest
-	HibernationOptions                *ec2.HibernationOptionsRequest
-	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
-	EnclaveOptions                    *ec2.EnclaveOptionsRequest
-	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
 }
 
 func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
