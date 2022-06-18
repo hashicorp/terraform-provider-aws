@@ -164,8 +164,9 @@ func TestAccEC2Host_tags(t *testing.T) {
 
 func TestAccHost_outpost(t *testing.T) {
 	var host ec2.Host
+	resourceName := "aws_ec2_host.test"
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
-	rName := "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -174,10 +175,10 @@ func TestAccHost_outpost(t *testing.T) {
 		CheckDestroy:      testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHost_outpost(rName),
+				Config: testAccHostConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(rName, &host),
-					resource.TestCheckResourceAttrPair(rName, "outpost_arn", outpostDataSourceName, "arn"),
+					testAccCheckHostExists(resourceName, &host),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
 			{
@@ -304,22 +305,22 @@ resource "aws_ec2_host" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccHost_outpost(rName string) string {
+func testAccHostConfig_outpost(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-	data "aws_outposts_outposts" "test" {}
+data "aws_outposts_outposts" "test" {}
 
-	data "aws_outposts_outpost" "test" {
-	  id = tolist(data.aws_outposts_outposts.test.ids)[0]
-	}
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
 	
-	resource "aws_ec2_host" "test" {
-		instance_family   = "r5d"
-		availability_zone = "us-west-2b"
-		outpost_arn       = data.aws_outposts_outpost.test.arn
+resource "aws_ec2_host" "test" {
+  instance_family   = "r5d"
+  availability_zone = data.aws_availability_zones.available.names[1]
+  outpost_arn       = data.aws_outposts_outpost.test.arn
 
-		tags = {
-			Name = %[1]q
-		}
-	  }
+  tags = {
+    Name = %[1]q
+  }
+}
 `, rName))
 }
