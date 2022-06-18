@@ -653,7 +653,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2InstanceDataSource_disableApiStopTermination(t *testing.T) {
+func TestAccEC2InstanceDataSource_disableAPIStopTermination(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -663,14 +663,14 @@ func TestAccEC2InstanceDataSource_disableApiStopTermination(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_disableApiStopTermination(rName, true),
+				Config: testAccInstanceDataSourceConfig_disableAPIStopTermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "true"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfig_disableApiStopTermination(rName, false),
+				Config: testAccInstanceDataSourceConfig_disableAPIStopTermination(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "false"),
@@ -1354,7 +1354,7 @@ data "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_disableApiStopTermination(rName string, disableApiStopTermination bool) string {
+func testAccInstanceDataSourceConfig_disableAPIStopTermination(rName string, disableApiStopTermination bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccInstanceVPCConfig(rName, false, 1),
