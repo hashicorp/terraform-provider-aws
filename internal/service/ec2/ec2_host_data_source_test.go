@@ -31,6 +31,7 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -62,6 +63,39 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "total_vcpus"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2HostDataSource_outpost(t *testing.T) {
+	dataSourceName := "data.aws_ec2_host.test"
+	resourceName := "aws_ec2_host.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostDataSourceConfig_outpost(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "cores"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "host_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_id", resourceName, "outpost_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -115,6 +149,30 @@ data "aws_ec2_host" "test" {
     name   = "tag-key"
     values = [%[1]q]
   }
+}
+`, rName))
+}
+
+func testAccHostDataSourceConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+	id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_ec2_host" "test" {
+	instance_family   = "r5d"
+	availability_zone = "us-west-2b"
+	outpost_arn       = data.aws_outposts_outpost.test.arn
+
+	tags = {
+		Name = %[1]q
+	}
+	}
+
+data "aws_ec2_host" "test" {
+  host_id = aws_ec2_host.test.id
 }
 `, rName))
 }
