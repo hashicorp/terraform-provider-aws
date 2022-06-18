@@ -519,7 +519,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	// Lookup and Set Instance Attributes
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String("disableApiStop"),
+			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
@@ -529,7 +529,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String("disableApiTermination"),
+			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiTermination),
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
