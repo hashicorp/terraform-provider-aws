@@ -27,7 +27,7 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrincipalAssociationConfig(rName),
+				Config: testAccPrincipalAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(resourceName, &association),
 				),
@@ -53,7 +53,7 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrincipalAssociationConfig(rName),
+				Config: testAccPrincipalAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(resourceName, &association),
 					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourcePrincipalAssociation(), resourceName),
@@ -138,7 +138,7 @@ func testAccCheckPrincipalAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPrincipalAssociationConfig(rName string) string {
+func testAccPrincipalAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
   allow_external_principals = true
