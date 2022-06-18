@@ -162,7 +162,7 @@ func TestAccEC2Host_tags(t *testing.T) {
 	})
 }
 
-func TestAccHost_outpost(t *testing.T) {
+func TestAccEC2Host_outpost(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
