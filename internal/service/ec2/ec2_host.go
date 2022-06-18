@@ -64,6 +64,7 @@ func ResourceHost() *schema.Resource {
 			"outpost_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -98,6 +99,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("outpost_arn"); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
+
 	if len(tags) > 0 {
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
 	}
