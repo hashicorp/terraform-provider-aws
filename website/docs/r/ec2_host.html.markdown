@@ -1,7 +1,7 @@
 ---
-subcategory: 'EC2 (Elastic Compute Cloud)'
-layout: 'aws'
-page_title: 'AWS: aws_ec2_host'
+subcategory: "EC2 (Elastic Compute Cloud)"
+layout: "aws"
+page_title: "AWS: aws_ec2_host"
 description: |-
   Provides an EC2 Host resource. This allows Dedicated Hosts to be allocated, modified, and released.
 ---

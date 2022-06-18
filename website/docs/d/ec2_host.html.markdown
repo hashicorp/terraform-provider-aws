@@ -1,7 +1,7 @@
 ---
-subcategory: 'EC2 (Elastic Compute Cloud)'
-layout: 'aws'
-page_title: 'AWS: aws_ec2_host'
+subcategory: "EC2 (Elastic Compute Cloud)"
+layout: "aws"
+page_title: "AWS: aws_ec2_host"
 description: |-
   Get information on an EC2 Host.
 ---
