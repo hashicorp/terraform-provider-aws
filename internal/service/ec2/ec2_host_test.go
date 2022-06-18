@@ -312,7 +312,7 @@ data "aws_outposts_outposts" "test" {}
 data "aws_outposts_outpost" "test" {
   id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
-	
+
 resource "aws_ec2_host" "test" {
   instance_family   = "r5d"
   availability_zone = data.aws_availability_zones.available.names[1]
