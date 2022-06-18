@@ -1528,10 +1528,8 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_stop") && !d.IsNewResource() {
-		err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool))
-
-		if err != nil {
-			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiStop, err)
+		if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
+			return err
 		}
 	}
 
@@ -1793,7 +1791,7 @@ func disableInstanceAPIStop(conn *ec2.EC2, id string, disableAPIStop bool) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %w", id, err)
 	}
 
 	return nil
