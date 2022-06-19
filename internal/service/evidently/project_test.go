@@ -158,7 +158,7 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s", rName3)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", "1"),
