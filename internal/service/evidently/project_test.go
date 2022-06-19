@@ -20,7 +20,7 @@ func TestAccProject_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalDescription := "original description"
 	updatedDescription := "updated description"
-	resourceName := "aws_cloudwatchevidently_project.test"
+	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -82,7 +82,7 @@ func TestAccProject_tags(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "example description"
-	resourceName := "aws_cloudwatchevidently_project.test"
+	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -141,7 +141,7 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "example description"
-	resourceName := "aws_cloudwatchevidently_project.test"
+	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -212,7 +212,7 @@ func TestAccProject_disappears(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "disappears"
-	resourceName := "aws_cloudwatchevidently_project.test"
+	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -235,7 +235,7 @@ func TestAccProject_disappears(t *testing.T) {
 func testAccCheckProjectDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatchevidently_project" {
+		if rs.Type != "aws_evidently_project" {
 			continue
 		}
 
@@ -281,7 +281,7 @@ func testAccCheckProjectExists(name string, project *cloudwatchevidently.GetProj
 
 func testAccProjectConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatchevidently_project" "test" {
+resource "aws_evidently_project" "test" {
   name        = %[1]q
   description = %[2]q
 
@@ -294,7 +294,7 @@ resource "aws_cloudwatchevidently_project" "test" {
 
 func testAccProjectConfig_tags1(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatchevidently_project" "test" {
+resource "aws_evidently_project" "test" {
   name        = %[1]q
   description = %[2]q
 
@@ -308,7 +308,7 @@ resource "aws_cloudwatchevidently_project" "test" {
 
 func testAccProjectConfig_tags2(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatchevidently_project" "test" {
+resource "aws_evidently_project" "test" {
   name        = %[1]q
   description = %[2]q
 
@@ -346,7 +346,7 @@ func testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, desc
 	return acctest.ConfigCompose(
 		testAccProjectBaseConfig(rName, rName2),
 		fmt.Sprintf(`
-resource "aws_cloudwatchevidently_project" "test" {
+resource "aws_evidently_project" "test" {
   name        = %[1]q
   description = %[2]q
 
@@ -367,7 +367,7 @@ resource "aws_cloudwatchevidently_project" "test" {
 // 	return acctest.ConfigCompose(
 // 		testAccProjectBaseConfig(rName, rName2),
 // 		fmt.Sprintf(`
-// resource "aws_cloudwatchevidently_project" "test" {
+// resource "aws_evidently_project" "test" {
 //   name        = %[1]q
 //   description = %[2]q
 

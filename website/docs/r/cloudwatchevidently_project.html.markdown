@@ -1,12 +1,12 @@
 ---
 subcategory: "CloudWatch Evidently"
 layout: "aws"
-page_title: "AWS: aws_cloudwatchevidently_project"
+page_title: "AWS: aws_evidently_project"
 description: |-
   Provides a CloudWatch Evidently Project resource.
 ---
 
-# Resource: aws_cloudwatchevidently_project
+# Resource: aws_evidently_project
 
 Provides a CloudWatch Evidently Project resource.
 
@@ -15,7 +15,7 @@ Provides a CloudWatch Evidently Project resource.
 ### Basic
 
 ```terraform
-resource "aws_cloudwatchevidently_project" "example" {
+resource "aws_evidently_project" "example" {
   name        = "Example"
   description = "Example Description"
 
@@ -28,7 +28,7 @@ resource "aws_cloudwatchevidently_project" "example" {
 ### Store evaluation events in a CloudWatch Log Group
 
 ```terraform
-resource "aws_cloudwatchevidently_project" "example" {
+resource "aws_evidently_project" "example" {
   name        = "Example"
   description = "Example Description"
 
@@ -47,7 +47,7 @@ resource "aws_cloudwatchevidently_project" "example" {
 ### Store evaluation events in an S3 bucket
 
 ```terraform
-resource "aws_cloudwatchevidently_project" "example" {
+resource "aws_evidently_project" "example" {
   name        = "Example"
   description = "Example Description"
 
@@ -110,5 +110,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch Evidently Project can be imported using the `arn`, e.g.,
 
 ```
-$ terraform import aws_cloudwatchevidently_project.example arn:aws:logs:us-west-2:123456789123:log-group:example-log-group-name:*
+$ terraform import aws_evidently_project.example arn:aws:logs:us-west-2:123456789123:log-group:example-log-group-name:*
 ```

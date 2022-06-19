@@ -1100,8 +1100,6 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
-			"aws_cloudwatchevidently_project": evidently.ResourceProject(),
-
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
 			"aws_codeartifact_repository":                    codeartifact.ResourceRepository(),
@@ -1449,6 +1447,8 @@ func Provider() *schema.Provider {
 			"aws_emr_studio_session_mapping": emr.ResourceStudioSessionMapping(),
 
 			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
+
+			"aws_evidently_project": evidently.ResourceProject(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
