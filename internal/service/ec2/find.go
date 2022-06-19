@@ -1011,24 +1011,6 @@ func FindInstanceTypeOfferings(conn *ec2.EC2, input *ec2.DescribeInstanceTypeOff
 	return output, nil
 }
 
-func FindInstanceTypeOffering(conn *ec2.EC2, input *ec2.DescribeInstanceTypeOfferingsInput) (*ec2.InstanceTypeOffering, error) {
-	output, err := FindInstanceTypeOfferings(conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
 func FindLocalGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 
