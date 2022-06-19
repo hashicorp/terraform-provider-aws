@@ -775,6 +775,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
 			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
+			"aws_networkfirewall_resource_policy": networkfirewall.DataSourceFirewallResourcePolicy(),
 
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
 			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
