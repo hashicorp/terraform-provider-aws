@@ -1,15 +1,23 @@
 package kendra
 
 import (
+	"context"
+	"fmt"
 	"regexp"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
+		ReadContext: dataSourceIndexRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -267,4 +275,78 @@ func DataSourceIndex() *schema.Resource {
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	id := d.Get("id").(string)
+
+	resp, err := findIndexByID(ctx, conn, id)
+
+	if err != nil {
+		return diag.Errorf("error getting Kendra Index (%s): %s", id, err)
+	}
+
+	if resp == nil {
+		return diag.Errorf("error getting Kendra Index (%s): empty response", id)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "kendra",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("index/%s", id),
+	}.String()
+
+	d.Set("arn", arn)
+	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("description", resp.Description)
+	d.Set("edition", resp.Edition)
+	d.Set("error_message", resp.ErrorMessage)
+	d.Set("name", resp.Name)
+	d.Set("role_arn", resp.RoleArn)
+	d.Set("status", resp.Status)
+	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
+	d.Set("user_context_policy", resp.UserContextPolicy)
+
+	if err := d.Set("capacity_units", flattenCapacityUnits(resp.CapacityUnits)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("document_metadata_configuration_updates", flattenDocumentMetadataConfigurations(resp.DocumentMetadataConfigurations)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("index_statistics", flattenIndexStatistics(resp.IndexStatistics)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(resp.ServerSideEncryptionConfiguration)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("user_group_resolution_configuration", flattenUserGroupResolutionConfiguration(resp.UserGroupResolutionConfiguration)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("user_token_configurations", flattenUserTokenConfigurations(resp.UserTokenConfigurations)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	tags, err := ListTags(ctx, conn, arn)
+	if err != nil {
+		return diag.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	d.SetId(id)
+
+	return nil
 }
