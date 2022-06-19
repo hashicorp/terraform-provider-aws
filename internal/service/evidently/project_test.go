@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevidently"
+	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 )
 
 func TestAccProject_basic(t *testing.T) {
