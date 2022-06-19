@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccProject_basic(t *testing.T) {
-	var project cloudwatchevidently.GetProjectOutput
+	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalDescription := "original description"
@@ -78,7 +78,7 @@ func TestAccProject_basic(t *testing.T) {
 }
 
 func TestAccProject_tags(t *testing.T) {
-	var project cloudwatchevidently.GetProjectOutput
+	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "example description"
@@ -135,7 +135,7 @@ func TestAccProject_tags(t *testing.T) {
 }
 
 func TestAccProject_updateDataDelivery(t *testing.T) {
-	var project cloudwatchevidently.GetProjectOutput
+	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -208,7 +208,7 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 }
 
 func TestAccProject_disappears(t *testing.T) {
-	var project cloudwatchevidently.GetProjectOutput
+	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "disappears"
@@ -239,14 +239,10 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &cloudwatchevidently.GetProjectInput{
-			Project: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.GetProject(input)
+		resp, err := tfcloudwatchevidently.FindProjectByName(conn, rs.Primary.ID)
 
 		if err == nil {
-			if aws.StringValue(resp.Project.Arn) == rs.Primary.ID {
+			if aws.StringValue(resp.Name) == rs.Primary.ID {
 				return fmt.Errorf("Project '%s' was not deleted properly", rs.Primary.ID)
 			}
 		}
@@ -255,7 +251,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckProjectExists(name string, project *cloudwatchevidently.GetProjectOutput) resource.TestCheckFunc {
+func testAccCheckProjectExists(name string, project *cloudwatchevidently.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -263,11 +259,12 @@ func testAccCheckProjectExists(name string, project *cloudwatchevidently.GetProj
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
-		input := &cloudwatchevidently.GetProjectInput{
-			Project: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No cloudwatchevidently Project ID is set")
 		}
-		resp, err := conn.GetProject(input)
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+		resp, err := tfcloudwatchevidently.FindProjectByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
