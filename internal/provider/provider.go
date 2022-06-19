@@ -780,6 +780,8 @@ func Provider() *schema.Provider {
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
 			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
 
+			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
+			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
 			"aws_outposts_outpost_instance_types": outposts.DataSourceOutpostInstanceTypes(),
