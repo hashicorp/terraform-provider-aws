@@ -57,7 +57,7 @@ func TestAccLocationPlaceIndex_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMapDestroy,
+		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_basic(rName),
@@ -79,7 +79,7 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMapDestroy,
+		CheckDestroy:      testAccCheckPlaceIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseSingleUse),
