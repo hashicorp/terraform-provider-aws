@@ -136,8 +136,9 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cpu_credits": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Only work with existing instances
 								if d.Id() == "" {
@@ -2560,10 +2561,10 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 
 	instanceType := d.Get("instance_type").(string)
 
-	// Set default cpu_credits as Unlimited for T3 instance type
+	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
 		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String("unlimited"),
+			CpuCredits: aws.String(CPUCreditsUnlimited),
 		}
 	}
 
