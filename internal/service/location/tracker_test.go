@@ -102,6 +102,109 @@ func TestAccLocationTracker_description(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLocationTracker_kmsKeyID(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_location_tracker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrackerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrackerConfig_kmsKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLocationTracker_positionFiltering(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_location_tracker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrackerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrackerConfig_positionFiltering(rName, locationservice.PositionFilteringAccuracyBased),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringAccuracyBased),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrackerConfig_positionFiltering(rName, locationservice.PositionFilteringDistanceBased),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringDistanceBased),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLocationTracker_tags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_location_tracker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrackerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrackerConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrackerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccTrackerConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrackerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
 func testAccCheckTrackerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
 
@@ -171,4 +274,51 @@ resource "aws_location_tracker" "test" {
   description     = %[2]q
 }
 `, rName, description)
+}
+
+func testAccTrackerConfig_kmsKeyID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_location_tracker" "test" {
+  tracker_name    = %[1]q
+  kms_key_id      = aws_kms_key.test.arn
+}
+`, rName)
+}
+
+func testAccTrackerConfig_positionFiltering(rName, positionFiltering string) string {
+	return fmt.Sprintf(`
+resource "aws_location_tracker" "test" {
+  tracker_name       = %[1]q
+  position_filtering = %[2]q
+}
+`, rName, positionFiltering)
+}
+
+func testAccTrackerConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_location_tracker" "test" {
+  tracker_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccTrackerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_location_tracker" "test" {
+  tracker_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
