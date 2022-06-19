@@ -43,5 +43,6 @@ data "aws_outposts_asset" "test" {
 	id       = tolist(data.aws_outposts_outposts.test.ids)[0]
 	asset_id = data.aws_outposts_assets.test.asset_ids[0]
 }
+
 `
 }
