@@ -24,11 +24,11 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccKendraIndexDataSourceConfig_nonExistent,
+				Config:      testAccIndexDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`error getting Kendra Index`),
 			},
 			{
-				Config: testAccKendraIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3),
+				Config: testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.#", resourceName, "capacity_units.#"),
@@ -65,13 +65,13 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccKendraIndexDataSourceConfig_nonExistent = `
+const testAccIndexDataSourceConfig_nonExistent = `
 data "aws_kendra_index" "test" {
   id = "tf-acc-test-does-not-exist-kendra-id"
 }
 `
 
-func testAccKendraIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3 string) string {
+func testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
