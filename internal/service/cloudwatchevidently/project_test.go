@@ -1,4 +1,4 @@
-package cloudwatchevidently_test
+package evidently_test
 
 import (
 	"fmt"

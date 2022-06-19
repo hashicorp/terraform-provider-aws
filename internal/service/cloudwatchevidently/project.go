@@ -1,4 +1,4 @@
-package cloudwatchevidently
+package evidently
 
 import (
 	"context"
