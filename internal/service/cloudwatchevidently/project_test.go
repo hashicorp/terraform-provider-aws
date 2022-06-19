@@ -77,7 +77,7 @@ func TestAccProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccProject_updateTags(t *testing.T) {
+func TestAccProject_tags(t *testing.T) {
 	var project cloudwatchevidently.GetProjectOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -118,7 +118,7 @@ func TestAccProject_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_tags(rName, description),
+				Config: testAccProjectConfig_tags1(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
@@ -143,7 +143,7 @@ func TestAccProject_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_tagsUpdated(rName, description),
+				Config: testAccProjectConfig_tags2(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
@@ -325,7 +325,7 @@ resource "aws_cloudwatchevidently_project" "test" {
 `, rName, description)
 }
 
-func testAccProjectConfig_tags(rName, description string) string {
+func testAccProjectConfig_tags1(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatchevidently_project" "test" {
   name        = %[1]q
@@ -339,7 +339,7 @@ resource "aws_cloudwatchevidently_project" "test" {
 `, rName, description)
 }
 
-func testAccProjectConfig_tagsUpdated(rName, description string) string {
+func testAccProjectConfig_tags2(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatchevidently_project" "test" {
   name        = %[1]q
