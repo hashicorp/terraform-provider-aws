@@ -4729,19 +4729,12 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
-data "aws_ami" "amzn-ami-hvm-arm64-gp2" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-arm64-gp2"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test-arm" {
-  image_id      = data.aws_ami.amzn-ami-hvm-arm64-gp2.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = "t4g.micro"
   name          = "%[1]s-arm"
 }
