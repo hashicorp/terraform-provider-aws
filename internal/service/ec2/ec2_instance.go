@@ -987,7 +987,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
-		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDnsNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
 			return fmt.Errorf("error setting private_dns_name_options: %w", err)
 		}
 	} else {
@@ -2728,7 +2728,7 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	}
 
 	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		opts.PrivateDNSNameOptions = expandPrivateDnsNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return opts, nil
@@ -3124,7 +3124,7 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	return tfMap
 }
 
-func expandPrivateDnsNameOptionsRequest(tfMap map[string]interface{}) *ec2.PrivateDnsNameOptionsRequest {
+func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *ec2.PrivateDnsNameOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -3146,7 +3146,7 @@ func expandPrivateDnsNameOptionsRequest(tfMap map[string]interface{}) *ec2.Priva
 	return apiObject
 }
 
-func flattenPrivateDnsNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
+func flattenPrivateDNSNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
