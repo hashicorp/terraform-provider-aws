@@ -37,6 +37,7 @@ func ResourceTracker() *schema.Resource {
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"position_filtering": {
@@ -80,12 +81,16 @@ func resourceTrackerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tracker_name"); ok {
-		input.TrackerName = aws.String(v.(string))
+	if v, ok := d.GetOk("position_filtering"); ok {
+		input.PositionFiltering = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("tracker_name"); ok {
+		input.TrackerName = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateTracker(input)
@@ -132,9 +137,6 @@ func resourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
-	d.Set("tracker_arn", output.TrackerArn)
-	d.Set("tracker_name", output.TrackerName)
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -145,6 +147,10 @@ func resourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	d.Set("tracker_arn", output.TrackerArn)
+	d.Set("tracker_name", output.TrackerName)
+	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	return nil
 }
