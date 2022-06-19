@@ -179,7 +179,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error creating CloudWatch Evidently Project (%s): empty output", name))
 	}
 
-	d.SetId(aws.StringValue(output.Project.Arn))
+	d.SetId(aws.StringValue(output.Project.Name))
 
 	return resourceProjectRead(ctx, d, meta)
 }
@@ -189,10 +189,10 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn := d.Id()
+	name := d.Id()
 
 	resp, err := conn.GetProjectWithContext(ctx, &cloudwatchevidently.GetProjectInput{
-		Project: aws.String(arn),
+		Project: aws.String(name),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
@@ -244,7 +244,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 
-	arn := d.Id()
+	name := d.Id()
 
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
@@ -253,7 +253,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges("description") {
 		_, err := conn.UpdateProjectWithContext(ctx, &cloudwatchevidently.UpdateProjectInput{
 			Description: aws.String(d.Get("description").(string)),
-			Project:     aws.String(arn),
+			Project:     aws.String(name),
 		})
 
 		if err != nil {
@@ -264,7 +264,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	// A bug in the service API for UpdateProjectDataDelivery has been reported
 	// if d.HasChange("data_delivery") {
 	// 	input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
-	// 		Project: aws.String(arn),
+	// 		Project: aws.String(name),
 	// 	}
 
 	// 	dataDelivery := d.Get("data_delivery").([]interface{})
@@ -304,14 +304,14 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 
-	arn := d.Id()
+	name := d.Id()
 
 	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{
-		Project: aws.String(arn),
+		Project: aws.String(name),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Project (%s): %w", arn, err))
+		return diag.FromErr(fmt.Errorf("error deleting Project (%s): %w", name, err))
 	}
 
 	return nil
