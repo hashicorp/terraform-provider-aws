@@ -1,6 +1,6 @@
 # EC2 Transit Gateway intra-region Peering
 
-This example demonstrates how to create two Transit Gateways in one AWS account and *same* region, attach a VPC each, and then create a Peering Attachment between the two Transit Gateways.
+This example demonstrates how to create two Transit Gateways in one AWS account and the same region, attach a VPC each, and then create a Peering Attachment between the two Transit Gateways.
 
 See [more in the Transit Gateway intra-region Peering documentation](https://aws.amazon.com/it/blogs/networking-and-content-delivery/aws-transit-gateway-now-supports-intra-region-peering/).
 

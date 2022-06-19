@@ -78,7 +78,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "example_vpc_2_attachment" {
 }
 
 # Create the intra-region Peering Attachment from Gateway 1 to Gateway 2.
-# Actually, this will create two peerings: one for Gateway 1 (Creator) 
+# Actually, this will create two peerings: one for Gateway 1 (Creator)
 # and one for Gateway 2 (Acceptor).
 resource "aws_ec2_transit_gateway_peering_attachment" "example_source_peering" {
   peer_region             = var.aws_region
@@ -90,9 +90,9 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example_source_peering" {
   }
 }
 
-# Transit Gateway 2's peering request needs to be accepted. 
+# Transit Gateway 2's peering request needs to be accepted.
 # So, we fetch the Peering Attachment that is created for the Gateway 2.
-data "aws_ec2_transit_gateway_peering_attachment" "example_acceptor_peering_data" {
+data "aws_ec2_transit_gateway_peering_attachment" "example_accepter_peering_data" {
   depends_on = [aws_ec2_transit_gateway_peering_attachment.example_source_peering]
   filter {
     name   = "transit-gateway-id"
@@ -101,8 +101,8 @@ data "aws_ec2_transit_gateway_peering_attachment" "example_acceptor_peering_data
 }
 
 # Accept the Attachment Peering request.
-resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example_accpeter" {
-  transit_gateway_attachment_id = data.aws_ec2_transit_gateway_peering_attachment.example_acceptor_peering_data.id
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example_accepter" {
+  transit_gateway_attachment_id = data.aws_ec2_transit_gateway_peering_attachment.example_accepter_peering_data.id
   tags = {
     Name = "terraform-example-tgw-peering-accepter"
     Side = "Acceptor"
