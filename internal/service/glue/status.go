@@ -69,9 +69,9 @@ func statusSchema(conn *glue.Glue, id string) resource.StateRefreshFunc {
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusSchemaVersion(conn *glue.Glue, versionId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSchemaVersionByID(conn, id)
+		output, err := FindSchemaByVersionID(conn, versionId)
 		if err != nil {
 			return nil, schemaVersionStatusUnknown, err
 		}

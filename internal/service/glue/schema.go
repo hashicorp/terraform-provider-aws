@@ -238,12 +238,12 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
-		_, err := conn.RegisterSchemaVersion(defInput)
+		schemaVersion, err := conn.RegisterSchemaVersion(defInput)
 		if err != nil {
 			return fmt.Errorf("error updating Glue Schema Definition (%s): %w", d.Id(), err)
 		}
 
-		_, err = waitSchemaVersionAvailable(conn, d.Id())
+		_, err = waitSchemaVersionAvailable(conn, *schemaVersion.SchemaVersionId)
 		if err != nil {
 			return fmt.Errorf("error waiting for Glue Schema Version (%s) to be Available: %w", d.Id(), err)
 		}

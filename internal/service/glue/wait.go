@@ -94,11 +94,11 @@ func waitSchemaDeleted(conn *glue.Glue, registryID string) (*glue.GetSchemaOutpu
 }
 
 // waitSchemaVersionAvailable waits for a Schema to return Available
-func waitSchemaVersionAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaVersionOutput, error) {
+func waitSchemaVersionAvailable(conn *glue.Glue, schemaVersionId string) (*glue.GetSchemaVersionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaVersionStatusPending},
 		Target:  []string{glue.SchemaVersionStatusAvailable},
-		Refresh: statusSchemaVersion(conn, registryID),
+		Refresh: statusSchemaVersion(conn, schemaVersionId),
 		Timeout: schemaVersionAvailableTimeout,
 	}
 

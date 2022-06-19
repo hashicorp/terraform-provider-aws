@@ -111,6 +111,20 @@ func FindSchemaVersionByID(conn *glue.Glue, id string) (*glue.GetSchemaVersionOu
 	return output, nil
 }
 
+// FindSchemaVersionByVersionID returns the Schema corresponding to the schemaVersionID.
+func FindSchemaByVersionID(conn *glue.Glue, versionId string) (*glue.GetSchemaVersionOutput, error) {
+	input := &glue.GetSchemaVersionInput{
+		SchemaVersionId: &versionId,
+	}
+
+	output, err := conn.GetSchemaVersion(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // FindPartitionByValues returns the Partition corresponding to the specified Partition Values.
 func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) {
 

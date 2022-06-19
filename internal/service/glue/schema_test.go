@@ -2,6 +2,7 @@ package glue_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -267,6 +268,36 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 	})
 }
 
+func TestAccGlueSchema_backwardCompatibilityBreakingChange(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaConfig_backwardCompatible(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compatibility", "BACKWARD"),
+				),
+			},
+			{
+				Config:      testAccSchemaConfig_definitionUpdated_breakingChange(rName),
+				ExpectError: regexp.MustCompile(`unexpected state 'FAILURE', wanted target 'AVAILABLE'`),
+			},
+		},
+	})
+}
+
 func TestAccGlueSchema_disappears(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
@@ -495,6 +526,30 @@ resource "aws_glue_schema" "test" {
   data_format       = "AVRO"
   compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"
+}
+`, rName)
+}
+
+func testAccSchemaConfig_backwardCompatible(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "BACKWARD"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+}
+`, rName)
+}
+
+func testAccSchemaConfig_definitionUpdated_breakingChange(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "BACKWARD"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"}, {\"name\": \"f3\", \"type\": \"string\"} ]}"
 }
 `, rName)
 }
