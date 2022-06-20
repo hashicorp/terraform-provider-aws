@@ -444,6 +444,13 @@ func TestAccSageMakerNotebookInstance_Platform_identifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 				),
 			},
+			{
+				Config: testAccNotebookInstanceConfig_platformIdentifier(rName, "notebook-al2-v2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v2"),
+				),
+			},
 		},
 	})
 }
