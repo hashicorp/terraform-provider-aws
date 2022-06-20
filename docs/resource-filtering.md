@@ -3,6 +3,11 @@
 AWS provides server-side filtering across many services and resources, which can be used when listing resources of that type, for example in the implementation of a data source.
 See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI) for information about how server-side filtering can be used with EC2 resources.
 
+To determine if the supporting AWS API supports this functionality:
+
+- Open the AWS Go SDK documentation for the service, e.g., for [`service/rds`](https://docs.aws.amazon.com/sdk-for-go/api/service/rds/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
+- Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). 
+
 Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
 
 - _Generated Service Filtering Code_: In the internal code generators (e.g., `internal/generate/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
@@ -15,8 +20,7 @@ This step is only necessary for the first implementation and may have been previ
 
 More details about this code generation can be found in the [namevaluesfilters documentation](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/namevaluesfilters/README.md).
 
-- Open the AWS Go SDK documentation for the service, e.g., for [`service/rds`](https://docs.aws.amazon.com/sdk-for-go/api/service/rds/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
-- Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
+Add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
 
 ### Resource Filter Code Implementation
