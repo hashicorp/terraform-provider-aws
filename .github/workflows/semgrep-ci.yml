@@ -14,6 +14,7 @@ on:
 
 jobs:
   semgrep:
+    name: Semgrep Code Quality Scan
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep-action
