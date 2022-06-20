@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
        fetch-depth: 0
-    - run: semgrep ci
+    - run: semgrep --config .semgrep.yml
   naming_cac:
     name: Semgrep Naming Scan Caps/AWS/EC2
     runs-on: ubuntu-latest
