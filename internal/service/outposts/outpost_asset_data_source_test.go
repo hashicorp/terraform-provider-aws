@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccOutpostsAssetDataSource_id(t *testing.T) {
+func TestAccOutpostsAssetDataSource_id(t *testing.T) { // nosemgrep: outposts-in-func-name
 	dataSourceName := "data.aws_outposts_asset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccOutpostsAssetDataSource_id(t *testing.T) {
 	})
 }
 
-func testAccOutpostAssetDataSourceConfig_id() string {
+func testAccOutpostAssetDataSourceConfig_id() string { // nosemgrep: outposts-in-func-name
 	return `
 data "aws_outposts_outposts" "test" {}
 
