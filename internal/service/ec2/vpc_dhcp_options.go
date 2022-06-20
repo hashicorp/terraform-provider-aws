@@ -26,6 +26,8 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		// Keep in sync with aws_default_vpc_dhcp_options' schema.
+		// See notes in vpc_default_vpc_dhcp_options.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -246,6 +248,10 @@ func newDHCPOptionsMap(tfToApi map[string]string) *dhcpOptionsMap {
 
 // dhcpConfigurationsToResourceData sets Terraform ResourceData from a list of AWS API DHCP configurations.
 func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*ec2.DhcpConfiguration, d *schema.ResourceData) error {
+	for v := range m.tfToApi {
+		d.Set(v, nil)
+	}
+
 	for _, dhcpConfiguration := range dhcpConfigurations {
 		apiName := aws.StringValue(dhcpConfiguration.Key)
 		if tfName, ok := m.apiToTf[apiName]; ok {
