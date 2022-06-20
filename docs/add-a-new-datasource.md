@@ -14,13 +14,13 @@ If this is the first addition of a resource or data source for a new service, pl
 
 ### Fork the Provider and Create a Feature Branch
 
-For a new resources use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
+For a new data source use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
 ### Name the Data Source
 
 Either by creating the file manually, or using `skaff` to generate a template.
 
-All resources should be named with the following pattern: `aws_<service>_<name>`
+All data sources should be named with the following pattern: `aws_<service>_<name>`
 
 Where `<service>` is the AWS short service name that matches the key in the `serviceData` map in the `conns` package (created via the [Adding a new Service](add-a-new-service.md))
 
@@ -28,7 +28,7 @@ Where `<name>` represents the conceptual infrastructure represented by the creat
 
 ### Fill out the Data Source Schema
 
-In the `internal/service/<service>/<service>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, and choose the correct data type.
+In the `internal/service/<service>/<service>_data_source.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, and choose the correct data type.
 
 Attribute names are to specified in `snake_case` as opposed to the AWS API which is `CamelCase`
 
@@ -47,17 +47,18 @@ You will need at minimum:
 
 ### Create Documentation for the Data Source
 
-Add a file covering the use of the new resource in `website/docs/d/<service>_<name>.md`. You may want to also add examples of the resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
+Add a file covering the use of the new data source in `website/docs/d/<service>_<name>.md`. You may want to also add examples of the data source in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the data source is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
 
 ### Ensure Format and Lint Checks are Passing Locally
 
 Run `go fmt` to format your code, and install and run all linters to detect and resolve any structural issues with the implementation or documentation.
 
 ```sh
-go fmt
-make tools     # install linters and dependencies
-make lint      # run provider linters
-make docs-lint # run documentation linters
+make fmt
+make tools        # install linters and dependencies
+make lint         # run provider linters
+make docs-lint    # run documentation linters
+make website-lint # run website documentation linters
 ```
 
 ### Raise a Pull Request
