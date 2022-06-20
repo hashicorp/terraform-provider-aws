@@ -232,6 +232,10 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.#", resourceName, "private_dns_name_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.hostname_type", resourceName, "private_dns_name_options.0.hostname_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
 				),
 			},

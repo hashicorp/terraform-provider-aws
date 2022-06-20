@@ -987,6 +987,86 @@ func FindInstanceCreditSpecificationByID(conn *ec2.EC2, id string) (*ec2.Instanc
 	return output, nil
 }
 
+func FindInstanceTypes(conn *ec2.EC2, input *ec2.DescribeInstanceTypesInput) ([]*ec2.InstanceTypeInfo, error) {
+	var output []*ec2.InstanceTypeInfo
+
+	err := conn.DescribeInstanceTypesPages(input, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceTypes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindInstanceType(conn *ec2.EC2, input *ec2.DescribeInstanceTypesInput) (*ec2.InstanceTypeInfo, error) {
+	output, err := FindInstanceTypes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInstanceTypeByName(conn *ec2.EC2, name string) (*ec2.InstanceTypeInfo, error) {
+	input := &ec2.DescribeInstanceTypesInput{
+		InstanceTypes: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindInstanceType(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindInstanceTypeOfferings(conn *ec2.EC2, input *ec2.DescribeInstanceTypeOfferingsInput) ([]*ec2.InstanceTypeOffering, error) {
+	var output []*ec2.InstanceTypeOffering
+
+	err := conn.DescribeInstanceTypeOfferingsPages(input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceTypeOfferings {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindLocalGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 
