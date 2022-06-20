@@ -167,17 +167,17 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 		input.SupportedIpAddressTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating VPC Endpoint Service: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPC Endpoint Service: %s", input)
 	output, err := conn.CreateVpcEndpointServiceConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("creating VPC Endpoint Service: %w", err)
+		return fmt.Errorf("creating EC2 VPC Endpoint Service: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.ServiceConfiguration.ServiceId))
 
 	if _, err := WaitVPCEndpointServiceAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for VPC Endpoint Service (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 VPC Endpoint Service (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("allowed_principals"); ok && v.(*schema.Set).Len() > 0 {
@@ -187,7 +187,7 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := conn.ModifyVpcEndpointServicePermissions(input); err != nil {
-			return fmt.Errorf("modifying VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
+			return fmt.Errorf("modifying EC2 VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
 		}
 	}
 
@@ -285,36 +285,6 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func flattenPrivateDNSNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
-	if privateDnsNameConfiguration == nil {
-		return nil
-	}
-	tfMap := map[string]interface{}{}
-
-	if v := privateDnsNameConfiguration.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
-	}
-
-	if v := privateDnsNameConfiguration.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
-	}
-
-	if v := privateDnsNameConfiguration.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	if v := privateDnsNameConfiguration.Value; v != nil {
-		tfMap["value"] = aws.StringValue(v)
-	}
-
-	// The EC2 API can return a XML structure with no elements
-	if len(tfMap) == 0 {
-		return nil
-	}
-
-	return []interface{}{tfMap}
-}
-
 func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -378,33 +348,58 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteVpcEndpointServiceConfigurationsInput{
+	log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", d.Id())
+	output, err := conn.DeleteVpcEndpointServiceConfigurations(&ec2.DeleteVpcEndpointServiceConfigurationsInput{
 		ServiceIds: aws.StringSlice([]string{d.Id()}),
-	}
+	})
 
-	output, err := conn.DeleteVpcEndpointServiceConfigurations(input)
+	if err == nil && output != nil {
+		err = UnsuccessfulItemsError(output.Unsuccessful)
+	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPC Endpoint Service (%s): %w", d.Id(), err)
 	}
 
-	if output != nil && len(output.Unsuccessful) > 0 {
-		err := UnsuccessfulItemsError(output.Unsuccessful)
-
-		if err != nil {
-			return fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %w", d.Id(), err)
-		}
-	}
-
-	if err := waitForVPCEndpointServiceDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC Endpoint Service (%s) to delete: %w", d.Id(), err)
+	if _, err := WaitVPCEndpointServiceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for EC2 VPC Endpoint Service (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func flattenPrivateDNSNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
+	if privateDnsNameConfiguration == nil {
+		return nil
+	}
+	tfMap := map[string]interface{}{}
+
+	if v := privateDnsNameConfiguration.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := privateDnsNameConfiguration.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
+	}
+
+	if v := privateDnsNameConfiguration.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	if v := privateDnsNameConfiguration.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+	}
+
+	// The EC2 API can return a XML structure with no elements
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []interface{}{tfMap}
 }
 
 func vpcEndpointServiceStateRefresh(conn *ec2.EC2, svcId string) resource.StateRefreshFunc {
@@ -445,21 +440,6 @@ func vpcEndpointServiceWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2)
 	}
 
 	return nil
-}
-
-func waitForVPCEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
-		Target:     []string{ec2.ServiceStateDeleted},
-		Refresh:    vpcEndpointServiceStateRefresh(conn, serviceID),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 func setVPCEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {

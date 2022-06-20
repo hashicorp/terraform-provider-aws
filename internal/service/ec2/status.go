@@ -1103,7 +1103,7 @@ func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 	}
 }
 
-func StatusVPCEndpointServiceState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCEndpointServiceStateAvailable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindVPCEndpointServiceByID as it maps useful status codes to NotFoundError.
 		output, err := FindVPCEndpointService(conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
@@ -1118,13 +1118,23 @@ func StatusVPCEndpointServiceState(conn *ec2.EC2, id string) resource.StateRefre
 			return nil, "", err
 		}
 
-		serviceState := aws.StringValue(output.ServiceState)
+		return output, aws.StringValue(output.ServiceState), nil
+	}
+}
 
-		if serviceState == ec2.ServiceStateDeleted {
+func StatusVPCEndpointServiceStateDeleted(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCEndpointServiceByID(conn, id)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return output, serviceState, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ServiceState), nil
 	}
 }
 

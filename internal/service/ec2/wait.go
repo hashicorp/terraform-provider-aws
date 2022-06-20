@@ -2285,7 +2285,7 @@ func WaitVPCEndpointServiceAvailable(conn *ec2.EC2, id string, timeout time.Dura
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.ServiceStatePending},
 		Target:     []string{ec2.ServiceStateAvailable},
-		Refresh:    StatusVPCEndpointServiceState(conn, id),
+		Refresh:    StatusVPCEndpointServiceStateAvailable(conn, id),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -2305,7 +2305,7 @@ func WaitVPCEndpointServiceDeleted(conn *ec2.EC2, id string, timeout time.Durati
 		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
 		Target:     []string{},
 		Timeout:    timeout,
-		Refresh:    StatusVPCEndpointServiceState(conn, id),
+		Refresh:    StatusVPCEndpointServiceStateDeleted(conn, id),
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
