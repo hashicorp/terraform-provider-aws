@@ -1103,6 +1103,31 @@ func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 	}
 }
 
+func StatusVPCEndpointServiceState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindVPCEndpointServiceByID as it maps useful status codes to NotFoundError.
+		output, err := FindVPCEndpointService(conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+			ServiceIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		serviceState := aws.StringValue(output.ServiceState)
+
+		if serviceState == ec2.ServiceStateDeleted {
+			return nil, "", nil
+		}
+
+		return output, serviceState, nil
+	}
+}
+
 const (
 	VPCEndpointRouteTableAssociationStatusReady = "ready"
 )
