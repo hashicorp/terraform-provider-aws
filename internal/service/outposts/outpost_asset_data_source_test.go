@@ -11,7 +11,6 @@ import (
 
 func TestAccOutpostsAssetDataSource_id(t *testing.T) { // nosemgrep: outposts-in-func-name
 	dataSourceName := "data.aws_outposts_asset.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
@@ -20,7 +19,7 @@ func TestAccOutpostsAssetDataSource_id(t *testing.T) { // nosemgrep: outposts-in
 			{
 				Config: testAccOutpostAssetDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "arn", regexp.MustCompile(`arn:aws([a-z-]+)?:outposts:[a-z\d-]+:\d{12}:outpost/`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
 					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexp.MustCompile(`^(\w+)$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexp.MustCompile(`^[\S \n]+$`)),

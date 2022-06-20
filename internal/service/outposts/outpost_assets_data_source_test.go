@@ -20,7 +20,7 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) { // nosemgrep: outposts-i
 			{
 				Config: testAccOutpostAssetsDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "arn", regexp.MustCompile(`arn:aws([a-z-]+)?:outposts:[a-z\d-]+:\d{12}:outpost/`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
 				),
 			},
 		},
