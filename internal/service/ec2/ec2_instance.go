@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -3348,4 +3349,40 @@ func findInstanceTagValue(conn *ec2.EC2, instanceID, tagKey string) (string, err
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
 func isSnowballEdgeInstance(id string) bool {
 	return strings.Contains(id, "s.")
+}
+
+// InstanceType describes an EC2 instance type.
+type InstanceType struct {
+	// e.g. "m6i"
+	Type string
+	// e.g. "m"
+	Family string
+	// e.g. 6
+	Generation int
+	// e.g. "i"
+	AdditionalCapabilities string
+	// e.g. "9xlarge"
+	Size string
+}
+
+func ParseInstanceType(s string) (*InstanceType, error) {
+	matches := regexp.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
+
+	if matches == nil {
+		return nil, fmt.Errorf("invalid EC2 Instance Type name: %s", s)
+	}
+
+	generation, err := strconv.Atoi(matches[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &InstanceType{
+		Type:                   matches[1],
+		Family:                 matches[2],
+		Generation:             generation,
+		AdditionalCapabilities: matches[4],
+		Size:                   matches[5],
+	}, nil
 }

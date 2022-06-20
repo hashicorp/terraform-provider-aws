@@ -100,6 +100,75 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
+func TestParseInstanceType(t *testing.T) {
+	invalidInstanceTypes := []string{
+		"",
+		"abc",
+		"abc4",
+		"abc4.",
+		"abc.xlarge",
+		"4g.3xlarge",
+	}
+
+	for _, v := range invalidInstanceTypes {
+		if _, err := tfec2.ParseInstanceType(v); err == nil {
+			t.Errorf("Expected error for %s", v)
+		}
+	}
+
+	v, err := tfec2.ParseInstanceType("c4.large")
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+
+	if got, want := v.Type, "c4"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Family, "c"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Generation, 4; got != want {
+		t.Errorf("Got: %d, want: %d", got, want)
+	}
+
+	if got, want := v.AdditionalCapabilities, ""; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Size, "large"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	v, err = tfec2.ParseInstanceType("im4gn.16xlarge")
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+
+	if got, want := v.Type, "im4gn"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Family, "im"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Generation, 4; got != want {
+		t.Errorf("Got: %d, want: %d", got, want)
+	}
+
+	if got, want := v.AdditionalCapabilities, "gn"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Size, "16xlarge"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+}
+
 func TestAccEC2Instance_basic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
