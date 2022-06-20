@@ -25,6 +25,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 		Read:   resourceVPCEndpointServiceRead,
 		Update: resourceVPCEndpointServiceUpdate,
 		Delete: resourceVPCEndpointServiceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +40,6 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -49,13 +49,11 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 			"base_endpoint_dns_names": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 			"gateway_load_balancer_arns": {
 				Type:     schema.TypeSet,
@@ -65,7 +63,6 @@ func ResourceVPCEndpointService() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
-				Set: schema.HashString,
 			},
 			"manages_vpc_endpoints": {
 				Type:     schema.TypeBool,
@@ -79,7 +76,6 @@ func ResourceVPCEndpointService() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
-				Set: schema.HashString,
 			},
 			"private_dns_name": {
 				Type:     schema.TypeString,
@@ -144,39 +140,35 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
+	input := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
-		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, "vpc-endpoint-service"),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcEndpointService),
 	}
+
+	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.GatewayLoadBalancerArns = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("network_load_balancer_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.NetworkLoadBalancerArns = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("private_dns_name"); ok {
-		req.PrivateDnsName = aws.String(v.(string))
+		input.PrivateDnsName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok {
-		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			req.GatewayLoadBalancerArns = flex.ExpandStringSet(v)
-		}
+	if v, ok := d.GetOk("supported_ip_address_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.SupportedIpAddressTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("network_load_balancer_arns"); ok {
-		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			req.NetworkLoadBalancerArns = flex.ExpandStringSet(v)
-		}
-	}
+	log.Printf("[DEBUG] Creating VPC Endpoint Service: %s", input)
+	output, err := conn.CreateVpcEndpointServiceConfiguration(input)
 
-	if v, ok := d.GetOk("supported_ip_address_types"); ok {
-		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			req.SupportedIpAddressTypes = flex.ExpandStringSet(v)
-		}
-	}
-
-	log.Printf("[DEBUG] Creating VPC Endpoint Service configuration: %#v", req)
-	resp, err := conn.CreateVpcEndpointServiceConfiguration(req)
 	if err != nil {
-		return fmt.Errorf("Error creating VPC Endpoint Service configuration: %s", err.Error())
+		return fmt.Errorf("creating VPC Endpoint Service: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ServiceConfiguration.ServiceId))
+	d.SetId(aws.StringValue(output.ServiceConfiguration.ServiceId))
 
 	if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
 		return err
