@@ -2172,11 +2172,6 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 
 func flattenResponseLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
 	instanceType := aws.StringValue(apiObject.InstanceType)
-	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
-
-	if err != nil {
-		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
-	}
 
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %w", err)
@@ -2195,9 +2190,17 @@ func flattenResponseLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData, ap
 	} else {
 		d.Set("cpu_options", nil)
 	}
-	if apiObject.CreditSpecification != nil && aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
-		if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
-			return fmt.Errorf("error setting credit_specification: %w", err)
+	if apiObject.CreditSpecification != nil && instanceType != "" {
+		instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+		}
+
+		if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+			if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
+				return fmt.Errorf("error setting credit_specification: %w", err)
+			}
 		}
 	} // Don't overwrite any configured value.
 	d.Set("disable_api_stop", apiObject.DisableApiStop)
