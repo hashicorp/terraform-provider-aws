@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -438,6 +437,14 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 // Populate instance attribute fields with the returned instance
 func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
 	d.SetId(aws.StringValue(instance.InstanceId))
+
+	instanceType := aws.StringValue(instance.InstanceType)
+	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+	}
+
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
 	if instance.Placement != nil {
@@ -457,7 +464,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
@@ -575,7 +582,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).

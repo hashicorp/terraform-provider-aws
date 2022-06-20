@@ -941,6 +941,13 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
 
+	instanceType := aws.StringValue(instance.InstanceType)
+	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+	}
+
 	d.Set("instance_state", instance.State.Name)
 
 	if v := instance.Placement; v != nil {
@@ -997,7 +1004,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
@@ -1225,7 +1232,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
@@ -2531,8 +2538,8 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2570,15 +2577,22 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
-		// Only T2 and T3 are burstable performance instance types and supports Unlimited.
-		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				opts.CreditSpecification = expandCreditSpecificationRequest(v)
-			} else {
-				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
+		if instanceType != "" {
+			instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+			if err != nil {
+				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
-		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
+
+			if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+				if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+					opts.CreditSpecification = expandCreditSpecificationRequest(v)
+				} else {
+					log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
+				}
+			} else {
+				log.Print("[WARN] credit_specification is defined but instance type does not support burstable performance. Ignoring...")
+			}
 		}
 	}
 
