@@ -131,6 +131,12 @@ func ResourceVPCEndpointService() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -170,18 +176,18 @@ func resourceVPCEndpointServiceCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(output.ServiceConfiguration.ServiceId))
 
-	if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
-		return err
+	if _, err := WaitVPCEndpointServiceAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for VPC Endpoint Service (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("allowed_principals"); ok && v.(*schema.Set).Len() > 0 {
-		modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
-			ServiceId:            aws.String(d.Id()),
+		input := &ec2.ModifyVpcEndpointServicePermissionsInput{
 			AddAllowedPrincipals: flex.ExpandStringSet(v.(*schema.Set)),
+			ServiceId:            aws.String(d.Id()),
 		}
-		log.Printf("[DEBUG] Adding VPC Endpoint Service permissions: %#v", modifyPermReq)
-		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
-			return fmt.Errorf("error adding VPC Endpoint Service permissions: %s", err.Error())
+
+		if _, err := conn.ModifyVpcEndpointServicePermissions(input); err != nil {
+			return fmt.Errorf("modifying VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
 		}
 	}
 
