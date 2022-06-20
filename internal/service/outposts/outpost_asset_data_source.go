@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceOutpostAsset() *schema.Resource {
@@ -14,9 +15,10 @@ func DataSourceOutpostAsset() *schema.Resource {
 		Read: DataSourceOutpostAssetRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+			"arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"asset_id": {
 				Type:     schema.TypeString,
@@ -41,7 +43,7 @@ func DataSourceOutpostAsset() *schema.Resource {
 func DataSourceOutpostAssetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OutpostsConn
 
-	outpost_id := aws.String(d.Get("id").(string))
+	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,

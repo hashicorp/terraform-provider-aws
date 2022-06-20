@@ -16,12 +16,11 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) { // nosemgrep: outposts-i
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostAssetsDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^op-.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "arn", regexp.MustCompile(`arn:aws([a-z-]+)?:outposts:[a-z\d-]+:\d{12}:outpost/`)),
 				),
 			},
 		},
@@ -33,7 +32,7 @@ func testAccOutpostAssetsDataSourceConfig_id() string { // nosemgrep: outposts-i
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_assets" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+  arn = tolist(data.aws_outposts_outposts.test.arns)[0]
 }
 
 `

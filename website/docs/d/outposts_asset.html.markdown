@@ -14,12 +14,12 @@ Information about a specific hardware asset in an Outpost.
 
 ```terraform
 data "aws_outposts_assets" "example" {
-  id = data.aws_outposts_outpost.example.id
+  arn = data.aws_outposts_outpost.example.arn
 }
 
 data "aws_outposts_asset" "example" {
   count    = length(data.aws_outposts_assets.example.asset_ids)
-  id       = data.aws_outposts_outpost.example.id
+  arn      = data.aws_outposts_outpost.example.arn
   asset_id = element(data.aws_outposts_assets.this.asset_ids, count.index)
 }
 
@@ -29,7 +29,7 @@ data "aws_outposts_asset" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) Outpost identifier.
+* `arn` - (Required) Outpost ARN.
 * `asset_id` - (Required) The ID of the asset.
 
 ## Attribute Reference

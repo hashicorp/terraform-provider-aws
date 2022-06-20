@@ -16,14 +16,13 @@ func TestAccOutpostsAssetDataSource_id(t *testing.T) { // nosemgrep: outposts-in
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostAssetDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^op-.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "arn", regexp.MustCompile(`arn:aws([a-z-]+)?:outposts:[a-z\d-]+:\d{12}:outpost/`)),
 					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexp.MustCompile(`^(\w+)$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "asset_type", regexp.MustCompile(`COMPUTE`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexp.MustCompile(`^[\S \n]+$`)),
 				),
 			},
@@ -36,11 +35,11 @@ func testAccOutpostAssetDataSourceConfig_id() string { // nosemgrep: outposts-in
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_assets" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+  arn = tolist(data.aws_outposts_outposts.test.arns)[0]
 }
 
 data "aws_outposts_asset" "test" {
-  id       = tolist(data.aws_outposts_outposts.test.ids)[0]
+  arn      = tolist(data.aws_outposts_outposts.test.arns)[0]
   asset_id = data.aws_outposts_assets.test.asset_ids[0]
 }
 
