@@ -109,7 +109,10 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
-	analyzerName, ruleName := DecodeRuleID(d.Id())
+	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	if err != nil {
+		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+	}
 	out, err := FindArchiveRule(ctx, conn, analyzerName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -130,7 +133,11 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
 
-	analyzerName, ruleName := DecodeRuleID(d.Id())
+	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	if err != nil {
+		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+	}
+
 	in := &accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(resource.UniqueId()),
@@ -143,7 +150,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Updating AccessAnalyzer ArchiveRule (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateArchiveRuleWithContext(ctx, in)
+	_, err = conn.UpdateArchiveRuleWithContext(ctx, in)
 	if err != nil {
 		return diag.Errorf("updating AccessAnalyzer ArchiveRule (%s): %s", d.Id(), err)
 	}
@@ -156,8 +163,12 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Deleting AccessAnalyzer ArchiveRule %s", d.Id())
 
-	analyzerName, ruleName := DecodeRuleID(d.Id())
-	_, err := conn.DeleteArchiveRuleWithContext(ctx, &accessanalyzer.DeleteArchiveRuleInput{
+	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	if err != nil {
+		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+	}
+
+	_, err = conn.DeleteArchiveRuleWithContext(ctx, &accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(resource.UniqueId()),
 		RuleName:     aws.String(ruleName),
@@ -260,8 +271,11 @@ func EncodeRuleID(analyzerName, ruleName string) string {
 	return fmt.Sprintf("%s/%s", analyzerName, ruleName)
 }
 
-func DecodeRuleID(id string) (string, string) {
-	parts := strings.Split(id, "/")
+func DecodeRuleID(id string) (string, string, error) {
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", "", fmt.Errorf("expected ID to be the form analyzer_name/rule_name, given: %s", id)
+	}
 
-	return parts[0], parts[1]
+	return idParts[0], idParts[1], nil
 }

@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	tfaccessanalyzer "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 //func TestArchiveRuleExampleUnitTest(t *testing.T) {
@@ -145,8 +144,12 @@ func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		analyzerName, ruleName := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
-		_, err := tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
+		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
+		}
+
+		_, err = tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -174,7 +177,11 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
-		analyzerName, ruleName := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
+		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
+		}
+
 		resp, err := tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
 
 		if err != nil {
@@ -208,6 +215,16 @@ func testAccArchiveRuleConfig_basic(rName string) string {
 resource "aws_accessanalyzer_archiverule" "test" {
   analyzer_name = aws_accessanalyzer_analyzer.test
   rule_name     = %[1]q
+
+  filter {
+    criteria = "error"
+    exists   = true
+  }
+
+  filter {
+    criteria = "isPublic"
+    eq       = ["false"]
+  }
 }
 `, rName)
 }
