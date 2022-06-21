@@ -198,10 +198,10 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_Subscriber2(rName, address1, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address1),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.1.type", "EMAIL"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.1.address", address2),
+					resource.TestCheckResourceAttrSet(resourceName, "subscriber.0.type"),
+					resource.TestCheckResourceAttrSet(resourceName, "subscriber.0.address"),
+					resource.TestCheckResourceAttrSet(resourceName, "subscriber.1.type"),
+					resource.TestCheckResourceAttrSet(resourceName, "subscriber.1.address"),
 				),
 			},
 			{
