@@ -53,12 +53,28 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// Indicates whether the connection supports MAC Security (MACsec).
+			"macsec_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			// The MAC Security (MACsec) security keys associated with the connection.
+			"macsec_keys": {
+				// Slice of type MacSecKey
+				Type:     schema.TypeList,
+				Optional: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			// The MAC Security (MACsec) port link status of the connection.
+			"port_encryption_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,6 +102,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
+		RequestMACSec:  aws.Bool(d.Get("macsec_enabled").(bool)),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -138,8 +155,11 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
+	d.Set("macsec_capable", connection.MacSecCapable)
+	d.Set("macsec_keys", connection.MacSecKeys)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
 
 	tags, err := ListTags(conn, arn)
