@@ -166,6 +166,58 @@ func TestAccFaq_languageCode(t *testing.T) {
 	})
 }
 
+func TestAccFaq_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_faq.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFaqDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFaqExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFaqConfig_tags2(rName, rName2, rName3, rName4, rName5, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFaqExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFaqExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFaqDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -419,4 +471,47 @@ resource "aws_kendra_faq" "test" {
   }
 }
 `, rName5, languageCode))
+}
+
+func testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, tag, value string) string {
+	return acctest.ConfigCompose(
+		testAccFaqConfigBase(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_faq" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  role_arn = aws_iam_role.test_faq.arn
+
+  s3_path {
+    bucket = aws_s3_bucket.test.id
+    key    = aws_s3_object.test.key
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName5, tag, value))
+}
+
+func testAccFaqConfig_tags2(rName, rName2, rName3, rName4, rName5, tag1, value1, tag2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccFaqConfigBase(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_faq" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  role_arn = aws_iam_role.test_faq.arn
+
+  s3_path {
+    bucket = aws_s3_bucket.test.id
+    key    = aws_s3_object.test.key
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName5, tag1, value1, tag2, value2))
 }
