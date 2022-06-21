@@ -28,7 +28,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -62,13 +62,13 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 				),
 			},
 			{
-				Config: testAccUserUpdateConfig(rName),
+				Config: testAccUserConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
@@ -99,7 +99,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserTagsConfig(rName, "tagKey", "tagVal"),
+				Config: testAccUserConfig_tags(rName, "tagKey", "tagVal"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -111,7 +111,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserTagsConfig(rName, "tagKey", "tagVal2"),
+				Config: testAccUserConfig_tags(rName, "tagKey", "tagVal2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -123,7 +123,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserBasicConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
@@ -149,7 +149,7 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUser(), resourceName),
@@ -218,7 +218,7 @@ func testAccCheckUserExistsWithProvider(n string, v *elasticache.User, providerF
 	}
 }
 
-func testAccUserBasicConfig(rName string) string {
+func testAccUserConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
@@ -230,7 +230,7 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
-func testAccUserUpdateConfig(rName string) string {
+func testAccUserConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
@@ -242,7 +242,7 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
-func testAccUserTagsConfig(rName, tagKey, tagValue string) string {
+func testAccUserConfig_tags(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q

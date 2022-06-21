@@ -21,7 +21,7 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryDataSourceConfig(rName),
+				Config: testAccCostCategoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cost_category_arn", resourceName, "arn"),
@@ -34,9 +34,9 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCostCategoryDataSourceConfig(rName string) string {
+func testAccCostCategoryDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCostCategoryConfig(rName),
+		testAccCostCategoryConfig_basic(rName),
 		`
 data "aws_ce_cost_category" "test" {
   cost_category_arn = aws_ce_cost_category.test.arn

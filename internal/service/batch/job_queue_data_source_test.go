@@ -21,7 +21,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueDataSourceConfigBasic(rName),
+				Config: testAccJobQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
@@ -47,7 +47,7 @@ func TestAccBatchJobQueueDataSource_schedulingPolicy(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueDataSourceConfigSchedulingPolicy(rName),
+				Config: testAccJobQueueDataSourceConfig_schedulingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
@@ -163,7 +163,7 @@ resource "aws_batch_compute_environment" "sample" {
 `, rName)
 }
 
-func testAccJobQueueDataSourceConfigBasic(rName string) string {
+func testAccJobQueueDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueDataSourceConfigBase(rName),
 		fmt.Sprintf(`
@@ -187,7 +187,7 @@ data "aws_batch_job_queue" "by_name" {
 `, rName))
 }
 
-func testAccJobQueueDataSourceConfigSchedulingPolicy(rName string) string {
+func testAccJobQueueDataSourceConfig_schedulingPolicy(rName string) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueDataSourceConfigBase(rName),
 		fmt.Sprintf(`

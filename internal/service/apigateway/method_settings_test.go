@@ -27,7 +27,7 @@ func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -56,7 +56,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsCacheDataEncryptedConfig(rName, true),
+				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -64,7 +64,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsCacheDataEncryptedConfig(rName, false),
+				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -93,7 +93,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsCacheTTLInSecondsConfig(rName, 0),
+				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -101,7 +101,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsCacheTTLInSecondsConfig(rName, 1),
+				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -109,7 +109,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsCacheTTLInSecondsConfig(rName, 2),
+				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -138,7 +138,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsCachingEnabledConfig(rName, true),
+				Config: testAccMethodSettingsConfig_cachingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -146,7 +146,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsCachingEnabledConfig(rName, false),
+				Config: testAccMethodSettingsConfig_cachingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -175,7 +175,7 @@ func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsDataTraceEnabledConfig(rName, true),
+				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -183,7 +183,7 @@ func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsDataTraceEnabledConfig(rName, false),
+				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -212,7 +212,7 @@ func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					testAccCheckMethodSettings_loggingLevel(&stage1, "test/GET", "INFO"),
@@ -221,7 +221,7 @@ func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "OFF"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					testAccCheckMethodSettings_loggingLevel(&stage2, "test/GET", "OFF"),
@@ -251,7 +251,7 @@ func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsMetricsEnabledConfig(rName, true),
+				Config: testAccMethodSettingsConfig_metricsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					testAccCheckMethodSettings_metricsEnabled(&stage1, "test/GET", true),
@@ -260,7 +260,7 @@ func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsMetricsEnabledConfig(rName, false),
+				Config: testAccMethodSettingsConfig_metricsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					testAccCheckMethodSettings_metricsEnabled(&stage2, "test/GET", false),
@@ -290,7 +290,7 @@ func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsMultipleConfig(rName, "INFO", true),
+				Config: testAccMethodSettingsConfig_multiple(rName, "INFO", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					testAccCheckMethodSettings_metricsEnabled(&stage1, "test/GET", true),
@@ -301,7 +301,7 @@ func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsMultipleConfig(rName, "OFF", false),
+				Config: testAccMethodSettingsConfig_multiple(rName, "OFF", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					testAccCheckMethodSettings_metricsEnabled(&stage2, "test/GET", false),
@@ -333,7 +333,7 @@ func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheContro
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsRequireAuthorizationForCacheControlConfig(rName, true),
+				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -341,7 +341,7 @@ func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheContro
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsRequireAuthorizationForCacheControlConfig(rName, false),
+				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -370,7 +370,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T)
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsThrottlingBurstLimitConfig(rName, 1),
+				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -378,7 +378,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T)
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsThrottlingBurstLimitConfig(rName, 2),
+				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -408,7 +408,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefa
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -422,7 +422,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefa
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMethodSettingsSettingsThrottlingBurstLimitConfig(rName, 1),
+				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -445,7 +445,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) 
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsThrottlingRateLimitConfig(rName, 1.1),
+				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -453,7 +453,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsThrottlingRateLimitConfig(rName, 2.2),
+				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 2.2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -483,7 +483,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefau
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -497,7 +497,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefau
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMethodSettingsSettingsThrottlingRateLimitConfig(rName, 1.1),
+				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -520,7 +520,7 @@ func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStra
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsUnauthorizedCacheControlHeaderStrategyConfig(rName, "SUCCEED_WITH_RESPONSE_HEADER"),
+				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITH_RESPONSE_HEADER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage1),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -528,7 +528,7 @@ func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStra
 				),
 			},
 			{
-				Config: testAccMethodSettingsSettingsUnauthorizedCacheControlHeaderStrategyConfig(rName, "SUCCEED_WITHOUT_RESPONSE_HEADER"),
+				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITHOUT_RESPONSE_HEADER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage2),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -590,7 +590,7 @@ func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsSettingsLoggingLevelConfig(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
@@ -690,7 +690,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, rName)
 }
 
-func testAccMethodSettingsSettingsCacheDataEncryptedConfig(rName string, cacheDataEncrypted bool) string {
+func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncrypted bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -704,7 +704,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, cacheDataEncrypted)
 }
 
-func testAccMethodSettingsSettingsCacheTTLInSecondsConfig(rName string, cacheTtlInSeconds int) string {
+func testAccMethodSettingsConfig_cacheTTLInSeconds(rName string, cacheTtlInSeconds int) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -718,7 +718,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, cacheTtlInSeconds)
 }
 
-func testAccMethodSettingsSettingsCachingEnabledConfig(rName string, cachingEnabled bool) string {
+func testAccMethodSettingsConfig_cachingEnabled(rName string, cachingEnabled bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -732,7 +732,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, cachingEnabled)
 }
 
-func testAccMethodSettingsSettingsDataTraceEnabledConfig(rName string, dataTraceEnabled bool) string {
+func testAccMethodSettingsConfig_dataTraceEnabled(rName string, dataTraceEnabled bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -746,7 +746,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, dataTraceEnabled)
 }
 
-func testAccMethodSettingsSettingsLoggingLevelConfig(rName, loggingLevel string) string {
+func testAccMethodSettingsConfig_loggingLevel(rName, loggingLevel string) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -760,7 +760,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, loggingLevel)
 }
 
-func testAccMethodSettingsSettingsMetricsEnabledConfig(rName string, metricsEnabled bool) string {
+func testAccMethodSettingsConfig_metricsEnabled(rName string, metricsEnabled bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -774,7 +774,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, metricsEnabled)
 }
 
-func testAccMethodSettingsSettingsMultipleConfig(rName, loggingLevel string, metricsEnabled bool) string {
+func testAccMethodSettingsConfig_multiple(rName, loggingLevel string, metricsEnabled bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
@@ -789,7 +789,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, loggingLevel, metricsEnabled)
 }
 
-func testAccMethodSettingsSettingsRequireAuthorizationForCacheControlConfig(rName string, requireAuthorizationForCacheControl bool) string {
+func testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName string, requireAuthorizationForCacheControl bool) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -803,7 +803,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, requireAuthorizationForCacheControl)
 }
 
-func testAccMethodSettingsSettingsThrottlingBurstLimitConfig(rName string, throttlingBurstLimit int) string {
+func testAccMethodSettingsConfig_throttlingBurstLimit(rName string, throttlingBurstLimit int) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -817,7 +817,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, throttlingBurstLimit)
 }
 
-func testAccMethodSettingsSettingsThrottlingRateLimitConfig(rName string, throttlingRateLimit float32) string {
+func testAccMethodSettingsConfig_throttlingRateLimit(rName string, throttlingRateLimit float32) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
@@ -831,7 +831,7 @@ resource "aws_api_gateway_method_settings" "test" {
 `, throttlingRateLimit)
 }
 
-func testAccMethodSettingsSettingsUnauthorizedCacheControlHeaderStrategyConfig(rName, unauthorizedCacheControlHeaderStrategy string) string {
+func testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, unauthorizedCacheControlHeaderStrategy string) string {
 	return testAccMethodSettingsBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"

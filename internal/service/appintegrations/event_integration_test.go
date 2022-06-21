@@ -15,7 +15,7 @@ import (
 	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 )
 
-func TestAccEventIntegration_basic(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -74,7 +74,7 @@ func TestAccEventIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventIntegration_updateTags(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -153,7 +153,7 @@ func TestAccEventIntegration_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccEventIntegration_disappears(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

@@ -44,7 +44,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCLinkConfig_Update(rName, "test update"),
+				Config: testAccVPCLinkConfig_update(rName, "test update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
@@ -254,7 +254,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVPCLinkConfig_Update(rName, description string) string {
+func testAccVPCLinkConfig_update(rName, description string) string {
 	return testAccVPCLinkConfig_basis(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-update-%s"

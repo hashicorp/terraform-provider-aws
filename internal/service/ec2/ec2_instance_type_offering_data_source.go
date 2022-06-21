@@ -21,13 +21,9 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 				Computed: true,
 			},
 			"location_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.LocationTypeAvailabilityZone,
-					ec2.LocationTypeAvailabilityZoneId,
-					ec2.LocationTypeRegion,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.LocationType_Values(), false),
 			},
 			"preferred_instance_types": {
 				Type:     schema.TypeList,
@@ -51,59 +47,39 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 		input.LocationType = aws.String(v.(string))
 	}
 
-	var foundInstanceTypes []string
+	instanceTypeOfferings, err := FindInstanceTypeOfferings(conn, input)
 
-	for {
-		output, err := conn.DescribeInstanceTypeOfferings(input)
-
-		if err != nil {
-			return fmt.Errorf("error reading EC2 Instance Type Offerings: %w", err)
-		}
-
-		if output == nil {
-			break
-		}
-
-		for _, instanceTypeOffering := range output.InstanceTypeOfferings {
-			if instanceTypeOffering == nil {
-				continue
-			}
-
-			foundInstanceTypes = append(foundInstanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance Type Offerings: %w", err)
 	}
 
-	if len(foundInstanceTypes) == 0 {
+	if len(instanceTypeOfferings) == 0 {
 		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
+	}
+
+	var foundInstanceTypes []string
+
+	for _, instanceTypeOffering := range instanceTypeOfferings {
+		foundInstanceTypes = append(foundInstanceTypes, aws.StringValue(instanceTypeOffering.InstanceType))
 	}
 
 	var resultInstanceType string
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
-	if l := d.Get("preferred_instance_types").([]interface{}); len(l) > 0 {
-		for _, elem := range l {
-			preferredInstanceType, ok := elem.(string)
+	if v, ok := d.GetOk("preferred_instance_types"); ok {
+		for _, v := range v.([]interface{}) {
+			if v, ok := v.(string); ok {
+				for _, foundInstanceType := range foundInstanceTypes {
+					if foundInstanceType == v {
+						resultInstanceType = v
+						break
+					}
+				}
 
-			if !ok {
-				continue
-			}
-
-			for _, foundInstanceType := range foundInstanceTypes {
-				if foundInstanceType == preferredInstanceType {
-					resultInstanceType = preferredInstanceType
+				if resultInstanceType != "" {
 					break
 				}
-			}
-
-			if resultInstanceType != "" {
-				break
 			}
 		}
 	}
@@ -120,9 +96,8 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
-	d.Set("instance_type", resultInstanceType)
-
 	d.SetId(resultInstanceType)
+	d.Set("instance_type", resultInstanceType)
 
 	return nil
 }

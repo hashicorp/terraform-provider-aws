@@ -24,7 +24,7 @@ func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -53,7 +53,7 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
@@ -75,7 +75,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitoringSubscriptionConfig("Enabled"),
+				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -90,7 +90,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMonitoringSubscriptionConfig("Disabled"),
+				Config: testAccMonitoringSubscriptionConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
@@ -198,7 +198,7 @@ resource "aws_cloudfront_distribution" "test" {
 `
 }
 
-func testAccMonitoringSubscriptionConfig(status string) string {
+func testAccMonitoringSubscriptionConfig_basic(status string) string {
 	return acctest.ConfigCompose(
 		testAccMonitoringSubscriptionBaseConfig(),
 		fmt.Sprintf(`

@@ -23,7 +23,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInvocation_basic(rName, testData),
+				Config: testAccInvocationConfig_basic(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)),
 				),
@@ -44,7 +44,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 		CheckDestroy:      testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInvocation_qualifier(rName, testData),
+				Config: testAccInvocationConfig_qualifier(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
@@ -65,7 +65,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 		CheckDestroy:      testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInvocation_complex(rName, testData),
+				Config: testAccInvocationConfig_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
@@ -87,19 +87,19 @@ func TestAccLambdaInvocation_triggers(t *testing.T) {
 		CheckDestroy:      testAccCheckInvocationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInvocation_triggers(rName, testData),
+				Config: testAccInvocationConfig_triggers(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 			{
-				Config: testAccConfigInvocation_triggers(rName, testData),
+				Config: testAccInvocationConfig_triggers(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
 			{
-				Config: testAccConfigInvocation_triggers(rName, testData2),
+				Config: testAccInvocationConfig_triggers(rName, testData2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData2+`"}`),
 				),
@@ -140,7 +140,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, roleName)
 }
 
-func testAccConfigInvocation_basic(rName, testData string) string {
+func testAccInvocationConfig_basic(rName, testData string) string {
 	return acctest.ConfigCompose(
 		testAccConfigInvocation_base(rName),
 		fmt.Sprintf(`
@@ -171,7 +171,7 @@ resource "aws_lambda_invocation" "test" {
 `, rName, testData))
 }
 
-func testAccConfigInvocation_qualifier(rName, testData string) string {
+func testAccInvocationConfig_qualifier(rName, testData string) string {
 	return acctest.ConfigCompose(
 		testAccConfigInvocation_base(rName),
 		fmt.Sprintf(`
@@ -204,7 +204,7 @@ resource "aws_lambda_invocation" "test" {
 `, rName, testData))
 }
 
-func testAccConfigInvocation_complex(rName, testData string) string {
+func testAccInvocationConfig_complex(rName, testData string) string {
 	return acctest.ConfigCompose(
 		testAccConfigInvocation_base(rName),
 		fmt.Sprintf(`
@@ -243,7 +243,7 @@ resource "aws_lambda_invocation" "test" {
 `, rName, testData))
 }
 
-func testAccConfigInvocation_triggers(rName, testData string) string {
+func testAccInvocationConfig_triggers(rName, testData string) string {
 	return acctest.ConfigCompose(
 		testAccConfigInvocation_base(rName),
 		fmt.Sprintf(`

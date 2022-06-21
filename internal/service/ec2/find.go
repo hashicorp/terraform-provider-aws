@@ -987,6 +987,86 @@ func FindInstanceCreditSpecificationByID(conn *ec2.EC2, id string) (*ec2.Instanc
 	return output, nil
 }
 
+func FindInstanceTypes(conn *ec2.EC2, input *ec2.DescribeInstanceTypesInput) ([]*ec2.InstanceTypeInfo, error) {
+	var output []*ec2.InstanceTypeInfo
+
+	err := conn.DescribeInstanceTypesPages(input, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceTypes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindInstanceType(conn *ec2.EC2, input *ec2.DescribeInstanceTypesInput) (*ec2.InstanceTypeInfo, error) {
+	output, err := FindInstanceTypes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInstanceTypeByName(conn *ec2.EC2, name string) (*ec2.InstanceTypeInfo, error) {
+	input := &ec2.DescribeInstanceTypesInput{
+		InstanceTypes: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindInstanceType(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindInstanceTypeOfferings(conn *ec2.EC2, input *ec2.DescribeInstanceTypeOfferingsInput) ([]*ec2.InstanceTypeOffering, error) {
+	var output []*ec2.InstanceTypeOffering
+
+	err := conn.DescribeInstanceTypeOfferingsPages(input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceTypeOfferings {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindLocalGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]*ec2.LocalGatewayRouteTable, error) {
 	var output []*ec2.LocalGatewayRouteTable
 
@@ -4638,6 +4718,48 @@ func FindSnapshotByID(conn *ec2.EC2, id string) (*ec2.Snapshot, error) {
 	}
 
 	return output, nil
+}
+
+func FindSnapshotAttribute(conn *ec2.EC2, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
+	output, err := conn.DescribeSnapshotAttribute(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn *ec2.EC2, snapshotID, accountID string) (*ec2.CreateVolumePermission, error) {
+	input := &ec2.DescribeSnapshotAttributeInput{
+		Attribute:  aws.String(ec2.SnapshotAttributeNameCreateVolumePermission),
+		SnapshotId: aws.String(snapshotID),
+	}
+
+	output, err := FindSnapshotAttribute(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.CreateVolumePermissions {
+		if aws.StringValue(v.UserId) == accountID {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{LastRequest: input}
 }
 
 func FindFindSnapshotTierStatuses(conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) ([]*ec2.SnapshotTierStatus, error) {

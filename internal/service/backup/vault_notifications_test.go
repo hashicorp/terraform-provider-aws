@@ -26,7 +26,7 @@ func TestAccBackupVaultNotification_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultNotificationConfig(rName),
+				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", "2"),
@@ -53,7 +53,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultNotificationConfig(rName),
+				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultNotifications(), resourceName),
@@ -109,7 +109,7 @@ func testAccCheckVaultNotificationExists(name string, vault *backup.GetBackupVau
 	}
 }
 
-func testAccBackupVaultNotificationConfig(rName string) string {
+func testAccVaultNotificationsConfig_notification(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q

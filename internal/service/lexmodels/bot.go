@@ -106,7 +106,7 @@ func ResourceBot() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: 100,
+				MaxItems: 250,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"intent_name": {

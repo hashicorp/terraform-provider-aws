@@ -22,7 +22,7 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(userName),
+				Config: testAccUserDataSourceConfig_basic(userName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
@@ -57,7 +57,7 @@ func TestAccIAMUserDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccUserDataSourceConfig(name string) string {
+func testAccUserDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = "%s"

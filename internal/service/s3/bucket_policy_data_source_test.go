@@ -26,7 +26,7 @@ func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceBucketPolicyConfigBasicConfig(rName),
+				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName, &conf),
 					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
@@ -137,7 +137,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDataSourceBucketPolicyConfigBasicConfig(rName string) string {
+func testAccBucketPolicyDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataSourceBucketPolicyBaseConfig(rName), `
 data "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id

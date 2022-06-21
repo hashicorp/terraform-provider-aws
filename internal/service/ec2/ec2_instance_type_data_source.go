@@ -1,13 +1,10 @@
 package ec2
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstanceType() *schema.Resource {
@@ -19,125 +16,99 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"bare_metal": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"burstable_performance_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"current_generation": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"dedicated_hosts_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"default_cores": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"default_threads_per_core": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"default_vcpus": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"ebs_encryption_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"ebs_nvme_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"ebs_optimized_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"ebs_performance_baseline_bandwidth": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"ebs_performance_baseline_throughput": {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-
 			"ebs_performance_baseline_iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"ebs_performance_maximum_bandwidth": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"ebs_performance_maximum_throughput": {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-
 			"ebs_performance_maximum_iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"efa_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"ena_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"encryption_in_transit_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"fpgas": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"count": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"manufacturer": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"memory_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -145,15 +116,12 @@ func DataSourceInstanceType() *schema.Resource {
 					},
 				},
 			},
-
 			"free_tier_eligible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"gpus": {
 				Type:     schema.TypeSet,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -161,17 +129,14 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"manufacturer": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"memory_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -179,58 +144,47 @@ func DataSourceInstanceType() *schema.Resource {
 					},
 				},
 			},
-
 			"hibernation_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
-
 			"inference_accelerators": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"count": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
-						"name": {
+						"manufacturer": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
-						"manufacturer": {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-
 			"instance_disks": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"count": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-
 						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -238,107 +192,84 @@ func DataSourceInstanceType() *schema.Resource {
 					},
 				},
 			},
-
 			"instance_storage_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"ipv6_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"maximum_ipv4_addresses_per_interface": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"maximum_ipv6_addresses_per_interface": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"maximum_network_interfaces": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"network_performance": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"supported_architectures": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supported_placement_strategies": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supported_root_device_types": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supported_usages_classes": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supported_virtualization_types": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"sustained_clock_speed": {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-
 			"total_fpga_memory": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"total_gpu_memory": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"total_instance_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				Optional: true,
 			},
-
 			"valid_cores": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
-
 			"valid_threads_per_core": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -351,23 +282,13 @@ func DataSourceInstanceType() *schema.Resource {
 func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	params := &ec2.DescribeInstanceTypesInput{}
+	v, err := FindInstanceTypeByName(conn, d.Get("instance_type").(string))
 
-	instanceType := d.Get("instance_type").(string)
-	params.InstanceTypes = []*string{aws.String(instanceType)}
-	log.Printf("[DEBUG] Reading instances types: %s", params)
-
-	resp, err := conn.DescribeInstanceTypes(params)
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("EC2 Instance Type", err)
 	}
-	if len(resp.InstanceTypes) == 0 {
-		return fmt.Errorf("no Instance Type found for %s", instanceType)
-	}
-	if len(resp.InstanceTypes) > 1 {
-		return fmt.Errorf("multiple instance types found for type %s", instanceType)
-	}
-	v := resp.InstanceTypes[0]
+
+	d.SetId(aws.StringValue(v.InstanceType))
 	d.Set("auto_recovery_supported", v.AutoRecoverySupported)
 	d.Set("bare_metal", v.BareMetal)
 	d.Set("burstable_performance_supported", v.BurstablePerformanceSupported)
@@ -464,6 +385,6 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("sustained_clock_speed", v.ProcessorInfo.SustainedClockSpeedInGhz)
 	d.Set("valid_cores", v.VCpuInfo.ValidCores)
 	d.Set("valid_threads_per_core", v.VCpuInfo.ValidThreadsPerCore)
-	d.SetId(aws.StringValue(v.InstanceType))
+
 	return nil
 }

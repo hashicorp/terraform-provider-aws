@@ -35,7 +35,7 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
@@ -76,7 +76,7 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationOlderSchemaConfig(prefix, sseAlgorithm, rInt),
+				Config: testAccRemediationConfigurationConfig_olderSchema(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
@@ -113,7 +113,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &rc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
@@ -146,14 +146,14 @@ func testAccRemediationConfiguration_recreates(t *testing.T) {
 		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig(originalName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(originalName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", fmt.Sprintf("%s-tf-acc-test-%d", originalName, rInt)),
 				),
 			},
 			{
-				Config: testAccRemediationConfigurationConfig(updatedName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(updatedName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &updated),
 					testAccCheckRemediationConfigurationRecreated(t, &original, &updated),
@@ -191,7 +191,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemediationConfigurationConfig(name, originalSseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Config: testAccRemediationConfigurationConfig_basic(name, originalSseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2.static_value", originalSseAlgorithm),
@@ -206,7 +206,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRemediationConfigurationConfig(name, updatedSseAlgorithm, rInt, uAttempts, uSeconds, uExecPct, uErrorPct, uAutomatic),
+				Config: testAccRemediationConfigurationConfig_basic(name, updatedSseAlgorithm, rInt, uAttempts, uSeconds, uExecPct, uErrorPct, uAutomatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(resourceName, &updated),
 					testAccCheckRemediationConfigurationNotRecreated(t, &original, &updated),
@@ -277,7 +277,7 @@ func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRemediationConfigurationOlderSchemaConfig(namePrefix, sseAlgorithm string, randInt int) string {
+func testAccRemediationConfigurationConfig_olderSchema(namePrefix, sseAlgorithm string, randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name
@@ -362,7 +362,7 @@ EOF
 `, namePrefix, sseAlgorithm, randInt)
 }
 
-func testAccRemediationConfigurationConfig(namePrefix, sseAlgorithm string, randInt int, randAttempts int, randSeconds int, randExecPct int, randErrorPct int, automatic string) string {
+func testAccRemediationConfigurationConfig_basic(namePrefix, sseAlgorithm string, randInt int, randAttempts int, randSeconds int, randExecPct int, randErrorPct int, automatic string) string {
 	return fmt.Sprintf(`
 resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name

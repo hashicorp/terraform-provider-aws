@@ -27,7 +27,7 @@ func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccerviceSpecificCredentialBasicConfig(rName),
+				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
@@ -61,7 +61,7 @@ func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccerviceSpecificCredentialMultiConfig(rName),
+				Config: testAccServiceSpecificCredentialConfig_multi(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
@@ -99,7 +99,7 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceSpecificCredentialConfigStatus(rName, "Inactive"),
+				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -112,14 +112,14 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"service_password"},
 			},
 			{
-				Config: testAccServiceSpecificCredentialConfigStatus(rName, "Active"),
+				Config: testAccServiceSpecificCredentialConfig_status(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 				),
 			},
 			{
-				Config: testAccServiceSpecificCredentialConfigStatus(rName, "Inactive"),
+				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -142,7 +142,7 @@ func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceSpecificCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccerviceSpecificCredentialBasicConfig(rName),
+				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(resourceName, &cred),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceSpecificCredential(), resourceName),
@@ -210,7 +210,7 @@ func testAccCheckServiceSpecificCredentialDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccerviceSpecificCredentialBasicConfig(rName string) string {
+func testAccServiceSpecificCredentialConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -223,7 +223,7 @@ resource "aws_iam_service_specific_credential" "test" {
 `, rName)
 }
 
-func testAccerviceSpecificCredentialMultiConfig(rName string) string {
+func testAccServiceSpecificCredentialConfig_multi(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -241,7 +241,7 @@ resource "aws_iam_service_specific_credential" "test2" {
 `, rName)
 }
 
-func testAccServiceSpecificCredentialConfigStatus(rName, status string) string {
+func testAccServiceSpecificCredentialConfig_status(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

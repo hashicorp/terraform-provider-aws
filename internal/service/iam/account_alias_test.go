@@ -47,7 +47,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAliasConfig(rName),
+				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountAliasExists(resourceName),
 				),
@@ -118,7 +118,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAccountAliasConfig(rName string) string {
+func testAccAccountAliasConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

@@ -25,7 +25,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig(rInt),
+				Config: testAccEndpointConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
@@ -58,7 +58,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig(rInt),
+				Config: testAccEndpointConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3outposts.ResourceEndpoint(), resourceName),
@@ -129,7 +129,7 @@ func testAccEndpointImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccEndpointConfig(rInt int) string {
+func testAccEndpointConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
