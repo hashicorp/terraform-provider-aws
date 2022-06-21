@@ -28,10 +28,9 @@ func ResourceBucketMetric() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"filter": {
 				Type:     schema.TypeList,
@@ -57,7 +56,7 @@ func ResourceBucketMetric() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
 	}
