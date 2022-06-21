@@ -29,11 +29,11 @@ data "aws_route53_resolver_firewall_domain_list" "example" {
 The following attribute is additionally exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall domain list.
-* `name` - The name of the domain list.
+* `creation_time` - The date and time that the domain list was created, in Unix time format and Coordinated Universal Time (UTC).
+* `creator_request_id` - A unique string defined by you to identify the request.
 * `domain_count` - The number of domain names that are specified in the domain list.
+* `name` - The name of the domain list.
+* `managed_owner_name` - The owner of the list, used only for lists that are not managed by you.
+* `modification_time` - The date and time that the domain list was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `status` - The status of the domain list.
 * `status_message` - Additional information about the status of the list, if available.
-* `managed_owner_name` - The owner of the list, used only for lists that are not managed by you.
-* `creator_request_id` - A unique string defined by you to identify the request.
-* `creation_time` - The date and time that the domain list was created, in Unix time format and Coordinated Universal Time (UTC).
-* `modification_time` - The date and time that the domain list was last modified, in Unix time format and Coordinated Universal Time (UTC).

@@ -22,23 +22,7 @@ func DataSourceResolverFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_message": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"managed_owner_name": {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,11 +30,27 @@ func DataSourceResolverFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			"domain_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"managed_owner_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"modification_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,14 +77,14 @@ func dataSourceResolverFirewallDomainListRead(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
 	d.Set("arn", output.FirewallDomainList.Arn)
-	d.Set("name", output.FirewallDomainList.Name)
+	d.Set("creation_time", output.FirewallDomainList.CreationTime)
+	d.Set("creator_request_id", output.FirewallDomainList.CreatorRequestId)
 	d.Set("domain_count", output.FirewallDomainList.DomainCount)
+	d.Set("name", output.FirewallDomainList.Name)
+	d.Set("managed_owner_name", output.FirewallDomainList.ManagedOwnerName)
+	d.Set("modification_time", output.FirewallDomainList.ModificationTime)
 	d.Set("status", output.FirewallDomainList.Status)
 	d.Set("status_message", output.FirewallDomainList.StatusMessage)
-	d.Set("managed_owner_name", output.FirewallDomainList.ManagedOwnerName)
-	d.Set("creator_request_id", output.FirewallDomainList.CreatorRequestId)
-	d.Set("creation_time", output.FirewallDomainList.CreationTime)
-	d.Set("modification_time", output.FirewallDomainList.ModificationTime)
 
 	return nil
 }
