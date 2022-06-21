@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceResolverFirewallDomainList() *schema.Resource {
@@ -20,9 +19,8 @@ func DataSourceResolverFirewallDomainList() *schema.Resource {
 				Required: true,
 			},
 			"arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
