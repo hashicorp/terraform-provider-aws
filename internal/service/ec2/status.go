@@ -1105,8 +1105,8 @@ func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 
 func StatusVPCEndpointServiceStateAvailable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// Don't call FindVPCEndpointServiceByID as it maps useful status codes to NotFoundError.
-		output, err := FindVPCEndpointService(conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
+		output, err := FindVPCEndpointServiceConfiguration(conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 			ServiceIds: aws.StringSlice([]string{id}),
 		})
 
@@ -1124,7 +1124,7 @@ func StatusVPCEndpointServiceStateAvailable(conn *ec2.EC2, id string) resource.S
 
 func StatusVPCEndpointServiceStateDeleted(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCEndpointServiceByID(conn, id)
+		output, err := FindVPCEndpointServiceConfigurationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

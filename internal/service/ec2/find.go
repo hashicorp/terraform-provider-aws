@@ -2522,8 +2522,8 @@ func FindVPCEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
 	return output, nil
 }
 
-func FindVPCEndpointService(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*ec2.ServiceConfiguration, error) {
-	output, err := FindVPCEndpointServices(conn, input)
+func FindVPCEndpointServiceConfiguration(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*ec2.ServiceConfiguration, error) {
+	output, err := FindVPCEndpointServiceConfigurations(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2540,7 +2540,7 @@ func FindVPCEndpointService(conn *ec2.EC2, input *ec2.DescribeVpcEndpointService
 	return output[0], nil
 }
 
-func FindVPCEndpointServices(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]*ec2.ServiceConfiguration, error) {
+func FindVPCEndpointServiceConfigurations(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]*ec2.ServiceConfiguration, error) {
 	var output []*ec2.ServiceConfiguration
 
 	err := conn.DescribeVpcEndpointServiceConfigurationsPages(input, func(page *ec2.DescribeVpcEndpointServiceConfigurationsOutput, lastPage bool) bool {
@@ -2571,12 +2571,12 @@ func FindVPCEndpointServices(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServic
 	return output, nil
 }
 
-func FindVPCEndpointServiceByID(conn *ec2.EC2, id string) (*ec2.ServiceConfiguration, error) {
+func FindVPCEndpointServiceConfigurationByID(conn *ec2.EC2, id string) (*ec2.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		ServiceIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindVPCEndpointService(conn, input)
+	output, err := FindVPCEndpointServiceConfiguration(conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2597,6 +2597,45 @@ func FindVPCEndpointServiceByID(conn *ec2.EC2, id string) (*ec2.ServiceConfigura
 	}
 
 	return output, nil
+}
+
+func FindVPCEndpointServicePermissions(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]*ec2.AllowedPrincipal, error) {
+	var output []*ec2.AllowedPrincipal
+
+	err := conn.DescribeVpcEndpointServicePermissionsPages(input, func(page *ec2.DescribeVpcEndpointServicePermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AllowedPrincipals {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindVPCEndpointServicePermissionsByID(conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
+	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(id),
+	}
+
+	return FindVPCEndpointServicePermissions(conn, input)
 }
 
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.

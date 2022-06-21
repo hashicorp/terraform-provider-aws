@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -199,22 +200,19 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	svcCfgRaw, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
-	if err != nil && state != ec2.ServiceStateFailed {
-		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", d.Id(), err.Error())
-	}
+	svcCfg, err := FindVPCEndpointServiceConfigurationByID(conn, d.Id())
 
-	terminalStates := map[string]bool{
-		ec2.ServiceStateDeleted:  true,
-		ec2.ServiceStateDeleting: true,
-		ec2.ServiceStateFailed:   true,
-	}
-	if _, ok := terminalStates[state]; ok {
-		log.Printf("[WARN] VPC Endpoint Service (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 VPC Endpoint Service %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("reading EC2 VPC Endpoint Service (%s): %w", d.Id(), err)
+	}
+
+	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -223,64 +221,47 @@ func resourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) er
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
-	svcCfg := svcCfgRaw.(*ec2.ServiceConfiguration)
-	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	err = d.Set("availability_zones", flex.FlattenStringSet(svcCfg.AvailabilityZones))
-	if err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
-	}
-	err = d.Set("base_endpoint_dns_names", flex.FlattenStringSet(svcCfg.BaseEndpointDnsNames))
-	if err != nil {
-		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
-	}
-
-	if err := d.Set("gateway_load_balancer_arns", flex.FlattenStringSet(svcCfg.GatewayLoadBalancerArns)); err != nil {
-		return fmt.Errorf("error setting gateway_load_balancer_arns: %w", err)
-	}
-
-	if err := d.Set("supported_ip_address_types", flex.FlattenStringSet(svcCfg.SupportedIpAddressTypes)); err != nil {
-		return fmt.Errorf("error setting supported_ip_address_types: %w", err)
-	}
-
+	d.Set("availability_zones", aws.StringValueSlice(svcCfg.AvailabilityZones))
+	d.Set("base_endpoint_dns_names", aws.StringValueSlice(svcCfg.BaseEndpointDnsNames))
+	d.Set("gateway_load_balancer_arns", aws.StringValueSlice(svcCfg.GatewayLoadBalancerArns))
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
-
-	if err := d.Set("network_load_balancer_arns", flex.FlattenStringSet(svcCfg.NetworkLoadBalancerArns)); err != nil {
-		return fmt.Errorf("error setting network_load_balancer_arns: %w", err)
-	}
-
+	d.Set("network_load_balancer_arns", aws.StringValueSlice(svcCfg.NetworkLoadBalancerArns))
 	d.Set("private_dns_name", svcCfg.PrivateDnsName)
+	// The EC2 API can return a XML structure with no elements.
+	if tfMap := flattenPrivateDNSNameConfiguration(svcCfg.PrivateDnsNameConfiguration); len(tfMap) > 0 {
+		if err := d.Set("private_dns_name_configuration", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting private_dns_name_configuration: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_configuration", nil)
+	}
 	d.Set("service_name", svcCfg.ServiceName)
-	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
+	if len(svcCfg.ServiceType) > 0 {
+		d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
+	} else {
+		d.Set("service_type", nil)
+	}
 	d.Set("state", svcCfg.ServiceState)
+	d.Set("supported_ip_address_types", aws.StringValueSlice(svcCfg.SupportedIpAddressTypes))
 
 	tags := KeyValueTags(svcCfg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
-	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(d.Id()),
-	})
+	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint Service permissions (%s): %s", d.Id(), err.Error())
+		return fmt.Errorf("reading EC2 VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
 	}
 
-	err = d.Set("allowed_principals", flattenVPCEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
-	if err != nil {
-		return fmt.Errorf("error setting allowed_principals: %s", err)
-	}
-
-	err = d.Set("private_dns_name_configuration", flattenPrivateDNSNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
-	if err != nil {
-		return fmt.Errorf("error setting private_dns_name_configuration: %w", err)
-	}
+	d.Set("allowed_principals", flattenAllowedPrincipals(allowedPrincipals))
 
 	return nil
 }
@@ -372,34 +353,30 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func flattenPrivateDNSNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
-	if privateDnsNameConfiguration == nil {
+func flattenPrivateDNSNameConfiguration(apiObject *ec2.PrivateDnsNameConfiguration) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
+
 	tfMap := map[string]interface{}{}
 
-	if v := privateDnsNameConfiguration.Name; v != nil {
+	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
 	}
 
-	if v := privateDnsNameConfiguration.State; v != nil {
+	if v := apiObject.State; v != nil {
 		tfMap["state"] = aws.StringValue(v)
 	}
 
-	if v := privateDnsNameConfiguration.Type; v != nil {
+	if v := apiObject.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
 	}
 
-	if v := privateDnsNameConfiguration.Value; v != nil {
+	if v := apiObject.Value; v != nil {
 		tfMap["value"] = aws.StringValue(v)
 	}
 
-	// The EC2 API can return a XML structure with no elements
-	if len(tfMap) == 0 {
-		return nil
-	}
-
-	return []interface{}{tfMap}
+	return tfMap
 }
 
 func vpcEndpointServiceStateRefresh(conn *ec2.EC2, svcId string) resource.StateRefreshFunc {
@@ -460,14 +437,28 @@ func setVPCEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 	}
 }
 
-func flattenVPCEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
-	vPrincipals := []interface{}{}
-
-	for _, allowedPrincipal := range allowedPrincipals {
-		if allowedPrincipal.Principal != nil {
-			vPrincipals = append(vPrincipals, aws.StringValue(allowedPrincipal.Principal))
-		}
+func flattenAllowedPrincipal(apiObject *ec2.AllowedPrincipal) *string {
+	if apiObject == nil {
+		return nil
 	}
 
-	return schema.NewSet(schema.HashString, vPrincipals)
+	return apiObject.Principal
+}
+
+func flattenAllowedPrincipals(apiObjects []*ec2.AllowedPrincipal) []*string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []*string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAllowedPrincipal(apiObject))
+	}
+
+	return tfList
 }
