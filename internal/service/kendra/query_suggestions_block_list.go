@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceThesaurus() *schema.Resource {
+func ResourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceThesaurusCreate,
-		ReadWithoutTimeout:   resourceThesaurusRead,
-		UpdateWithoutTimeout: resourceThesaurusUpdate,
-		DeleteWithoutTimeout: resourceThesaurusDelete,
+		CreateWithoutTimeout: resourceQuerySuggestionsBlockListCreate,
+		ReadWithoutTimeout:   resourceQuerySuggestionsBlockListRead,
+		UpdateWithoutTimeout: resourceQuerySuggestionsBlockListUpdate,
+		DeleteWithoutTimeout: resourceQuerySuggestionsBlockListDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -55,6 +55,10 @@ func ResourceThesaurus() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"query_suggestions_block_list_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -90,12 +94,12 @@ func ResourceThesaurus() *schema.Resource {
 	}
 }
 
-func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &kendra.CreateThesaurusInput{
+	in := &kendra.CreateQuerySuggestionsBlockListInput{
 		ClientToken:  aws.String(resource.UniqueId()),
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get("name").(string)),
@@ -104,17 +108,18 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
+		in.Description = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(
 		propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateThesaurus(ctx, input)
+			return conn.CreateQuerySuggestionsBlockList(ctx, in)
+
 		},
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
@@ -128,47 +133,46 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Amazon Kendra Thesaurus (%s): %s", d.Get("name").(string), err)
+		return diag.Errorf("creating Amazon Kendra QuerySuggestionsBlockList (%s): %s", d.Get("name").(string), err)
 	}
 
-	if outputRaw == nil {
-		return diag.Errorf("creating Amazon Kendra Thesaurus (%s): empty output", d.Get("name").(string))
+	out, ok := outputRaw.(*kendra.CreateQuerySuggestionsBlockListOutput)
+	if !ok || out == nil {
+		return diag.Errorf("creating Amazon Kendra QuerySuggestionsBlockList (%s): empty output", d.Get("name").(string))
 	}
 
-	output := outputRaw.(*kendra.CreateThesaurusOutput)
-
-	id := aws.ToString(output.Id)
+	id := aws.ToString(out.Id)
 	indexId := d.Get("index_id").(string)
 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
-	if _, err := waitThesaurusCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Kendra Thesaurus (%s) create: %s", d.Id(), err)
+	if _, err := waitQuerySuggestionsBlockListCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Amazon Kendra QuerySuggestionsBlockList (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceThesaurusRead(ctx, d, meta)
+	return resourceQuerySuggestionsBlockListRead(ctx, d, meta)
 }
 
-func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id, indexId, err := ThesaurusParseResourceID(d.Id())
+	id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	out, err := FindThesaurusByID(ctx, conn, id, indexId)
+	out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Kendra Thesaurus (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Kendra QuerySuggestionsBlockList (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Thesaurus (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -176,13 +180,14 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "kendra",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexId, id),
+		Resource:  fmt.Sprintf("index/%s/query-suggestions-block-list/%s", indexId, id),
 	}.String()
 
 	d.Set("arn", arn)
 	d.Set("description", out.Description)
 	d.Set("index_id", out.IndexId)
 	d.Set("name", out.Name)
+	d.Set("query_suggestions_block_list_id", id)
 	d.Set("role_arn", out.RoleArn)
 	d.Set("status", out.Status)
 
@@ -192,7 +197,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -209,16 +214,16 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		id, indexId, err := ThesaurusParseResourceID(d.Id())
+		id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		input := &kendra.UpdateThesaurusInput{
+		input := &kendra.UpdateQuerySuggestionsBlockListInput{
 			Id:      aws.String(id),
 			IndexId: aws.String(indexId),
 		}
@@ -239,12 +244,13 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Kendra Thesaurus (%s): %#v", d.Id(), input)
+		log.Printf("[DEBUG] Updating Kendra QuerySuggestionsBlockList (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(
 			propagationTimeout,
 			func() (interface{}, error) {
-				return conn.UpdateThesaurus(ctx, input)
+				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
+
 			},
 			func(err error) (bool, error) {
 				var validationException *types.ValidationException
@@ -258,11 +264,11 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Kendra Thesaurus(%s): %s", d.Id(), err)
+			return diag.Errorf("updating Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitThesaurusUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Kendra Thesaurus (%s) update: %s", d.Id(), err)
+		if _, err := waitQuerySuggestionsBlockListUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Kendra QuerySuggestionsBlockList (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -270,47 +276,48 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Kendra Thesaurus (%s) tags: %s", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error updating Kendra QuerySuggestionsBlockList (%s) tags: %s", d.Id(), err))
 		}
 	}
 
-	return resourceThesaurusRead(ctx, d, meta)
+	return resourceQuerySuggestionsBlockListRead(ctx, d, meta)
 }
 
-func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 
-	log.Printf("[INFO] Deleting Kendra Thesaurus %s", d.Id())
+	log.Printf("[INFO] Deleting Kendra QuerySuggestionsBlockList %s", d.Id())
 
-	id, indexId, err := ThesaurusParseResourceID(d.Id())
+	id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err = conn.DeleteThesaurus(ctx, &kendra.DeleteThesaurusInput{
+	_, err = conn.DeleteQuerySuggestionsBlockList(ctx, &kendra.DeleteQuerySuggestionsBlockListInput{
 		Id:      aws.String(id),
 		IndexId: aws.String(indexId),
 	})
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	var notFound *types.ResourceNotFoundException
+
+	if errors.As(err, &notFound) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Thesaurus (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitThesaurusDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Thesaurus (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitQuerySuggestionsBlockListDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for Kendra QuerySuggestionsBlockList (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindThesaurusByID(ctx, conn, id, indexId)
+		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -323,19 +330,19 @@ func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId strin
 	}
 }
 
-func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
+func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.ThesaurusStatusCreating)},
-		Target:                    []string{string(types.ThesaurusStatusActive)},
-		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
+		Pending:                   []string{string(types.QuerySuggestionsBlockListStatusCreating)},
+		Target:                    []string{string(types.QuerySuggestionsBlockListStatusActive)},
+		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
-		if out.Status == types.ThesaurusStatusFailed {
+	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
+		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
@@ -344,19 +351,19 @@ func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId 
 	return nil, err
 }
 
-func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
+func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{string(types.QuerySuggestionsBlockListStatusUpdating)},
 		Target:                    []string{string(types.QuerySuggestionsBlockListStatusActive)},
-		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
+		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
-		if out.Status == types.ThesaurusStatusActiveButUpdateFailed || out.Status == types.ThesaurusStatusFailed {
+	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
+		if out.Status == types.QuerySuggestionsBlockListStatusActiveButUpdateFailed || out.Status == types.QuerySuggestionsBlockListStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
@@ -365,17 +372,17 @@ func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId 
 	return nil, err
 }
 
-func waitThesaurusDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
+func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{string(types.QuerySuggestionsBlockListStatusDeleting)},
 		Target:  []string{},
-		Refresh: statusThesaurus(ctx, conn, id, indexId),
+		Refresh: statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*kendra.DescribeThesaurusOutput); ok {
-		if out.Status == types.ThesaurusStatusFailed {
+	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
+		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
