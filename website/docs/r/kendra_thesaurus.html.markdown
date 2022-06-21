@@ -34,7 +34,7 @@ resource "aws_kendra_thesaurus" "example" {
 The following arguments are required:
 
 * `index_id`- (Required, Forces new resource) The identifier of the index for a thesaurus.
-* `name` - (Required) The identifier of the index for a thesaurus.
+* `name` - (Required) The name for the thesaurus.
 * `role_arn` - (Required) The IAM (Identity and Access Management) role used to access the thesaurus file in S3.
 * `source_s3_path` - (Required) The S3 path where your thesaurus file sits in S3. Detailed below.
 

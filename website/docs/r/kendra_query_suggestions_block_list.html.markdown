@@ -36,7 +36,7 @@ resource "aws_kendra_query_suggestions_block_list" "example" {
 The following arguments are required:
 
 * `index_id`- (Required, Forces new resource) The identifier of the index for a block list.
-* `name` - (Required) The identifier of the index for a block list.
+* `name` - (Required) The name for the block list.
 * `role_arn` - (Required) The IAM (Identity and Access Management) role used to access the block list text file in S3.
 * `source_s3_path` - (Required) The S3 path where your block list text file sits in S3. Detailed below.
 
