@@ -2,7 +2,6 @@ package lakeformation_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"log"
 	"strconv"
 	"testing"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -200,20 +200,20 @@ func testAccPermissions_dataLocation(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissions_lf_tag(t *testing.T) {
+func testAccPermissions_lfTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tagName := "aws_lakeformation_lf_tag.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_lf_tag(rName),
+				Config: testAccPermissionsConfig_lfTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
@@ -234,20 +234,20 @@ func testAccAWSLakeFormationPermissions_lf_tag(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissions_lf_tag_policy(t *testing.T) {
+func testAccPermissions_lfTagPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tagName := "aws_lakeformation_lf_tag.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_lf_tag_policy(rName),
+				Config: testAccPermissionsConfig_lfTagPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
@@ -1301,7 +1301,7 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_lf_tag(rName string) string {
+func testAccPermissionsConfig_lfTag(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
@@ -1354,12 +1354,12 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_lf_tag_policy(rName string) string {
+func testAccPermissionsConfig_lfTagPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/"
+  name               = %[1]q
+  path               = "/"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1390,25 +1390,29 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = ["value1", "value2"]
+
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
+
 resource "aws_lakeformation_permissions" "test" {
   permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
   permissions_with_grant_option = ["CREATE_TABLE"]
   principal                     = aws_iam_role.test.arn
+
   lf_tag_policy {
-	resource_type = "DATABASE"
-	
-	expression {
-		key    = aws_lakeformation_lf_tag.test.key
-        values = aws_lakeformation_lf_tag.test.values
-	}
+    resource_type = "DATABASE"
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test.key
+      values = aws_lakeformation_lf_tag.test.values
+    }
   }
+
   # for consistency, ensure that admins are setup before testing
   depends_on = [
-	  aws_lakeformation_data_lake_settings.test,
-	  aws_lakeformation_lf_tag.test,
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_lf_tag.test,
   ]
 }
 `, rName)

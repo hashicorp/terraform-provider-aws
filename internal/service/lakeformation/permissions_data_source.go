@@ -360,7 +360,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {
-		if err := d.Set("lf_tag", []interface{}{flattenLakeFormationLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
 			return fmt.Errorf("error setting LF-tag: %w", err)
 		}
 	} else {
@@ -368,7 +368,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.LFTagPolicy != nil {
-		if err := d.Set("lf_tag_policy", []interface{}{flattenLakeFormationLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
 			return fmt.Errorf("error setting LF-tag policy: %w", err)
 		}
 	} else {

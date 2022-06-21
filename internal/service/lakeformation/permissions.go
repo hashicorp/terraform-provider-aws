@@ -607,7 +607,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {
-		if err := d.Set("lf_tag", []interface{}{flattenLakeFormationLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
 			return fmt.Errorf("error setting database: %w", err)
 		}
 	} else {
@@ -615,7 +615,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.LFTagPolicy != nil {
-		if err := d.Set("lf_tag_policy", []interface{}{flattenLakeFormationLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
 			return fmt.Errorf("error setting database: %w", err)
 		}
 	} else {
@@ -908,7 +908,7 @@ func ExpandLFTagExpression(expression []interface{}) []*lakeformation.LFTag {
 	return tagSlice
 }
 
-func flattenLakeFormationLFTagPolicyResource(apiObject *lakeformation.LFTagPolicyResource) map[string]interface{} {
+func flattenLFTagPolicyResource(apiObject *lakeformation.LFTagPolicyResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -920,7 +920,7 @@ func flattenLakeFormationLFTagPolicyResource(apiObject *lakeformation.LFTagPolic
 	}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = flattenLakeFormationLFTagExpression(v)
+		tfMap["expression"] = flattenLFTagExpression(v)
 	}
 
 	if v := apiObject.ResourceType; v != nil {
@@ -930,7 +930,7 @@ func flattenLakeFormationLFTagPolicyResource(apiObject *lakeformation.LFTagPolic
 	return tfMap
 }
 
-func flattenLakeFormationLFTagExpression(ts []*lakeformation.LFTag) []map[string]interface{} {
+func flattenLFTagExpression(ts []*lakeformation.LFTag) []map[string]interface{} {
 	tagSlice := make([]map[string]interface{}, len(ts))
 	if len(ts) > 0 {
 		for i, t := range ts {
@@ -973,7 +973,7 @@ func ExpandLFTagKeyResource(tfMap map[string]interface{}) *lakeformation.LFTagKe
 	return apiObject
 }
 
-func flattenLakeFormationLFTagKeyResource(apiObject *lakeformation.LFTagKeyResource) map[string]interface{} {
+func flattenLFTagKeyResource(apiObject *lakeformation.LFTagKeyResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
