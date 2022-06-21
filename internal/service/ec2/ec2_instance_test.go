@@ -36,6 +36,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"You have reached the maximum allowed number of license configurations created in one day",
 		"specified zone does not support multi-attach-enabled volumes",
 		"Unsupported volume type",
+		"HostLimitExceeded",
+		"ReservationCapacityExceeded",
 	)
 }
 
