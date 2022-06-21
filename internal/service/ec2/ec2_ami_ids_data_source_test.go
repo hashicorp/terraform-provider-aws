@@ -34,7 +34,6 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccAMIIdsDataSourceConfig_sorted(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSSnapshotIDDataSource("data.aws_ami_ids.test"),
 					resource.TestCheckResourceAttr("data.aws_ami_ids.test", "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_ami_ids.test", "ids.0",

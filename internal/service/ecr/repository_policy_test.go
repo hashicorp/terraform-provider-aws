@@ -27,7 +27,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
@@ -41,7 +41,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryPolicyUpdatedConfig(rName),
+				Config: testAccRepositoryPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
@@ -65,7 +65,7 @@ func TestAccECRRepositoryPolicy_IAM_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyIAMRoleConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
@@ -93,7 +93,7 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
@@ -101,13 +101,13 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRepositoryPolicyIAMRoleNewOrderJSONEncodeConfig(rName),
+				Config: testAccRepositoryPolicyConfig_iamRoleNewOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 				),
 			},
 			{
-				Config:   testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName),
+				Config:   testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
 				PlanOnly: true,
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccECRRepositoryPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepositoryPolicy(), resourceName),
@@ -147,7 +147,7 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryPolicyConfig(rName),
+				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRepository(), resourceName),
@@ -193,7 +193,7 @@ func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRepositoryPolicyConfig(rName string) string {
+func testAccRepositoryPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -215,7 +215,7 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName)
 }
 
-func testAccRepositoryPolicyUpdatedConfig(rName string) string {
+func testAccRepositoryPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -240,11 +240,11 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName)
 }
 
-// testAccRepositoryPolicyIAMRoleConfig creates a new IAM Role and tries
+// testAccRepositoryPolicyConfig_iamRole creates a new IAM Role and tries
 // to use it's ARN in an ECR Repository Policy. IAM changes need some time to
 // be propagated to other services - like ECR. So the following code should
 // exercise our retry logic, since we try to use the new resource instantly.
-func testAccRepositoryPolicyIAMRoleConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
@@ -368,7 +368,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryPolicyIAMRoleOrderJSONEncodeConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRepositoryPolicyIAMRoleOrderBaseConfig(rName),
 		fmt.Sprintf(`
@@ -396,7 +396,7 @@ resource "aws_ecr_repository_policy" "test" {
 `, rName))
 }
 
-func testAccRepositoryPolicyIAMRoleNewOrderJSONEncodeConfig(rName string) string {
+func testAccRepositoryPolicyConfig_iamRoleNewOrderJSONEncode(rName string) string {
 	return acctest.ConfigCompose(
 		testAccRepositoryPolicyIAMRoleOrderBaseConfig(rName),
 		fmt.Sprintf(`

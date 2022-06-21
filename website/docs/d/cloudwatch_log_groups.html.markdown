@@ -22,7 +22,7 @@ data "aws_cloudwatch_log_groups" "example" {
 
 The following arguments are supported:
 
-* `log_group_name_prefix` - (Required) The group prefix of the Cloudwatch log groups to list
+* `log_group_name_prefix` - (Optional) The group prefix of the Cloudwatch log groups to list
 
 ## Attributes Reference
 

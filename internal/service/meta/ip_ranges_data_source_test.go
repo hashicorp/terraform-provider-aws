@@ -22,7 +22,7 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPRangesConfig,
+				Config: testAccIPRangesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
@@ -42,7 +42,7 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPRangesURLConfig,
+				Config: testAccIPRangesDataSourceConfig_url,
 				Check: resource.ComposeTestCheckFunc(
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
@@ -160,7 +160,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 }
 
 // lintignore:AWSAT003
-const testAccIPRangesConfig = `
+const testAccIPRangesDataSourceConfig_basic = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
@@ -173,7 +173,7 @@ data "aws_ip_ranges" "none" {
 `
 
 // lintignore:AWSAT003
-const testAccIPRangesURLConfig = `
+const testAccIPRangesDataSourceConfig_url = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]

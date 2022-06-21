@@ -27,7 +27,7 @@ func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupBasicConfig(rName),
+				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
@@ -56,7 +56,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupBasicConfig(rName),
+				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
@@ -65,7 +65,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupMultipleConfig(rName),
+				Config: testAccUserGroupConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
@@ -74,7 +74,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupBasicConfig(rName),
+				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
@@ -98,7 +98,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccUserGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -106,7 +106,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUserGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -115,7 +115,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccUserGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -138,7 +138,7 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupBasicConfig(rName),
+				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName, &userGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
@@ -202,7 +202,7 @@ func testAccCheckUserGroupExistsWithProvider(n string, v *elasticache.UserGroup,
 	}
 }
 
-func testAccUserGroupBasicConfig(rName string) string {
+func testAccUserGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
@@ -228,7 +228,7 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
-func testAccUserGroupMultipleConfig(rName string) string {
+func testAccUserGroupConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
@@ -254,7 +254,7 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
-func testAccUserGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccUserGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
@@ -274,7 +274,7 @@ resource "aws_elasticache_user_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccUserGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUserGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"

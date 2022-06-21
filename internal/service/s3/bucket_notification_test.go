@@ -28,7 +28,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationEventBridgeConfig(rName),
+				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketEventBridgeNotification("aws_s3_bucket.bucket")),
 			},
@@ -52,7 +52,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationLambdaFunctionConfig(rName),
+				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLambdaFunctionConfiguration(
 						"aws_s3_bucket.bucket",
@@ -94,7 +94,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationLambdaFunctionLambdaFunctionARNAliasConfig(rName),
+				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLambdaFunctionConfiguration(
 						"aws_s3_bucket.test",
@@ -125,7 +125,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationQueueConfig(rName),
+				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -167,7 +167,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicConfig(rName),
+				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -198,7 +198,7 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicMultipleConfig(rName),
+				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -253,7 +253,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicConfig(rName),
+				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -265,7 +265,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketNotificationQueueConfig(rName),
+				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -527,7 +527,7 @@ func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []stri
 	}
 }
 
-func testAccBucketNotificationEventBridgeConfig(rName string) string {
+func testAccBucketNotificationConfig_eventBridge(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -548,7 +548,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationTopicMultipleConfig(rName string) string {
+func testAccBucketNotificationConfig_topicMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -616,7 +616,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationQueueConfig(rName string) string {
+func testAccBucketNotificationConfig_queue(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -671,7 +671,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationLambdaFunctionConfig(rName string) string {
+func testAccBucketNotificationConfig_lambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -739,7 +739,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationLambdaFunctionLambdaFunctionARNAliasConfig(rName string) string {
+func testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -806,7 +806,7 @@ resource "aws_s3_bucket_notification" "test" {
 `, rName)
 }
 
-func testAccBucketNotificationTopicConfig(rName string) string {
+func testAccBucketNotificationConfig_topic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

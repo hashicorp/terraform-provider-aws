@@ -19,10 +19,11 @@ import (
 
 func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceEBSSnapshotImportCreate,
-		Read:          resourceEBSSnapshotImportRead,
-		Update:        resourceEBSSnapshotUpdate,
-		Delete:        resourceEBSSnapshotDelete,
+		Create: resourceEBSSnapshotImportCreate,
+		Read:   resourceEBSSnapshotImportRead,
+		Update: resourceEBSSnapshotUpdate,
+		Delete: resourceEBSSnapshotDelete,
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{

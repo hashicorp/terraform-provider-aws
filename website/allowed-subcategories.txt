@@ -105,6 +105,7 @@ ELB (Elastic Load Balancing)
 ELB Classic
 EMR
 EMR Containers
+EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Inference

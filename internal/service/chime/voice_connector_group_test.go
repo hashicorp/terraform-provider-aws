@@ -27,7 +27,7 @@ func TestAccChimeVoiceConnectorGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
@@ -57,7 +57,7 @@ func TestAccChimeVoiceConnectorGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorGroup(), resourceName),
@@ -81,7 +81,7 @@ func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 		CheckDestroy:      testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
@@ -89,7 +89,7 @@ func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVoiceConnectorGroupUpdated(vcgName),
+				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "10"),
@@ -104,7 +104,7 @@ func TestAccChimeVoiceConnectorGroup_update(t *testing.T) {
 	})
 }
 
-func testAccVoiceConnectorGroupConfig(name string) string {
+func testAccVoiceConnectorGroupConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -122,7 +122,7 @@ resource "aws_chime_voice_connector_group" "test" {
 `, name)
 }
 
-func testAccVoiceConnectorGroupUpdated(name string) string {
+func testAccVoiceConnectorGroupConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
