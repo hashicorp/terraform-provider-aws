@@ -30,8 +30,7 @@ func TestAccRoute53ResolverFirewallDataSource_basic(t *testing.T) {
 	})
 }
 
-// nosemgrep: outposts-in-func-name
-func testAccRoute53ResolverFirewallDataSourceConfig_basic() string {
+func testAccFirewallDataSourceConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
