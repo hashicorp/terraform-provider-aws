@@ -139,7 +139,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "2"),
 				),
 			},
 		},
