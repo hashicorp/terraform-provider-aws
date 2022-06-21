@@ -2718,6 +2718,24 @@ func FindVPCEndpointServicePermissionsByID(conn *ec2.EC2, id string) ([]*ec2.All
 	return FindVPCEndpointServicePermissions(conn, input)
 }
 
+func FindVPCEndpointServicePermissionExists(conn *ec2.EC2, serviceID, principalARN string) error {
+	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(conn, serviceID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range allowedPrincipals {
+		if aws.StringValue(v.Principal) == principalARN {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint Service (%s) Principal (%s) not found", serviceID, principalARN),
+	}
+}
+
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
 func FindVPCEndpointRouteTableAssociationExists(conn *ec2.EC2, vpcEndpointID string, routeTableID string) error {
 	vpcEndpoint, err := FindVPCEndpointByID(conn, vpcEndpointID)
