@@ -105,7 +105,7 @@ func TestAccNetworkFirewallFirewallDataSource_both(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDataSourceConfig_name(rName),
+				Config: testAccFirewallDataSourceConfig_both(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
