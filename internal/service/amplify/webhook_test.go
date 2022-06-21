@@ -27,7 +27,7 @@ func testAccWebhook_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig(rName),
+				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/webhooks/.+`)),
@@ -57,7 +57,7 @@ func testAccWebhook_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig(rName),
+				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
@@ -80,7 +80,7 @@ func testAccWebhook_update(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookDescriptionConfig(rName),
+				Config: testAccWebhookConfig_description(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-1", rName)),
@@ -93,7 +93,7 @@ func testAccWebhook_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebhookDescriptionUpdatedConfig(rName),
+				Config: testAccWebhookConfig_descriptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-2", rName)),
@@ -153,7 +153,7 @@ func testAccCheckWebhookDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccWebhookConfig(rName string) string {
+func testAccWebhookConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -171,7 +171,7 @@ resource "aws_amplify_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookDescriptionConfig(rName string) string {
+func testAccWebhookConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -195,7 +195,7 @@ resource "aws_amplify_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookDescriptionUpdatedConfig(rName string) string {
+func testAccWebhookConfig_descriptionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q

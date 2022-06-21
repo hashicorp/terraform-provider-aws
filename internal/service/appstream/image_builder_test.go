@@ -27,7 +27,7 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderConfig(instanceType, rName),
+				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,7 +57,7 @@ func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderConfig(instanceType, rName),
+				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceImageBuilder(), resourceName),
@@ -83,7 +83,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderCompleteConfig(rName, description, instanceType),
+				Config: testAccImageBuilderConfig_complete(rName, description, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -100,7 +100,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"image_name"},
 			},
 			{
-				Config: testAccImageBuilderCompleteConfig(rName, descriptionUpdated, instanceTypeUpdate),
+				Config: testAccImageBuilderConfig_complete(rName, descriptionUpdated, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -132,7 +132,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderTags1Config(instanceType, rName, "key1", "value1"),
+				Config: testAccImageBuilderConfig_tags1(instanceType, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -146,7 +146,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"image_name"},
 			},
 			{
-				Config: testAccImageBuilderTags2Config(instanceType, rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccImageBuilderConfig_tags2(instanceType, rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -155,7 +155,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccImageBuilderTags1Config(instanceType, rName, "key2", "value2"),
+				Config: testAccImageBuilderConfig_tags1(instanceType, rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -181,7 +181,7 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageBuilderByImageARNConfig(rName, imageName, instanceType),
+				Config: testAccImageBuilderConfig_byARN(rName, imageName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(resourceName),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "image_arn", "appstream", fmt.Sprintf("image/%s", imageName)),
@@ -245,7 +245,7 @@ func testAccCheckImageBuilderDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccImageBuilderConfig(instanceType, name string) string {
+func testAccImageBuilderConfig_basic(instanceType, name string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2012R2-07-19-2021"
@@ -255,7 +255,7 @@ resource "aws_appstream_image_builder" "test" {
 `, instanceType, name)
 }
 
-func testAccImageBuilderCompleteConfig(name, description, instanceType string) string {
+func testAccImageBuilderConfig_complete(name, description, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -282,7 +282,7 @@ resource "aws_appstream_image_builder" "test" {
 `, name, description, instanceType))
 }
 
-func testAccImageBuilderTags1Config(instanceType, name, key, value string) string {
+func testAccImageBuilderConfig_tags1(instanceType, name, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2012R2-07-19-2021"
@@ -296,7 +296,7 @@ resource "aws_appstream_image_builder" "test" {
 `, instanceType, name, key, value)
 }
 
-func testAccImageBuilderTags2Config(instanceType, name, key1, value1, key2, value2 string) string {
+func testAccImageBuilderConfig_tags2(instanceType, name, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2012R2-07-19-2021"
@@ -311,7 +311,7 @@ resource "aws_appstream_image_builder" "test" {
 `, instanceType, name, key1, value1, key2, value2)
 }
 
-func testAccImageBuilderByImageARNConfig(rName, imageName, instanceType string) string {
+func testAccImageBuilderConfig_byARN(rName, imageName, instanceType string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

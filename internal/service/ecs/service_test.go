@@ -31,7 +31,7 @@ func TestAccECSService_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig(rName),
+				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
@@ -40,7 +40,7 @@ func TestAccECSService_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceModifiedConfig(rName),
+				Config: testAccServiceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
@@ -64,7 +64,7 @@ func TestAccECSService_basicImport(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceFamilyAndRevisionConfig(rName),
+				Config: testAccServiceConfig_familyAndRevision(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -102,7 +102,7 @@ func TestAccECSService_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig(rName),
+				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceService(), resourceName),
@@ -125,7 +125,7 @@ func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceInterchangeablePlacementStrategyConfig(rName),
+				Config: testAccServiceConfig_interchangeablePlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -146,13 +146,13 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceCapacityProviderStrategyConfig(rName, 1, 0, false),
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 			{
-				Config: testAccServiceCapacityProviderStrategyConfig(rName, 10, 1, false),
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -173,13 +173,13 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceCapacityProviderStrategyConfig(rName, 1, 0, true),
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 				),
 			},
 			{
-				Config: testAccServiceCapacityProviderStrategyConfig(rName, 10, 1, true),
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
@@ -201,26 +201,26 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyRemoveConfig(rName),
+				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 				),
 			},
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE"),
+				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
 				),
 			},
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyConfig(rName, 1, "FARGATE_SPOT"),
+				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 					testAccCheckServiceNotRecreated(&service1, &service2),
 				),
 			},
 			{
-				Config: testAccServiceUpdateCapacityProviderStrategyRemoveConfig(rName),
+				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 				),
@@ -241,7 +241,7 @@ func TestAccECSService_CapacityProviderStrategy_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceMultipleCapacityProviderStrategiesConfig(rName),
+				Config: testAccServiceConfig_multipleCapacityProviderStrategies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
@@ -263,14 +263,14 @@ func TestAccECSService_familyAndRevision(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceFamilyAndRevisionConfig(rName),
+				Config: testAccServiceConfig_familyAndRevision(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
 			},
 
 			{
-				Config: testAccServiceFamilyAndRevisionModifiedConfig(rName),
+				Config: testAccServiceConfig_familyAndRevisionModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -292,7 +292,7 @@ func TestAccECSService_renamedCluster(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceRenamedClusterConfig(rName),
+				Config: testAccServiceConfig_renamedCluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
@@ -300,7 +300,7 @@ func TestAccECSService_renamedCluster(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceRenamedClusterConfig(rName),
+				Config: testAccServiceConfig_renamedCluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
@@ -326,29 +326,29 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceHealthCheckGracePeriodSecondsConfig(rName, -1),
+				Config:      testAccServiceConfig_healthCheckGracePeriodSeconds(rName, -1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
-				Config:      testAccServiceHealthCheckGracePeriodSecondsConfig(rName, math.MaxInt32+1),
+				Config:      testAccServiceConfig_healthCheckGracePeriodSeconds(rName, math.MaxInt32+1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
-				Config: testAccServiceHealthCheckGracePeriodSecondsConfig(rName, 300),
+				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
 				),
 			},
 			{
-				Config: testAccServiceHealthCheckGracePeriodSecondsConfig(rName, 600),
+				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, 600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
 				),
 			},
 			{
-				Config: testAccServiceHealthCheckGracePeriodSecondsConfig(rName, math.MaxInt32),
+				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, math.MaxInt32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "2147483647"),
@@ -370,7 +370,7 @@ func TestAccECSService_iamRole(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceIAMRoleConfig(rName),
+				Config: testAccServiceConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 				),
@@ -391,7 +391,7 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfig(rName),
+				Config: testAccServiceConfig_deploymentControllerTypeCodeDeploy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
@@ -427,7 +427,7 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 1, 100),
+				Config: testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName, 1, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
@@ -436,14 +436,14 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 				),
 			},
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 100),
+				Config: testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName, 2, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
 				),
 			},
 			{
-				Config: testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName, 2, 120),
+				Config: testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName, 2, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "120"),
@@ -465,7 +465,7 @@ func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentControllerTypeExternalConfig(rName),
+				Config: testAccServiceConfig_deploymentControllerTypeExternal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
@@ -496,7 +496,7 @@ func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentValuesConfig(rName),
+				Config: testAccServiceConfig_deploymentValues(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "200"),
@@ -520,7 +520,7 @@ func TestAccECSService_DeploymentValues_minZeroMaxOneHundred(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentPercentsConfig(rName, 0, 100),
+				Config: testAccServiceConfig_deploymentPercents(rName, 0, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "100"),
@@ -543,7 +543,7 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDeploymentCircuitBreakerConfig(rName),
+				Config: testAccServiceConfig_deploymentCircuitBreaker(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
@@ -568,13 +568,13 @@ func TestAccECSService_loadBalancerChanges(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLBChangesConfig(rName),
+				Config: testAccServiceConfig_lbChanges(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &s1),
 				),
 			},
 			{
-				Config: testAccServiceLBChangesModifiedConfig(rName),
+				Config: testAccServiceConfig_lbChangesModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &s2),
 					testAccCheckServiceNotRecreated(&s2, &s1),
@@ -597,7 +597,7 @@ func TestAccECSService_clusterName(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceClusterNameConfig(rName),
+				Config: testAccServiceConfig_clusterName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
@@ -619,7 +619,7 @@ func TestAccECSService_alb(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceALBConfig(rName),
+				Config: testAccServiceConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
@@ -641,7 +641,7 @@ func TestAccECSService_multipleTargetGroups(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceMultipleTargetGroupsConfig(rName),
+				Config: testAccServiceConfig_multipleTargetGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "2"),
@@ -663,14 +663,14 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig(rName),
+				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
-				Config: testAccServiceForceNewDeploymentConfig(rName),
+				Config: testAccServiceConfig_forceNewDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
@@ -695,14 +695,14 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig(rName),
+				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
-				Config: testAccServicePlacementStrategyConfig(rName),
+				Config: testAccServiceConfig_placementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
@@ -712,7 +712,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceRandomPlacementStrategyConfig(rName),
+				Config: testAccServiceConfig_randomPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service3),
 					testAccCheckServiceNotRecreated(&service2, &service3),
@@ -722,7 +722,7 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceMultiplacementStrategyConfig(rName),
+				Config: testAccServiceConfig_multiplacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service4),
 					testAccCheckServiceNotRecreated(&service3, &service4),
@@ -748,7 +748,7 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServicePlacementStrategyTypeConfig(rName, ""),
+				Config:      testAccServiceConfig_placementStrategyType(rName, ""),
 				ExpectError: regexp.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
 			},
 		},
@@ -767,14 +767,14 @@ func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePlacementConstraintConfig(rName),
+				Config: testAccServiceConfig_placementConstraint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service1),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
 			},
 			{
-				Config: testAccServicePlacementConstraintEmptyExpressionConfig(rName),
+				Config: testAccServiceConfig_placementConstraintEmptyExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
@@ -797,7 +797,7 @@ func TestAccECSService_PlacementConstraints_emptyExpression(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePlacementConstraintEmptyExpressionConfig(rName),
+				Config: testAccServiceConfig_placementConstraintEmptyExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
@@ -819,7 +819,7 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLaunchTypeFargateConfig(rName, false),
+				Config: testAccServiceConfig_launchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
@@ -830,14 +830,14 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceLaunchTypeFargateConfig(rName, true),
+				Config: testAccServiceConfig_launchTypeFargate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "true"),
 				),
 			},
 			{
-				Config: testAccServiceLaunchTypeFargateConfig(rName, false),
+				Config: testAccServiceConfig_launchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
@@ -859,21 +859,21 @@ func TestAccECSService_LaunchTypeFargate_platformVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLaunchTypeFargateAndPlatformVersionConfig(rName, "1.3.0"),
+				Config: testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, "1.3.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.3.0"),
 				),
 			},
 			{
-				Config: testAccServiceLaunchTypeFargateAndPlatformVersionConfig(rName, "LATEST"),
+				Config: testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, "LATEST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "LATEST"),
 				),
 			},
 			{
-				Config: testAccServiceLaunchTypeFargateAndPlatformVersionConfig(rName, "1.4.0"),
+				Config: testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, "1.4.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.4.0"),
@@ -896,7 +896,7 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Wait for the ECS Cluster to reach a steady state w/specified count
-				Config: testAccServiceLaunchTypeFargateAndWaitConfig(rName, 1, true),
+				Config: testAccServiceConfig_launchTypeFargateAndWait(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
@@ -928,7 +928,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLaunchTypeFargateNoWaitConfig(rName),
+				Config: testAccServiceConfig_launchTypeFargateNoWait(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
@@ -937,7 +937,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 			},
 			{
 				// Modify desired count and wait for the ECS Cluster to reach steady state
-				Config: testAccServiceLaunchTypeFargateAndWaitConfig(rName, 2, true),
+				Config: testAccServiceConfig_launchTypeFargateAndWait(rName, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
@@ -946,7 +946,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 			},
 			{
 				// Modify desired count without wait
-				Config: testAccServiceLaunchTypeFargateAndWaitConfig(rName, 1, false),
+				Config: testAccServiceConfig_launchTypeFargateAndWait(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
@@ -969,7 +969,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkConfigurationConfig(rName),
+				Config: testAccServiceConfig_networkConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
@@ -978,7 +978,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceNetworkConfigurationModifiedConfig(rName),
+				Config: testAccServiceConfig_networkConfigurationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
@@ -1002,7 +1002,7 @@ func TestAccECSService_DaemonSchedulingStrategy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDaemonSchedulingStrategyConfig(rName),
+				Config: testAccServiceConfig_daemonSchedulingStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "DAEMON"),
@@ -1024,7 +1024,7 @@ func TestAccECSService_DaemonSchedulingStrategy_setDeploymentMinimum(t *testing.
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDaemonSchedulingStrategySetDeploymentMinimumConfig(rName),
+				Config: testAccServiceConfig_daemonSchedulingStrategySetDeploymentMinimum(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "DAEMON"),
@@ -1046,7 +1046,7 @@ func TestAccECSService_replicaSchedulingStrategy(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceReplicaSchedulingStrategyConfig(rName),
+				Config: testAccServiceConfig_replicaSchedulingStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
@@ -1068,7 +1068,7 @@ func TestAccECSService_ServiceRegistries_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceServiceRegistriesConfig(rName),
+				Config: testAccServiceConfig_registries(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
@@ -1090,7 +1090,7 @@ func TestAccECSService_ServiceRegistries_container(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceServiceRegistriesContainerConfig(rName),
+				Config: testAccServiceConfig_registriesContainer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
@@ -1118,14 +1118,14 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceServiceRegistriesChangesConfig(rName, serviceDiscoveryName),
+				Config: testAccServiceConfig_registriesChanges(rName, serviceDiscoveryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
 				),
 			},
 			{
-				Config: testAccServiceServiceRegistriesChangesConfig(rName, updatedServiceDiscoveryName),
+				Config: testAccServiceConfig_registriesChanges(rName, updatedServiceDiscoveryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
@@ -1147,7 +1147,7 @@ func TestAccECSService_Tags_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceTags1Config(rName, "key1", "value1"),
+				Config: testAccServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1164,7 +1164,7 @@ func TestAccECSService_Tags_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
-				Config: testAccServiceTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -1173,7 +1173,7 @@ func TestAccECSService_Tags_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceTags1Config(rName, "key2", "value2"),
+				Config: testAccServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1196,7 +1196,7 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceManagedTagsConfig(rName),
+				Config: testAccServiceConfig_managedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1219,7 +1219,7 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePropagateTagsConfig(rName, "SERVICE"),
+				Config: testAccServiceConfig_propagateTags(rName, "SERVICE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1227,14 +1227,14 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServicePropagateTagsConfig(rName, "TASK_DEFINITION"),
+				Config: testAccServiceConfig_propagateTags(rName, "TASK_DEFINITION"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &second),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsTaskDefinition),
 				),
 			},
 			{
-				Config: testAccServicePropagateTagsConfig(rName, "NONE"),
+				Config: testAccServiceConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &third),
 					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsNone),
@@ -1256,14 +1256,14 @@ func TestAccECSService_executeCommand(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceExecuteCommandConfig(rName, true),
+				Config: testAccServiceConfig_executeCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
 				),
 			},
 			{
-				Config: testAccServiceExecuteCommandConfig(rName, false),
+				Config: testAccServiceConfig_executeCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
@@ -1364,7 +1364,7 @@ func testAccCheckServiceNotRecreated(i, j *ecs.Service) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceConfig(rName string) string {
+func testAccServiceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1395,7 +1395,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceModifiedConfig(rName string) string {
+func testAccServiceConfig_modified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1426,7 +1426,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceLaunchTypeFargateNoWaitConfig(rName string) string {
+func testAccServiceConfig_launchTypeFargateNoWait(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1539,7 +1539,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceLaunchTypeFargateAndWaitConfig(rName string, desiredCount int, waitForSteadyState bool) string {
+func testAccServiceConfig_launchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1655,7 +1655,7 @@ resource "aws_ecs_service" "test" {
 `, rName, desiredCount, waitForSteadyState)
 }
 
-func testAccServiceInterchangeablePlacementStrategyConfig(rName string) string {
+func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1691,7 +1691,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceCapacityProviderStrategyConfig(rName string, weight, base int, forceNewDeployment bool) string {
+func testAccServiceConfig_capacityProviderStrategy(rName string, weight, base int, forceNewDeployment bool) string {
 	return acctest.ConfigCompose(testAccCapacityProviderBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
@@ -1737,7 +1737,7 @@ resource "aws_ecs_service" "test" {
 `, rName, weight, base, forceNewDeployment))
 }
 
-func testAccServiceUpdateCapacityProviderStrategyConfig(rName string, weight int, capacityProvider string) string {
+func testAccServiceConfig_updateCapacityProviderStrategy(rName string, weight int, capacityProvider string) string {
 	return acctest.ConfigCompose(
 		testAccCapacityProviderBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1817,7 +1817,7 @@ resource "aws_ecs_service" "test" {
 `, rName, weight, capacityProvider))
 }
 
-func testAccServiceUpdateCapacityProviderStrategyRemoveConfig(rName string) string {
+func testAccServiceConfig_updateCapacityProviderStrategyRemove(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCapacityProviderBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1851,8 +1851,8 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceMultipleCapacityProviderStrategiesConfig(rName string) string {
-	return acctest.ConfigCompose(testAccClusterCapacityProviders(rName), fmt.Sprintf(`
+func testAccServiceConfig_multipleCapacityProviderStrategies(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_capacityProviders(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
@@ -1928,7 +1928,7 @@ resource "aws_vpc" "test" {
 `, rName))
 }
 
-func testAccServiceForceNewDeploymentConfig(rName string) string {
+func testAccServiceConfig_forceNewDeployment(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -1965,7 +1965,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServicePlacementStrategyConfig(rName string) string {
+func testAccServiceConfig_placementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2001,7 +2001,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServicePlacementStrategyTypeConfig(rName string, placementStrategyType string) string {
+func testAccServiceConfig_placementStrategyType(rName string, placementStrategyType string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2036,7 +2036,7 @@ resource "aws_ecs_service" "test" {
 `, rName, placementStrategyType)
 }
 
-func testAccServiceRandomPlacementStrategyConfig(rName string) string {
+func testAccServiceConfig_randomPlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2071,7 +2071,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceMultiplacementStrategyConfig(rName string) string {
+func testAccServiceConfig_multiplacementStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2112,7 +2112,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServicePlacementConstraintConfig(rName string) string {
+func testAccServiceConfig_placementConstraint(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2157,7 +2157,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServicePlacementConstraintEmptyExpressionConfig(rName string) string {
+func testAccServiceConfig_placementConstraintEmptyExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2192,7 +2192,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceLaunchTypeFargateConfig(rName string, assignPublicIP bool) string {
+func testAccServiceConfig_launchTypeFargate(rName string, assignPublicIP bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2289,7 +2289,7 @@ resource "aws_ecs_service" "test" {
 `, rName, assignPublicIP)
 }
 
-func testAccServiceLaunchTypeFargateAndPlatformVersionConfig(rName, platformVersion string) string {
+func testAccServiceConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2387,7 +2387,7 @@ resource "aws_ecs_service" "test" {
 `, rName, platformVersion)
 }
 
-func testAccServiceHealthCheckGracePeriodSecondsConfig(rName string, healthCheckGracePeriodSeconds int) string {
+func testAccServiceConfig_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2531,7 +2531,7 @@ resource "aws_ecs_service" "test" {
 `, rName, healthCheckGracePeriodSeconds)
 }
 
-func testAccServiceIAMRoleConfig(rName string) string {
+func testAccServiceConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2660,7 +2660,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDeploymentValuesConfig(rName string) string {
+func testAccServiceConfig_deploymentValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2832,15 +2832,15 @@ resource "aws_ecs_service" "test" {
 `, rName, image, containerName, containerPort, hostPort)
 }
 
-func testAccServiceLBChangesConfig(rName string) string {
+func testAccServiceConfig_lbChanges(rName string) string {
 	return testAccServiceLBChangesBaseConfig(rName, "ghost:latest", "ghost", 2368, 8080)
 }
 
-func testAccServiceLBChangesModifiedConfig(rName string) string {
+func testAccServiceConfig_lbChangesModified(rName string) string {
 	return testAccServiceLBChangesBaseConfig(rName, "nginx:latest", "nginx", 80, 8080)
 }
 
-func testAccServiceFamilyAndRevisionConfig(rName string) string {
+func testAccServiceConfig_familyAndRevision(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2871,7 +2871,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceFamilyAndRevisionModifiedConfig(rName string) string {
+func testAccServiceConfig_familyAndRevisionModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2902,7 +2902,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceRenamedClusterConfig(rName string) string {
+func testAccServiceConfig_renamedCluster(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2933,7 +2933,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceClusterNameConfig(rName string) string {
+func testAccServiceConfig_clusterName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -2964,7 +2964,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceALBConfig(rName string) string {
+func testAccServiceConfig_alb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3107,7 +3107,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceMultipleTargetGroupsConfig(rName string) string {
+func testAccServiceConfig_multipleTargetGroups(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3324,15 +3324,15 @@ resource "aws_ecs_service" "test" {
 `, rName, securityGroups)
 }
 
-func testAccServiceNetworkConfigurationConfig(rName string) string {
+func testAccServiceConfig_networkConfiguration(rName string) string {
 	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id")
 }
 
-func testAccServiceNetworkConfigurationModifiedConfig(rName string) string {
+func testAccServiceConfig_networkConfigurationModified(rName string) string {
 	return testAccServiceNetworkConfigurationBaseConfig(rName, "aws_security_group.allow_all_a.id")
 }
 
-func testAccServiceServiceRegistriesConfig(rName string) string {
+func testAccServiceConfig_registries(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3433,7 +3433,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceServiceRegistriesContainerConfig(rName string) string {
+func testAccServiceConfig_registriesContainer(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3537,7 +3537,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceServiceRegistriesChangesConfig(rName, discoveryName string) string {
+func testAccServiceConfig_registriesChanges(rName, discoveryName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   state = "available"
@@ -3638,7 +3638,7 @@ resource "aws_ecs_service" "test" {
 `, rName, discoveryName)
 }
 
-func testAccServiceDaemonSchedulingStrategyConfig(rName string) string {
+func testAccServiceConfig_daemonSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -3669,7 +3669,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDaemonSchedulingStrategySetDeploymentMinimumConfig(rName string) string {
+func testAccServiceConfig_daemonSchedulingStrategySetDeploymentMinimum(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -3701,7 +3701,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDeploymentControllerTypeCodeDeployConfig(rName string) string {
+func testAccServiceConfig_deploymentControllerTypeCodeDeploy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3801,7 +3801,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDeploymentControllerTypeCodeDeployConfigUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
+func testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName string, desiredReplicas, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -3959,7 +3959,7 @@ resource "aws_ecs_service" "test" {
 `, rName, desiredReplicas, healthCheckGracePeriodSeconds)
 }
 
-func testAccServiceDeploymentControllerTypeExternalConfig(rName string) string {
+func testAccServiceConfig_deploymentControllerTypeExternal(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -3977,7 +3977,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceDeploymentPercentsConfig(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
+func testAccServiceConfig_deploymentPercents(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4010,7 +4010,7 @@ resource "aws_ecs_service" "test" {
 `, rName, deploymentMaximumPercent, deploymentMinimumHealthyPercent)
 }
 
-func testAccServiceDeploymentCircuitBreakerConfig(rName string) string {
+func testAccServiceConfig_deploymentCircuitBreaker(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4046,7 +4046,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccServiceConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4081,7 +4081,7 @@ resource "aws_ecs_service" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccServiceTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccServiceConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4117,7 +4117,7 @@ resource "aws_ecs_service" "test" {
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccServiceManagedTagsConfig(rName string) string {
+func testAccServiceConfig_managedTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4153,7 +4153,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServicePropagateTagsConfig(rName, propagate string) string {
+func testAccServiceConfig_propagateTags(rName, propagate string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -4194,7 +4194,7 @@ resource "aws_ecs_service" "test" {
 `, rName, propagate)
 }
 
-func testAccServiceReplicaSchedulingStrategyConfig(rName string) string {
+func testAccServiceConfig_replicaSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = %[1]q
@@ -4226,7 +4226,7 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceExecuteCommandConfig(rName string, enable bool) string {
+func testAccServiceConfig_executeCommand(rName string, enable bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

@@ -21,7 +21,7 @@ func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceDataSourceConfig(rName),
+				Config: testAccDeviceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "aws_location.#", resourceName, "aws_location.#"),
@@ -40,7 +40,7 @@ func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDeviceDataSourceConfig(rName string) string {
+func testAccDeviceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

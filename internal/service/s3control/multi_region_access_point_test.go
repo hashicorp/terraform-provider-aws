@@ -109,7 +109,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionAccessPointConfig_publicAccessBlock(bucketName, rName),
+				Config: testAccMultiRegionAccessPointConfig_publicBlock(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
@@ -189,7 +189,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionAccessPointConfig_threeRegions(bucket1Name, bucket2Name, bucket3Name, rName),
+				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
@@ -315,7 +315,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
 `, bucketName, multiRegionAccessPointName)
 }
 
-func testAccMultiRegionAccessPointConfig_publicAccessBlock(bucketName, multiRegionAccessPointName string) string {
+func testAccMultiRegionAccessPointConfig_publicBlock(bucketName, multiRegionAccessPointName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -341,7 +341,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
 `, bucketName, multiRegionAccessPointName)
 }
 
-func testAccMultiRegionAccessPointConfig_threeRegions(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
+func testAccMultiRegionAccessPointConfig_three(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`

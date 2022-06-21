@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -196,6 +195,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
@@ -957,12 +960,17 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(name),
-		LaunchTemplateData: expandRequestLaunchTemplateData(d),
 		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.VersionDescription = aws.String(v.(string))
+	}
+
+	if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
+		input.LaunchTemplateData = v
+	} else {
+		return err
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Launch Template: %s", input)
@@ -1015,7 +1023,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
-	if err := flattenResponseLaunchTemplateData(d, ltv.LaunchTemplateData); err != nil {
+	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
 		return err
 	}
 
@@ -1042,6 +1050,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		"cpu_options",
 		"credit_specification",
 		"description",
+		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
 		"elastic_gpu_specifications",
@@ -1072,13 +1081,18 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChanges(updateKeys...) {
 		input := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:        aws.String(resource.UniqueId()),
-			LaunchTemplateData: expandRequestLaunchTemplateData(d),
-			LaunchTemplateId:   aws.String(d.Id()),
+			ClientToken:      aws.String(resource.UniqueId()),
+			LaunchTemplateId: aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
 			input.VersionDescription = aws.String(v.(string))
+		}
+
+		if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
+			input.LaunchTemplateData = v
+		} else {
+			return err
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(input)
@@ -1139,7 +1153,7 @@ func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchTemplateData {
+func expandRequestLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
 	apiObject := &ec2.RequestLaunchTemplateData{
 		// Always set at least one field.
 		UserData: aws.String(d.Get("user_data").(string)),
@@ -1165,8 +1179,22 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.CpuOptions = expandLaunchTemplateCPUOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && (strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3")) {
-		apiObject.CreditSpecification = expandCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if instanceType != "" {
+			instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+			if err != nil {
+				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+			}
+
+			if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+				apiObject.CreditSpecification = expandCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		apiObject.DisableApiStop = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("disable_api_termination"); ok {
@@ -1279,7 +1307,7 @@ func expandRequestLaunchTemplateData(d *schema.ResourceData) *ec2.RequestLaunchT
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	return apiObject
+	return apiObject, nil
 }
 
 func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateBlockDeviceMappingRequest {
@@ -2142,7 +2170,9 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 	return apiObjects
 }
 
-func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
+func flattenResponseLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
+	instanceType := aws.StringValue(apiObject.InstanceType)
+
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %w", err)
 	}
@@ -2160,11 +2190,20 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 	} else {
 		d.Set("cpu_options", nil)
 	}
-	if apiObject.CreditSpecification != nil && (strings.HasPrefix(aws.StringValue(apiObject.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(apiObject.InstanceType), "t3")) {
-		if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
-			return fmt.Errorf("error setting credit_specification: %w", err)
+	if apiObject.CreditSpecification != nil && instanceType != "" {
+		instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+		}
+
+		if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+			if err := d.Set("credit_specification", []interface{}{flattenCreditSpecification(apiObject.CreditSpecification)}); err != nil {
+				return fmt.Errorf("error setting credit_specification: %w", err)
+			}
 		}
 	} // Don't overwrite any configured value.
+	d.Set("disable_api_stop", apiObject.DisableApiStop)
 	d.Set("disable_api_termination", apiObject.DisableApiTermination)
 	if apiObject.EbsOptimized != nil {
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(apiObject.EbsOptimized)))
@@ -2222,7 +2261,7 @@ func flattenResponseLaunchTemplateData(d *schema.ResourceData, apiObject *ec2.Re
 	} else {
 		d.Set("instance_requirements", nil)
 	}
-	d.Set("instance_type", apiObject.InstanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("kernel_id", apiObject.KernelId)
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {

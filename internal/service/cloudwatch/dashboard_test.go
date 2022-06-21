@@ -29,7 +29,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDashboardConfig(rInt),
+				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
@@ -56,7 +56,7 @@ func TestAccCloudWatchDashboard_update(t *testing.T) {
 		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDashboardConfig(rInt),
+				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(resourceName, &dashboard),
 					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
@@ -92,7 +92,7 @@ func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 		CheckDestroy:      testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDashboardConfig(rInt),
+				Config: testAccDashboardConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(resourceName, &dashboard),
 					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
@@ -100,7 +100,7 @@ func TestAccCloudWatchDashboard_updateName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDashboardConfig(rInt2),
+				Config: testAccDashboardConfig_basic(rInt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(resourceName, &dashboard),
 					testAccCheckDashboardBodyIsExpected(resourceName, basicWidget),
@@ -217,7 +217,7 @@ func testAccDashboardName(rInt int) string {
 	return fmt.Sprintf("terraform-test-dashboard-%d", rInt)
 }
 
-func testAccDashboardConfig(rInt int) string {
+func testAccDashboardConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "test" {
   dashboard_name = "terraform-test-dashboard-%d"

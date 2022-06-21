@@ -102,6 +102,75 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
+func TestParseInstanceType(t *testing.T) {
+	invalidInstanceTypes := []string{
+		"",
+		"abc",
+		"abc4",
+		"abc4.",
+		"abc.xlarge",
+		"4g.3xlarge",
+	}
+
+	for _, v := range invalidInstanceTypes {
+		if _, err := tfec2.ParseInstanceType(v); err == nil {
+			t.Errorf("Expected error for %s", v)
+		}
+	}
+
+	v, err := tfec2.ParseInstanceType("c4.large")
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+
+	if got, want := v.Type, "c4"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Family, "c"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Generation, 4; got != want {
+		t.Errorf("Got: %d, want: %d", got, want)
+	}
+
+	if got, want := v.AdditionalCapabilities, ""; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Size, "large"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	v, err = tfec2.ParseInstanceType("im4gn.16xlarge")
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+
+	if got, want := v.Type, "im4gn"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Family, "im"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Generation, 4; got != want {
+		t.Errorf("Got: %d, want: %d", got, want)
+	}
+
+	if got, want := v.AdditionalCapabilities, "gn"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+
+	if got, want := v.Size, "16xlarge"; got != want {
+		t.Errorf("Got: %s, want: %s", got, want)
+	}
+}
+
 func TestAccEC2Instance_basic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -963,6 +1032,41 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_disableAPIStop(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1699,6 +1803,68 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testCheckPrivateIP(),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_computed(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "false"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
 				),
 			},
 			{
@@ -3540,6 +3706,64 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnknownCPUCredits(rName, "t3.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecificationUnknownCPUCredits(rName, "t3a.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecificationUnknownCPUCredits(rName, "t4g.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -5495,6 +5719,24 @@ resource "aws_instance" "test" {
 `, rName, val))
 }
 
+func testAccInstanceConfig_disableAPIStop(rName string, val bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami              = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type    = "t2.small"
+  subnet_id        = aws_subnet.test.id
+  disable_api_stop = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, val))
+}
+
 func testAccInstanceConfig_disableAPITermination(rName string, val bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -6384,6 +6626,77 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func testAccInstancePrivateDNSNameOptionsBaseConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block                      = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id                          = aws_vpc.test.id
+  availability_zone               = data.aws_availability_zones.available.names[2]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+
+  enable_resource_name_dns_aaaa_record_on_launch = true
+  enable_resource_name_dns_a_record_on_launch    = true
+  private_dns_hostname_type_on_launch            = "resource-name"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_PrivateDNSNameOptions_computed(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_PrivateDNSNameOptions_configured(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstancePrivateDNSNameOptionsBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test.id
+
+  private_dns_name_options {
+    enable_resource_name_dns_aaaa_record = false
+    enable_resource_name_dns_a_record    = true
+    hostname_type                        = "ip-name"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccInstanceConfig_networkSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -7228,7 +7541,7 @@ func testAccInstanceConfig_creditSpecificationIsNotAppliedToNonBurstable(rName s
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.small"
+  instance_type = "c6i.large"
   subnet_id     = aws_subnet.test.id
 
   credit_specification {
@@ -7243,12 +7556,22 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_creditSpecificationUnknownCPUCredits(rName, instanceType string) string {
+	var amiConfig, amiIDRef string
+
+	if v, err := tfec2.ParseInstanceType(instanceType); err == nil && v.Type == "t4g" {
+		amiConfig = acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI()
+		amiIDRef = "data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id"
+	} else {
+		amiConfig = acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI()
+		amiIDRef = "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id"
+	}
+
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		amiConfig,
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = %[3]s
   instance_type = %[2]q
   subnet_id     = aws_subnet.test.id
 
@@ -7258,7 +7581,7 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-`, rName, instanceType))
+`, rName, instanceType, amiIDRef))
 }
 
 func testAccInstanceConfig_userDataUnspecified(rName string) string {

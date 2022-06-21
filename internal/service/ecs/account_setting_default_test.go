@@ -25,7 +25,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T
 		CheckDestroy:      testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
@@ -53,7 +53,7 @@ func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
@@ -81,7 +81,7 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
@@ -109,7 +109,7 @@ func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
@@ -137,7 +137,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountSettingDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig(settingName),
+				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
@@ -198,7 +198,7 @@ func testAccCheckAccountSettingDefaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAccountSettingDefaultConfig(settingName string) string {
+func testAccAccountSettingDefaultConfig_basic(settingName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
   name  = %[1]q

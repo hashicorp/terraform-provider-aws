@@ -38,6 +38,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "0"),
@@ -425,6 +426,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", "1"),
@@ -724,6 +726,34 @@ func TestAccEC2LaunchTemplate_CreditSpecification_t3(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "t3.micro", "unlimited"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_CreditSpecification_t4g(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_creditSpecification(rName, "t4g.micro", "unlimited"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
@@ -3143,6 +3173,7 @@ resource "aws_launch_template" "test" {
     auto_recovery = "disabled"
   }
 
+  disable_api_stop        = true
   disable_api_termination = true
   ebs_optimized           = false
 

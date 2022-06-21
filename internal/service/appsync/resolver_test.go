@@ -59,7 +59,7 @@ func testAccResolver_syncConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResolverConfig_syncConfig(rName),
+				Config: testAccResolverConfig_sync(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(resourceName, &resolver1),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
@@ -243,7 +243,7 @@ func testAccResolver_multipleResolvers(t *testing.T) {
 		CheckDestroy:      testAccCheckResolverDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResolverConfig_multipleResolvers(rName),
+				Config: testAccResolverConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(resourceName+"1", &resolver),
 					testAccCheckResolverExists(resourceName+"2", &resolver),
@@ -602,7 +602,7 @@ EOF
 `, statusCode)
 }
 
-func testAccResolverConfig_multipleResolvers(rName string) string {
+func testAccResolverConfig_multiple(rName string) string {
 	var queryFields string
 	var resolverResources string
 	for i := 1; i <= 10; i++ {
@@ -775,7 +775,7 @@ EOF
 `
 }
 
-func testAccResolverConfig_syncConfig(rName string) string {
+func testAccResolverConfig_sync(rName string) string {
 	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"

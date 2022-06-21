@@ -31,7 +31,7 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig(rName),
+				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
@@ -99,7 +99,7 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
@@ -112,14 +112,14 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeActive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeActive),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
 				),
 			},
 			{
-				Config: testAccAccessKeyConfig_Status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
@@ -220,7 +220,7 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 	}
 }
 
-func testAccAccessKeyConfig(rName string) string {
+func testAccAccessKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -248,7 +248,7 @@ EOF
 `, rName, key)
 }
 
-func testAccAccessKeyConfig_Status(rName string, status string) string {
+func testAccAccessKeyConfig_status(rName string, status string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

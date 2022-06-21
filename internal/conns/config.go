@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -23,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
@@ -187,6 +189,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
+
+	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
+		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
+			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
 
 	client.Route53DomainsConn = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
@@ -438,6 +446,20 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		switch r.Operation.Name {
+		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DeleteContainerService":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
+				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

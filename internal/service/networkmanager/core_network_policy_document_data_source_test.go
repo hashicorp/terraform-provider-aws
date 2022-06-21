@@ -18,7 +18,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkPolicyDocumentBasic,
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
@@ -30,7 +30,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 }
 
 //lintignore:AWSAT003
-var testAccCoreNetworkPolicyDocumentBasic = `
+var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false

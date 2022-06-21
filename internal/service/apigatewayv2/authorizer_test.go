@@ -222,7 +222,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerConfig_httpAPILambdaRequestAuthorizer(rName),
+				Config: testAccAuthorizerConfig_httpAPILambdaRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
@@ -244,7 +244,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAuthorizerConfig_httpAPILambdaRequestAuthorizerUpdated(rName, 3600),
+				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
@@ -261,7 +261,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 				),
 			},
 			{
-				Config: testAccAuthorizerConfig_httpAPILambdaRequestAuthorizerUpdated(rName, 0),
+				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
@@ -295,7 +295,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerConfig_httpAPILambdaRequestAuthorizerUpdated(rName, 0),
+				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
@@ -318,7 +318,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAuthorizerConfig_httpAPILambdaRequestAuthorizerUpdated(rName, 600),
+				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
@@ -544,7 +544,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 `, rName))
 }
 
-func testAccAuthorizerConfig_httpAPILambdaRequestAuthorizer(rName string) string {
+func testAccAuthorizerConfig_httpAPILambdaRequest(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAuthorizerConfig_apiHTTP(rName),
 		testAccAuthorizerConfig_baseLambda(rName),
@@ -561,7 +561,7 @@ resource "aws_apigatewayv2_authorizer" "test" {
 `, rName))
 }
 
-func testAccAuthorizerConfig_httpAPILambdaRequestAuthorizerUpdated(rName string, authorizerResultTtl int) string {
+func testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName string, authorizerResultTtl int) string {
 	return acctest.ConfigCompose(
 		testAccAuthorizerConfig_apiHTTP(rName),
 		testAccAuthorizerConfig_baseLambda(rName),
