@@ -24,6 +24,4 @@ const (
 	ColDeprecatedEnvVar        = 20
 	ColEnvVar                  = 21
 	ColNote                    = 22
-	ColAccTestVpcLock          = 23
-	ColAccTestParallelism      = 24
 )

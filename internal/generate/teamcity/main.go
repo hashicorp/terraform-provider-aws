@@ -7,19 +7,22 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
+
+	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	servicesAllFilename = `../../../.teamcity/components/generated/services_all.kt`
-	namesDataFile       = "../../../names/names_data.csv"
+	servicesAllFile   = `../../../.teamcity/components/generated/services_all.kt`
+	namesDataFile     = "../../../names/names_data.csv"
+	serviceConfigFile = "./acctest_services.hcl"
 )
 
 type ServiceDatum struct {
@@ -34,7 +37,12 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(servicesAllFilename, "../../../"))
+	fmt.Printf("Generating %s\n", strings.TrimPrefix(servicesAllFile, "../../../"))
+
+	serviceConfigs, err := acctestConfigurations(serviceConfigFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	f, err := os.Open(namesDataFile)
 	if err != nil {
@@ -78,14 +86,11 @@ func main() {
 		sd := ServiceDatum{
 			ProviderPackage: p,
 			HumanFriendly:   l[names.ColHumanFriendly],
-			VpcLock:         l[names.ColAccTestVpcLock] != "",
 		}
-		if s := l[names.ColAccTestParallelism]; s != "" {
-			v, err := strconv.Atoi(s)
-			if err != nil {
-				log.Fatal(err)
-			}
-			sd.Parallelism = v
+		serviceConfig, ok := serviceConfigs[p]
+		if ok {
+			sd.VpcLock = serviceConfig.VpcLock
+			sd.Parallelism = serviceConfig.Parallelism
 		}
 
 		td.Services = append(td.Services, sd)
@@ -95,7 +100,7 @@ func main() {
 		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
 	})
 
-	writeTemplate(servicesAllFilename, tmpl, "teamcity", td)
+	writeTemplate(servicesAllFile, tmpl, "teamcity", td)
 }
 
 func writeTemplate(filename, body, templateName string, td TemplateData) {
@@ -134,3 +139,50 @@ val services = mapOf(
 {{- end }}
 )
 `
+
+type acctestConfig struct {
+	Services []acctestServiceConfig `hcl:"service,block"`
+}
+
+type acctestServiceConfig struct {
+	Service     string `hcl:",label"`
+	VpcLock     bool   `hcl:"vpc_lock,optional"`
+	Parallelism int    `hcl:"parallelism,optional"`
+}
+
+func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {
+	var config acctestConfig
+
+	err := decodeHclFile(filename, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]acctestServiceConfig)
+
+	for _, v := range config.Services {
+		result[v.Service] = v
+	}
+
+	return result, nil
+}
+
+func decodeHclFile(filename string, target interface{}) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	err = hclsimple.Decode(filename, b, nil, target)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
