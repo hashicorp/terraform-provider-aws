@@ -256,6 +256,7 @@ func TestAccCEAnomalySubscription_Threshold(t *testing.T) {
 		},
 	})
 }
+
 func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	var subscription costexplorer.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
