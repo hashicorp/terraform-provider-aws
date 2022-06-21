@@ -218,6 +218,36 @@ func TestAccFaq_tags(t *testing.T) {
 	})
 }
 
+func TestAccFaq_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_faq.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFaqDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFaqConfig_basic(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFaqExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceFaq(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFaqDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
