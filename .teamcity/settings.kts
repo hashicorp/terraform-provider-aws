@@ -220,6 +220,7 @@ object SetUp : BuildType({
         }
         script {
             name = "Pre-Sweeper"
+            executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/sweeper.sh").readText()
         }
     }
