@@ -123,7 +123,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"ipv4", "ipv6"}, false),
+					ValidateFunc: validation.StringInSlice(ec2.ServiceConnectivityType_Values(), false),
 				},
 			},
 			"tags":     tftags.TagsSchema(),
