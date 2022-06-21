@@ -86,7 +86,7 @@ func dataSourceResolverFirewallFirewallRuleGroupAssociationRead(d *schema.Resour
 		return fmt.Errorf("no  Route53 Firewall Rule Group Association found matching criteria; try different search")
 	}
 
-	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.FirewallRuleGroupId))
+	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.Id))
 	d.Set("arn", output.FirewallRuleGroupAssociation.Arn)
 	d.Set("creation_time", output.FirewallRuleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", output.FirewallRuleGroupAssociation.CreatorRequestId)
