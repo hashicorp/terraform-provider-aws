@@ -1304,9 +1304,10 @@ resource "aws_lakeformation_permissions" "test" {
 func testAccPermissionsConfig_lfTag(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/"
+  name               = %[1]q
+  path               = "/"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1337,17 +1338,21 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
   values = ["value1", "value2"]
+
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
+
 resource "aws_lakeformation_permissions" "test" {
   permissions                   = ["ASSOCIATE", "DESCRIBE"]
   permissions_with_grant_option = ["ASSOCIATE", "DESCRIBE"]
   principal                     = aws_iam_role.test.arn
+
   lf_tag {
     key    = aws_lakeformation_lf_tag.test.key
     values = aws_lakeformation_lf_tag.test.values
   }
+
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }

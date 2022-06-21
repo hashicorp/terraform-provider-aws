@@ -501,8 +501,8 @@ resource "aws_lakeformation_permissions" "test" {
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [
-	  aws_lakeformation_data_lake_settings.test,
-	  aws_lakeformation_lf_tag.test,
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_lf_tag.test,
   ]
 }
 
