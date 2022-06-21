@@ -32,7 +32,7 @@ The following attribute is additionally exported:
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).
 * `creator_request_id` - A unique string defined by you to identify the request.
 * `firewall_rule_group_id` - The unique identifier of the firewall rule group.
-* `managed_owner_name` - The owner of the association, used only for associations that are not managed by you. 
+* `managed_owner_name` - The owner of the association, used only for associations that are not managed by you.
 * `modification_time` - The date and time that the association was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `mutation_protection` - If enabled, this setting disallows modification or removal of the association, to help prevent against accidentally altering DNS firewall protections.
 * `name` - The name of the association.
