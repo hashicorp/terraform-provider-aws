@@ -2651,6 +2651,42 @@ func FindVPCEndpointServiceConfigurations(conn *ec2.EC2, input *ec2.DescribeVpcE
 	return output, nil
 }
 
+func FindVPCEndpointServices(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServicesInput) ([]*ec2.ServiceDetail, []string, error) {
+	var serviceDetails []*ec2.ServiceDetail
+	var serviceNames []string
+
+	err := describeVPCEndpointServicesPages(conn, input, func(page *ec2.DescribeVpcEndpointServicesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ServiceDetails {
+			if v != nil {
+				serviceDetails = append(serviceDetails, v)
+			}
+		}
+
+		for _, v := range page.ServiceNames {
+			serviceNames = append(serviceNames, aws.StringValue(v))
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidServiceName) {
+		return nil, nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return serviceDetails, serviceNames, nil
+}
+
 func FindVPCEndpointServiceConfigurationByID(conn *ec2.EC2, id string) (*ec2.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		ServiceIds: aws.StringSlice([]string{id}),
