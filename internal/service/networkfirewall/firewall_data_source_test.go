@@ -227,7 +227,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 data "aws_networkfirewall_firewall" "test" {
-  arn = aws_networkfirewall_firewall.test.arn
+  arn  = aws_networkfirewall_firewall.test.arn
   name = %[1]q
 
   depends_on = [aws_networkfirewall_firewall.test]

@@ -19,6 +19,7 @@ data "aws_networkfirewall_firewall" "example" {
   arn = aws_networkfirewall_firewall.arn
 }
 ```
+
 By name
 
 ```hcl
