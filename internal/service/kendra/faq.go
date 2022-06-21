@@ -2,15 +2,19 @@ package kendra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,7 +25,8 @@ import (
 
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceFaqRead,
+		CreateContext: resourceFaqCreate,
+		ReadContext:   resourceFaqRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -129,6 +134,77 @@ func ResourceFaq() *schema.Resource {
 	}
 }
 
+func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &kendra.CreateFaqInput{
+		ClientToken: aws.String(resource.UniqueId()),
+		IndexId:     aws.String(d.Get("index_id").(string)),
+		Name:        aws.String(name),
+		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("file_format"); ok {
+		input.FileFormat = types.FaqFileFormat(v.(string))
+	}
+
+	if v, ok := d.GetOk("language_code"); ok {
+		input.LanguageCode = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Kendra Faq %#v", input)
+
+	outputRaw, err := tfresource.RetryWhen(
+		propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateFaq(ctx, input)
+		},
+		func(err error) (bool, error) {
+			var validationException *types.ValidationException
+
+			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return diag.Errorf("creating Kendra Faq (%s): %s", name, err)
+	}
+
+	if outputRaw == nil {
+		return diag.Errorf("creating Kendra Faq (%s): empty output", name)
+	}
+
+	output := outputRaw.(*kendra.CreateFaqOutput)
+
+	id := aws.ToString(output.Id)
+	indexId := d.Get("index_id").(string)
+
+	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
+
+	if _, err := waitFaqCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Faq (%s) creation: %s", d.Id(), err)
+	}
+
+	return resourceFaqRead(ctx, d, meta)
+}
+
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -191,6 +267,68 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
+
+	stateConf := &resource.StateChangeConf{
+		Pending:                   FaqStatusValues(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
+		Target:                    FaqStatusValues(types.FaqStatusActive),
+		Timeout:                   timeout,
+		Refresh:                   statusFaq(ctx, conn, id, indexId),
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
+		if output.Status == types.FaqStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindFaqByID(ctx, conn, id, indexId)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func expandS3Path(tfList []interface{}) *types.S3Path {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.S3Path{}
+
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+		result.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		result.Key = aws.String(v)
+	}
+
+	return result
 }
 
 func flattenS3Path(apiObject *types.S3Path) []interface{} {
