@@ -39,7 +39,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceBasicConfig(rName),
+				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					testAccCheckInstanceAttributes(&dbInstance1),
@@ -112,7 +112,7 @@ func TestAccRDSInstance_NameDeprecated_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceNameDeprecatedBasicConfig(rName),
+				Config: testAccInstanceConfig_nameDeprecated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					testAccCheckInstanceAttributes(&dbInstance1),
@@ -1183,7 +1183,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
@@ -1219,7 +1219,7 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName_RAMShared(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
@@ -1253,7 +1253,7 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_vpcSecurityGroupIDs(t
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName_VPCSecurityGroupIDs(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
@@ -1916,7 +1916,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
@@ -2071,7 +2071,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_AllocatedStorage(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 				),
@@ -2103,7 +2103,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_Io1Storage(rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
 				),
@@ -2135,7 +2135,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 				Config: testAccInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 				),
@@ -2167,7 +2167,7 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 				Config: testAccInstanceConfig_SnapshotIdentifier_AutoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
@@ -2199,7 +2199,7 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_AvailabilityZone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -2230,7 +2230,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 				),
@@ -2262,7 +2262,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupRetentionPeriod_Unset(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
 				),
@@ -2294,7 +2294,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_BackupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
 				),
@@ -2328,7 +2328,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_DBSubnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -2368,7 +2368,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 				Config: testAccInstanceConfig_SnapshotIdentifier_DBSubnetGroupName_RAMShared(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -2403,7 +2403,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 				Config: testAccInstanceConfig_SnapshotIdentifier_DBSubnetGroupName_VPCSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -2436,7 +2436,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_DeletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
@@ -2446,7 +2446,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_DeletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
@@ -2478,7 +2478,7 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 				Config: testAccInstanceConfig_SnapshotIdentifier_IAMDatabaseAuthenticationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "true"),
 				),
@@ -2510,7 +2510,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_MaintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
@@ -2542,7 +2542,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_MaxAllocatedStorage(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
 				),
@@ -2574,7 +2574,7 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_Monitoring(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
@@ -2606,7 +2606,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_MultiAZ(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
 				),
@@ -2638,7 +2638,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_MultiAZ_SQLServer(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
 				),
@@ -2670,7 +2670,7 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_ParameterGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2703,7 +2703,7 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_Port(rName, 9999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "port", "9999"),
 				),
@@ -2735,7 +2735,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_Tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -2768,7 +2768,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_Tags_Clear(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -2800,7 +2800,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_VPCSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -2835,7 +2835,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 				Config: testAccInstanceConfig_SnapshotIdentifier_VPCSecurityGroupIds_Tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -4104,7 +4104,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 				Config: testAccInstanceConfig_SnapshotIdentifier_PerformanceInsightsEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
@@ -4461,7 +4461,7 @@ func TestAccRDSInstance_CoIPEnabled_snapshotIdentifier(t *testing.T) {
 				Config: testAccInstanceConfig_CoIPEnabled_SnapshotIdentifier(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
 				),
@@ -4548,7 +4548,7 @@ func testAccInstanceConfig_orderableClassSQLServerSe() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-se", "license-included", "standard", sqlServerSEPreferredInstanceClasses)
 }
 
-func testAccInstanceBasicConfig(rName string) string {
+func testAccInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -4573,7 +4573,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceNameDeprecatedBasicConfig(rName string) string {
+func testAccInstanceConfig_nameDeprecated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
@@ -6937,7 +6937,7 @@ resource "aws_db_instance" "test" {
 `, rName, backupWindow, maintenanceWindow))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -7072,7 +7072,7 @@ provider "awssameaccountalternateregion" {
 `, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName_RAMShared(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName string) string {
 	return acctest.ConfigCompose(testAccAlternateAccountAndAlternateRegionProviderConfig(), fmt.Sprintf(`
 data "aws_availability_zones" "alternateaccountsameregion" {
   provider = "awsalternateaccountsameregion"
@@ -7228,7 +7228,7 @@ resource "aws_db_instance" "test" {
 `, rName, mySQLPreferredInstanceClasses))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_DbSubnetGroupName_VPCSecurityGroupIDs(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		acctest.ConfigAvailableAZsNoOptIn(),

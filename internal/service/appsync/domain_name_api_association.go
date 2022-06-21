@@ -11,13 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func ResourceDomainNameApiAssociation() *schema.Resource {
+func ResourceDomainNameAPIAssociation() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceDomainNameApiAssociationCreate,
-		Read:   resourceDomainNameApiAssociationRead,
-		Update: resourceDomainNameApiAssociationUpdate,
-		Delete: resourceDomainNameApiAssociationDelete,
+		Create: resourceDomainNameAPIAssociationCreate,
+		Read:   resourceDomainNameAPIAssociationRead,
+		Update: resourceDomainNameAPIAssociationUpdate,
+		Delete: resourceDomainNameAPIAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func ResourceDomainNameApiAssociation() *schema.Resource {
 	}
 }
 
-func resourceDomainNameApiAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameAPIAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	params := &appsync.AssociateApiInput{
@@ -51,17 +51,17 @@ func resourceDomainNameApiAssociationCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.ApiAssociation.DomainName))
 
-	if err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
+	if err := waitDomainNameAPIAssociation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Association: %w", d.Id(), err)
 	}
 
-	return resourceDomainNameApiAssociationRead(d, meta)
+	return resourceDomainNameAPIAssociationRead(d, meta)
 }
 
-func resourceDomainNameApiAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameAPIAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	association, err := FindDomainNameApiAssociationByID(conn, d.Id())
+	association, err := FindDomainNameAPIAssociationByID(conn, d.Id())
 	if association == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Appsync Domain Name API Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -78,7 +78,7 @@ func resourceDomainNameApiAssociationRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceDomainNameApiAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameAPIAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	params := &appsync.AssociateApiInput{
@@ -91,14 +91,14 @@ func resourceDomainNameApiAssociationUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error creating Appsync Domain Name API Association: %w", err)
 	}
 
-	if err := waitDomainNameApiAssociation(conn, d.Id()); err != nil {
+	if err := waitDomainNameAPIAssociation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Association: %w", d.Id(), err)
 	}
 
-	return resourceDomainNameApiAssociationRead(d, meta)
+	return resourceDomainNameAPIAssociationRead(d, meta)
 }
 
-func resourceDomainNameApiAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainNameAPIAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
 	input := &appsync.DisassociateApiInput{
@@ -112,7 +112,7 @@ func resourceDomainNameApiAssociationDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error deleting Appsync Domain Name API Association: %w", err)
 	}
 
-	if err := waitDomainNameApiDisassociation(conn, d.Id()); err != nil {
+	if err := waitDomainNameAPIDisassociation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Appsync Domain Name API (%s) Disassociation: %w", d.Id(), err)
 	}
 

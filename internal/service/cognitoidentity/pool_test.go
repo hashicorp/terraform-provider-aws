@@ -251,7 +251,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 		CheckDestroy:      testAccCheckPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolConfig_cognitoIdentityProviders(name),
+				Config: testAccPoolConfig_identityProviders(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
@@ -274,7 +274,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPoolConfig_cognitoIdentityProvidersModified(name),
+				Config: testAccPoolConfig_identityProvidersModified(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
@@ -312,7 +312,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 		CheckDestroy:      testAccCheckPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolConfig_cognitoIdentityProviders(name),
+				Config: testAccPoolConfig_identityProviders(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
@@ -325,7 +325,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPoolConfig_cognitoIdentityProvidersAndOpenidConnectProviderARNs(name),
+				Config: testAccPoolConfig_identityProvidersAndOpenIDConnectProviderARNs(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
@@ -602,7 +602,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name, idpEntityId, secondaryIdpEntityId)
 }
 
-func testAccPoolConfig_cognitoIdentityProviders(name string) string {
+func testAccPoolConfig_identityProviders(name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -627,7 +627,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name)
 }
 
-func testAccPoolConfig_cognitoIdentityProvidersModified(name string) string {
+func testAccPoolConfig_identityProvidersModified(name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -646,7 +646,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name)
 }
 
-func testAccPoolConfig_cognitoIdentityProvidersAndOpenidConnectProviderARNs(name string) string {
+func testAccPoolConfig_identityProvidersAndOpenIDConnectProviderARNs(name string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

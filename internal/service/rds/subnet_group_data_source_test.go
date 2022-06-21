@@ -22,7 +22,7 @@ func TestAccRDSSubnetGroupDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupDataSourceConfig(rName),
+				Config: testAccSubnetGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -56,7 +56,7 @@ data "aws_db_subnet_group" "test" {
 }
 `
 
-func testAccSubnetGroupDataSourceConfig(rName string) string {
+func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

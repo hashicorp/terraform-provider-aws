@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccExportGatewayV2ExportDataSource_basic(t *testing.T) {
+func TestAccAPIGatewayV2ExportDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_export.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -31,7 +31,7 @@ func TestAccExportGatewayV2ExportDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccExportGatewayV2ExportDataSource_stage(t *testing.T) {
+func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
 	dataSourceName := "data.aws_apigatewayv2_export.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

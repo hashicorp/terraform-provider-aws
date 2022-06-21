@@ -25,7 +25,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup),
+				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
@@ -60,7 +60,7 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionUpgradeTargetsDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexp.MustCompile(`^[1-9][0-9]*`)),
 				),
@@ -79,7 +79,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionPreferredDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.27"),
 				),
@@ -98,7 +98,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
 				),
@@ -126,7 +126,7 @@ func testAccEngineVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup string) string {
+func testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine                 = %[1]q
@@ -136,7 +136,7 @@ data "aws_rds_engine_version" "test" {
 `, engine, version, paramGroup)
 }
 
-func testAccEngineVersionUpgradeTargetsDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
@@ -145,7 +145,7 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccEngineVersionPreferredDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
@@ -154,7 +154,7 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccEngineVersionDefaultOnlyDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_defaultOnly() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine = "mysql"

@@ -118,7 +118,7 @@ func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{
 	d.Set("name", tg.TargetGroupName)
 
 	cpc := tg.ConnectionPoolConfig
-	d.Set("connection_pool_config", flattenDbProxyTargetGroupConnectionPoolConfig(cpc))
+	d.Set("connection_pool_config", flattenProxyTargetGroupConnectionPoolConfig(cpc))
 
 	return nil
 }
@@ -141,7 +141,7 @@ func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("connection_pool_config"); ok {
-		params.ConnectionPoolConfig = expandDbProxyConnectionPoolConfig(v.([]interface{}))
+		params.ConnectionPoolConfig = expandProxyConnectionPoolConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Update DB Proxy default target group: %#v", params)
@@ -165,7 +165,7 @@ func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta in
 	return resourceProxyDefaultTargetGroupRead(d, meta)
 }
 
-func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {
+func expandProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {
 	if len(configs) < 1 {
 		return nil
 	}
@@ -183,7 +183,7 @@ func expandDbProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoo
 	return result
 }
 
-func flattenDbProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigurationInfo) []interface{} {
+func flattenProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigurationInfo) []interface{} {
 	if cpc == nil {
 		return []interface{}{}
 	}

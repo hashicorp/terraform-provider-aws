@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEventDataStore_basic(t *testing.T) {
+func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -56,7 +56,7 @@ func TestAccEventDataStore_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventDataStore_disappears(t *testing.T) {
+func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -78,7 +78,7 @@ func TestAccEventDataStore_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEventDataStore_tags(t *testing.T) {
+func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -122,7 +122,7 @@ func TestAccEventDataStore_tags(t *testing.T) {
 	})
 }
 
-func TestAccEventDataStore_options(t *testing.T) {
+func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -161,7 +161,7 @@ func TestAccEventDataStore_options(t *testing.T) {
 	})
 }
 
-func TestAccEventDataStore_advancedEventSelector(t *testing.T) {
+func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
