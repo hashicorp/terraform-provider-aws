@@ -2,6 +2,10 @@ package lakeformation
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -9,9 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"log"
-	"regexp"
-	"strings"
 )
 
 func ResourceLFTag() *schema.Resource {
@@ -25,6 +26,12 @@ func ResourceLFTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"catalog_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
+			},
 			"key": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -41,12 +48,6 @@ func ResourceLFTag() *schema.Resource {
 					ValidateFunc: validateLFTagValues(),
 				},
 				Set: schema.HashString,
-			},
-			"catalog_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
 			},
 		},
 	}

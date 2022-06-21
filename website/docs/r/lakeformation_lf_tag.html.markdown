@@ -3,7 +3,7 @@ subcategory: "Lake Formation"
 layout: "aws"
 page_title: "AWS: aws_lakeformation_lf_tag"
 description: |-
-Creates a tag with the specified name and values.
+    Creates a tag with the specified name and values.
 ---
 
 # Resource: aws_lakeformation_lf_tag
@@ -24,8 +24,8 @@ resource "aws_lakeformation_lf_tag" "example" {
 The following arguments are supported:
 
 * `catalog_id` - (Optional) ID of the Data Catalog to create the tag in. If omitted, this defaults to the AWS Account ID.
-* `key` - (Required) The key-name for the tag.
-* `values` - (Required) A list of possible values an attribute can take.
+* `key` - (Required) Key-name for the tag.
+* `values` - (Required) List of possible values an attribute can take.
 
 ## Attributes Reference
 
