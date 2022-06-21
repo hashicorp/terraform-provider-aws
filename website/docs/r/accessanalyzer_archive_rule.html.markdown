@@ -46,8 +46,10 @@ The following arguments are required:
 
 ### Filter
 
+**Note** At least one comparator must be included with each filter.
+
 * `criteria` - (Required) The filter criteria.
-* `contains` - (Optional) Contains comparator. 
+* `contains` - (Optional) Contains comparator.
 * `eq` - (Optional) Equals comparator.
 * `exists` - (Optional) Boolean comparator.
 * `neq` - (Optional) Not Equals comparator.
