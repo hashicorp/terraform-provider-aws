@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,6 +22,7 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	efsFileSystemResourceName := "aws_efs_file_system.test"
 	resourceName := "aws_datasync_location_efs.test"
 	subnetResourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -29,7 +31,7 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSConfig(),
+				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -52,9 +54,10 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationEFS_access(t *testing.T) {
+func TestAccDataSyncLocationEFS_accessPointARN(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -63,7 +66,7 @@ func TestAccDataSyncLocationEFS_access(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSConfigAccess(),
+				Config: testAccLocationEFSConfig_accessPointARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_point_arn", "aws_efs_access_point.test", "arn"),
@@ -83,6 +86,7 @@ func TestAccDataSyncLocationEFS_access(t *testing.T) {
 func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -91,7 +95,7 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSConfig(),
+				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
@@ -106,6 +110,7 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -114,7 +119,7 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSSubdirectoryConfig("/subdirectory1/"),
+				Config: testAccLocationEFSConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
@@ -133,6 +138,7 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	var locationEfs1, locationEfs2, locationEfs3 datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -141,7 +147,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLocationEFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSTags1Config("key1", "value1"),
+				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -155,7 +161,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"efs_file_system_arn"},
 			},
 			{
-				Config: testAccLocationEFSTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationEFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs2),
 					testAccCheckLocationEFSNotRecreated(&locationEfs1, &locationEfs2),
@@ -165,7 +171,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationEFSTags1Config("key1", "value1"),
+				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(resourceName, &locationEfs3),
 					testAccCheckLocationEFSNotRecreated(&locationEfs2, &locationEfs3),
@@ -241,13 +247,13 @@ func testAccCheckLocationEFSNotRecreated(i, j *datasync.DescribeLocationEfsOutpu
 	}
 }
 
-func testAccLocationEFSBaseConfig() string {
-	return `
+func testAccLocationEFSBaseConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-datasync-location-efs"
+    Name = %[1]q
   }
 }
 
@@ -256,7 +262,7 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-datasync-location-efs"
+    Name = %[1]q
   }
 }
 
@@ -264,21 +270,25 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-datasync-location-efs"
+    Name = %[1]q
   }
 }
 
-resource "aws_efs_file_system" "test" {}
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
   subnet_id      = aws_subnet.test.id
 }
-`
+`, rName)
 }
 
-func testAccLocationEFSConfig() string {
-	return testAccLocationEFSBaseConfig() + `
+func testAccLocationEFSConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), `
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
@@ -287,42 +297,25 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = aws_subnet.test.arn
   }
 }
-`
+`)
 }
 
-func testAccLocationEFSSubdirectoryConfig(subdirectory string) string {
-	return testAccLocationEFSBaseConfig() + fmt.Sprintf(`
+func testAccLocationEFSConfig_subdirectory(rName, subdirectory string) string {
+	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
-  subdirectory        = %q
+  subdirectory        = %[1]q
 
   ec2_config {
     security_group_arns = [aws_security_group.test.arn]
     subnet_arn          = aws_subnet.test.arn
   }
 }
-`, subdirectory)
+`, subdirectory))
 }
 
-func testAccLocationEFSTags1Config(key1, value1 string) string {
-	return testAccLocationEFSBaseConfig() + fmt.Sprintf(`
-resource "aws_datasync_location_efs" "test" {
-  efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
-
-  ec2_config {
-    security_group_arns = [aws_security_group.test.arn]
-    subnet_arn          = aws_subnet.test.arn
-  }
-
-  tags = {
-    %q = %q
-  }
-}
-`, key1, value1)
-}
-
-func testAccLocationEFSTags2Config(key1, value1, key2, value2 string) string {
-	return testAccLocationEFSBaseConfig() + fmt.Sprintf(`
+func testAccLocationEFSConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
@@ -332,17 +325,38 @@ resource "aws_datasync_location_efs" "test" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[1]q = %[2]q
   }
 }
-`, key1, value1, key2, value2)
+`, key1, value1))
 }
 
-func testAccLocationEFSConfigAccess() string {
-	return testAccLocationEFSBaseConfig() + `
+func testAccLocationEFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
+resource "aws_datasync_location_efs" "test" {
+  efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
+
+  ec2_config {
+    security_group_arns = [aws_security_group.test.arn]
+    subnet_arn          = aws_subnet.test.arn
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, key1, value1, key2, value2))
+}
+
+func testAccLocationEFSConfig_accessPointARN(rName string) string {
+	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_datasync_location_efs" "test" {
@@ -355,5 +369,5 @@ resource "aws_datasync_location_efs" "test" {
     subnet_arn          = aws_subnet.test.arn
   }
 }
-`
+`, rName))
 }
