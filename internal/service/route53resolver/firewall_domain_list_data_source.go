@@ -14,7 +14,7 @@ func DataSourceResolverFirewallDomainList() *schema.Resource {
 		Read: dataSourceResolverFirewallDomainListRead,
 
 		Schema: map[string]*schema.Schema{
-			"firewall_domain_list_id": {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -62,7 +62,7 @@ func dataSourceResolverFirewallDomainListRead(d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallDomainListInput{
-		FirewallDomainListId: aws.String(d.Get("firewall_domain_list_id").(string)),
+		FirewallDomainListId: aws.String(d.Get("id").(string)),
 	}
 
 	output, err := conn.GetFirewallDomainList(input)

@@ -43,7 +43,7 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 }
 
 data "aws_route53_resolver_firewall_domain_list" "test" {
-  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
+  id = aws_route53_resolver_firewall_domain_list.test.id
 }
 
 `
