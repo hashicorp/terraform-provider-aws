@@ -22,7 +22,7 @@ data "aws_kendra_index" "example" {
 
 The following attributes are supported:
 
-* `id` - Returns information on a specific Index by id.
+* `id` - (Required) Returns information on a specific Index by id.
 
 ## Attributes Reference
 
