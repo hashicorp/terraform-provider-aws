@@ -29,7 +29,7 @@ func testAccFaq_basic(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -75,7 +75,7 @@ func testAccFaq_description(t *testing.T) {
 	description := "example description for kendra faq"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -110,7 +110,7 @@ func testAccFaq_fileFormat(t *testing.T) {
 	fileFormat := string(types.FaqFileFormatCsv)
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -145,7 +145,7 @@ func testAccFaq_languageCode(t *testing.T) {
 	languageCode := "en"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -179,7 +179,7 @@ func testAccFaq_tags(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -231,7 +231,7 @@ func testAccFaq_disappears(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
