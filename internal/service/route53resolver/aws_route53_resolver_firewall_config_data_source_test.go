@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccResolverFirewallConfig_basic(t *testing.T) {
+func TestAccRoute53ResolverFirewallDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_config.test"
 
 	resource.Test(t, resource.TestCase{
@@ -18,7 +18,7 @@ func TestAccResolverFirewallConfig_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResolverFirewallConfig_basic(),
+				Config: testAccRoute53ResolverFirewallDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "firewall_fail_open", regexp.MustCompile(`ENABLED|DISABLED`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
@@ -30,22 +30,23 @@ func TestAccResolverFirewallConfig_basic(t *testing.T) {
 	})
 }
 
-func testAccResolverFirewallConfig_basic() string {
+// nosemgrep: outposts-in-func-name
+func testAccRoute53ResolverFirewallDataSourceConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 }
-	
+
 resource "aws_route53_resolver_firewall_config" "test" {
   resource_id        = aws_vpc.test.id
   firewall_fail_open = "ENABLED"
 }
-	
+
 data "aws_route53_resolver_firewall_config" "test" {
   resource_id = aws_vpc.test.id
-}  
+}
 
 `
 }
