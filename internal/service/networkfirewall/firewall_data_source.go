@@ -19,10 +19,12 @@ func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFirewallResourceRead,
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			"arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidARN,
+				AtLeastOneOf: []string{"arn", "name"},
 			},
 			"delete_protection": {
 				Type:     schema.TypeBool,
@@ -77,8 +79,10 @@ func DataSourceFirewall() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				AtLeastOneOf: []string{"arn", "name"},
 			},
 			"subnet_change_protection": {
 				Type:     schema.TypeBool,
@@ -112,16 +116,23 @@ func DataSourceFirewall() *schema.Resource {
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resourceArn := d.Get("resource_arn").(string)
+	input := &networkfirewall.DescribeFirewallInput{}
 
-	log.Printf("[DEBUG] Reading NetworkFirewall Firewall %s", resourceArn)
-
-	input := &networkfirewall.DescribeFirewallInput{
-		FirewallArn: aws.String(resourceArn),
+	if v, ok := d.GetOk("arn"); ok {
+		input.FirewallArn = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("name"); ok {
+		input.FirewallName = aws.String(v.(string))
+	}
+
+	if input.FirewallArn == nil && input.FirewallName == nil {
+
+		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
+	}
+
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
@@ -139,7 +150,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 
 	firewall := output.Firewall
 
-	d.SetId(resourceArn)
+	d.Set("arn", firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	d.Set("name", firewall.FirewallName)
@@ -154,16 +165,11 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
 	}
 
-	tags := KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	if err := d.Set("tags", KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	d.SetId(aws.StringValue(firewall.FirewallArn))
 
 	return nil
 }
