@@ -6,15 +6,15 @@ description: |-
     Provides details about a specific a Route 53 Resolver DNS Firewall config.
 ---
 
-# Data Source: aws_route53_delegation_set
+# Data Source: aws_route53_resolver_firewall_config
 
 `aws_route53_resolver_firewall_config` provides details about a specific a Route 53 Resolver DNS Firewall config.
 
-This data source allows to find a details about a specific a Route 53 Resolver DNS Firewall config..
+This data source allows to find a details about a specific a Route 53 Resolver DNS Firewall config.
 
 ## Example Usage
 
-The following example shows how to get a delegation set from its id.
+The following example shows how to get a firewall config using the VPC id.
 
 ```terraform
 data "aws_route53_resolver_firewall_config" "example" {
