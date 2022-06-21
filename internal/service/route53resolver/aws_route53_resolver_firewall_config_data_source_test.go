@@ -18,7 +18,7 @@ func TestAccRoute53ResolverFirewallDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDataSourceConfig_basic(),
+				Config: testAccFirewallDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "firewall_fail_open", regexp.MustCompile(`ENABLED|DISABLED`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
