@@ -16,6 +16,15 @@ func TestAccKendra_serial(t *testing.T) {
 			"ServerSideEncryption": testAccIndex_serverSideEncryption,
 			"UserTokenJSON":        testAccIndex_updateUserTokenJSON,
 		},
+		"QuerySuggestionsBlockList": {
+			"basic":        testAccQuerySuggestionsBlockList_basic,
+			"disappears":   testAccQuerySuggestionsBlockList_disappears,
+			"tags":         testAccQuerySuggestionsBlockList_tags,
+			"Description":  testAccQuerySuggestionsBlockList_Description,
+			"Name":         testAccQuerySuggestionsBlockList_Name,
+			"RoleARN":      testAccQuerySuggestionsBlockList_RoleARN,
+			"SourceS3Path": testAccQuerySuggestionsBlockList_SourceS3Path,
+		},
 		"Thesaurus": {
 			"basic":        testAccThesaurus_basic,
 			"disappears":   testAccThesaurus_disappears,
