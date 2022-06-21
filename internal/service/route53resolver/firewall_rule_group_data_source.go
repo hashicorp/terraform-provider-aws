@@ -81,15 +81,15 @@ func dataSourceResolverFirewallFirewallRuleGroupRead(d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(output.FirewallRuleGroup.Id))
 	d.Set("arn", output.FirewallRuleGroup.Arn)
+	d.Set("creation_time", output.FirewallRuleGroup.CreationTime)
+	d.Set("creator_request_id", output.FirewallRuleGroup.CreatorRequestId)
+	d.Set("modification_time", output.FirewallRuleGroup.ModificationTime)
 	d.Set("name", output.FirewallRuleGroup.Name)
+	d.Set("owner_id", output.FirewallRuleGroup.OwnerId)
 	d.Set("rule_count", output.FirewallRuleGroup.RuleCount)
+	d.Set("share_status", output.FirewallRuleGroup.ShareStatus)
 	d.Set("status", output.FirewallRuleGroup.Status)
 	d.Set("status_message", output.FirewallRuleGroup.StatusMessage)
-	d.Set("owner_id", output.FirewallRuleGroup.OwnerId)
-	d.Set("creator_request_id", output.FirewallRuleGroup.CreatorRequestId)
-	d.Set("share_status", output.FirewallRuleGroup.ShareStatus)
-	d.Set("creation_time", output.FirewallRuleGroup.CreationTime)
-	d.Set("modification_time", output.FirewallRuleGroup.ModificationTime)
 
 	return nil
 }
