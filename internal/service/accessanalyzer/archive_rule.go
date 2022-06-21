@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -34,25 +36,28 @@ func ResourceArchiveRule() *schema.Resource {
 				Required: true,
 			},
 			"filter": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeSet,
 				Required: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"criteria": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"contains": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"eq": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"exists": {
-							Type:     schema.TypeBool,
+							Type:     nullable.TypeNullableBool,
 							Optional: true,
 							Computed: true,
 						},
@@ -60,7 +65,7 @@ func ResourceArchiveRule() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -87,7 +92,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		in.Filter = expandFilter(v.(map[string]interface{}))
+		in.Filter = expandFilter(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateArchiveRuleWithContext(ctx, in)
@@ -134,7 +139,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChanges("filter") {
-		in.Filter = expandFilter(d.Get("filter").(map[string]interface{}))
+		in.Filter = expandFilter(d.Get("filter").(*schema.Set))
 
 	}
 
@@ -195,49 +200,59 @@ func FindArchiveRule(ctx context.Context, conn *accessanalyzer.AccessAnalyzer, a
 	return out.ArchiveRule, nil
 }
 
-func flattenFilter(filter map[string]*accessanalyzer.Criterion) map[string]interface{} {
+func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 	if filter == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	// m := map[string]interface{}{}
+	l := make([]interface{}, 0, 0)
 
 	for key, value := range filter {
 		val := make(map[string]interface{})
+		val["criteria"] = key
 		val["contains"] = aws.ToStringSlice(value.Contains)
 		val["eq"] = aws.ToStringSlice(value.Eq)
 		val["exists"] = aws.ToBool(value.Exists)
 		val["neq"] = aws.ToStringSlice(value.Neq)
 
-		m[key] = val
+		l = append(l, val)
 	}
 
-	return m
+	return l
 }
 
-func expandFilter(tfMap map[string]interface{}) map[string]*accessanalyzer.Criterion {
-	if tfMap == nil {
+func expandFilter(l *schema.Set) map[string]*accessanalyzer.Criterion {
+	if len(l.List()) == 0 || l.List()[0] == nil {
 		return nil
 	}
 
 	a := make(map[string]*accessanalyzer.Criterion)
 
-	for key, value := range tfMap {
+	for _, value := range l.List() {
 		c := &accessanalyzer.Criterion{}
 		if v, ok := value.(map[string]interface{})["contains"]; ok {
-			c.Contains = aws.StringSlice(v.([]string))
+			if len(v.([]interface{})) > 0 {
+				c.Contains = flex.ExpandStringList(v.([]interface{}))
+			}
 		}
 		if v, ok := value.(map[string]interface{})["eq"]; ok {
-			c.Eq = aws.StringSlice(v.([]string))
-		}
-		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			c.Exists = aws.Bool(v.(bool))
+			if len(v.([]interface{})) > 0 {
+				c.Eq = flex.ExpandStringList(v.([]interface{}))
+			}
 		}
 		if v, ok := value.(map[string]interface{})["neq"]; ok {
-			c.Neq = aws.StringSlice(v.([]string))
+			if len(v.([]interface{})) > 0 {
+				c.Neq = flex.ExpandStringList(v.([]interface{}))
+			}
+		}
+		if v, ok := value.(map[string]interface{})["exists"]; ok {
+			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
+				c.Exists = aws.Bool(val)
+			}
 		}
 
-		a[key] = c
+		a[value.(map[string]interface{})["criteria"].(string)] = c
 	}
 
 	return a

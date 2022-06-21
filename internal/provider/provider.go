@@ -904,7 +904,8 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_analyzer":    accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_archiverule": accessanalyzer.ResourceArchiveRule(),
 
 			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
