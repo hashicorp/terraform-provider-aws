@@ -91,6 +91,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the FAQ.
 * `created_at` - The Unix datetime that the FAQ was created.
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
+* `faq_id` - The identifier of the FAQ.
 * `id` - The unique identifiers of the FAQ and index separated by a slash (`/`)
 * `status` - The status of the FAQ. It is ready to use when the status is ACTIVE.
 * `updated_at` - The date and time that the FAQ was last updated.

@@ -56,6 +56,10 @@ func ResourceFaq() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"faq_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"file_format": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -241,6 +245,7 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("description", resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
+	d.Set("faq_id", resp.Id)
 	d.Set("file_format", resp.FileFormat)
 	d.Set("index_id", resp.IndexId)
 	d.Set("language_code", resp.LanguageCode)

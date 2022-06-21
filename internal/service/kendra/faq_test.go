@@ -41,6 +41,7 @@ func testAccFaq_basic(t *testing.T) {
 					testAccCheckFaqExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/faq/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "faq_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName5),
