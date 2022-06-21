@@ -91,7 +91,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the FAQ.
 * `created_at` - The Unix datetime that the FAQ was created.
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
-* `id` - the unique identifiers of the FAQ and index separated by a slash (`/`)
+* `id` - The unique identifiers of the FAQ and index separated by a slash (`/`)
+* `status` - The status of the FAQ. It is ready to use when the status is ACTIVE.
 * `updated_at` - The date and time that the FAQ was last updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
