@@ -1,14 +1,15 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection"
 description: |-
-  Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
+  Manages a Site-to-Site VPN connection. A Site-to-Site VPN connection is an Internet Protocol security (IPsec) VPN connection between a VPC and an on-premises network.
 ---
 
 # Resource: aws_vpn_connection
 
-Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
+Manages a Site-to-Site VPN connection. A Site-to-Site VPN connection is an Internet Protocol security (IPsec) VPN connection between a VPC and an on-premises network.
+Any new Site-to-Site VPN connection that you create is an [AWS VPN connection](https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-categories.html).
 
 ~> **Note:** All arguments including `tunnel1_preshared_key` and `tunnel2_preshared_key` will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
@@ -126,8 +127,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the VPN Connection.
 * `id` - The amazon-assigned ID of the VPN connection.
+* `core_network_arn` - The ARN of the core network.
+* `core_network_attachment_arn` - The ARN of the core network attachment.
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
+* `routes` - The static routes associated with the VPN connection. Detailed below.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
@@ -143,12 +147,27 @@ In addition to all arguments above, the following attributes are exported:
 * `tunnel2_preshared_key` - The preshared key of the second VPN tunnel.
 * `tunnel2_bgp_asn` - The bgp asn number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - The bgp holdtime of the second VPN tunnel.
+* `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
 * `vpn_gateway_id` - The ID of the virtual private gateway to which the connection is attached.
 
+### routes
+
+* `destination_cidr_block` - The CIDR block associated with the local subnet of the customer data center.
+* `source` - Indicates how the routes were provided.
+* `state` - The current state of the static route.
+
+### vgw_telemetry
+
+* `accepted_route_count` - The number of accepted routes.
+* `certificate_arn` - The Amazon Resource Name (ARN) of the VPN tunnel endpoint certificate.
+* `last_status_change` - The date and time of the last change in status.
+* `outside_ip_address` - The Internet-routable IP address of the virtual private gateway's outside interface.
+* `status` - The status of the VPN tunnel.
+* `status_message` - If an error occurs, a description of the error.
 
 ## Import
 
-VPN Connections can be imported using the `vpn connection id`, e.g.
+VPN Connections can be imported using the `vpn connection id`, e.g.,
 
 ```
 $ terraform import aws_vpn_connection.testvpnconnection vpn-40f41529

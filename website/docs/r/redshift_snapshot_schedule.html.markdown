@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Snapshot Schedule can be imported using the `identifier`, e.g.
+Redshift Snapshot Schedule can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule

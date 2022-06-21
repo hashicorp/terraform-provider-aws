@@ -96,13 +96,17 @@ The follow arguments are optional:
 * `partition_index` - (Optional) Configuration block for a maximum of 3 partition indexes. See [`partition_index`](#partition_index) below.
 * `partition_keys` - (Optional) Configuration block of columns by which the table is partitioned. Only primitive types are supported as partition keys. See [`partition_keys`](#partition_keys) below.
 * `retention` - (Optional) Retention time for this table.
-* `storage_descriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables. html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
+* `storage_descriptor` - (Optional) Configuration block for information about the physical storage of this table. For more information, refer to the [Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-catalog-tables.html#aws-glue-api-catalog-tables-StorageDescriptor). See [`storage_descriptor`](#storage_descriptor) below.
 * `table_type` - (Optional) Type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `target_table` - (Optional) Configuration block of a target table for resource linking. See [`target_table`](#target_table) below.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
 
 ### partition_index
+
+~> **NOTE:** A `partition_index` cannot be added to an existing `glue_catalog_table`.
+This will destroy and recreate the table, possibly resulting in data loss.
+To add an index to an existing table, see the [`glue_partition_index` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
 
 * `index_name` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
@@ -123,7 +127,7 @@ The follow arguments are optional:
 * `number_of_buckets` - (Optional) Must be specified if the table contains any dimension columns.
 * `output_format` - (Optional) Output format: SequenceFileOutputFormat (binary), or IgnoreKeyTextOutputFormat, or a custom format.
 * `parameters` - (Optional) User-supplied properties in key-value form.
-* `schema_reference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema-reference) below.
+* `schema_reference` - (Optional) Object that references a schema stored in the AWS Glue Schema Registry. When creating a table, you can pass an empty list of columns for the schema, and instead use a schema reference. See [Schema Reference](#schema_reference) below.
 * `ser_de_info` - (Optional) Configuration block for serialization and deserialization ("SerDe") information. See [`ser_de_info`](#ser_de_info) below.
 * `skewed_info` - (Optional) Configuration block with information about values that appear very frequently in a column (skewed values). See [`skewed_info`](#skewed_info) below.
 * `sort_columns` - (Optional) Configuration block for the sort order of each bucket in the table. See [`sort_columns`](#sort_columns) below.
@@ -180,7 +184,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.
+Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.,
 
 ```
 $ terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable

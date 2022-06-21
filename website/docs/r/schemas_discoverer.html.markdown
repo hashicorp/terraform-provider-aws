@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge discoverers can be imported using the `id`, e.g.
+EventBridge discoverers can be imported using the `id`, e.g.,
 
 ```console
 $ terraform import aws_schemas_discoverer.test 123

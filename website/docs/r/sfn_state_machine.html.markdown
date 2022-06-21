@@ -1,5 +1,5 @@
 ---
-subcategory: "Step Function (SFN)"
+subcategory: "SFN (Step Functions)"
 layout: "aws"
 page_title: "AWS: aws_sfn_state_machine"
 description: |-
@@ -129,7 +129,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-State Machines can be imported using the `arn`, e.g.
+State Machines can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_sfn_state_machine.foo arn:aws:states:eu-west-1:123456789098:stateMachine:bar

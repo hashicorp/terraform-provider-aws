@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_authorization_rule"
 description: |-
@@ -34,6 +34,13 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+`aws_ec2_client_vpn_authorization_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for rule authorization
+- `delete` - (Default `10 minutes`) Used for rule revocation
 
 ## Import
 

@@ -57,7 +57,7 @@ The following arguments are supported:
 
 `workspace_properties` supports the following:
 
-* `compute_type_name` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO` and `GRAPHICSPRO`.
+* `compute_type_name` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
 * `root_volume_size_gib` – (Optional) The size of the root volume.
 * `running_mode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
@@ -84,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Workspaces can be imported using their ID, e.g.
+Workspaces can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv

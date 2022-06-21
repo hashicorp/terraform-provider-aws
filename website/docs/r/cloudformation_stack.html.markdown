@@ -79,7 +79,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudformation Stacks can be imported using the `name`, e.g.
+Cloudformation Stacks can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudformation_stack.stack networking-stack

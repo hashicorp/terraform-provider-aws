@@ -18,7 +18,7 @@ resource "aws_guardduty_ipset" "example" {
   activate    = true
   detector_id = aws_guardduty_detector.primary.id
   format      = "TXT"
-  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.MyIPSet.bucket}/${aws_s3_bucket_object.MyIPSet.key}"
+  location    = "https://s3.amazonaws.com/${aws_s3_object.MyIPSet.bucket}/${aws_s3_object.MyIPSet.key}"
   name        = "MyIPSet"
 }
 
@@ -27,11 +27,15 @@ resource "aws_guardduty_detector" "primary" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  acl = "private"
+  # ... other configuration
 }
 
-resource "aws_s3_bucket_object" "MyIPSet" {
-  acl     = "public-read"
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_s3_object" "MyIPSet" {
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.bucket.id
   key     = "MyIPSet"
@@ -59,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty IPSet can be imported using the the primary GuardDuty detector ID and IPSet ID, e.g.
+GuardDuty IPSet can be imported using the the primary GuardDuty detector ID and IPSet ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012

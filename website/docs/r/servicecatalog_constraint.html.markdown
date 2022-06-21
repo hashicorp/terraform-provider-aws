@@ -84,9 +84,19 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Constraint identifier.
 * `owner` - Owner of the constraint.
 
+## Timeouts
+
+`aws_servicecatalog_constraint` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `3 minutes`)
+- `delete` - (Default `3 minutes`)
+
 ## Import
 
-`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.
+`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs

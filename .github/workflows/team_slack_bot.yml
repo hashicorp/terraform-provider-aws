@@ -13,7 +13,7 @@ jobs:
     - name: open-pr-stats
       uses: breathingdust/github-team-slackbot@v17
       with:
-        github_token: ${{ secrets.GITHUB_ACTIONS_TOKEN}}
+        github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
         org: hashicorp
         repo: terraform-provider-aws
         team_slug: terraform-aws

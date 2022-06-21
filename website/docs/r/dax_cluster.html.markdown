@@ -25,6 +25,10 @@ resource "aws_dax_cluster" "bar" {
 
 The following arguments are supported:
 
+* `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
+cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
+Default value is `NONE`.
+
 * `cluster_name` – (Required) Group identifier. DAX converts this name to
 lowercase
 
@@ -77,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the DAX cluster
 
 * `nodes` - List of node objects including `id`, `address`, `port` and
-`availability_zone`. Referenceable e.g. as
+`availability_zone`. Referenceable e.g., as
 `${aws_dax_cluster.test.nodes.0.address}`
 
 * `configuration_endpoint` - The configuration endpoint for this DAX cluster,
@@ -100,7 +104,7 @@ consisting of a DNS name and a port number
 
 ## Import
 
-DAX Clusters can be imported using the `cluster_name`, e.g.
+DAX Clusters can be imported using the `cluster_name`, e.g.,
 
 ```
 $ terraform import aws_dax_cluster.my_cluster my_cluster

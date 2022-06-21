@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_session_context"
 description: |-
@@ -30,7 +30,7 @@ Combined with `aws_caller_identity`, you can get the current user's source IAM r
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "example" {
-  arn = data.aws_called_identity.current.arn
+  arn = data.aws_caller_identity.current.arn
 }
 ```
 
@@ -38,7 +38,7 @@ data "aws_iam_session_context" "example" {
 
 * `arn` - (Required) ARN for an assumed role.
 
-~> If `arn` is a non-role ARN (or non-ARN), Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
+~> If `arn` is a non-role ARN, Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
 
 ## Attributes Reference
 

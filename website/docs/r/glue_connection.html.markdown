@@ -59,6 +59,7 @@ The following arguments are supported:
 * `match_criteria` – (Optional) A list of criteria that can be used in selecting this connection.
 * `name` – (Required) The name of the connection.
 * `physical_connection_requirements` - (Optional) A map of physical connection requirements, such as VPC and SecurityGroup. Defined below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### physical_connection_requirements
 
@@ -72,10 +73,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Catalog ID and name of the connection
 * `arn` - The ARN of the Glue Connection.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Glue Connections can be imported using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`, e.g.
+Glue Connections can be imported using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`, e.g.,
 
 ```
 $ terraform import aws_glue_connection.MyConnection 123456789012:MyConnection

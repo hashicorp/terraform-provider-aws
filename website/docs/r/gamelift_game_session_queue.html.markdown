@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_session_queue"
 description: |-
-  Provides a Gamelift Game Session Queue resource.
+  Provides a GameLift Game Session Queue resource.
 ---
 
 # Resource: aws_gamelift_game_session_queue
 
-Provides an Gamelift Game Session Queue resource.
+Provides an GameLift Game Session Queue resource.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Game Session Queues can be imported by their `name`, e.g.
+GameLift Game Session Queues can be imported by their `name`, e.g.,
 
 ```
 $ terraform import aws_gamelift_game_session_queue.example example

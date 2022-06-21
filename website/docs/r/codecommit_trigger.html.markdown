@@ -10,6 +10,8 @@ description: |-
 
 Provides a CodeCommit Trigger Resource.
 
+~> **NOTE:** Terraform currently can create only one trigger per repository, even if multiple aws_codecommit_trigger resources are defined. Moreover, creating triggers with Terraform will delete all other triggers in the repository (also manually-created triggers).
+
 ## Example Usage
 
 ```terraform
