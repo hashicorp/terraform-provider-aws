@@ -27,6 +27,7 @@ func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFaqCreate,
 		ReadContext:   resourceFaqRead,
+		UpdateContext: resourceFaqUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -267,6 +268,20 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("updating Kendra Faq (%s) tags: %s", d.Id(), err))
+		}
+	}
+
+	return resourceFaqRead(ctx, d, meta)
 }
 
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
