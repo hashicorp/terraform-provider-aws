@@ -138,10 +138,6 @@ resource "aws_subnet" "test" {
 
 data "aws_caller_identity" "current" {}
 
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
@@ -157,7 +153,7 @@ resource "aws_vpc_endpoint_service" "test" {
 resource "aws_vpc_endpoint_service_allowed_principal" "test" {
   vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
 
-  principal_arn = data.aws_iam_session_context.current.issuer_arn
+  principal_arn = data.aws_caller_identity.current.arn
 }
 `, rName))
 }
