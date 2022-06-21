@@ -18,6 +18,10 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 			"Tags":              testAccAnalyzer_Tags,
 			"Type_Organization": testAccAnalyzer_Type_Organization,
 		},
+		"ArchiveRule": {
+			"basic": testAccAccessAnalyzerArchiveRule_basic,
+			// "disappears": testAccAccessAnalyzerArchiveRule_disappears,
+		},
 	}
 
 	for group, m := range testCases {

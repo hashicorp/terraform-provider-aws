@@ -3,7 +3,6 @@ package accessanalyzer_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -16,53 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-//func TestArchiveRuleExampleUnitTest(t *testing.T) {
-//	testCases := []struct {
-//		TestName string
-//		Input    string
-//		Expected string
-//		Error    bool
-//	}{
-//		{
-//			TestName: "empty",
-//			Input:    "",
-//			Expected: "",
-//			Error:    true,
-//		},
-//		{
-//			TestName: "descriptive name",
-//			Input:    "some input",
-//			Expected: "some output",
-//			Error:    false,
-//		},
-//		{
-//			TestName: "another descriptive name",
-//			Input:    "more input",
-//			Expected: "more output",
-//			Error:    false,
-//		},
-//	}
-//
-//	for _, testCase := range testCases {
-//		t.Run(testCase.TestName, func(t *testing.T) {
-//			got, err := tfaccessanalyzer.FunctionFromResource(testCase.Input)
-//
-//			if err != nil && !testCase.Error {
-//				t.Errorf("got error (%s), expected no error", err)
-//			}
-//
-//			if err == nil && testCase.Error {
-//				t.Errorf("got (%s) and no error, expected error", got)
-//			}
-//
-//			if got != testCase.Expected {
-//				t.Errorf("got %s, expected %s", got, testCase.Expected)
-//			}
-//		})
-//	}
-//}
-
-func TestAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
+func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -75,7 +28,6 @@ func TestAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
-			testAccArchiveRulePreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -85,15 +37,8 @@ func TestAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 				Config: testAccArchiveRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "accessanalyzer", regexp.MustCompile(`archiverule:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "false"),
 				),
 			},
 			{
@@ -105,7 +50,7 @@ func TestAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
+func testAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -118,7 +63,6 @@ func TestAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
-			testAccArchiveRulePreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -194,37 +138,27 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 	}
 }
 
-func testAccArchiveRulePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+func testAccArchiveRuleBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+}
 
-	input := &accessanalyzer.ListArchiveRulesInput{}
-
-	_, err := conn.ListArchiveRules(input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+`, rName)
 }
 
 func testAccArchiveRuleConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccArchiveRuleBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_accessanalyzer_archiverule" "test" {
-  analyzer_name = aws_accessanalyzer_analyzer.test
+  analyzer_name = aws_accessanalyzer_analyzer.test.analyzer_name
   rule_name     = %[1]q
-
-  filter {
-    criteria = "error"
-    exists   = true
-  }
 
   filter {
     criteria = "isPublic"
     eq       = ["false"]
   }
 }
-`, rName)
+`, rName))
 }
