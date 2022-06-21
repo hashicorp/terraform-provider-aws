@@ -12,6 +12,8 @@ Terraform resource for managing an AWS Kendra FAQ.
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_kendra_faq" "example" {
   index_id = aws_kendra_index.example.id
@@ -25,6 +27,38 @@ resource "aws_kendra_faq" "example" {
 
   tags = {
     Name = "Example Kendra Faq"
+  }
+}
+```
+
+### With File Format
+
+```terraform
+resource "aws_kendra_faq" "example" {
+  index_id    = aws_kendra_index.example.id
+  name        = "Example"
+  file_format = "CSV"
+  role_arn    = aws_iam_role.example.arn
+
+  source_s3_path {
+    bucket = aws_s3_bucket.example.id
+    key    = aws_s3_object.example.key
+  }
+}
+```
+
+### With Language Code
+
+```terraform
+resource "aws_kendra_faq" "example" {
+  index_id      = aws_kendra_index.example.id
+  name          = "Example"
+  language_code = "en"
+  role_arn      = aws_iam_role.example.arn
+
+  source_s3_path {
+    bucket = aws_s3_bucket.example.id
+    key    = aws_s3_object.example.key
   }
 }
 ```
