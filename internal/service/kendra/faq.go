@@ -28,6 +28,7 @@ func ResourceFaq() *schema.Resource {
 		CreateContext: resourceFaqCreate,
 		ReadContext:   resourceFaqRead,
 		UpdateContext: resourceFaqUpdate,
+		DeleteContext: resourceFaqDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -284,6 +285,37 @@ func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return resourceFaqRead(ctx, d, meta)
 }
 
+func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
+
+	id, indexId, err := FaqParseResourceID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteFaq(ctx, &kendra.DeleteFaqInput{
+		Id:      aws.String(id),
+		IndexId: aws.String(indexId),
+	})
+
+	var resourceNotFoundException *types.ResourceNotFoundException
+	if errors.As(err, &resourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting Kendra Faq (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitFaqDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for Kendra Faq (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
@@ -301,6 +333,25 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 		if output.Status == types.FaqStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: FaqStatusValues(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusFaq(ctx, conn, id, indexId),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
 		return output, err
 	}
 
