@@ -539,11 +539,15 @@ func testAccVPCEndpointServiceConfig_allowedPrincipals(rName string, count int) 
 	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn
 
-  allowed_principals = (%[2]d == 0 ? [] : [data.aws_caller_identity.current.arn])
+  allowed_principals = (%[2]d == 0 ? [] : [data.aws_iam_session_context.current.issuer_arn])
 
   tags = {
     Name = %[1]q
