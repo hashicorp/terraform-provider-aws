@@ -28,9 +28,10 @@ func ResourceAnomalySubscription() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid AWS Account ID matching expression: [\\S\\s]*"),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -100,6 +101,10 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 			Threshold:        aws.Float64(d.Get("threshold").(float64)),
 		},
+	}
+
+	if v, ok := d.GetOk("account_id"); ok {
+		input.AnomalySubscription.AccountId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
