@@ -29,6 +29,6 @@ data "aws_route53_resolver_firewall_config" "example" {
 
 The following attribute is additionally exported:
 
+* `firewall_fail_open` - Determines how DNS Firewall operates during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply.
 * `id` - The ID of the firewall configuration.
 * `owner_id` - The Amazon Web Services account ID of the owner of the VPC that this firewall configuration applies to.
-* `firewall_fail_open` - Determines how DNS Firewall operates during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply.
