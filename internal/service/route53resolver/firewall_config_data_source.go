@@ -54,6 +54,7 @@ func dataSourceResolverFirewallConfigRead(d *schema.ResourceData, meta interface
 	d.SetId(aws.StringValue(output.FirewallConfig.Id))
 	d.Set("firewall_fail_open", output.FirewallConfig.FirewallFailOpen)
 	d.Set("owner_id", output.FirewallConfig.OwnerId)
+	d.Set("resource_id", output.FirewallConfig.ResourceId)
 
 	return nil
 }
