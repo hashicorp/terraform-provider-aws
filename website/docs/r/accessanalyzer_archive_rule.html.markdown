@@ -16,6 +16,23 @@ Terraform resource for managing an AWS AccessAnalyzer ArchiveRule.
 
 ```terraform
 resource "aws_accessanalyzer_archiverule" "example" {
+  analyser_name = "example-analyzer"
+  rule_name     = "example-rule"
+
+  filter {
+    criteria = "condition.aws:UserId"
+    eq       = ["userid"]
+  }
+
+  filter {
+    criteria = "error"
+    exists   = true
+  }
+
+  filter {
+    criteria = "isPublic"
+    eq       = ["false"]
+  }
 }
 ```
 
@@ -23,31 +40,29 @@ resource "aws_accessanalyzer_archiverule" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description.
+* `analyzer_name` - (Required) Analyzer name.
+* `filter` - (Required) The filter criteria for the archive rule. See [Filter](#filter) for more details.
+* `rule_name` - (Required) Rule name.
 
-The following arguments are optional:
+### Filter
 
-* `optional_arg` - (Optional) Concise argument description.
+* `criteria` - (Required) The filter criteria.
+* `contains` - (Optional) Contains comparator. 
+* `eq` - (Optional) Equals comparator.
+* `exists` - (Optional) Boolean comparator.
+* `neq` - (Optional) Not Equals comparator.
+
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the ArchiveRule.
-* `example_attribute` - Concise description.
-
-## Timeouts
-
-`aws_accessanalyzer_archiverule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-* `create` - (Optional, Default: `60m`)
-* `update` - (Optional, Default: `180m`)
-* `delete` - (Optional, Default: `90m`)
+* `id` - Resource ID in the format: `analyzer_name/rule_name`.
 
 ## Import
 
-AccessAnalyzer ArchiveRule can be imported using the `example_id_arg`, e.g.,
+AccessAnalyzer ArchiveRule can be imported using the `analyzer_name/rule_name`, e.g.,
 
 ```
-$ terraform import aws_accessanalyzer_archiverule.example rft-8012925589
+$ terraform import aws_accessanalyzer_archiverule.example example-analyzer/example-rule
 ```

@@ -112,7 +112,6 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	analyzerName, ruleName := DecodeRuleID(d.Id())
 	out, err := FindArchiveRule(ctx, conn, analyzerName, ruleName)
 
-	// TIP: -- 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AccessAnalyzer ArchiveRule (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -205,7 +204,6 @@ func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 		return nil
 	}
 
-	// m := map[string]interface{}{}
 	l := make([]interface{}, 0, 0)
 
 	for key, value := range filter {
