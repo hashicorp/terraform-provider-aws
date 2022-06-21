@@ -31,36 +31,30 @@ func DataSourceOutpostAssets() *schema.Resource {
 
 func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OutpostsConn
-
 	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,
 	}
 	var asset_ids []string
-
 	err := conn.ListAssetsPages(input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
-
 		for _, asset := range page.Assets {
-
 			if asset == nil {
 				continue
 			}
 			asset_ids = append(asset_ids, aws.StringValue(asset.AssetId))
 		}
-
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts assets: %w", err)
+		return fmt.Errorf("error listing Outposts Assets: %w", err)
 	}
-
 	if len(asset_ids) == 0 {
-		return fmt.Errorf("no Outposts assets found matching criteria; try different search")
+		return fmt.Errorf("no Outposts Assets found matching criteria; try different search")
 	}
 
 	d.SetId(aws.StringValue(outpost_id))
