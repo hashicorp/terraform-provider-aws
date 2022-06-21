@@ -139,7 +139,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, roleName)
 	}, d.IsNewResource())
 

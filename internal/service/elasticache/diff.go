@@ -3,46 +3,10 @@ package elasticache
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	multierror "github.com/hashicorp/go-multierror"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// NormalizeEngineVersion returns a github.com/hashicorp/go-version Version
-// that can handle a regular 1.2.3 version number or a 6.x version number used for
-// ElastiCache Redis version 6 and higher
-func NormalizeEngineVersion(version string) (*gversion.Version, error) {
-	if matches := redisVersionPostV6Regexp.FindStringSubmatch(version); matches != nil {
-		version = matches[1]
-	}
-	return gversion.NewVersion(version)
-}
-
-// CustomizeDiffEngineVersion causes re-creation of the resource if the version is being downgraded
-func CustomizeDiffEngineVersion(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if diff.Id() == "" || !diff.HasChange("engine_version") {
-		return nil
-	}
-
-	o, n := diff.GetChange("engine_version")
-	oVersion, err := NormalizeEngineVersion(o.(string))
-	if err != nil {
-		return fmt.Errorf("error parsing old engine_version: %w", err)
-	}
-	nVersion, err := NormalizeEngineVersion(n.(string))
-	if err != nil {
-		return fmt.Errorf("error parsing new engine_version: %w", err)
-	}
-
-	if nVersion.GreaterThan(oVersion) {
-		return nil
-	}
-
-	return diff.ForceNew("engine_version")
-}
 
 // CustomizeDiffValidateClusterAZMode validates that `num_cache_nodes` is greater than 1 when `az_mode` is "cross-az"
 func CustomizeDiffValidateClusterAZMode(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -54,29 +18,6 @@ func CustomizeDiffValidateClusterAZMode(_ context.Context, diff *schema.Resource
 	}
 
 	return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
-}
-
-// CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	// Memcached: Versions in format <major>.<minor>.<bug fix>
-	// Redis: Starting with version 6, must match <major>.x, prior to version 6, <major>.<minor>.<bug fix>
-	engineVersion, ok := diff.GetOk("engine_version")
-	if !ok {
-		return nil
-	}
-
-	var validator schema.SchemaValidateFunc
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineMemcached {
-		validator = validVersionString
-	} else {
-		validator = ValidRedisVersionString
-	}
-
-	_, errs := validator(engineVersion, "engine_version")
-
-	var err *multierror.Error
-	err = multierror.Append(err, errs...)
-	return err.ErrorOrNil()
 }
 
 // CustomizeDiffValidateClusterNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"

@@ -54,11 +54,11 @@ func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) er
 	default:
 		return fmt.Errorf("error updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 	case ServeSignatureSigning:
-		if err := route53HostedZoneDnssecEnable(conn, d.Id()); err != nil {
+		if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 		}
 	case ServeSignatureNotSigning:
-		if err := route53HostedZoneDnssecDisable(conn, d.Id()); err != nil {
+		if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 		}
 	}
@@ -120,11 +120,11 @@ func resourceHostedZoneDNSSECUpdate(d *schema.ResourceData, meta interface{}) er
 		default:
 			return fmt.Errorf("error updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 		case ServeSignatureSigning:
-			if err := route53HostedZoneDnssecEnable(conn, d.Id()); err != nil {
+			if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
 				return fmt.Errorf("error enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 			}
 		case ServeSignatureNotSigning:
-			if err := route53HostedZoneDnssecDisable(conn, d.Id()); err != nil {
+			if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
 				return fmt.Errorf("error disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 			}
 		}
@@ -167,7 +167,7 @@ func resourceHostedZoneDNSSECDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func route53HostedZoneDnssecDisable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECDisable(conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -187,7 +187,7 @@ func route53HostedZoneDnssecDisable(conn *route53.Route53, hostedZoneID string) 
 	return nil
 }
 
-func route53HostedZoneDnssecEnable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECEnable(conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.EnableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}

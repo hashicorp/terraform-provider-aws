@@ -312,8 +312,8 @@ resource "aws_emr_cluster" "cluster" {
 
   ec2_attributes {
     subnet_id                         = aws_subnet.main.id
-    emr_managed_master_security_group = aws_security_group.allow_all.id
-    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    emr_managed_master_security_group = aws_security_group.allow_access.id
+    emr_managed_slave_security_group  = aws_security_group.allow_access.id
     instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
@@ -380,7 +380,7 @@ resource "aws_security_group" "allow_access" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = aws_vpc.main.cidr_block
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
@@ -653,6 +653,7 @@ EOF
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job flow. See below.
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. See below.
+* `list_steps_states` - (Optional) List of [step states](https://docs.aws.amazon.com/emr/latest/APIReference/API_StepStatus.html) used to filter returned steps
 * `log_encryption_kms_key_id` - (Optional) AWS KMS customer master key (CMK) key ID or arn used for encrypting log files. This attribute is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
+func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+		result, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 		if err != nil {
 			return nil, "", err
@@ -27,9 +27,9 @@ func statusDynamoDBKinesisStreamingDestination(ctx context.Context, conn *dynamo
 	}
 }
 
-func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
+		table, err := findTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -47,7 +47,7 @@ func statusDynamoDBTable(conn *dynamodb.DynamoDB, tableName string) resource.Sta
 	}
 }
 
-func statusDynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -74,7 +74,7 @@ func statusDynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region stri
 	}
 }
 
-func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -101,9 +101,9 @@ func statusDynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region stri
 	}
 }
 
-func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gsi, err := FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
+		gsi, err := findGSIByTableNameIndexName(conn, tableName, indexName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -121,9 +121,9 @@ func statusDynamoDBGSI(conn *dynamodb.DynamoDB, tableName, indexName string) res
 	}
 }
 
-func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pitr, err := FindDynamoDBPITRDescriptionByTableName(conn, tableName)
+		pitr, err := findPITRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -141,9 +141,9 @@ func statusDynamoDBPITR(conn *dynamodb.DynamoDB, tableName string) resource.Stat
 	}
 }
 
-func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ttl, err := FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
+		ttl, err := findTTLRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -161,9 +161,9 @@ func statusDynamoDBTTL(conn *dynamodb.DynamoDB, tableName string) resource.State
 	}
 }
 
-func statusDynamoDBTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
+		table, err := findTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil

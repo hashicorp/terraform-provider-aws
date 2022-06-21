@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceRepository() *schema.Resource {
@@ -118,7 +119,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("upstream"); ok {
-		params.Upstreams = expandCodeArtifactUpstreams(v.([]interface{}))
+		params.Upstreams = expandUpstreams(v.([]interface{}))
 	}
 
 	res, err := conn.CreateRepository(params)
@@ -167,7 +168,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("upstream") {
 		if v, ok := d.GetOk("upstream"); ok {
-			params.Upstreams = expandCodeArtifactUpstreams(v.([]interface{}))
+			params.Upstreams = expandUpstreams(v.([]interface{}))
 			needsUpdate = true
 		}
 	}
@@ -236,13 +237,14 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		Domain:      aws.String(domain),
 		DomainOwner: aws.String(owner),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResRepository, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] CodeArtifact Repository %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Repository (%s): %w", d.Id(), err)
+		return names.Error(names.CodeArtifact, names.ErrActionReading, ResRepository, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Repository.Arn)
@@ -254,13 +256,13 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", sm.Repository.Description)
 
 	if sm.Repository.Upstreams != nil {
-		if err := d.Set("upstream", flattenCodeArtifactUpstreams(sm.Repository.Upstreams)); err != nil {
+		if err := d.Set("upstream", flattenUpstreams(sm.Repository.Upstreams)); err != nil {
 			return fmt.Errorf("[WARN] Error setting upstream: %w", err)
 		}
 	}
 
 	if sm.Repository.ExternalConnections != nil {
-		if err := d.Set("external_connections", flattenCodeArtifactExternalConnections(sm.Repository.ExternalConnections)); err != nil {
+		if err := d.Set("external_connections", flattenExternalConnections(sm.Repository.ExternalConnections)); err != nil {
 			return fmt.Errorf("[WARN] Error setting external_connections: %w", err)
 		}
 	}
@@ -312,7 +314,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandCodeArtifactUpstreams(l []interface{}) []*codeartifact.UpstreamRepository {
+func expandUpstreams(l []interface{}) []*codeartifact.UpstreamRepository {
 	upstreams := []*codeartifact.UpstreamRepository{}
 
 	for _, mRaw := range l {
@@ -327,7 +329,7 @@ func expandCodeArtifactUpstreams(l []interface{}) []*codeartifact.UpstreamReposi
 	return upstreams
 }
 
-func flattenCodeArtifactUpstreams(upstreams []*codeartifact.UpstreamRepositoryInfo) []interface{} {
+func flattenUpstreams(upstreams []*codeartifact.UpstreamRepositoryInfo) []interface{} {
 	if len(upstreams) == 0 {
 		return nil
 	}
@@ -345,7 +347,7 @@ func flattenCodeArtifactUpstreams(upstreams []*codeartifact.UpstreamRepositoryIn
 	return ls
 }
 
-func flattenCodeArtifactExternalConnections(connections []*codeartifact.RepositoryExternalConnectionInfo) []interface{} {
+func flattenExternalConnections(connections []*codeartifact.RepositoryExternalConnectionInfo) []interface{} {
 	if len(connections) == 0 {
 		return nil
 	}

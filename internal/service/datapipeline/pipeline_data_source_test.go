@@ -18,11 +18,11 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDataSourceConfig(rName),
+				Config: testAccPipelineDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -33,7 +33,7 @@ func TestAccDataPipelinePipelineDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataPipelinePipelineDataSourceConfig(name string) string {
+func testAccPipelineDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "test" {
   name = %[1]q

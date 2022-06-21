@@ -31,23 +31,23 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"level_one": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_two": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_three": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_four": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_five": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 					},
@@ -63,7 +63,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 }
 
 // Each level shares the same schema
-func connectUserHierarchyLevelSchema() *schema.Schema {
+func userHierarchyLevelSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -302,11 +301,11 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GrantPermissions(input)
 		if err != nil {
@@ -455,8 +454,8 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenLakeFormationPermissions(cleanPermissions))
-	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(cleanPermissions))
+	d.Set("permissions", flattenPermissions(cleanPermissions))
+	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
@@ -465,7 +464,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
-		if err := d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
+		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
 			return fmt.Errorf("error setting data_location: %w", err)
 		}
 	} else {
@@ -473,7 +472,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return fmt.Errorf("error setting database: %w", err)
 		}
 	} else {
@@ -490,7 +489,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -498,7 +497,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -517,7 +516,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		// since perm list could include Table, get the right one
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table_with_columns: %w", err)
 				}
 				twcSet = true
@@ -566,7 +565,7 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) {
@@ -666,7 +665,7 @@ func ExpandDataLocationResource(tfMap map[string]interface{}) *lakeformation.Dat
 	return apiObject
 }
 
-func flattenLakeFormationDataLocationResource(apiObject *lakeformation.DataLocationResource) map[string]interface{} {
+func flattenDataLocationResource(apiObject *lakeformation.DataLocationResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -702,7 +701,7 @@ func ExpandDatabaseResource(tfMap map[string]interface{}) *lakeformation.Databas
 	return apiObject
 }
 
-func flattenLakeFormationDatabaseResource(apiObject *lakeformation.DatabaseResource) map[string]interface{} {
+func flattenDatabaseResource(apiObject *lakeformation.DatabaseResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -768,7 +767,7 @@ func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *lakefo
 	return apiObject
 }
 
-func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) map[string]interface{} {
+func flattenTableResource(apiObject *lakeformation.TableResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -796,7 +795,7 @@ func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) m
 	return tfMap
 }
 
-func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *lakeformation.TableWithColumnsResource {
+func expandTableColumnsResource(tfMap map[string]interface{}) *lakeformation.TableWithColumnsResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -836,7 +835,7 @@ func expandLakeFormationTableWithColumnsResource(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResource(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -868,7 +867,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 // This only happens in very specific situations:
 // (Select) TWC + ColumnWildcard              = (Select) Table
 // (Select) TWC + ColumnWildcard + ALL_TABLES = (Select) Table + TableWildcard
-func flattenLakeFormationTableWithColumnsResourceAsTable(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResourceAsTable(apiObject *lakeformation.TableWithColumnsResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -892,7 +891,7 @@ func flattenLakeFormationTableWithColumnsResourceAsTable(apiObject *lakeformatio
 	return tfMap
 }
 
-func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+func flattenPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
 	if apiObjects == nil {
 		return nil
 	}
@@ -908,7 +907,7 @@ func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResour
 	return tfList
 }
 
-func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+func flattenGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
 	if apiObjects == nil {
 		return nil
 	}

@@ -119,7 +119,7 @@ func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.KernelGatewayImageConfig = expandSagemakerAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+		input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
 	}
 
 	_, err := conn.CreateAppImageConfig(input)
@@ -152,7 +152,7 @@ func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("app_image_config_name", image.AppImageConfigName)
 	d.Set("arn", arn)
 
-	if err := d.Set("kernel_gateway_image_config", flattenSagemakerAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
+	if err := d.Set("kernel_gateway_image_config", flattenAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
 		return fmt.Errorf("error setting kernel_gateway_image_config: %w", err)
 	}
 
@@ -194,10 +194,10 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-			input.KernelGatewayImageConfig = expandSagemakerAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+			input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Sagemaker App Image Config update config: %#v", *input)
+		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
 		_, err := conn.UpdateAppImageConfig(input)
 		if err != nil {
 			return fmt.Errorf("error updating SageMaker App Image Config: %w", err)
@@ -225,7 +225,7 @@ func resourceAppImageConfigDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
+func expandAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -235,17 +235,17 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sag
 	config := &sagemaker.KernelGatewayImageConfig{}
 
 	if v, ok := m["kernel_spec"].([]interface{}); ok && len(v) > 0 {
-		config.KernelSpecs = expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
+		config.KernelSpecs = expandAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
 	}
 
 	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
-		config.FileSystemConfig = expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(v)
+		config.FileSystemConfig = expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
+func expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -261,7 +261,7 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []i
 	return config
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
+func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -283,17 +283,13 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []i
 			kernelSpec.DisplayName = aws.String(v)
 		}
 
-		if kernelSpec == nil {
-			continue
-		}
-
 		kernelSpecs = append(kernelSpecs, kernelSpec)
 	}
 
 	return kernelSpecs
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -301,17 +297,17 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.Ke
 	m := map[string]interface{}{}
 
 	if config.KernelSpecs != nil {
-		m["kernel_spec"] = flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
+		m["kernel_spec"] = flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
 	}
 
 	if config.FileSystemConfig != nil {
-		m["file_system_config"] = flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(config.FileSystemConfig)
+		m["file_system_config"] = flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config.FileSystemConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -325,7 +321,7 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(conf
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
+func flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0, len(kernelSpecs))
 
 	for _, raw := range kernelSpecs {

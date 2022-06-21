@@ -111,7 +111,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
-		instanceSummary, err := dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
+		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
@@ -160,7 +160,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
+func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
 	var result *connect.InstanceSummary
 
 	input := &connect.ListInstancesInput{

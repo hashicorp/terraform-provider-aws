@@ -28,7 +28,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(Route53TrafficPolicyDocEndpointType_Values(), false),
+							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
 						},
 						"region": {
 							Type:     schema.TypeString,

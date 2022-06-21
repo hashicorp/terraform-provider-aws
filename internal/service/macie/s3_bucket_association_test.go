@@ -18,10 +18,10 @@ func TestAccMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckS3BucketAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_basic(rInt),
@@ -47,10 +47,10 @@ func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, macie.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckS3BucketAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, macie.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3BucketAssociationConfig_accountIdAndPrefix(rInt),

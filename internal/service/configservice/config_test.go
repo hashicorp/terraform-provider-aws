@@ -65,7 +65,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"Description":               testAccOrganizationCustomRule_Description,
 			"ExcludedAccounts":          testAccOrganizationCustomRule_ExcludedAccounts,
 			"InputParameters":           testAccOrganizationCustomRule_InputParameters,
-			"LambdaFunctionArn":         testAccOrganizationCustomRule_LambdaFunctionArn,
+			"LambdaFunctionArn":         testAccOrganizationCustomRule_lambdaFunctionARN,
 			"MaximumExecutionFrequency": testAccOrganizationCustomRule_MaximumExecutionFrequency,
 			"ResourceIdScope":           testAccOrganizationCustomRule_ResourceIdScope,
 			"ResourceTypesScope":        testAccOrganizationCustomRule_ResourceTypesScope,

@@ -45,6 +45,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardSelectOnly":      testAccPermissions_twcWildcardSelectOnly,
 			"wildcardSelectPlus":      testAccPermissions_twcWildcardSelectPlus,
 		},
+		"LFTags": {
+			"basic":      testAccLFTag_basic,
+			"disappears": testAccLFTag_disappears,
+			"values":     testAccLFTag_values,
+		},
 	}
 
 	for group, m := range testCases {

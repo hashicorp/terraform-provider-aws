@@ -14,7 +14,7 @@ jobs:
         days-before-close: 30
         exempt-issue-labels: 'needs-triage'
         exempt-pr-labels: 'needs-triage'
-        operations-per-run: 125
+        operations-per-run: 150
         stale-issue-label: 'stale'
         stale-issue-message: |
           Marking this issue as stale due to inactivity. This helps our maintainers find and focus on the active issues. If this issue receives no comments in the next 30 days it will automatically be closed. Maintainers can also remove the stale label.

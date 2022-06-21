@@ -251,16 +251,16 @@ func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.S
 	if v != nil && aws.StringValue(v.Type) != "" {
 		m := make(map[string]interface{})
 		if v.Type != nil {
-			m["type"] = *v.Type
+			m["type"] = aws.StringValue(v.Type)
 		}
 		if v.Url != nil {
-			m["url"] = *v.Url
+			m["url"] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m["username"] = *v.Username
+			m["username"] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
-			m["revision"] = *v.Revision
+			m["revision"] = aws.StringValue(v.Revision)
 		}
 
 		// v.Password and v.SshKey will, on read, contain the placeholder string
@@ -281,13 +281,13 @@ func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.S
 }
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}
@@ -311,7 +311,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	var dErr error
 
 	for {
-		resp, dErr = client.DescribeStacks(req)
+		resp, dErr = conn.DescribeStacks(req)
 		if dErr != nil {
 			if awserr, ok := dErr.(awserr.Error); ok {
 				if awserr.Code() == "ResourceNotFoundException" {
@@ -319,7 +319,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 						// If we haven't already, try us-east-1, legacy connection
 						notFound++
 						var connErr error
-						client, connErr = opsworksConnForRegion("us-east-1", meta) //lintignore:AWSAT003
+						conn, connErr = connForRegion("us-east-1", meta) //lintignore:AWSAT003
 						if connErr != nil {
 							return connErr
 						}
@@ -339,7 +339,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 			return dErr
 		}
 		// If the stack was found, set the stack_endpoint
-		if region := aws.StringValue(client.Config.Region); region != "" {
+		if region := aws.StringValue(conn.Config.Region); region != "" {
 			log.Printf("[DEBUG] Setting stack_endpoint for (%s) to (%s)", d.Id(), region)
 			if err := d.Set("stack_endpoint", region); err != nil {
 				log.Printf("[WARN] Error setting stack_endpoint: %s", err)
@@ -386,7 +386,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := ListTags(client, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
@@ -413,7 +413,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 // See:
 //  - https://github.com/hashicorp/terraform/pull/12688
 //  - https://github.com/hashicorp/terraform/issues/12842
-func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
+func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
 	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 
 	// Regions are the same, no need to reconfigure
@@ -431,7 +431,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceStackValidate(d)
 	if err != nil {
@@ -469,7 +469,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *opsworks.CreateStackOutput
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		resp, err = client.CreateStack(req)
+		resp, err = conn.CreateStack(req)
 		if err != nil {
 			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
 			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
@@ -490,14 +490,13 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = client.CreateStack(req)
+		resp, err = conn.CreateStack(req)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating Opsworks stack: %s", err)
 	}
 
-	stackId := *resp.StackId
-	d.SetId(stackId)
+	d.SetId(aws.StringValue(resp.StackId))
 
 	if inVpc && *req.UseOpsworksSecurityGroups {
 		// For VPC-based stacks, OpsWorks asynchronously creates some default
@@ -513,10 +512,10 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}
@@ -571,7 +570,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
 
-	_, err = client.UpdateStack(req)
+	_, err = conn.UpdateStack(req)
 	if err != nil {
 		return err
 	}
@@ -586,7 +585,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(client, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
@@ -595,10 +594,10 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
-		client, conErr = opsworksConnForRegion(v, meta)
+		conn, conErr = connForRegion(v, meta)
 		if conErr != nil {
 			return conErr
 		}
@@ -610,7 +609,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting OpsWorks stack: %s", d.Id())
 
-	_, err := client.DeleteStack(req)
+	_, err := conn.DeleteStack(req)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		log.Printf("[DEBUG] OpsWorks Stack (%s) not found to delete; removed from state", d.Id())

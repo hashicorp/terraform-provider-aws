@@ -137,6 +137,7 @@ resource "aws_autoscaling_policy" "example" {
 * `policy_type` - (Optional) The policy type, either "SimpleScaling", "StepScaling", "TargetTrackingScaling", or "PredictiveScaling". If this value isn't provided, AWS will default to "SimpleScaling."
 * `predictive_scaling_configuration` - (Optional) The predictive scaling policy configuration to use with Amazon EC2 Auto Scaling.
 * `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
+* `enabled` - (Optional) Indicates whether the scaling policy is enabled or disabled. Default: `true`.
 
 The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
 

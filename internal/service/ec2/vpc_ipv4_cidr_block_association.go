@@ -137,7 +137,7 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(d *schema.ResourceData, meta inte
 		AssociationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcCidrBlockAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return nil
 	}
 

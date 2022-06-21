@@ -22,10 +22,10 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventStreamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),
@@ -60,10 +60,10 @@ func TestAccPinpointEventStream_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventStreamDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),

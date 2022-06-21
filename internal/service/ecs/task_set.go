@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -567,7 +566,7 @@ func TaskSetParseID(id string) (string, string, string, error) {
 
 func retryTaskSetCreate(conn *ecs.ECS, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout+taskSetCreateTimeout,
+		propagationTimeout+taskSetCreateTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTaskSet(input)
 		},

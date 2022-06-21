@@ -64,12 +64,12 @@ func Create(resName, snakeName string, comments, force bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	s, err := names.ServiceProviderNameUpper(servicePackage)
+	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
 	}
 
-	sn, err := names.AWSServiceName(servicePackage)
+	sn, err := names.FullHumanFriendly(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}

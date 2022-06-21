@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "test" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = aws_organizations_organization.example.id
+      values   = [aws_organizations_organization.example.id]
     }
   }
 }
@@ -123,7 +123,7 @@ data "aws_iam_policy_document" "test" {
     condition {
       test     = "StringEquals"
       variable = "aws:PrincipalOrgID"
-      values   = aws_organizations_organization.example.id
+      values   = [aws_organizations_organization.example.id]
     }
   }
 }

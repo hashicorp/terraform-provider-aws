@@ -250,6 +250,21 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
+			"server_timing_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"sampling_rate": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+					}},
+			},
 		},
 	}
 }
@@ -322,6 +337,14 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		}
 	} else {
 		d.Set("security_headers_config", nil)
+	}
+
+	if apiObject.ServerTimingHeadersConfig != nil {
+		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+			return fmt.Errorf("error setting server_timing_headers_config: %w", err)
+		}
+	} else {
+		d.Set("server_timing_headers_config", nil)
 	}
 
 	return nil

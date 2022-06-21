@@ -214,7 +214,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 	if err != nil {
 		return err
@@ -246,7 +246,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("file_share_name"); ok {
@@ -301,7 +301,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("bucket_region", fileshare.BucketRegion)
-	if err := d.Set("cache_attributes", flattenStorageGatewayNfsFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
+	if err := d.Set("cache_attributes", flattenNFSFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
 		return fmt.Errorf("error setting cache_attributes: %w", err)
 	}
 	if err := d.Set("client_list", flex.FlattenStringSet(fileshare.ClientList)); err != nil {
@@ -315,7 +315,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
-	if err := d.Set("nfs_file_share_defaults", flattenStorageGatewayNfsFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
+	if err := d.Set("nfs_file_share_defaults", flattenNFSFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
 		return fmt.Errorf("error setting nfs_file_share_defaults: %w", err)
 	}
 	d.Set("notification_policy", fileshare.NotificationPolicy)
@@ -345,7 +345,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChangesExcept("tags_all", "tags") {
-		fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 		if err != nil {
 			return err
@@ -369,7 +369,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandNFSFileShareCacheAttributes(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("file_share_name"); ok {
@@ -430,7 +430,7 @@ func resourceNFSFileShareDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandStorageGatewayNfsFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDefaults, error) {
+func expandNFSFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDefaults, error) {
 	if len(l) == 0 || l[0] == nil {
 		return nil, nil
 	}
@@ -457,7 +457,7 @@ func expandStorageGatewayNfsFileShareDefaults(l []interface{}) (*storagegateway.
 	return nfsFileShareDefaults, nil
 }
 
-func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileShareDefaults) []interface{} {
+func flattenNFSFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileShareDefaults) []interface{} {
 	if nfsFileShareDefaults == nil {
 		return []interface{}{}
 	}
@@ -472,7 +472,7 @@ func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegate
 	return []interface{}{m}
 }
 
-func expandStorageGatewayNfsFileShareCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
+func expandNFSFileShareCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -486,7 +486,7 @@ func expandStorageGatewayNfsFileShareCacheAttributes(l []interface{}) *storagega
 	return ca
 }
 
-func flattenStorageGatewayNfsFileShareCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
+func flattenNFSFileShareCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
 	if ca == nil {
 		return []interface{}{}
 	}

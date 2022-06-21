@@ -8,16 +8,15 @@ import (
 )
 
 const (
-	endpointDeletedTimeout        = 5 * time.Minute
 	replicationTaskRunningTimeout = 5 * time.Minute
 )
 
-func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.Endpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
 		Refresh: statusEndpoint(conn, id),
-		Timeout: endpointDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -100,7 +99,7 @@ func waitReplicationTaskStopped(conn *dms.DatabaseMigrationService, id string) e
 		Refresh:    statusReplicationTask(conn, id),
 		Timeout:    replicationTaskRunningTimeout,
 		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+		Delay:      60 * time.Second, // Wait 30 secs before starting
 	}
 
 	// Wait, catching any errors

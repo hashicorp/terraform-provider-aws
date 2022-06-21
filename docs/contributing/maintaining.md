@@ -35,7 +35,7 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp.
 
-Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is a week, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait the week, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Road map items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
+Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is a week, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait the week, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
 
 Notes for each type of pull request are (or will be) available in subsections below.
 
@@ -401,7 +401,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
-| `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | Sagemaker base image to use for tests. |
+| `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_SERVICE_CODE` | Service Code for Service Quotas testing (submits support case). |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_VALUE` | Value of quota increase for Service Quotas testing (submits support case). |

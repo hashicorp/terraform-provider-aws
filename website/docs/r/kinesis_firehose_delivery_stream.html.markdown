@@ -98,6 +98,58 @@ resource "aws_lambda_function" "lambda_processor" {
 }
 ```
 
+### Extended S3 Destination with dynamic partitioning
+These examples use built-in Firehose functionality, rather than requiring a lambda.
+
+```terraform
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+
+    # Example prefix using partitionKeyFromQuery, applicable to JQ processor
+    prefix              = "data/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+
+    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
+    buffer_size = 64
+    processing_configuration {
+      enabled = "true"
+
+      # Multi-record deaggregation processor example
+      processors {
+        type = "RecordDeAggregation"
+        parameters {
+          parameter_name  = "SubRecordType"
+          parameter_value = "JSON"
+        }
+      }
+
+      # New line delimiter processor example
+      processors {
+        type = "AppendDelimiterToRecord"
+      }
+
+      # JQ processor example
+      processors {
+        type = "MetadataExtraction"
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{customer_id:.customer_id}"
+        }
+      }
+    }
+  }
+}
+```
+
 ### S3 Destination (deprecated)
 
 ```terraform
@@ -503,12 +555,12 @@ The `processing_configuration` object supports the following:
 
 The `processors` array objects support the following:
 
-* `type` - (Required) The type of processor. Valid Values: `Lambda`
+* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
 * `parameters` - (Optional) Array of processor parameters. More details are given below
 
 The `parameters` array objects support the following:
 
-* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ~> **NOTE:** Parameters with default values, including `NumberOfRetries`(default: 3), `RoleArn`(default: firehose role ARN), `BufferSizeInMBs`(default: 3), and `BufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.

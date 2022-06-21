@@ -56,7 +56,7 @@ func customActionSchema() *schema.Schema {
 	}
 }
 
-func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.CustomAction {
+func expandCustomActions(l []interface{}) []*networkfirewall.CustomAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.Cust
 			continue
 		}
 		if v, ok := tfMap["action_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			customAction.ActionDefinition = expandNetworkFirewallActionDefinition(v)
+			customAction.ActionDefinition = expandActionDefinition(v)
 		}
 		if v, ok := tfMap["action_name"].(string); ok && v != "" {
 			customAction.ActionName = aws.String(v)
@@ -80,7 +80,7 @@ func expandNetworkFirewallCustomActions(l []interface{}) []*networkfirewall.Cust
 	return customActions
 }
 
-func expandNetworkFirewallActionDefinition(l []interface{}) *networkfirewall.ActionDefinition {
+func expandActionDefinition(l []interface{}) *networkfirewall.ActionDefinition {
 	if l == nil || l[0] == nil {
 		return nil
 	}
@@ -92,13 +92,13 @@ func expandNetworkFirewallActionDefinition(l []interface{}) *networkfirewall.Act
 	customAction := &networkfirewall.ActionDefinition{}
 
 	if v, ok := tfMap["publish_metric_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		customAction.PublishMetricAction = expandNetworkFirewallCustomActionPublishMetricAction(v)
+		customAction.PublishMetricAction = expandCustomActionPublishMetricAction(v)
 	}
 
 	return customAction
 }
 
-func expandNetworkFirewallCustomActionPublishMetricAction(l []interface{}) *networkfirewall.PublishMetricAction {
+func expandCustomActionPublishMetricAction(l []interface{}) *networkfirewall.PublishMetricAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -125,7 +125,7 @@ func expandNetworkFirewallCustomActionPublishMetricAction(l []interface{}) *netw
 	return action
 }
 
-func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []interface{} {
+func flattenCustomActions(c []*networkfirewall.CustomAction) []interface{} {
 	if c == nil {
 		return []interface{}{}
 	}
@@ -133,7 +133,7 @@ func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []in
 	customActions := make([]interface{}, 0, len(c))
 	for _, elem := range c {
 		m := map[string]interface{}{
-			"action_definition": flattenNetworkFirewallActionDefinition(elem.ActionDefinition),
+			"action_definition": flattenActionDefinition(elem.ActionDefinition),
 			"action_name":       aws.StringValue(elem.ActionName),
 		}
 		customActions = append(customActions, m)
@@ -142,29 +142,29 @@ func flattenNetworkFirewallCustomActions(c []*networkfirewall.CustomAction) []in
 	return customActions
 }
 
-func flattenNetworkFirewallActionDefinition(v *networkfirewall.ActionDefinition) []interface{} {
+func flattenActionDefinition(v *networkfirewall.ActionDefinition) []interface{} {
 	if v == nil {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"publish_metric_action": flattenNetworkFirewallPublishMetricAction(v.PublishMetricAction),
+		"publish_metric_action": flattenPublishMetricAction(v.PublishMetricAction),
 	}
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallPublishMetricAction(m *networkfirewall.PublishMetricAction) []interface{} {
+func flattenPublishMetricAction(m *networkfirewall.PublishMetricAction) []interface{} {
 	if m == nil {
 		return []interface{}{}
 	}
 
 	metrics := map[string]interface{}{
-		"dimension": flattenNetworkFirewallDimensions(m.Dimensions),
+		"dimension": flattenDimensions(m.Dimensions),
 	}
 
 	return []interface{}{metrics}
 }
 
-func flattenNetworkFirewallDimensions(d []*networkfirewall.Dimension) []interface{} {
+func flattenDimensions(d []*networkfirewall.Dimension) []interface{} {
 	dimensions := make([]interface{}, 0, len(d))
 	for _, v := range d {
 		dimension := map[string]interface{}{

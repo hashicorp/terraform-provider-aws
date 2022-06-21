@@ -21,7 +21,7 @@ func TestAccMemoryDBUserDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(rName),
+				Config: testAccUserDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "access_string", resourceName, "access_string"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -37,7 +37,7 @@ func TestAccMemoryDBUserDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserDataSourceConfig(rName string) string {
+func testAccUserDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"

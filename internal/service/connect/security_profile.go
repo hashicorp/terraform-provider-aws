@@ -148,7 +148,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", resp.SecurityProfile.SecurityProfileName)
 
 	// reading permissions requires a separate API call
-	permissions, err := getConnectSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
+	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", securityProfileID, err))
@@ -241,7 +241,7 @@ func SecurityProfileParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func getConnectSecurityProfilePermissions(ctx context.Context, conn *connect.Connect, instanceID, securityProfileID string) ([]*string, error) {
+func getSecurityProfilePermissions(ctx context.Context, conn *connect.Connect, instanceID, securityProfileID string) ([]*string, error) {
 	var result []*string
 
 	input := &connect.ListSecurityProfilePermissionsInput{

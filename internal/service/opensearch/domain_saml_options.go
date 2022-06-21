@@ -86,13 +86,13 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 							Optional:         true,
 							Default:          60,
 							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: opensearchDomainSamlOptionsDiffSupress,
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 						"subject_key": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "",
-							DiffSuppressFunc: opensearchDomainSamlOptionsDiffSupress,
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 					},
 				},
@@ -100,7 +100,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 	}
 }
-func opensearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
 		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
 			return true

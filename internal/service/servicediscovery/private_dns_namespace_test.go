@@ -26,12 +26,12 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
@@ -43,7 +43,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPrivateDNSNamespaceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -60,12 +60,12 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePrivateDNSNamespace(), resourceName),
@@ -86,12 +86,12 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigDescription(rName, "test"),
+				Config: testAccPrivateDNSNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -113,12 +113,12 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(rName),
+				Config:      testAccPrivateDNSNamespaceConfig_overlapping(rName),
 				ExpectError: regexp.MustCompile(`ConflictingDomainExists`),
 			},
 		},
@@ -135,12 +135,12 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -150,11 +150,11 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPrivateDNSNamespaceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPrivateDNSNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -163,7 +163,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -224,7 +224,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
+func testAccPrivateDNSNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -241,7 +241,7 @@ resource "aws_service_discovery_private_dns_namespace" "test" {
 `, rName)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfigDescription(rName, description string) string {
+func testAccPrivateDNSNamespaceConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -259,7 +259,7 @@ resource "aws_service_discovery_private_dns_namespace" "test" {
 `, description, rName)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(rName string) string {
+func testAccPrivateDNSNamespaceConfig_overlapping(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -282,7 +282,7 @@ resource "aws_service_discovery_private_dns_namespace" "subdomain" {
 `, rName)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccPrivateDNSNamespaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -303,7 +303,7 @@ resource "aws_service_discovery_private_dns_namespace" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPrivateDNSNamespaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -325,7 +325,7 @@ resource "aws_service_discovery_private_dns_namespace" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccPrivateDNSNamespaceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR (Elastic Container Registry)"
+subcategory: "ECR Public"
 layout: "aws"
 page_title: "AWS: aws_ecrpublic_authorization_token"
 description: |-

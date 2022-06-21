@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1087,7 +1086,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(tfiam.PropagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(input)
 
 			if err != nil {
@@ -1240,7 +1239,7 @@ func resourceLoadBalancerHash(v interface{}) int {
 
 func retryServiceCreate(conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
 	var output *ecs.CreateServiceOutput
-	err := resource.Retry(tfiam.PropagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateService(&input)
 

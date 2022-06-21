@@ -132,6 +132,7 @@ func ResourceImageRecipe() *schema.Resource {
 						"component_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"parameter": {
@@ -142,11 +143,13 @@ func ResourceImageRecipe() *schema.Resource {
 									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -161,6 +164,7 @@ func ResourceImageRecipe() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name": {
@@ -194,6 +198,7 @@ func ResourceImageRecipe() *schema.Resource {
 						"uninstall_after_build": {
 							Type:     schema.TypeBool,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},

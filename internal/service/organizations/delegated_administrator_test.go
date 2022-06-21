@@ -31,7 +31,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
@@ -65,7 +65,7 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedAdministratorConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
 					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
@@ -162,7 +162,7 @@ func testAccCheckDelegatedAdministratorExists(n string, org *organizations.Deleg
 	}
 }
 
-func testAccDelegatedAdministratorConfig(servicePrincipal string) string {
+func testAccDelegatedAdministratorConfig_basic(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"

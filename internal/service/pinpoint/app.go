@@ -196,15 +196,15 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	//}
 
 	if d.HasChange("campaign_hook") {
-		appSettings.CampaignHook = expandPinpointCampaignHook(d.Get("campaign_hook").([]interface{}))
+		appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
 	}
 
 	if d.HasChange("limits") {
-		appSettings.Limits = expandPinpointCampaignLimits(d.Get("limits").([]interface{}))
+		appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
 	}
 
 	if d.HasChange("quiet_time") {
-		appSettings.QuietTime = expandPinpointQuietTime(d.Get("quiet_time").([]interface{}))
+		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
 	}
 
 	req := pinpoint.UpdateApplicationSettingsInput{
@@ -269,13 +269,13 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("application_id", app.ApplicationResponse.Id)
 	d.Set("arn", arn)
 
-	if err := d.Set("campaign_hook", flattenPinpointCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
+	if err := d.Set("campaign_hook", flattenCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
 		return fmt.Errorf("error setting campaign_hook: %s", err)
 	}
-	if err := d.Set("limits", flattenPinpointCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
+	if err := d.Set("limits", flattenCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
 		return fmt.Errorf("error setting limits: %s", err)
 	}
-	if err := d.Set("quiet_time", flattenPinpointQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
+	if err := d.Set("quiet_time", flattenQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
 		return fmt.Errorf("error setting quiet_time: %s", err)
 	}
 
@@ -317,7 +317,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandPinpointCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
+func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -341,7 +341,7 @@ func expandPinpointCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 	return ch
 }
 
-func flattenPinpointCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
+func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
@@ -355,7 +355,7 @@ func flattenPinpointCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	return l
 }
 
-func expandPinpointCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
+func expandCampaignLimits(configs []interface{}) *pinpoint.CampaignLimits {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -383,7 +383,7 @@ func expandPinpointCampaignLimits(configs []interface{}) *pinpoint.CampaignLimit
 	return &cl
 }
 
-func flattenPinpointCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
+func flattenCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}
@@ -398,7 +398,7 @@ func flattenPinpointCampaignLimits(cl *pinpoint.CampaignLimits) []interface{} {
 	return l
 }
 
-func expandPinpointQuietTime(configs []interface{}) *pinpoint.QuietTime {
+func expandQuietTime(configs []interface{}) *pinpoint.QuietTime {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -418,7 +418,7 @@ func expandPinpointQuietTime(configs []interface{}) *pinpoint.QuietTime {
 	return &qt
 }
 
-func flattenPinpointQuietTime(qt *pinpoint.QuietTime) []interface{} {
+func flattenQuietTime(qt *pinpoint.QuietTime) []interface{} {
 	l := make([]interface{}, 0)
 
 	m := map[string]interface{}{}

@@ -25,9 +25,9 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityNotificationTopicDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, ses.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIdentityNotificationTopicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccIdentityNotificationTopicConfig_basic, domain),

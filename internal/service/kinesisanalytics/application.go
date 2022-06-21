@@ -625,9 +625,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ApplicationCode:          aws.String(d.Get("code").(string)),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
 		ApplicationName:          aws.String(applicationName),
-		CloudWatchLoggingOptions: expandKinesisAnalyticsCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
-		Inputs:                   expandKinesisAnalyticsInputs(d.Get("inputs").([]interface{})),
-		Outputs:                  expandKinesisAnalyticsOutputs(d.Get("outputs").(*schema.Set).List()),
+		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
+		Inputs:                   expandInputs(d.Get("inputs").([]interface{})),
+		Outputs:                  expandOutputs(d.Get("outputs").(*schema.Set).List()),
 	}
 
 	if len(tags) > 0 {
@@ -653,7 +653,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
 			ApplicationName:             aws.String(applicationName),
 			CurrentApplicationVersionId: aws.Int64(1), // Newly created application version.
-			ReferenceDataSource:         expandKinesisAnalyticsReferenceDataSource(v),
+			ReferenceDataSource:         expandReferenceDataSource(v),
 		}
 
 		log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) reference data source: %s", d.Id(), input)
@@ -687,7 +687,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", d.Id(), err)
 			}
 
-			err = kinesisAnalyticsStartApplication(conn, application, inputStartingPosition)
+			err = startApplication(conn, application, inputStartingPosition)
 
 			if err != nil {
 				return err
@@ -727,19 +727,19 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", application.ApplicationStatus)
 	d.Set("version", application.ApplicationVersionId)
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
+	if err := d.Set("cloudwatch_logging_options", flattenCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
-	if err := d.Set("inputs", flattenKinesisAnalyticsInputDescriptions(application.InputDescriptions)); err != nil {
+	if err := d.Set("inputs", flattenInputDescriptions(application.InputDescriptions)); err != nil {
 		return fmt.Errorf("error setting inputs: %w", err)
 	}
 
-	if err := d.Set("outputs", flattenKinesisAnalyticsOutputDescriptions(application.OutputDescriptions)); err != nil {
+	if err := d.Set("outputs", flattenOutputDescriptions(application.OutputDescriptions)); err != nil {
 		return fmt.Errorf("error setting outputs: %w", err)
 	}
 
-	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSourceDescriptions(application.ReferenceDataSourceDescriptions)); err != nil {
+	if err := d.Set("reference_data_sources", flattenReferenceDataSourceDescriptions(application.ReferenceDataSourceDescriptions)); err != nil {
 		return fmt.Errorf("error setting reference_data_sources: %w", err)
 	}
 
@@ -863,7 +863,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				input := &kinesisanalytics.AddApplicationInputInput{
 					ApplicationName:             aws.String(applicationName),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-					Input:                       expandKinesisAnalyticsInput(n.([]interface{})),
+					Input:                       expandInput(n.([]interface{})),
 				}
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input: %s", d.Id(), input)
@@ -887,7 +887,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error deleting Kinesis Analytics Application (%s) input", d.Id())
 			} else {
 				// Update existing input.
-				inputUpdate := expandKinesisAnalyticsInputUpdate(n.([]interface{}))
+				inputUpdate := expandInputUpdate(n.([]interface{}))
 
 				if d.HasChange("inputs.0.processing_configuration") {
 					o, n := d.GetChange("inputs.0.processing_configuration")
@@ -900,7 +900,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 							ApplicationName:              aws.String(applicationName),
 							CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionId),
 							InputId:                      inputUpdate.InputId,
-							InputProcessingConfiguration: expandKinesisAnalyticsInputProcessingConfiguration(n.([]interface{})),
+							InputProcessingConfiguration: expandInputProcessingConfiguration(n.([]interface{})),
 						}
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input processing configuration: %s", d.Id(), input)
@@ -1008,7 +1008,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				input := &kinesisanalytics.AddApplicationOutputInput{
 					ApplicationName:             aws.String(applicationName),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-					Output:                      expandKinesisAnalyticsOutput(vOutput),
+					Output:                      expandOutput(vOutput),
 				}
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) output: %s", d.Id(), input)
@@ -1037,7 +1037,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
 					ApplicationName:             aws.String(applicationName),
 					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-					ReferenceDataSource:         expandKinesisAnalyticsReferenceDataSource(n.([]interface{})),
+					ReferenceDataSource:         expandReferenceDataSource(n.([]interface{})),
 				}
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) reference data source: %s", d.Id(), input)
@@ -1082,7 +1082,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				currentApplicationVersionId += 1
 			} else {
 				// Update existing reference data source.
-				referenceDataSourceUpdate := expandKinesisAnalyticsReferenceDataSourceUpdate(n.([]interface{}))
+				referenceDataSourceUpdate := expandReferenceDataSourceUpdate(n.([]interface{}))
 
 				input.ApplicationUpdate.ReferenceDataSourceUpdates = []*kinesisanalytics.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
 
@@ -1138,7 +1138,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 
-				err = kinesisAnalyticsStartApplication(conn, application, inputStartingPosition)
+				err = startApplication(conn, application, inputStartingPosition)
 
 				if err != nil {
 					return err
@@ -1147,7 +1147,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				log.Printf("[DEBUG] Kinesis Analytics Application (%s) has no inputs", d.Id())
 			}
 		} else {
-			err = kinesisAnalyticsStopApplication(conn, application)
+			err = stopApplication(conn, application)
 
 			if err != nil {
 				return err
@@ -1208,7 +1208,7 @@ func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func kinesisAnalyticsStartApplication(conn *kinesisanalytics.KinesisAnalytics, application *kinesisanalytics.ApplicationDetail, inputStartingPosition string) error {
+func startApplication(conn *kinesisanalytics.KinesisAnalytics, application *kinesisanalytics.ApplicationDetail, inputStartingPosition string) error {
 	applicationARN := aws.StringValue(application.ApplicationARN)
 	applicationName := aws.StringValue(application.ApplicationName)
 
@@ -1247,7 +1247,7 @@ func kinesisAnalyticsStartApplication(conn *kinesisanalytics.KinesisAnalytics, a
 	return nil
 }
 
-func kinesisAnalyticsStopApplication(conn *kinesisanalytics.KinesisAnalytics, application *kinesisanalytics.ApplicationDetail) error {
+func stopApplication(conn *kinesisanalytics.KinesisAnalytics, application *kinesisanalytics.ApplicationDetail) error {
 	applicationARN := aws.StringValue(application.ApplicationARN)
 	applicationName := aws.StringValue(application.ApplicationName)
 
@@ -1273,7 +1273,7 @@ func kinesisAnalyticsStopApplication(conn *kinesisanalytics.KinesisAnalytics, ap
 	return nil
 }
 
-func expandKinesisAnalyticsCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalytics.CloudWatchLoggingOption {
+func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalytics.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
 	}
@@ -1292,15 +1292,15 @@ func expandKinesisAnalyticsCloudWatchLoggingOptions(vCloudWatchLoggingOptions []
 	return []*kinesisanalytics.CloudWatchLoggingOption{cloudWatchLoggingOption}
 }
 
-func expandKinesisAnalyticsInputs(vInputs []interface{}) []*kinesisanalytics.Input {
+func expandInputs(vInputs []interface{}) []*kinesisanalytics.Input {
 	if len(vInputs) == 0 || vInputs[0] == nil {
 		return nil
 	}
 
-	return []*kinesisanalytics.Input{expandKinesisAnalyticsInput(vInputs)}
+	return []*kinesisanalytics.Input{expandInput(vInputs)}
 }
 
-func expandKinesisAnalyticsInput(vInput []interface{}) *kinesisanalytics.Input {
+func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
@@ -1322,11 +1322,11 @@ func expandKinesisAnalyticsInput(vInput []interface{}) *kinesisanalytics.Input {
 	}
 
 	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]interface{}); ok {
-		input.InputProcessingConfiguration = expandKinesisAnalyticsInputProcessingConfiguration(vInputProcessingConfiguration)
+		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
 	if vInputSchema, ok := mInput["schema"].([]interface{}); ok {
-		input.InputSchema = expandKinesisAnalyticsSourceSchema(vInputSchema)
+		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
 	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
@@ -1366,7 +1366,7 @@ func expandKinesisAnalyticsInput(vInput []interface{}) *kinesisanalytics.Input {
 	return input
 }
 
-func expandKinesisAnalyticsInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalytics.InputProcessingConfiguration {
+func expandInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalytics.InputProcessingConfiguration {
 	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
 		return nil
 	}
@@ -1393,7 +1393,7 @@ func expandKinesisAnalyticsInputProcessingConfiguration(vInputProcessingConfigur
 	return inputProcessingConfiguration
 }
 
-func expandKinesisAnalyticsInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
+func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 	if len(vInput) == 0 || vInput[0] == nil {
 		return nil
 	}
@@ -1447,7 +1447,7 @@ func expandKinesisAnalyticsInputUpdate(vInput []interface{}) *kinesisanalytics.I
 		mInputSchema := vInputSchema[0].(map[string]interface{})
 
 		if vRecordColumns, ok := mInputSchema["record_columns"].([]interface{}); ok {
-			inputSchemaUpdate.RecordColumnUpdates = expandKinesisAnalyticsRecordColumns(vRecordColumns)
+			inputSchemaUpdate.RecordColumnUpdates = expandRecordColumns(vRecordColumns)
 		}
 
 		if vRecordEncoding, ok := mInputSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
@@ -1455,7 +1455,7 @@ func expandKinesisAnalyticsInputUpdate(vInput []interface{}) *kinesisanalytics.I
 		}
 
 		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
-			inputSchemaUpdate.RecordFormatUpdate = expandKinesisAnalyticsRecordFormat(vRecordFormat)
+			inputSchemaUpdate.RecordFormatUpdate = expandRecordFormat(vRecordFormat)
 		}
 
 		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
@@ -1498,7 +1498,7 @@ func expandKinesisAnalyticsInputUpdate(vInput []interface{}) *kinesisanalytics.I
 	return inputUpdate
 }
 
-func expandKinesisAnalyticsOutput(vOutput interface{}) *kinesisanalytics.Output {
+func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 	if vOutput == nil {
 		return nil
 	}
@@ -1571,7 +1571,7 @@ func expandKinesisAnalyticsOutput(vOutput interface{}) *kinesisanalytics.Output 
 	return output
 }
 
-func expandKinesisAnalyticsOutputs(vOutputs []interface{}) []*kinesisanalytics.Output {
+func expandOutputs(vOutputs []interface{}) []*kinesisanalytics.Output {
 	if len(vOutputs) == 0 {
 		return nil
 	}
@@ -1579,7 +1579,7 @@ func expandKinesisAnalyticsOutputs(vOutputs []interface{}) []*kinesisanalytics.O
 	outputs := []*kinesisanalytics.Output{}
 
 	for _, vOutput := range vOutputs {
-		output := expandKinesisAnalyticsOutput(vOutput)
+		output := expandOutput(vOutput)
 
 		if output != nil {
 			outputs = append(outputs, output)
@@ -1589,7 +1589,7 @@ func expandKinesisAnalyticsOutputs(vOutputs []interface{}) []*kinesisanalytics.O
 	return outputs
 }
 
-func expandKinesisAnalyticsRecordColumns(vRecordColumns []interface{}) []*kinesisanalytics.RecordColumn {
+func expandRecordColumns(vRecordColumns []interface{}) []*kinesisanalytics.RecordColumn {
 	recordColumns := []*kinesisanalytics.RecordColumn{}
 
 	for _, vRecordColumn := range vRecordColumns {
@@ -1613,7 +1613,7 @@ func expandKinesisAnalyticsRecordColumns(vRecordColumns []interface{}) []*kinesi
 	return recordColumns
 }
 
-func expandKinesisAnalyticsRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFormat {
+func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFormat {
 	if len(vRecordFormat) == 0 || vRecordFormat[0] == nil {
 		return nil
 	}
@@ -1664,7 +1664,7 @@ func expandKinesisAnalyticsRecordFormat(vRecordFormat []interface{}) *kinesisana
 	return recordFormat
 }
 
-func expandKinesisAnalyticsReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanalytics.ReferenceDataSource {
+func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanalytics.ReferenceDataSource {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
@@ -1674,7 +1674,7 @@ func expandKinesisAnalyticsReferenceDataSource(vReferenceDataSource []interface{
 	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
 
 	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
-		referenceDataSource.ReferenceSchema = expandKinesisAnalyticsSourceSchema(vReferenceSchema)
+		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
 	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
@@ -1702,7 +1702,7 @@ func expandKinesisAnalyticsReferenceDataSource(vReferenceDataSource []interface{
 	return referenceDataSource
 }
 
-func expandKinesisAnalyticsReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesisanalytics.ReferenceDataSourceUpdate {
+func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesisanalytics.ReferenceDataSourceUpdate {
 	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
 		return nil
 	}
@@ -1716,7 +1716,7 @@ func expandKinesisAnalyticsReferenceDataSourceUpdate(vReferenceDataSource []inte
 	}
 
 	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
-		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandKinesisAnalyticsSourceSchema(vReferenceSchema)
+		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
 	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
@@ -1744,7 +1744,7 @@ func expandKinesisAnalyticsReferenceDataSourceUpdate(vReferenceDataSource []inte
 	return referenceDataSourceUpdate
 }
 
-func expandKinesisAnalyticsSourceSchema(vSourceSchema []interface{}) *kinesisanalytics.SourceSchema {
+func expandSourceSchema(vSourceSchema []interface{}) *kinesisanalytics.SourceSchema {
 	if len(vSourceSchema) == 0 || vSourceSchema[0] == nil {
 		return nil
 	}
@@ -1754,7 +1754,7 @@ func expandKinesisAnalyticsSourceSchema(vSourceSchema []interface{}) *kinesisana
 	mSourceSchema := vSourceSchema[0].(map[string]interface{})
 
 	if vRecordColumns, ok := mSourceSchema["record_columns"].([]interface{}); ok {
-		sourceSchema.RecordColumns = expandKinesisAnalyticsRecordColumns(vRecordColumns)
+		sourceSchema.RecordColumns = expandRecordColumns(vRecordColumns)
 	}
 
 	if vRecordEncoding, ok := mSourceSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
@@ -1762,13 +1762,13 @@ func expandKinesisAnalyticsSourceSchema(vSourceSchema []interface{}) *kinesisana
 	}
 
 	if vRecordFormat, ok := mSourceSchema["record_format"].([]interface{}); ok && len(vRecordFormat) > 0 && vRecordFormat[0] != nil {
-		sourceSchema.RecordFormat = expandKinesisAnalyticsRecordFormat(vRecordFormat)
+		sourceSchema.RecordFormat = expandRecordFormat(vRecordFormat)
 	}
 
 	return sourceSchema
 }
 
-func flattenKinesisAnalyticsCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalytics.CloudWatchLoggingOptionDescription) []interface{} {
+func flattenCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalytics.CloudWatchLoggingOptionDescription) []interface{} {
 	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
 		return []interface{}{}
 	}
@@ -1784,7 +1784,7 @@ func flattenKinesisAnalyticsCloudWatchLoggingOptionDescriptions(cloudWatchLoggin
 	return []interface{}{mCloudWatchLoggingOption}
 }
 
-func flattenKinesisAnalyticsInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescription) []interface{} {
+func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescription) []interface{} {
 	if len(inputDescriptions) == 0 || inputDescriptions[0] == nil {
 		return []interface{}{}
 	}
@@ -1806,7 +1806,7 @@ func flattenKinesisAnalyticsInputDescriptions(inputDescriptions []*kinesisanalyt
 	}
 
 	if inputSchema := inputDescription.InputSchema; inputSchema != nil {
-		mInput["schema"] = flattenKinesisAnalyticsSourceSchema(inputSchema)
+		mInput["schema"] = flattenSourceSchema(inputSchema)
 	}
 
 	if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
@@ -1853,7 +1853,7 @@ func flattenKinesisAnalyticsInputDescriptions(inputDescriptions []*kinesisanalyt
 	return []interface{}{mInput}
 }
 
-func flattenKinesisAnalyticsOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDescription) []interface{} {
+func flattenOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDescription) []interface{} {
 	if len(outputDescriptions) == 0 {
 		return []interface{}{}
 	}
@@ -1909,7 +1909,7 @@ func flattenKinesisAnalyticsOutputDescriptions(outputDescriptions []*kinesisanal
 	return vOutputs
 }
 
-func flattenKinesisAnalyticsReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*kinesisanalytics.ReferenceDataSourceDescription) []interface{} {
+func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*kinesisanalytics.ReferenceDataSourceDescription) []interface{} {
 	if len(referenceDataSourceDescriptions) == 0 || referenceDataSourceDescriptions[0] == nil {
 		return []interface{}{}
 	}
@@ -1922,7 +1922,7 @@ func flattenKinesisAnalyticsReferenceDataSourceDescriptions(referenceDataSourceD
 	}
 
 	if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
-		mReferenceDataSource["schema"] = flattenKinesisAnalyticsSourceSchema(referenceSchema)
+		mReferenceDataSource["schema"] = flattenSourceSchema(referenceSchema)
 	}
 
 	if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
@@ -1938,7 +1938,7 @@ func flattenKinesisAnalyticsReferenceDataSourceDescriptions(referenceDataSourceD
 	return []interface{}{mReferenceDataSource}
 }
 
-func flattenKinesisAnalyticsSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interface{} {
+func flattenSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interface{} {
 	if sourceSchema == nil {
 		return []interface{}{}
 	}

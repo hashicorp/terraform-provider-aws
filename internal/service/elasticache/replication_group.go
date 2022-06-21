@@ -62,7 +62,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
-				Default:      "true",
+				Computed:     true,
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"automatic_failover_enabled": {
@@ -136,7 +136,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: ValidRedisVersionString,
+				ValidateFunc: validRedisVersionString,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -253,7 +253,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default Redis ports when not defined
-					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
+					if !d.IsNewResource() && new == "0" && old == defaultRedisPort {
 						return true
 					}
 					return false
@@ -389,7 +389,7 @@ func ResourceReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateReplicationGroupAutomaticFailover,
-			CustomizeDiffEngineVersion,
+			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("num_cache_clusters") ||
@@ -589,7 +589,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
 		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
+			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) to be available: %w", v, err)
 		}
 	}
 
@@ -685,18 +685,35 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("port", rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
 	} else {
-		d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-		d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-		d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
+
+		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
+			log.Printf("[DEBUG] ElastiCache Replication Group (%s) Primary Endpoint is not nil", d.Id())
+			if rgp.NodeGroups[0].PrimaryEndpoint.Port != nil {
+				d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			}
+
+			if rgp.NodeGroups[0].PrimaryEndpoint.Address != nil {
+				d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
+			}
+		}
+
+		if rgp.NodeGroups[0].ReaderEndpoint != nil && rgp.NodeGroups[0].ReaderEndpoint.Address != nil {
+			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
+		}
 	}
 
 	d.Set("user_group_ids", rgp.UserGroupIds)
 
 	// Tags cannot be read when the replication group is not Available
+	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
+
 	_, err = WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group to be available (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
+
+	log.Printf("[DEBUG] Listing tags for ElastiCache Replication Group (%s)", d.Id())
 
 	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
 
@@ -722,8 +739,10 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
+
 	// This section reads settings that require checking the underlying cache clusters
-	if rgp.NodeGroups != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
+	if rgp.NodeGroups != nil && rgp.NodeGroups[0] != nil && len(rgp.NodeGroups[0].NodeGroupMembers) != 0 {
 		cacheCluster := rgp.NodeGroups[0].NodeGroupMembers[0]
 
 		res, err := conn.DescribeCacheClusters(&elasticache.DescribeCacheClustersInput{
@@ -966,8 +985,10 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := DisassociateReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
+	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
+	if hasGlobalReplicationGroupID {
+		globalReplicationGroupID := v.(string)
+		err := DisassociateReplicationGroup(conn, globalReplicationGroupID, d.Id(), meta.(*conns.AWSClient).Region, GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -977,6 +998,19 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	err := deleteReplicationGroup(d.Id(), conn, finalSnapshotID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Replication Group (%s): %w", d.Id(), err)
+	}
+
+	if hasGlobalReplicationGroupID {
+		paramGroupName := d.Get("parameter_group_name").(string)
+		if paramGroupName != "" {
+			err := deleteParameterGroup(conn, paramGroupName)
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
+			}
+		}
 	}
 
 	return nil

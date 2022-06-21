@@ -52,11 +52,11 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Redshift event subscription.
 * `sns_topic_arn` - (Required) The ARN of the SNS topic to send events to.
-* `source_ids` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a source_type must also be specified.
-* `source_type` - (Optional) The type of source that will be generating the events. Valid options are `cluster`, `cluster-parameter-group`, `cluster-security-group`, or `cluster-snapshot`. If not set, all sources will be subscribed to.
-* `severity` - (Optional) The event severity to be published by the notification subscription. Valid options are `INFO` or `ERROR`.
+* `source_ids` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a `source_type` must also be specified.
+* `source_type` - (Optional) The type of source that will be generating the events. Valid options are `cluster`, `cluster-parameter-group`, `cluster-security-group`, `cluster-snapshot`, or `scheduled-action`. If not set, all sources will be subscribed to.
+* `severity` - (Optional) The event severity to be published by the notification subscription. Valid options are `INFO` or `ERROR`. Default value of `INFO`.
 * `event_categories` - (Optional) A list of event categories for a SourceType that you want to subscribe to. See https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-event-notifications.html or run `aws redshift describe-event-categories`.
-* `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
+* `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

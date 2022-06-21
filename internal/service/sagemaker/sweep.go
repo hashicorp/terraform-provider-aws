@@ -236,7 +236,7 @@ func sweepApps(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Apps: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Apps: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -311,7 +311,7 @@ func sweepDeviceFleets(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Device Fleets: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Device Fleets: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -349,7 +349,7 @@ func sweepDeviceFleets(region string) error {
 // 	}
 
 // 	if err != nil {
-// 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Device Fleets: %w", err))
+// 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Device Fleets: %w", err))
 // 	}
 
 // 	return sweeperErrs.ErrorOrNil()
@@ -387,7 +387,7 @@ func sweepDomains(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Domains: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Domains: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -427,7 +427,7 @@ func sweepEndpointConfigurations(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Endpoint Configs: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Endpoint Configs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -535,7 +535,7 @@ func sweepFlowDefinitions(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Flow Definitions: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Flow Definitions: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -572,7 +572,7 @@ func sweepHumanTaskUIs(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker HumanTaskUis: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker HumanTaskUis: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -682,7 +682,7 @@ func sweepModels(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Models: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Models: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -811,7 +811,7 @@ func sweepStudioLifecyclesConfig(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Studio Lifecycle Configs: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Studio Lifecycle Configs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -851,7 +851,7 @@ func sweepUserProfiles(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker User Profiles: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker User Profiles: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -888,7 +888,7 @@ func sweepWorkforces(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workforces: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Workforces: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -925,7 +925,7 @@ func sweepWorkteams(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workteams: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Workteams: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -963,7 +963,7 @@ func sweepProjects(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Projects: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Projects: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

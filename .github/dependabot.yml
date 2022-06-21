@@ -25,6 +25,13 @@ updates:
       - dependency-name: "google.golang.org/grpc"
     schedule:
       interval: "daily"
+  - package-ecosystem: "gomod"
+    directory: "/skaff"
+    ignore:
+      - dependency-name: "golang.org/x/tools"
+      - dependency-name: "google.golang.org/grpc"
+    schedule:
+      interval: "daily"
   - package-ecosystem: "terraform"
     directory: "/infrastructure/repository"
     schedule:

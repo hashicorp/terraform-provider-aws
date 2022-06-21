@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_flow_definition"
 description: |-
-  Provides a Sagemaker Flow Definition resource.
+  Provides a SageMaker Flow Definition resource.
 ---
 
 # Resource: aws_sagemaker_flow_definition
 
-Provides a Sagemaker Flow Definition resource.
+Provides a SageMaker Flow Definition resource.
 
 ## Example Usage
 
@@ -168,7 +168,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
+SageMaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_flow_definition.example example

@@ -196,7 +196,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				MinItems: 2,
+				MinItems: 1,
 				MaxItems: 2,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -258,7 +258,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
-		input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(v.([]interface{}))
+		input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("fsx_admin_password"); ok {
@@ -350,11 +350,11 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	if err := d.Set("endpoints", flattenFsxOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return fmt.Errorf("error setting endpoints: %w", err)
 	}
 
-	if err := d.Set("disk_iops_configuration", flattenFsxOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
+	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
 	}
 
@@ -415,7 +415,7 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.HasChange("disk_iops_configuration") {
-			input.OntapConfiguration.DiskIopsConfiguration = expandFsxOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateFileSystem(input)
@@ -459,7 +459,7 @@ func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandFsxOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
+func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -478,7 +478,7 @@ func expandFsxOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsCon
 	return &out
 }
 
-func flattenFsxOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -494,23 +494,23 @@ func flattenFsxOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []i
 	return []interface{}{m}
 }
 
-func flattenFsxOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
+func flattenOntapFileSystemEndpoints(rs *fsx.FileSystemEndpoints) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.Intercluster != nil {
-		m["intercluster"] = flattenFsxOntapFileSystemEndpoint(rs.Intercluster)
+		m["intercluster"] = flattenOntapFileSystemEndpoint(rs.Intercluster)
 	}
 	if rs.Management != nil {
-		m["management"] = flattenFsxOntapFileSystemEndpoint(rs.Management)
+		m["management"] = flattenOntapFileSystemEndpoint(rs.Management)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenFsxOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
+func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}

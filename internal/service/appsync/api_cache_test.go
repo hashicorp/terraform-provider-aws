@@ -14,21 +14,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAppSyncApiCache_basic(t *testing.T) {
+func testAccAPICache_basic(t *testing.T) {
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPICacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncApiCacheBasicConfig(rName),
+				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApiCacheExists(resourceName, &apiCache),
+					testAccCheckAPICacheExists(resourceName, &apiCache),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "FULL_REQUEST_CACHING"),
@@ -43,21 +43,21 @@ func testAccAppSyncApiCache_basic(t *testing.T) {
 	})
 }
 
-func testAccAppSyncApiCache_disappears(t *testing.T) {
+func testAccAPICache_disappears(t *testing.T) {
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appsync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApiCacheDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAPICacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppsyncApiCacheBasicConfig(rName),
+				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApiCacheExists(resourceName, &apiCache),
+					testAccCheckAPICacheExists(resourceName, &apiCache),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -66,14 +66,14 @@ func testAccAppSyncApiCache_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckApiCacheDestroy(s *terraform.State) error {
+func testAccCheckAPICacheDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_api_cache" {
 			continue
 		}
 
-		_, err := tfappsync.FindApiCacheByID(conn, rs.Primary.ID)
+		_, err := tfappsync.FindAPICacheByID(conn, rs.Primary.ID)
 		if err == nil {
 			if tfresource.NotFound(err) {
 				return nil
@@ -87,7 +87,7 @@ func testAccCheckApiCacheDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckApiCacheExists(resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
+func testAccCheckAPICacheExists(resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -96,7 +96,7 @@ func testAccCheckApiCacheExists(resourceName string, apiCache *appsync.ApiCache)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		cache, err := tfappsync.FindApiCacheByID(conn, rs.Primary.ID)
+		cache, err := tfappsync.FindAPICacheByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func testAccCheckApiCacheExists(resourceName string, apiCache *appsync.ApiCache)
 	}
 }
 
-func testAccAppsyncApiCacheBasicConfig(rName string) string {
+func testAccAPICacheConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"

@@ -19,6 +19,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
@@ -37,6 +39,14 @@ resource "aws_kms_key" "example" {
         }
         Sid      = "Allow Route 53 DNSSEC Service",
         Resource = "*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
+          }
+          ArnLike = {
+            "aws:SourceArn" = "arn:aws:route53:::hostedzone/*"
+          }
+        }
       },
       {
         Action = "kms:CreateGrant",
@@ -56,10 +66,10 @@ resource "aws_kms_key" "example" {
         Action = "kms:*"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Resource = "*"
-        Sid      = "IAM User Permissions"
+        Sid      = "Enable IAM User Permissions"
       },
     ]
     Version = "2012-10-17"

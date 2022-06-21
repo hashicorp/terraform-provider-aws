@@ -1,5 +1,5 @@
 ---
-subcategory: "S3 (Simple Storage)"
+subcategory: "S3 Control"
 layout: "aws"
 page_title: "AWS: aws_s3_account_public_access_block"
 description: |-

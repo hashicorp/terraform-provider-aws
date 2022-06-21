@@ -322,7 +322,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
-		input.LaunchTemplate = expandEksLaunchTemplateSpecification(v)
+		input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 	}
 
 	if v, ok := d.GetOk("release_version"); ok {
@@ -330,19 +330,19 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v := d.Get("remote_access").([]interface{}); len(v) > 0 {
-		input.RemoteAccess = expandEksRemoteAccessConfig(v)
+		input.RemoteAccess = expandRemoteAccessConfig(v)
 	}
 
 	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.ScalingConfig = expandNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
-		input.Taints = expandEksTaints(v.(*schema.Set).List())
+		input.Taints = expandTaints(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.UpdateConfig = expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -407,7 +407,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting labels: %s", err)
 	}
 
-	if err := d.Set("launch_template", flattenEksLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
 		return diag.Errorf("error setting launch_template: %s", err)
 	}
 
@@ -416,16 +416,16 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
-	if err := d.Set("remote_access", flattenEksRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return diag.Errorf("error setting remote_access: %s", err)
 	}
 
-	if err := d.Set("resources", flattenEksNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
 		return diag.Errorf("error setting resources: %s", err)
 	}
 
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
 			return diag.Errorf("error setting scaling_config: %s", err)
 		}
 	} else {
@@ -438,12 +438,12 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting subnets: %s", err)
 	}
 
-	if err := d.Set("taint", flattenEksTaints(nodeGroup.Taints)); err != nil {
+	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
 		return diag.Errorf("error setting taint: %s", err)
 	}
 
 	if nodeGroup.UpdateConfig != nil {
-		if err := d.Set("update_config", []interface{}{flattenEksNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+		if err := d.Set("update_config", []interface{}{flattenNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
 			return diag.Errorf("error setting update_config: %s", err)
 		}
 	} else {
@@ -485,7 +485,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
-			input.LaunchTemplate = expandEksLaunchTemplateSpecification(v)
+			input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 
 			// When returning Launch Template information, the API returns all
 			// fields. Since both the id and name are saved to the Terraform
@@ -534,20 +534,20 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Labels:             expandEksUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
+			Labels:             expandUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
-			Taints:             expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
+			Taints:             expandUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
 		}
 
 		if d.HasChange("scaling_config") {
 			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+				input.ScalingConfig = expandNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
 		if d.HasChange("update_config") {
 			if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
+				input.UpdateConfig = expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -608,7 +608,7 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func expandEksLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSpecification {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -632,7 +632,7 @@ func expandEksLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSp
 	return config
 }
 
-func expandEksNodegroupScalingConfig(tfMap map[string]interface{}) *eks.NodegroupScalingConfig {
+func expandNodegroupScalingConfig(tfMap map[string]interface{}) *eks.NodegroupScalingConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -654,7 +654,7 @@ func expandEksNodegroupScalingConfig(tfMap map[string]interface{}) *eks.Nodegrou
 	return apiObject
 }
 
-func expandEksTaints(l []interface{}) []*eks.Taint {
+func expandTaints(l []interface{}) []*eks.Taint {
 	if len(l) == 0 {
 		return nil
 	}
@@ -688,9 +688,9 @@ func expandEksTaints(l []interface{}) []*eks.Taint {
 	return taints
 }
 
-func expandEksUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *eks.UpdateTaintsPayload {
-	oldTaints := expandEksTaints(oldTaintsRaw)
-	newTaints := expandEksTaints(newTaintsRaw)
+func expandUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *eks.UpdateTaintsPayload {
+	oldTaints := expandTaints(oldTaintsRaw)
+	newTaints := expandTaints(newTaintsRaw)
 
 	var removedTaints []*eks.Taint
 	for _, ot := range oldTaints {
@@ -756,7 +756,7 @@ func expandEksUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *eks
 	return updateTaintsPayload
 }
 
-func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
+func expandRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -776,7 +776,7 @@ func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	return config
 }
 
-func expandEksNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpdateConfig {
+func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpdateConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -794,7 +794,7 @@ func expandEksNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.Nodegroup
 	return apiObject
 }
 
-func expandEksUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
+func expandUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := tftags.New(oldLabelsMap)
 	newLabels := tftags.New(newLabelsMap)
@@ -819,7 +819,7 @@ func expandEksUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.U
 	return updateLabelsPayload
 }
 
-func flattenEksAutoScalingGroups(autoScalingGroups []*eks.AutoScalingGroup) []map[string]interface{} {
+func flattenAutoScalingGroups(autoScalingGroups []*eks.AutoScalingGroup) []map[string]interface{} {
 	if len(autoScalingGroups) == 0 {
 		return []map[string]interface{}{}
 	}
@@ -837,7 +837,7 @@ func flattenEksAutoScalingGroups(autoScalingGroups []*eks.AutoScalingGroup) []ma
 	return l
 }
 
-func flattenEksLaunchTemplateSpecification(config *eks.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenLaunchTemplateSpecification(config *eks.LaunchTemplateSpecification) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
@@ -859,20 +859,20 @@ func flattenEksLaunchTemplateSpecification(config *eks.LaunchTemplateSpecificati
 	return []map[string]interface{}{m}
 }
 
-func flattenEksNodeGroupResources(resources *eks.NodegroupResources) []map[string]interface{} {
+func flattenNodeGroupResources(resources *eks.NodegroupResources) []map[string]interface{} {
 	if resources == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"autoscaling_groups":              flattenEksAutoScalingGroups(resources.AutoScalingGroups),
+		"autoscaling_groups":              flattenAutoScalingGroups(resources.AutoScalingGroups),
 		"remote_access_security_group_id": aws.StringValue(resources.RemoteAccessSecurityGroup),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEksNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map[string]interface{} {
+func flattenNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -894,7 +894,7 @@ func flattenEksNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map
 	return tfMap
 }
 
-func flattenEksNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[string]interface{} {
+func flattenNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -912,7 +912,7 @@ func flattenEksNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[s
 	return tfMap
 }
 
-func flattenEksRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]interface{} {
+func flattenRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -925,7 +925,7 @@ func flattenEksRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]i
 	return []map[string]interface{}{m}
 }
 
-func flattenEksTaints(taints []*eks.Taint) []interface{} {
+func flattenTaints(taints []*eks.Taint) []interface{} {
 	if len(taints) == 0 {
 		return nil
 	}

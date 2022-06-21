@@ -121,7 +121,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	err := deregisterServiceDiscoveryInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	err := deregisterInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
 	if err != nil {
 		return err

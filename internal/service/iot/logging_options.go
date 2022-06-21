@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -57,7 +56,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, tfiam.PropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.SetV2LoggingOptionsWithContext(ctx, input)
 		},

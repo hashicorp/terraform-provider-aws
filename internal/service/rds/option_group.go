@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -191,7 +190,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var option *rds.OptionGroup
 	for _, ogl := range options.OptionGroupsList {
-		if *ogl.OptionGroupName == d.Id() {
+		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
 			option = ogl
 			break
 		}
@@ -235,7 +234,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func optionInList(optionName string, list []*string) bool {
 	for _, opt := range list {
-		if *opt == optionName {
+		if aws.StringValue(opt) == optionName {
 			return true
 		}
 	}
@@ -285,7 +284,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+			err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE

@@ -29,7 +29,7 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaExternalKeyConfig(rName),
+				Config: testAccReplicaExternalKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
@@ -80,7 +80,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaExternalKeyDescriptionAndEnabledConfig(rName1, rName2, false),
+				Config: testAccReplicaExternalKeyConfig_descriptionAndEnabled(rName1, rName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName2),
@@ -98,7 +98,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccReplicaExternalKeyDescriptionAndEnabledConfig(rName1, rName3, true),
+				Config: testAccReplicaExternalKeyConfig_descriptionAndEnabled(rName1, rName3, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName3),
@@ -106,7 +106,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicaExternalKeyDescriptionAndEnabledConfig(rName1, rName4, false),
+				Config: testAccReplicaExternalKeyConfig_descriptionAndEnabled(rName1, rName4, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName4),
@@ -135,7 +135,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaExternalKeyPolicyConfig(rName, policy1, false),
+				Config: testAccReplicaExternalKeyConfig_policy(rName, policy1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
@@ -153,7 +153,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccReplicaExternalKeyPolicyConfig(rName, policy2, true),
+				Config: testAccReplicaExternalKeyConfig_policy(rName, policy2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
@@ -180,7 +180,7 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaExternalKeyTags1Config(rName, "key1", "value1"),
+				Config: testAccReplicaExternalKeyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -198,7 +198,7 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccReplicaExternalKeyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicaExternalKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -207,7 +207,7 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicaExternalKeyTags1Config(rName, "key2", "value2"),
+				Config: testAccReplicaExternalKeyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -218,7 +218,7 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 	})
 }
 
-func testAccReplicaExternalKeyConfig(rName string) string {
+func testAccReplicaExternalKeyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
@@ -237,7 +237,7 @@ resource "aws_kms_replica_external_key" "test" {
 `, rName))
 }
 
-func testAccReplicaExternalKeyDescriptionAndEnabledConfig(rName, description string, enabled bool) string {
+func testAccReplicaExternalKeyConfig_descriptionAndEnabled(rName, description string, enabled bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
@@ -264,7 +264,7 @@ resource "aws_kms_replica_external_key" "test" {
 `, rName, description, enabled))
 }
 
-func testAccReplicaExternalKeyPolicyConfig(rName, policy string, bypassLockoutCheck bool) string {
+func testAccReplicaExternalKeyConfig_policy(rName, policy string, bypassLockoutCheck bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
@@ -295,7 +295,7 @@ resource "aws_kms_replica_external_key" "test" {
 `, rName, policy, bypassLockoutCheck))
 }
 
-func testAccReplicaExternalKeyTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccReplicaExternalKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {
@@ -330,7 +330,7 @@ resource "aws_kms_replica_external_key" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccReplicaExternalKeyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccReplicaExternalKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 # ACCEPTANCE TESTING ONLY -- NEVER EXPOSE YOUR KEY MATERIAL
 resource "aws_kms_external_key" "test" {

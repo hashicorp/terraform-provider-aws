@@ -20,7 +20,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
+const contactFlowMutexKey = `aws_connect_contact_flow`
 
 func ResourceContactFlow() *schema.Resource {
 	return &schema.Resource{
@@ -32,8 +32,8 @@ func ResourceContactFlow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectContactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(connectContactFlowUpdateTimeout),
+			Create: schema.DefaultTimeout(contactFlowCreateTimeout),
+			Update: schema.DefaultTimeout(contactFlowUpdateTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -113,8 +113,8 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 		// Grab an exclusive lock so that we're only reading one contact flow into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
+		conns.GlobalMutexKV.Lock(contactFlowMutexKey)
+		defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 		file, err := resourceContactFlowLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -230,8 +230,8 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 			// Grab an exclusive lock so that we're only reading one contact flow into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
+			conns.GlobalMutexKV.Lock(contactFlowMutexKey)
+			defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 			file, err := resourceContactFlowLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))

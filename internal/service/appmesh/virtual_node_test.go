@@ -23,15 +23,15 @@ func testAccVirtualNode_basic(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
+				Config: testAccVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -64,15 +64,15 @@ func testAccVirtualNode_disappears(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
+				Config: testAccVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualNode(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,23 +92,23 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
+				Config: testAccVirtualNodeConfig_rootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain),
+				Config: testAccVirtualNodeConfig_backendClientPolicyACM(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -157,7 +157,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain),
+				Config: testAccVirtualNodeConfig_backendClientPolicyACM(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
@@ -175,15 +175,15 @@ func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyFile(meshName, vnName),
+				Config: testAccVirtualNodeConfig_backendClientPolicyFile(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -226,9 +226,9 @@ func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -289,15 +289,15 @@ func testAccVirtualNode_backendDefaults(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendDefaults(meshName, vnName),
+				Config: testAccVirtualNodeConfig_backendDefaults(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -327,9 +327,9 @@ func testAccVirtualNode_backendDefaults(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -376,15 +376,15 @@ func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_backendDefaultsCertificate(meshName, vnName),
+				Config: testAccVirtualNodeConfig_backendDefaultsCertificate(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -440,15 +440,15 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, "Key1", "Value1"),
+				Config: testAccVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, "Key1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -461,9 +461,9 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, "Key1", "Value2"),
+				Config: testAccVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, "Key1", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -492,15 +492,15 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerConnectionPool(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerConnectionPool(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -531,9 +531,9 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerConnectionPoolUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerConnectionPoolUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -581,15 +581,15 @@ func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerHealthChecks(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -628,9 +628,9 @@ func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -689,15 +689,15 @@ func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerOutlierDetection(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerOutlierDetection(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -731,9 +731,9 @@ func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -783,15 +783,15 @@ func testAccVirtualNode_listenerTimeout(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTimeout(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerTimeout(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -824,9 +824,9 @@ func testAccVirtualNode_listenerTimeout(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -883,15 +883,15 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTlsFile(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerTLSFile(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -937,16 +937,16 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAppmeshVirtualNodeConfigRootCA(domain),
+				Config: testAccVirtualNodeConfig_rootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain),
+				Config: testAccVirtualNodeConfig_listenerTLSACM(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -990,7 +990,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain),
+				Config: testAccVirtualNodeConfig_listenerTLSACM(meshName, vnName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(&ca),
@@ -1008,15 +1008,15 @@ func testAccVirtualNode_listenerValidation(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerValidation(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerValidation(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -1070,9 +1070,9 @@ func testAccVirtualNode_listenerValidation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_listenerValidationUpdated(meshName, vnName),
+				Config: testAccVirtualNodeConfig_listenerValidationUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -1126,15 +1126,15 @@ func testAccVirtualNode_logging(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, "/dev/stdout"),
+				Config: testAccVirtualNodeConfig_logging(meshName, vnName, "/dev/stdout"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -1146,9 +1146,9 @@ func testAccVirtualNode_logging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, "/tmp/access.log"),
+				Config: testAccVirtualNodeConfig_logging(meshName, vnName, "/tmp/access.log"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -1175,33 +1175,33 @@ func testAccVirtualNode_tags(t *testing.T) {
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo", "bar", "good", "bad"),
+				Config: testAccVirtualNodeConfig_tags(meshName, vnName, "foo", "bar", "good", "bad"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo2", "bar", "good", "bad2"),
+				Config: testAccVirtualNodeConfig_tags(meshName, vnName, "foo2", "bar", "good", "bad2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo2", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad2"),
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
+				Config: testAccVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -1215,7 +1215,7 @@ func testAccVirtualNode_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppmeshVirtualNodeDestroy(s *terraform.State) error {
+func testAccCheckVirtualNodeDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -1239,7 +1239,7 @@ func testAccCheckAppmeshVirtualNodeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAppmeshVirtualNodeExists(name string, v *appmesh.VirtualNodeData) resource.TestCheckFunc {
+func testAccCheckVirtualNodeExists(name string, v *appmesh.VirtualNodeData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
@@ -1265,7 +1265,7 @@ func testAccCheckAppmeshVirtualNodeExists(name string, v *appmesh.VirtualNodeDat
 	}
 }
 
-func testAccAppmeshVirtualNodeConfig_mesh(rName string) string {
+func testAccVirtualNodeConfig_mesh(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -1273,7 +1273,7 @@ resource "aws_appmesh_mesh" "test" {
 `, rName)
 }
 
-func testAccAppmeshVirtualNodeConfigRootCA(domain string) string {
+func testAccVirtualNodeConfig_rootCA(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -1291,7 +1291,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, domain)
 }
 
-func testAccAppmeshVirtualNodeConfigPrivateCert(domain string) string {
+func testAccVirtualNodeConfigPrivateCert(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = "test.%[1]s"
@@ -1300,8 +1300,8 @@ resource "aws_acm_certificate" "test" {
 `, domain)
 }
 
-func testAccAppmeshVirtualNodeConfig_basic(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_basic(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1311,8 +1311,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendDefaults(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_backendDefaults(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1338,8 +1338,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1365,8 +1365,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendDefaultsCertificate(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_backendDefaultsCertificate(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1405,11 +1405,11 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName, domain string) string {
+func testAccVirtualNodeConfig_backendClientPolicyACM(meshName, vnName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAppmeshVirtualNodeConfigRootCA(domain),
-		testAccAppmeshVirtualNodeConfigPrivateCert(domain),
-		testAccAppmeshVirtualNodeConfig_mesh(meshName),
+		testAccVirtualNodeConfig_rootCA(domain),
+		testAccVirtualNodeConfigPrivateCert(domain),
+		testAccVirtualNodeConfig_mesh(meshName),
 		fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
@@ -1453,8 +1453,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendClientPolicyFile(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_backendClientPolicyFile(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1497,8 +1497,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1547,8 +1547,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, attrKey, attrValue string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_cloudMapServiceDiscovery(meshName, vnName, rName, attrKey, attrValue string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[2]q
 }
@@ -1586,8 +1586,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName, rName, attrKey, attrValue))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerConnectionPool(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerConnectionPool(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1622,8 +1622,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerConnectionPoolUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerConnectionPoolUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1659,8 +1659,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerHealthChecks(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1698,8 +1698,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerHealthChecksUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1743,8 +1743,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerOutlierDetection(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerOutlierDetection(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1788,8 +1788,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1833,8 +1833,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerTimeout(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerTimeout(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1872,8 +1872,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerTimeoutUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1916,8 +1916,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerTlsFile(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerTLSFile(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -1957,11 +1957,11 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName, domain string) string {
+func testAccVirtualNodeConfig_listenerTLSACM(meshName, vnName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAppmeshVirtualNodeConfigRootCA(domain),
-		testAccAppmeshVirtualNodeConfigPrivateCert(domain),
-		testAccAppmeshVirtualNodeConfig_mesh(meshName),
+		testAccVirtualNodeConfig_rootCA(domain),
+		testAccVirtualNodeConfigPrivateCert(domain),
+		testAccVirtualNodeConfig_mesh(meshName),
 		fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
@@ -2001,8 +2001,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerValidation(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerValidation(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -2055,8 +2055,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_listenerValidationUpdated(meshName, vnName string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_listenerValidationUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -2103,8 +2103,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
-func testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, path string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_logging(meshName, vnName, path string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id
@@ -2141,8 +2141,8 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName, path))
 }
 
-func testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+func testAccVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
   name      = %[1]q
   mesh_name = aws_appmesh_mesh.test.id

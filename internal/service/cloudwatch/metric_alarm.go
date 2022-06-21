@@ -1,6 +1,7 @@
 package cloudwatch
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -13,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceMetricAlarm() *schema.Resource {
@@ -351,12 +354,24 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := FindMetricAlarmByName(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	if resp == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return names.Error(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && resp == nil {
+		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if resp == nil {
+		return names.Error(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id(), errors.New("not found after create"))
 	}
 
 	log.Printf("[DEBUG] Reading CloudWatch Metric Alarm: %s", d.Id())
@@ -551,7 +566,7 @@ func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch
 	}
 
 	if v := d.Get("metric_query"); v != nil {
-		params.Metrics = expandCloudWatchMetricAlarmMetrics(v.(*schema.Set))
+		params.Metrics = expandMetricAlarmMetrics(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("ok_actions"); ok {
@@ -607,7 +622,7 @@ func flattenMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat) map[string]i
 	return metric
 }
 
-func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
+func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
 	var metrics []*cloudwatch.MetricDataQuery
 
 	for _, v := range v.List() {
@@ -629,7 +644,7 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 			metricQuery.ReturnData = aws.Bool(v.(bool))
 		}
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
-			metricQuery.MetricStat = expandCloudWatchMetricAlarmMetricsMetric(v.([]interface{}))
+			metricQuery.MetricStat = expandMetricAlarmMetricsMetric(v.([]interface{}))
 		}
 		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
 			metricQuery.AccountId = aws.String(v.(string))
@@ -639,7 +654,7 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 	return metrics
 }
 
-func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.MetricStat {
+func expandMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.MetricStat {
 	metricResource := v[0].(map[string]interface{})
 	metric := cloudwatch.Metric{
 		MetricName: aws.String(metricResource["metric_name"].(string)),

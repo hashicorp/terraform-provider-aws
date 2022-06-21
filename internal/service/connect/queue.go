@@ -207,7 +207,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("status", resp.Queue.Status)
 
 	// reading quick_connect_ids requires a separate API call
-	quickConnectIds, err := getConnectQueueQuickConnectIds(ctx, conn, instanceID, queueID)
+	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
@@ -409,7 +409,7 @@ func flattenOutboundCallerConfig(outboundCallerConfig *connect.OutboundCallerCon
 	return []interface{}{values}
 }
 
-func getConnectQueueQuickConnectIds(ctx context.Context, conn *connect.Connect, instanceID, queueID string) ([]*string, error) {
+func getQueueQuickConnectIDs(ctx context.Context, conn *connect.Connect, instanceID, queueID string) ([]*string, error) {
 	var result []*string
 
 	input := &connect.ListQueueQuickConnectsInput{

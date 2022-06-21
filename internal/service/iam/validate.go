@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validRolePolicyName = validIamResourceName(rolePolicyNameMaxLen)
+var validRolePolicyName = validResourceName(rolePolicyNameMaxLen)
 
-func validIamResourceName(max int) schema.SchemaValidateFunc {
+func validResourceName(max int) schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, max),
 		validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),

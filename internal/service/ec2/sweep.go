@@ -98,6 +98,7 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -115,6 +116,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 		F: sweepKeyPairs,
 	})
@@ -159,6 +161,7 @@ func init() {
 			"aws_instance",
 			"aws_launch_template",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -180,6 +183,11 @@ func init() {
 		F:    sweepSpotFleetRequests,
 	})
 
+	resource.AddTestSweepers("aws_spot_instance_request", &resource.Sweeper{
+		Name: "aws_spot_instance_request",
+		F:    sweepSpotInstanceRequests,
+	})
+
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
 		F:    sweepSubnets,
@@ -191,6 +199,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_cloud9_environment_ec2",
 			"aws_cloudhsm_v2_cluster",
+			"aws_codestarconnections_host",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_dms_replication_instance",
@@ -208,6 +217,7 @@ func init() {
 			"aws_fsx_ontap_file_system",
 			"aws_fsx_openzfs_file_system",
 			"aws_fsx_windows_file_system",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_memorydb_subnet_group",
@@ -220,6 +230,7 @@ func init() {
 			"aws_route53_resolver_endpoint",
 			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
 		},
 	})
@@ -1534,6 +1545,57 @@ func sweepSpotFleetRequests(region string) error {
 	return errs.ErrorOrNil()
 }
 
+func sweepSpotInstanceRequests(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeSpotInstanceRequestsPages(&ec2.DescribeSpotInstanceRequestsInput{}, func(page *ec2.DescribeSpotInstanceRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		if len(page.SpotInstanceRequests) == 0 {
+			log.Print("[DEBUG] No Spot Instance Requests to sweep")
+			return false
+		}
+
+		for _, config := range page.SpotInstanceRequests {
+			id := aws.StringValue(config.SpotInstanceRequestId)
+
+			r := ResourceSpotInstanceRequest()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("spot_instance_id", config.InstanceId)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
 func sweepSubnets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -2314,9 +2376,9 @@ func sweepIPAMPoolCIDRs(region string) error {
 				}
 
 				for _, v := range page.IpamPoolCidrs {
-					r := ResourceVPCIpamPoolCidr()
+					r := ResourceIPAMPoolCIDR()
 					d := r.Data(nil)
-					d.SetId(encodeIpamPoolCidrId(aws.StringValue(v.Cidr), poolID))
+					d.SetId(encodeIPAMPoolCIDRId(aws.StringValue(v.Cidr), poolID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -2369,7 +2431,7 @@ func sweepIPAMPools(region string) error {
 		}
 
 		for _, v := range page.IpamPools {
-			r := ResourceVPCIpamPool()
+			r := ResourceIPAMPool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamPoolId))
 
@@ -2419,7 +2481,7 @@ func sweepIPAMScopes(region string) error {
 				continue
 			}
 
-			r := ResourceVPCIpamScope()
+			r := ResourceIPAMScope()
 			d := r.Data(nil)
 			d.SetId(scopeID)
 
@@ -2462,7 +2524,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceVPCIpam()
+			r := ResourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
 

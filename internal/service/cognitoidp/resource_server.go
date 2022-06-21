@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceResourceServer() *schema.Resource {
@@ -118,19 +120,24 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeResourceServer(params)
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if resp == nil || resp.ResourceServer == nil {
-		log.Printf("[WARN] Cognito Resource Server %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)

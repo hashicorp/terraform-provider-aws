@@ -18,9 +18,9 @@ import (
 
 func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                      testAccNetworkManagerCustomerGatewayAssociation_basic,
-		"disappears":                 testAccNetworkManagerCustomerGatewayAssociation_disappears,
-		"disappears_CustomerGateway": testAccNetworkManagerCustomerGatewayAssociation_disappears_CustomerGateway,
+		"basic":                      testAccCustomerGatewayAssociation_basic,
+		"disappears":                 testAccCustomerGatewayAssociation_disappears,
+		"disappears_CustomerGateway": testAccCustomerGatewayAssociation_Disappears_customerGateway,
 	}
 
 	for name, tc := range testCases {
@@ -31,18 +31,18 @@ func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_basic(t *testing.T) {
+func testAccCustomerGatewayAssociation_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayAssociationConfig(rName),
+				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(resourceName),
 				),
@@ -56,18 +56,18 @@ func testAccNetworkManagerCustomerGatewayAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_disappears(t *testing.T) {
+func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayAssociationConfig(rName),
+				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
@@ -78,20 +78,20 @@ func testAccNetworkManagerCustomerGatewayAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerCustomerGatewayAssociation_disappears_CustomerGateway(t *testing.T) {
+func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) {
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 	customerGatewayResourceName := "aws_customer_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCustomerGatewayAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerGatewayAssociationConfig(rName),
+				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
@@ -162,7 +162,7 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 	}
 }
 
-func testAccCustomerGatewayAssociationConfig(rName string) string {
+func testAccCustomerGatewayAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

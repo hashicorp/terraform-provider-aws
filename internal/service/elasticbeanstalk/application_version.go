@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -191,13 +191,12 @@ func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) 
 		DeleteSourceBundle: aws.Bool(false),
 	})
 
+	// application version is pending delete, or no longer exists.
+	if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
+		return nil
+	}
+
 	if err != nil {
-		if awserr, ok := err.(awserr.Error); ok {
-			// application version is pending delete, or no longer exists.
-			if awserr.Code() == "InvalidParameterValue" {
-				return nil
-			}
-		}
 		return err
 	}
 

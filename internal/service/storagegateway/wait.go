@@ -8,26 +8,26 @@ import (
 )
 
 const (
-	storageGatewayGatewayConnectedMinTimeout                = 10 * time.Second
-	storageGatewayGatewayConnectedContinuousTargetOccurence = 6
-	storageGatewayGatewayJoinDomainJoinedTimeout            = 5 * time.Minute
-	storediSCSIVolumeAvailableTimeout                       = 5 * time.Minute
-	nfsFileShareAvailableDelay                              = 5 * time.Second
-	nfsFileShareDeletedDelay                                = 5 * time.Second
-	smbFileShareAvailableDelay                              = 5 * time.Second
-	smbFileShareDeletedDelay                                = 5 * time.Second
-	fileSystemAssociationAvailableDelay                     = 5 * time.Second
-	fileSystemAssociationDeletedDelay                       = 5 * time.Second
+	gatewayConnectedMinTimeout                = 10 * time.Second
+	gatewayConnectedContinuousTargetOccurence = 6
+	gatewayJoinDomainJoinedTimeout            = 5 * time.Minute
+	storediSCSIVolumeAvailableTimeout         = 5 * time.Minute
+	nfsFileShareAvailableDelay                = 5 * time.Second
+	nfsFileShareDeletedDelay                  = 5 * time.Second
+	smbFileShareAvailableDelay                = 5 * time.Second
+	smbFileShareDeletedDelay                  = 5 * time.Second
+	fileSystemAssociationAvailableDelay       = 5 * time.Second
+	fileSystemAssociationDeletedDelay         = 5 * time.Second
 )
 
-func waitStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
+func waitGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
-		Target:                    []string{storageGatewayGatewayStatusConnected},
-		Refresh:                   statusStorageGatewayGateway(conn, gatewayARN),
+		Target:                    []string{gatewayStatusConnected},
+		Refresh:                   statusGateway(conn, gatewayARN),
 		Timeout:                   timeout,
-		MinTimeout:                storageGatewayGatewayConnectedMinTimeout,
-		ContinuousTargetOccurence: storageGatewayGatewayConnectedContinuousTargetOccurence, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway
+		MinTimeout:                gatewayConnectedMinTimeout,
+		ContinuousTargetOccurence: gatewayConnectedContinuousTargetOccurence, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -40,12 +40,12 @@ func waitStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gat
 	}
 }
 
-func waitStorageGatewayGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
+func waitGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
 		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
-		Refresh: statusStorageGatewayGatewayJoinDomain(conn, volumeARN),
-		Timeout: storageGatewayGatewayJoinDomainJoinedTimeout,
+		Refresh: statusGatewayJoinDomain(conn, volumeARN),
+		Timeout: gatewayJoinDomainJoinedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

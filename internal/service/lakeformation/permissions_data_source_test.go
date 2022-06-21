@@ -16,10 +16,10 @@ func testAccPermissionsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_basic(rName),
@@ -40,10 +40,10 @@ func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_dataLocation(rName),
@@ -65,10 +65,10 @@ func testAccPermissionsDataSource_database(t *testing.T) {
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_database(rName),
@@ -94,10 +94,10 @@ func testAccPermissionsDataSource_table(t *testing.T) {
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_table(rName),
@@ -120,10 +120,10 @@ func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 	dataSourceName := "data.aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_tableWithColumns(rName),

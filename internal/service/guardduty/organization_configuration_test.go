@@ -18,14 +18,14 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		// GuardDuty Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyOrganizationConfigurationConfigAutoEnable(true),
+				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -37,7 +37,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyOrganizationConfigurationConfigAutoEnable(false),
+				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -56,12 +56,12 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDetectorDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyOrganizationConfigurationConfigS3Logs(true),
+				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -74,7 +74,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGuardDutyOrganizationConfigurationConfigS3Logs(false),
+				Config: testAccOrganizationConfigurationConfig_s3Logs(false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
@@ -85,7 +85,7 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 	})
 }
 
-func testAccGuardDutyOrganizationConfigurationConfigAutoEnable(autoEnable bool) string {
+func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -113,7 +113,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 `, autoEnable)
 }
 
-func testAccGuardDutyOrganizationConfigurationConfigS3Logs(autoEnable bool) string {
+func testAccOrganizationConfigurationConfig_s3Logs(autoEnable bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

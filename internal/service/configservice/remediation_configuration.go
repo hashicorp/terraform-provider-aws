@@ -1,6 +1,7 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -160,7 +162,7 @@ func expandRemediationConfigurationExecutionControlsConfig(v map[string]interfac
 	if w, ok := v["ssm_controls"]; ok {
 		x := w.([]interface{})
 		if len(x) > 0 {
-			ssmControls, err := expandRemediationConfigurationSsmControlsConfig(x[0].(map[string]interface{}))
+			ssmControls, err := expandRemediationConfigurationSSMControlsConfig(x[0].(map[string]interface{}))
 			if err != nil {
 				return nil, err
 			}
@@ -173,7 +175,7 @@ func expandRemediationConfigurationExecutionControlsConfig(v map[string]interfac
 	return nil, fmt.Errorf("expected 'ssm_controls' in execution controls configuration")
 }
 
-func expandRemediationConfigurationSsmControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
+func expandRemediationConfigurationSSMControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
 	ret = &configservice.SsmControls{}
 	p := false
 	if concurrentExecutionRatePercentage, ok := v["concurrent_execution_rate_percentage"]; ok {
@@ -214,11 +216,11 @@ func flattenRemediationConfigurationExecutionControlsConfig(controls *configserv
 		return nil
 	}
 	return []interface{}{map[string]interface{}{
-		"ssm_controls": flattenRemediationConfigurationSsmControlsConfig(controls.SsmControls),
+		"ssm_controls": flattenRemediationConfigurationSSMControlsConfig(controls.SsmControls),
 	}}
 }
 
-func flattenRemediationConfigurationSsmControlsConfig(controls *configservice.SsmControls) []interface{} {
+func flattenRemediationConfigurationSSMControlsConfig(controls *configservice.SsmControls) []interface{} {
 	if controls == nil {
 		return nil
 	}
@@ -300,20 +302,26 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
+		log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
-			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
-	if numberOfRemediationConfigurations < 1 {
+	if !d.IsNewResource() && numberOfRemediationConfigurations < 1 {
 		log.Printf("[WARN] No Remediation Configuration for Config Rule %q (no remediation configuration found)", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)

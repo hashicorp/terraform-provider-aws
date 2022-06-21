@@ -693,7 +693,7 @@ func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		Spec:               expandAppmeshVirtualGatewaySpec(d.Get("spec").([]interface{})),
+		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
 		Tags:               Tags(tags.IgnoreAWS()),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	}
@@ -778,7 +778,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
 	d.Set("name", virtualGateway.VirtualGatewayName)
 	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppmeshVirtualGatewaySpec(virtualGateway.Spec))
+	err = d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %w", err)
 	}
@@ -809,7 +809,7 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualGatewayInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
-			Spec:               expandAppmeshVirtualGatewaySpec(d.Get("spec").([]interface{})),
+			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("name").(string)),
 		}
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -881,7 +881,7 @@ func resourceVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
+func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 	if len(vSpec) == 0 || vSpec[0] == nil {
 		return nil
 	}
@@ -896,7 +896,7 @@ func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewa
 		mBackendDefaults := vBackendDefaults[0].(map[string]interface{})
 
 		if vClientPolicy, ok := mBackendDefaults["client_policy"].([]interface{}); ok {
-			backendDefaults.ClientPolicy = expandAppmeshVirtualGatewayClientPolicy(vClientPolicy)
+			backendDefaults.ClientPolicy = expandVirtualGatewayClientPolicy(vClientPolicy)
 		}
 
 		spec.BackendDefaults = backendDefaults
@@ -1158,7 +1158,7 @@ func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewa
 	return spec
 }
 
-func expandAppmeshVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.VirtualGatewayClientPolicy {
+func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.VirtualGatewayClientPolicy {
 	if len(vClientPolicy) == 0 || vClientPolicy[0] == nil {
 		return nil
 	}
@@ -1293,7 +1293,7 @@ func expandAppmeshVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appme
 	return clientPolicy
 }
 
-func flattenAppmeshVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
+func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
@@ -1302,7 +1302,7 @@ func flattenAppmeshVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interf
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
 		mBackendDefaults := map[string]interface{}{
-			"client_policy": flattenAppmeshVirtualGatewayClientPolicy(backendDefaults.ClientPolicy),
+			"client_policy": flattenVirtualGatewayClientPolicy(backendDefaults.ClientPolicy),
 		}
 
 		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
@@ -1469,7 +1469,7 @@ func flattenAppmeshVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interf
 	return []interface{}{mSpec}
 }
 
-func flattenAppmeshVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClientPolicy) []interface{} {
+func flattenVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClientPolicy) []interface{} {
 	if clientPolicy == nil {
 		return []interface{}{}
 	}

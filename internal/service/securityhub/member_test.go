@@ -19,10 +19,10 @@ func testAccMember_basic(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
@@ -44,10 +44,10 @@ func testAccMember_invite(t *testing.T) {
 	resourceName := "aws_securityhub_member.example"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),

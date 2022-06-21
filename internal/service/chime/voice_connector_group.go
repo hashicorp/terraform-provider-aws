@@ -116,11 +116,6 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.Errorf("error updating Chime Voice Connector group (%s): %s", d.Id(), err)
 	}
 

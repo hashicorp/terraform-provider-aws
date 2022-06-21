@@ -21,13 +21,13 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
@@ -52,19 +52,19 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 				),
 			},
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentConfig_forceNew(rName),
+				Config: testAccManagedPolicyAttachmentConfig_forceNew(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
@@ -88,13 +88,13 @@ func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
@@ -111,13 +111,13 @@ func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
@@ -135,19 +135,19 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPolicyAttachmentDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 				),
 			},
 			{
-				Config: testAccSSOAdminManagedPolicyAttachmentConfig_multiple(rName),
+				Config: testAccManagedPolicyAttachmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(resourceName),
 					testAccCheckManagedPolicyAttachmentExists(otherResourceName),
@@ -234,7 +234,7 @@ func testAccCheckManagedPolicyAttachmentExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName string) string {
+func testAccManagedPolicyAttachmentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -247,9 +247,9 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName string) string {
+func testAccManagedPolicyAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
+		testAccManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
@@ -259,9 +259,9 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 `)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentConfig_forceNew(rName string) string {
+func testAccManagedPolicyAttachmentConfig_forceNew(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
+		testAccManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
@@ -271,9 +271,9 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 `)
 }
 
-func testAccSSOAdminManagedPolicyAttachmentConfig_multiple(rName string) string {
+func testAccManagedPolicyAttachmentConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
+		testAccManagedPolicyAttachmentConfig_basic(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "other" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]

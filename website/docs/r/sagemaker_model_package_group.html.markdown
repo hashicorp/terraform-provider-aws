@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model_package_group"
 description: |-
-  Provides a Sagemaker Model Package Group resource.
+  Provides a SageMaker Model Package Group resource.
 ---
 
 # Resource: aws_sagemaker_model_package_group
 
-Provides a Sagemaker Model Package Group resource.
+Provides a SageMaker Model Package Group resource.
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Model Package Groups can be imported using the `name`, e.g.,
+SageMaker Code Model Package Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo

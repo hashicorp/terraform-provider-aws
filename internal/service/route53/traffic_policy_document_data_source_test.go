@@ -20,7 +20,7 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyDocumentDataSourceConfig,
+				Config: testAccTrafficPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicySameJSON("data.aws_route53_traffic_policy_document.test",
 						testAccTrafficPolicyDocumentConfigExpectedJSON()),
@@ -37,7 +37,7 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyDocumentDataSourceConfigComplete,
+				Config: testAccTrafficPolicyDocumentDataSourceConfig_complete,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicySameJSON("data.aws_route53_traffic_policy_document.test",
 						testAccTrafficPolicyDocumentConfigCompleteExpectedJSON()),
@@ -162,7 +162,7 @@ func testAccTrafficPolicyDocumentConfigCompleteExpectedJSON() string {
 }`, acctest.Region(), acctest.AlternateRegion())
 }
 
-const testAccTrafficPolicyDocumentDataSourceConfig = `
+const testAccTrafficPolicyDocumentDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_route53_traffic_policy_document" "test" {
@@ -195,7 +195,7 @@ data "aws_route53_traffic_policy_document" "test" {
 }
 `
 
-const testAccTrafficPolicyDocumentDataSourceConfigComplete = `
+const testAccTrafficPolicyDocumentDataSourceConfig_complete = `
 data "aws_availability_zones" "available" {
   state = "available"
 }

@@ -108,7 +108,7 @@ resource "aws_cloudtrail" "example" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["arn:aws:s3:::"]
+      values = ["arn:aws:s3"]
     }
   }
 }

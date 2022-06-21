@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	storageGatewayGatewayStatusConnected = "GatewayConnected"
-	storediSCSIVolumeStatusNotFound      = "NotFound"
+	gatewayStatusConnected          = "GatewayConnected"
+	storediSCSIVolumeStatusNotFound = "NotFound"
 )
 
-func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeGatewayInformationInput{
 			GatewayARN: aws.String(gatewayARN),
@@ -29,11 +29,11 @@ func statusStorageGatewayGateway(conn *storagegateway.StorageGateway, gatewayARN
 			return output, "", err
 		}
 
-		return output, storageGatewayGatewayStatusConnected, nil
+		return output, gatewayStatusConnected, nil
 	}
 }
 
-func statusStorageGatewayGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+func statusGatewayJoinDomain(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &storagegateway.DescribeSMBSettingsInput{
 			GatewayARN: aws.String(gatewayARN),

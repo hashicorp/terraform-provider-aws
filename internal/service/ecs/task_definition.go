@@ -941,7 +941,7 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 		}
 
 		if v, ok := data["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFsxWinVolume(v)
+			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFSxWinVolume(v)
 		}
 
 		volumes = append(volumes, l)
@@ -959,8 +959,7 @@ func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfig
 	}
 
 	if v, ok := config["autoprovision"]; ok && v != "" {
-		scope := dockerVol.Scope
-		if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+		if dockerVol.Scope == nil || aws.StringValue(dockerVol.Scope) != ecs.ScopeTask || v.(bool) {
 			dockerVol.Autoprovision = aws.Bool(v.(bool))
 		}
 	}
@@ -1021,7 +1020,7 @@ func expandVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFS
 	return auth
 }
 
-func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
+func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
@@ -1034,13 +1033,13 @@ func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileSe
 	}
 
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		fsxVol.AuthorizationConfig = expandVolumesFsxWinVolumeAuthorizationConfig(v)
+		fsxVol.AuthorizationConfig = expandVolumesFSxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
 }
 
-func expandVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
 	authconfig := config[0].(map[string]interface{})
 	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
 
@@ -1075,7 +1074,7 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 		}
 
 		if volume.FsxWindowsFileServerVolumeConfiguration != nil {
-			l["fsx_windows_file_server_volume_configuration"] = flattenFsxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
+			l["fsx_windows_file_server_volume_configuration"] = flattenFSxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
 		}
 
 		result = append(result, l)
@@ -1155,7 +1154,7 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 	return items
 }
 
-func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
+func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1168,7 +1167,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 		}
 
 		if v := config.AuthorizationConfig; v != nil {
-			m["authorization_config"] = flattenFsxWinVolumeAuthorizationConfig(v)
+			m["authorization_config"] = flattenFSxWinVolumeAuthorizationConfig(v)
 		}
 	}
 
@@ -1176,7 +1175,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	return items
 }
 
-func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
+func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {

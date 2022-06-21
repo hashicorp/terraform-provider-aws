@@ -286,7 +286,7 @@ func resourceStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
 
-	if err := d.Set("parameters", flattenAllCloudFormationParameters(stackSet.Parameters)); err != nil {
+	if err := d.Set("parameters", flattenAllParameters(stackSet.Parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %s", err)
 	}
 
@@ -337,7 +337,7 @@ func resourceStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandCloudFormationOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {

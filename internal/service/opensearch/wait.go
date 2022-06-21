@@ -116,6 +116,7 @@ func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName s
 
 		return resource.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch domain %q to be deleted", domainName))
 	})
+
 	if tfresource.TimedOut(err) {
 		out, err = FindDomainByName(conn, domainName)
 		if err != nil {
@@ -128,8 +129,27 @@ func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName s
 			return nil
 		}
 	}
+
 	if err != nil {
 		return fmt.Errorf("Error waiting for OpenSearch domain to be deleted: %s", err)
 	}
+
+	// opensearch maintains information about the domain in multiple (at least 2) places that need
+	// to clear before it is really deleted - otherwise, requesting information about domain immediately
+	// after delete will return info about just deleted domain
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
+		Target:                    []string{ConfigStatusNotFound},
+		Refresh:                   domainConfigStatus(conn, domainName),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

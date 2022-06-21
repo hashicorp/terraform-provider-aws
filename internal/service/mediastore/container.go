@@ -73,7 +73,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{mediastore.ContainerStatusCreating},
 		Target:     []string{mediastore.ContainerStatusActive},
-		Refresh:    mediaStoreContainerRefreshStatusFunc(conn, d.Id()),
+		Refresh:    containerRefreshStatusFunc(conn, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -182,7 +182,7 @@ func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mediaStoreContainerRefreshStatusFunc(conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
+func containerRefreshStatusFunc(conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(cn),

@@ -13,7 +13,7 @@ func TestExpandEndpoints(t *testing.T) {
 	defer popEnv(oldEnv)
 
 	endpoints := make(map[string]interface{})
-	for _, serviceKey := range names.HCLKeys() {
+	for _, serviceKey := range names.Aliases() {
 		endpoints[serviceKey] = ""
 	}
 	endpoints["sts"] = "https://sts.fake.test"
@@ -69,7 +69,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 		defer popEnv(oldEnv)
 
 		endpoints := make(map[string]interface{})
-		for _, serviceKey := range names.HCLKeys() {
+		for _, serviceKey := range names.Aliases() {
 			endpoints[serviceKey] = ""
 		}
 		for k, v := range testcase.endpoints {
@@ -146,7 +146,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 		}
 
 		endpoints := make(map[string]interface{})
-		for _, serviceKey := range names.HCLKeys() {
+		for _, serviceKey := range names.Aliases() {
 			endpoints[serviceKey] = ""
 		}
 		for k, v := range testcase.endpoints {

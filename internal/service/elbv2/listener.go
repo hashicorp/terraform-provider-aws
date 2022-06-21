@@ -759,7 +759,7 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 
 		case elbv2.ActionTypeEnumAuthenticateOidc:
 			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
-				action.AuthenticateOidcConfig = expandLbListenerAuthenticateOidcConfig(v)
+				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 			} else {
 				err = errors.New("for actions of type 'authenticate-oidc', you must specify a 'authenticate_oidc' block")
 			}
@@ -808,7 +808,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 	return config
 }
 
-func expandLbListenerAuthenticateOidcConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -989,7 +989,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 				clientSecret = v.(string)
 			}
 
-			m["authenticate_oidc"] = flattenLbListenerActionAuthenticateOidcConfig(action.AuthenticateOidcConfig, clientSecret)
+			m["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
 		}
 
 		vActions = append(vActions, m)
@@ -998,7 +998,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 	return vActions
 }
 
-func flattenLbListenerActionAuthenticateOidcConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenAuthenticateOIDCActionConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}

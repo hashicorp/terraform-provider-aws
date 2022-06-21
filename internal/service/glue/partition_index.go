@@ -98,7 +98,7 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(createPartitionIndexID(catalogID, dbName, tableName, aws.StringValue(input.PartitionIndex.IndexName)))
 
-	if _, err := waitGluePartitionIndexCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitPartitionIndexCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -129,7 +129,7 @@ func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", dbName)
 
-	if err := d.Set("partition_index", []map[string]interface{}{flattenGluePartitionIndex(partition)}); err != nil {
+	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(partition)}); err != nil {
 		return fmt.Errorf("error setting partition_index: %w", err)
 	}
 
@@ -158,7 +158,7 @@ func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error deleting Glue Partition Index: %w", err)
 	}
 
-	if _, err := waitGluePartitionIndexDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitPartitionIndexDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to be deleted: %w", d.Id(), err)
 	}
 

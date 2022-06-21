@@ -162,7 +162,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{{ .Resource }}Config(rName),
+				Config: testAcc{{ .Resource }}Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -206,7 +206,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{{ .Resource }}Config(rName, testAcc{{ .Resource }}VersionNewer),
+				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
 					acctest.CheckResourceDisappears(acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}(), resourceName),
@@ -295,7 +295,7 @@ func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }
 	}
 }
 
-func testAcc{{ .Resource }}Config(rName, version string) string {
+func testAcc{{ .Resource }}Config_basic(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q

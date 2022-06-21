@@ -427,7 +427,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if v, ok := d.GetOk("rule_group"); ok {
 		if vRaw := v.([]interface{}); len(vRaw) > 0 && vRaw[0] != nil {
-			input.RuleGroup = expandNetworkFirewallRuleGroup(vRaw)
+			input.RuleGroup = expandRuleGroup(vRaw)
 		}
 	}
 	if v, ok := d.GetOk("rules"); ok {
@@ -489,7 +489,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("type", resp.Type)
 	d.Set("update_token", output.UpdateToken)
 
-	if err := d.Set("rule_group", flattenNetworkFirewallRuleGroup(ruleGroup)); err != nil {
+	if err := d.Set("rule_group", flattenRuleGroup(ruleGroup)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting rule_group: %w", err))
 	}
 
@@ -531,7 +531,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if d.HasChange("rules") {
 			input.Rules = aws.String(d.Get("rules").(string))
 		} else if d.HasChange("rule_group") {
-			input.RuleGroup = expandNetworkFirewallRuleGroup(d.Get("rule_group").([]interface{}))
+			input.RuleGroup = expandRuleGroup(d.Get("rule_group").([]interface{}))
 		}
 
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
@@ -590,7 +590,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func expandNetworkFirewallStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
+func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -622,7 +622,7 @@ func expandNetworkFirewallStatefulRuleHeader(l []interface{}) *networkfirewall.H
 	return header
 }
 
-func expandNetworkFirewallStatefulRuleOptions(l []interface{}) []*networkfirewall.RuleOption {
+func expandStatefulRuleOptions(l []interface{}) []*networkfirewall.RuleOption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -646,7 +646,7 @@ func expandNetworkFirewallStatefulRuleOptions(l []interface{}) []*networkfirewal
 	return ruleOptions
 }
 
-func expandNetworkFirewallRulesSourceList(l []interface{}) *networkfirewall.RulesSourceList {
+func expandRulesSourceList(l []interface{}) *networkfirewall.RulesSourceList {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -669,7 +669,7 @@ func expandNetworkFirewallRulesSourceList(l []interface{}) *networkfirewall.Rule
 	return rulesSourceList
 }
 
-func expandNetworkFirewallStatefulRules(l []interface{}) []*networkfirewall.StatefulRule {
+func expandStatefulRules(l []interface{}) []*networkfirewall.StatefulRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -685,10 +685,10 @@ func expandNetworkFirewallStatefulRules(l []interface{}) []*networkfirewall.Stat
 			rule.Action = aws.String(v)
 		}
 		if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.Header = expandNetworkFirewallStatefulRuleHeader(v)
+			rule.Header = expandStatefulRuleHeader(v)
 		}
 		if v, ok := tfMap["rule_option"].(*schema.Set); ok && v.Len() > 0 {
-			rule.RuleOptions = expandNetworkFirewallStatefulRuleOptions(v.List())
+			rule.RuleOptions = expandStatefulRuleOptions(v.List())
 		}
 		rules = append(rules, rule)
 	}
@@ -696,7 +696,7 @@ func expandNetworkFirewallStatefulRules(l []interface{}) []*networkfirewall.Stat
 	return rules
 }
 
-func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup {
+func expandRuleGroup(l []interface{}) *networkfirewall.RuleGroup {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -710,10 +710,10 @@ func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup 
 		rvMap, ok := tfList[0].(map[string]interface{})
 		if ok {
 			if v, ok := rvMap["ip_sets"].(*schema.Set); ok && v.Len() > 0 {
-				ruleVariables.IPSets = expandNetworkFirewallIPSets(v.List())
+				ruleVariables.IPSets = expandIPSets(v.List())
 			}
 			if v, ok := rvMap["port_sets"].(*schema.Set); ok && v.Len() > 0 {
-				ruleVariables.PortSets = expandNetworkFirewallPortSets(v.List())
+				ruleVariables.PortSets = expandPortSets(v.List())
 			}
 			ruleGroup.RuleVariables = ruleVariables
 		}
@@ -723,16 +723,16 @@ func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup 
 		rsMap, ok := tfList[0].(map[string]interface{})
 		if ok {
 			if v, ok := rsMap["rules_source_list"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				rulesSource.RulesSourceList = expandNetworkFirewallRulesSourceList(v)
+				rulesSource.RulesSourceList = expandRulesSourceList(v)
 			}
 			if v, ok := rsMap["rules_string"].(string); ok && v != "" {
 				rulesSource.RulesString = aws.String(v)
 			}
 			if v, ok := rsMap["stateful_rule"].(*schema.Set); ok && v.Len() > 0 {
-				rulesSource.StatefulRules = expandNetworkFirewallStatefulRules(v.List())
+				rulesSource.StatefulRules = expandStatefulRules(v.List())
 			}
 			if v, ok := rsMap["stateless_rules_and_custom_actions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				rulesSource.StatelessRulesAndCustomActions = expandNetworkFirewallStatelessRulesAndCustomActions(v)
+				rulesSource.StatelessRulesAndCustomActions = expandStatelessRulesAndCustomActions(v)
 			}
 			ruleGroup.RulesSource = rulesSource
 		}
@@ -751,7 +751,7 @@ func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup 
 	return ruleGroup
 }
 
-func expandNetworkFirewallIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
+func expandIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -781,7 +781,7 @@ func expandNetworkFirewallIPSets(l []interface{}) map[string]*networkfirewall.IP
 	return m
 }
 
-func expandNetworkFirewallPortSets(l []interface{}) map[string]*networkfirewall.PortSet {
+func expandPortSets(l []interface{}) map[string]*networkfirewall.PortSet {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -811,7 +811,7 @@ func expandNetworkFirewallPortSets(l []interface{}) map[string]*networkfirewall.
 	return m
 }
 
-func expandNetworkFirewallAddresses(l []interface{}) []*networkfirewall.Address {
+func expandAddresses(l []interface{}) []*networkfirewall.Address {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -830,7 +830,7 @@ func expandNetworkFirewallAddresses(l []interface{}) []*networkfirewall.Address 
 	return destinations
 }
 
-func expandNetworkFirewallPortRanges(l []interface{}) []*networkfirewall.PortRange {
+func expandPortRanges(l []interface{}) []*networkfirewall.PortRange {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -852,7 +852,7 @@ func expandNetworkFirewallPortRanges(l []interface{}) []*networkfirewall.PortRan
 	return ports
 }
 
-func expandNetworkFirewallTCPFlags(l []interface{}) []*networkfirewall.TCPFlagField {
+func expandTCPFlags(l []interface{}) []*networkfirewall.TCPFlagField {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -874,7 +874,7 @@ func expandNetworkFirewallTCPFlags(l []interface{}) []*networkfirewall.TCPFlagFi
 	return tcpFlags
 }
 
-func expandNetworkFirewallMatchAttributes(l []interface{}) *networkfirewall.MatchAttributes {
+func expandMatchAttributes(l []interface{}) *networkfirewall.MatchAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -885,28 +885,28 @@ func expandNetworkFirewallMatchAttributes(l []interface{}) *networkfirewall.Matc
 	}
 	matchAttributes := &networkfirewall.MatchAttributes{}
 	if v, ok := tfMap["destination"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.Destinations = expandNetworkFirewallAddresses(v.List())
+		matchAttributes.Destinations = expandAddresses(v.List())
 	}
 	if v, ok := tfMap["destination_port"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.DestinationPorts = expandNetworkFirewallPortRanges(v.List())
+		matchAttributes.DestinationPorts = expandPortRanges(v.List())
 	}
 	if v, ok := tfMap["protocols"].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Protocols = flex.ExpandInt64Set(v)
 	}
 	if v, ok := tfMap["source"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.Sources = expandNetworkFirewallAddresses(v.List())
+		matchAttributes.Sources = expandAddresses(v.List())
 	}
 	if v, ok := tfMap["source_port"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.SourcePorts = expandNetworkFirewallPortRanges(v.List())
+		matchAttributes.SourcePorts = expandPortRanges(v.List())
 	}
 	if v, ok := tfMap["tcp_flag"].(*schema.Set); ok && v.Len() > 0 {
-		matchAttributes.TCPFlags = expandNetworkFirewallTCPFlags(v.List())
+		matchAttributes.TCPFlags = expandTCPFlags(v.List())
 	}
 
 	return matchAttributes
 }
 
-func expandNetworkFirewallRuleDefinition(l []interface{}) *networkfirewall.RuleDefinition {
+func expandRuleDefinition(l []interface{}) *networkfirewall.RuleDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -919,12 +919,12 @@ func expandNetworkFirewallRuleDefinition(l []interface{}) *networkfirewall.RuleD
 		rd.Actions = flex.ExpandStringSet(v)
 	}
 	if v, ok := tfMap["match_attributes"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		rd.MatchAttributes = expandNetworkFirewallMatchAttributes(v)
+		rd.MatchAttributes = expandMatchAttributes(v)
 	}
 	return rd
 }
 
-func expandNetworkFirewallStatelessRules(l []interface{}) []*networkfirewall.StatelessRule {
+func expandStatelessRules(l []interface{}) []*networkfirewall.StatelessRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -939,7 +939,7 @@ func expandNetworkFirewallStatelessRules(l []interface{}) []*networkfirewall.Sta
 			statelessRule.Priority = aws.Int64(int64(v))
 		}
 		if v, ok := tfMap["rule_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			statelessRule.RuleDefinition = expandNetworkFirewallRuleDefinition(v)
+			statelessRule.RuleDefinition = expandRuleDefinition(v)
 		}
 		statelessRules = append(statelessRules, statelessRule)
 	}
@@ -947,7 +947,7 @@ func expandNetworkFirewallStatelessRules(l []interface{}) []*networkfirewall.Sta
 	return statelessRules
 }
 
-func expandNetworkFirewallStatelessRulesAndCustomActions(l []interface{}) *networkfirewall.StatelessRulesAndCustomActions {
+func expandStatelessRulesAndCustomActions(l []interface{}) *networkfirewall.StatelessRulesAndCustomActions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -958,42 +958,42 @@ func expandNetworkFirewallStatelessRulesAndCustomActions(l []interface{}) *netwo
 		return nil
 	}
 	if v, ok := tfMap["custom_action"].(*schema.Set); ok && v.Len() > 0 {
-		s.CustomActions = expandNetworkFirewallCustomActions(v.List())
+		s.CustomActions = expandCustomActions(v.List())
 	}
 	if v, ok := tfMap["stateless_rule"].(*schema.Set); ok && v.Len() > 0 {
-		s.StatelessRules = expandNetworkFirewallStatelessRules(v.List())
+		s.StatelessRules = expandStatelessRules(v.List())
 	}
 
 	return s
 }
 
-func flattenNetworkFirewallRuleGroup(r *networkfirewall.RuleGroup) []interface{} {
+func flattenRuleGroup(r *networkfirewall.RuleGroup) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"rule_variables":        flattenNetworkFirewallRuleVariables(r.RuleVariables),
-		"rules_source":          flattenNetworkFirewallRulesSource(r.RulesSource),
-		"stateful_rule_options": flattenNetworkFirewallStatefulRulesOptions(r.StatefulRuleOptions),
+		"rule_variables":        flattenRuleVariables(r.RuleVariables),
+		"rules_source":          flattenRulesSource(r.RulesSource),
+		"stateful_rule_options": flattenStatefulRulesOptions(r.StatefulRuleOptions),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallRuleVariables(rv *networkfirewall.RuleVariables) []interface{} {
+func flattenRuleVariables(rv *networkfirewall.RuleVariables) []interface{} {
 	if rv == nil {
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		"ip_sets":   flattenNetworkFirewallIPSets(rv.IPSets),
-		"port_sets": flattenNetworkFirewallPortSets(rv.PortSets),
+		"ip_sets":   flattenIPSets(rv.IPSets),
+		"port_sets": flattenPortSets(rv.PortSets),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallIPSets(m map[string]*networkfirewall.IPSet) []interface{} {
+func flattenIPSets(m map[string]*networkfirewall.IPSet) []interface{} {
 	if m == nil {
 		return []interface{}{}
 	}
@@ -1001,7 +1001,7 @@ func flattenNetworkFirewallIPSets(m map[string]*networkfirewall.IPSet) []interfa
 	for k, v := range m {
 		tfMap := map[string]interface{}{
 			"key":    k,
-			"ip_set": flattenNetworkFirewallIPSet(v),
+			"ip_set": flattenIPSet(v),
 		}
 		sets = append(sets, tfMap)
 	}
@@ -1009,7 +1009,7 @@ func flattenNetworkFirewallIPSets(m map[string]*networkfirewall.IPSet) []interfa
 	return sets
 }
 
-func flattenNetworkFirewallPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
+func flattenPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
 	if m == nil {
 		return []interface{}{}
 	}
@@ -1017,7 +1017,7 @@ func flattenNetworkFirewallPortSets(m map[string]*networkfirewall.PortSet) []int
 	for k, v := range m {
 		tfMap := map[string]interface{}{
 			"key":      k,
-			"port_set": flattenNetworkFirewallPortSet(v),
+			"port_set": flattenPortSet(v),
 		}
 		sets = append(sets, tfMap)
 	}
@@ -1025,7 +1025,7 @@ func flattenNetworkFirewallPortSets(m map[string]*networkfirewall.PortSet) []int
 	return sets
 }
 
-func flattenNetworkFirewallIPSet(i *networkfirewall.IPSet) []interface{} {
+func flattenIPSet(i *networkfirewall.IPSet) []interface{} {
 	if i == nil {
 		return []interface{}{}
 	}
@@ -1036,7 +1036,7 @@ func flattenNetworkFirewallIPSet(i *networkfirewall.IPSet) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallPortSet(p *networkfirewall.PortSet) []interface{} {
+func flattenPortSet(p *networkfirewall.PortSet) []interface{} {
 	if p == nil {
 		return []interface{}{}
 	}
@@ -1047,22 +1047,22 @@ func flattenNetworkFirewallPortSet(p *networkfirewall.PortSet) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallRulesSource(rs *networkfirewall.RulesSource) []interface{} {
+func flattenRulesSource(rs *networkfirewall.RulesSource) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"rules_source_list":                  flattenNetworkFirewallRulesSourceList(rs.RulesSourceList),
+		"rules_source_list":                  flattenRulesSourceList(rs.RulesSourceList),
 		"rules_string":                       aws.StringValue(rs.RulesString),
-		"stateful_rule":                      flattenNetworkFirewallStatefulRules(rs.StatefulRules),
-		"stateless_rules_and_custom_actions": flattenNetworkFirewallStatelessRulesAndCustomActions(rs.StatelessRulesAndCustomActions),
+		"stateful_rule":                      flattenStatefulRules(rs.StatefulRules),
+		"stateless_rules_and_custom_actions": flattenStatelessRulesAndCustomActions(rs.StatelessRulesAndCustomActions),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallRulesSourceList(r *networkfirewall.RulesSourceList) []interface{} {
+func flattenRulesSourceList(r *networkfirewall.RulesSourceList) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
@@ -1076,7 +1076,7 @@ func flattenNetworkFirewallRulesSourceList(r *networkfirewall.RulesSourceList) [
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallStatefulRules(sr []*networkfirewall.StatefulRule) []interface{} {
+func flattenStatefulRules(sr []*networkfirewall.StatefulRule) []interface{} {
 	if sr == nil {
 		return []interface{}{}
 	}
@@ -1084,15 +1084,15 @@ func flattenNetworkFirewallStatefulRules(sr []*networkfirewall.StatefulRule) []i
 	for _, s := range sr {
 		m := map[string]interface{}{
 			"action":      aws.StringValue(s.Action),
-			"header":      flattenNetworkFirewallHeader(s.Header),
-			"rule_option": flattenNetworkFirewallRuleOptions(s.RuleOptions),
+			"header":      flattenHeader(s.Header),
+			"rule_option": flattenRuleOptions(s.RuleOptions),
 		}
 		rules = append(rules, m)
 	}
 	return rules
 }
 
-func flattenNetworkFirewallHeader(h *networkfirewall.Header) []interface{} {
+func flattenHeader(h *networkfirewall.Header) []interface{} {
 	if h == nil {
 		return []interface{}{}
 	}
@@ -1109,7 +1109,7 @@ func flattenNetworkFirewallHeader(h *networkfirewall.Header) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallRuleOptions(o []*networkfirewall.RuleOption) []interface{} {
+func flattenRuleOptions(o []*networkfirewall.RuleOption) []interface{} {
 	if o == nil {
 		return []interface{}{}
 	}
@@ -1126,20 +1126,20 @@ func flattenNetworkFirewallRuleOptions(o []*networkfirewall.RuleOption) []interf
 	return options
 }
 
-func flattenNetworkFirewallStatelessRulesAndCustomActions(sr *networkfirewall.StatelessRulesAndCustomActions) []interface{} {
+func flattenStatelessRulesAndCustomActions(sr *networkfirewall.StatelessRulesAndCustomActions) []interface{} {
 	if sr == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"custom_action":  flattenNetworkFirewallCustomActions(sr.CustomActions),
-		"stateless_rule": flattenNetworkFirewallStatelessRules(sr.StatelessRules),
+		"custom_action":  flattenCustomActions(sr.CustomActions),
+		"stateless_rule": flattenStatelessRules(sr.StatelessRules),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallStatelessRules(sr []*networkfirewall.StatelessRule) []interface{} {
+func flattenStatelessRules(sr []*networkfirewall.StatelessRule) []interface{} {
 	if sr == nil {
 		return []interface{}{}
 	}
@@ -1148,7 +1148,7 @@ func flattenNetworkFirewallStatelessRules(sr []*networkfirewall.StatelessRule) [
 	for _, s := range sr {
 		rule := map[string]interface{}{
 			"priority":        int(aws.Int64Value(s.Priority)),
-			"rule_definition": flattenNetworkFirewallRuleDefinition(s.RuleDefinition),
+			"rule_definition": flattenRuleDefinition(s.RuleDefinition),
 		}
 		rules = append(rules, rule)
 	}
@@ -1156,37 +1156,37 @@ func flattenNetworkFirewallStatelessRules(sr []*networkfirewall.StatelessRule) [
 	return rules
 }
 
-func flattenNetworkFirewallRuleDefinition(r *networkfirewall.RuleDefinition) []interface{} {
+func flattenRuleDefinition(r *networkfirewall.RuleDefinition) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"actions":          flex.FlattenStringSet(r.Actions),
-		"match_attributes": flattenNetworkFirewallMatchAttributes(r.MatchAttributes),
+		"match_attributes": flattenMatchAttributes(r.MatchAttributes),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallMatchAttributes(ma *networkfirewall.MatchAttributes) []interface{} {
+func flattenMatchAttributes(ma *networkfirewall.MatchAttributes) []interface{} {
 	if ma == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"destination":      flattenNetworkFirewallAddresses(ma.Destinations),
-		"destination_port": flattenNetworkFirewallPortRanges(ma.DestinationPorts),
+		"destination":      flattenAddresses(ma.Destinations),
+		"destination_port": flattenPortRanges(ma.DestinationPorts),
 		"protocols":        flex.FlattenInt64Set(ma.Protocols),
-		"source":           flattenNetworkFirewallAddresses(ma.Sources),
-		"source_port":      flattenNetworkFirewallPortRanges(ma.SourcePorts),
-		"tcp_flag":         flattenNetworkFirewallTCPFlags(ma.TCPFlags),
+		"source":           flattenAddresses(ma.Sources),
+		"source_port":      flattenPortRanges(ma.SourcePorts),
+		"tcp_flag":         flattenTCPFlags(ma.TCPFlags),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallAddresses(d []*networkfirewall.Address) []interface{} {
+func flattenAddresses(d []*networkfirewall.Address) []interface{} {
 	if d == nil {
 		return []interface{}{}
 	}
@@ -1202,7 +1202,7 @@ func flattenNetworkFirewallAddresses(d []*networkfirewall.Address) []interface{}
 	return destinations
 }
 
-func flattenNetworkFirewallPortRanges(pr []*networkfirewall.PortRange) []interface{} {
+func flattenPortRanges(pr []*networkfirewall.PortRange) []interface{} {
 	if pr == nil {
 		return []interface{}{}
 	}
@@ -1219,7 +1219,7 @@ func flattenNetworkFirewallPortRanges(pr []*networkfirewall.PortRange) []interfa
 	return portRanges
 }
 
-func flattenNetworkFirewallTCPFlags(t []*networkfirewall.TCPFlagField) []interface{} {
+func flattenTCPFlags(t []*networkfirewall.TCPFlagField) []interface{} {
 	if t == nil {
 		return []interface{}{}
 	}
@@ -1235,7 +1235,7 @@ func flattenNetworkFirewallTCPFlags(t []*networkfirewall.TCPFlagField) []interfa
 	return flagFields
 }
 
-func flattenNetworkFirewallStatefulRulesOptions(sro *networkfirewall.StatefulRuleOptions) []interface{} {
+func flattenStatefulRulesOptions(sro *networkfirewall.StatefulRuleOptions) []interface{} {
 	if sro == nil {
 		return []interface{}{}
 	}

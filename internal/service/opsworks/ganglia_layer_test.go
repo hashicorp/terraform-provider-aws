@@ -16,13 +16,13 @@ func TestAccOpsWorksGangliaLayer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ganglia_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGangliaLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGangliaLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGangliaLayerVPCCreateConfig(rName),
+				Config: testAccGangliaLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -37,13 +37,13 @@ func TestAccOpsWorksGangliaLayer_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_ganglia_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGangliaLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGangliaLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGangliaLayerTags1Config(rName, "key1", "value1"),
+				Config: testAccGangliaLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -51,7 +51,7 @@ func TestAccOpsWorksGangliaLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGangliaLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGangliaLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -60,7 +60,7 @@ func TestAccOpsWorksGangliaLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGangliaLayerTags1Config(rName, "key2", "value2"),
+				Config: testAccGangliaLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -75,9 +75,9 @@ func testAccCheckGangliaLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_ganglia_layer", s)
 }
 
-func testAccGangliaLayerVPCCreateConfig(rName string) string {
+func testAccGangliaLayerConfig_vpcCreate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
@@ -93,9 +93,9 @@ resource "aws_opsworks_ganglia_layer" "test" {
 `, rName))
 }
 
-func testAccGangliaLayerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccGangliaLayerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
@@ -115,9 +115,9 @@ resource "aws_opsworks_ganglia_layer" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccGangliaLayerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGangliaLayerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {

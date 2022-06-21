@@ -55,7 +55,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(roleNameMaxLen),
+				ValidateFunc:  validResourceName(roleNameMaxLen),
 			},
 
 			"name_prefix": {
@@ -64,7 +64,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(roleNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
 			},
 
 			"path": {
@@ -254,7 +254,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -343,7 +343,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err := tfresource.RetryWhen(
-			PropagationTimeout,
+			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 			},
@@ -554,7 +554,7 @@ func DeleteRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasManag
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRole(deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
@@ -604,7 +604,7 @@ func deleteRoleInstanceProfiles(conn *iam.IAM, roleName string) error {
 
 func retryCreateRole(conn *iam.IAM, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(
-		PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateRole(input)
 		},

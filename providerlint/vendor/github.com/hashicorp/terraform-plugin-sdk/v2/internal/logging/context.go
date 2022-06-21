@@ -17,6 +17,8 @@ func InitContext(ctx context.Context) context.Context {
 		// All calls are through the HelperSchema* helper functions
 		tfsdklog.WithAdditionalLocationOffset(1),
 		tfsdklog.WithLevelFromEnv(EnvTfLogSdkHelperSchema),
+		// Propagate tf_req_id, tf_rpc, etc. fields
+		tfsdklog.WithRootFields(),
 	)
 
 	return ctx

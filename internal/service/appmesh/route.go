@@ -325,13 +325,13 @@ func ResourceRoute() *schema.Resource {
 						},
 
 						"http2_route": func() *schema.Schema {
-							schema := appmeshRouteHttpRouteSchema()
+							schema := RouteHTTPRouteSchema()
 							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
 							return schema
 						}(),
 
 						"http_route": func() *schema.Schema {
-							schema := appmeshRouteHttpRouteSchema()
+							schema := RouteHTTPRouteSchema()
 							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.tcp_route"}
 							return schema
 						}(),
@@ -448,8 +448,8 @@ func ResourceRoute() *schema.Resource {
 	}
 }
 
-// appmeshRouteHttpRouteSchema returns the schema for `http2_route` and `http_route` attributes.
-func appmeshRouteHttpRouteSchema() *schema.Schema {
+// RouteHTTPRouteSchema returns the schema for `http2_route` and `http_route` attributes.
+func RouteHTTPRouteSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -797,7 +797,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.Route.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshRouteSpec(resp.Route.Spec))
+	err = d.Set("spec", flattenRouteSpec(resp.Route.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}

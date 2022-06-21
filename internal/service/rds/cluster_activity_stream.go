@@ -17,9 +17,9 @@ import (
 
 func ResourceClusterActivityStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsRDSClusterActivityStreamCreate,
-		ReadContext:   resourceAwsRDSClusterActivityStreamRead,
-		DeleteContext: resourceAwsRDSClusterActivityStreamDelete,
+		CreateContext: resourceClusterActivityStreamCreate,
+		ReadContext:   resourceClusterActivityStreamRead,
+		DeleteContext: resourceClusterActivityStreamDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,7 +56,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 	}
 }
 
-func resourceAwsRDSClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	resourceArn := d.Get("resource_arn").(string)
@@ -85,10 +85,10 @@ func resourceAwsRDSClusterActivityStreamCreate(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	return resourceAwsRDSClusterActivityStreamRead(ctx, d, meta)
+	return resourceClusterActivityStreamRead(ctx, d, meta)
 }
 
-func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	log.Printf("[DEBUG] Finding DB Cluster (%s)", d.Id())
@@ -112,7 +112,7 @@ func resourceAwsRDSClusterActivityStreamRead(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceAwsRDSClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	stopActivityStreamInput := &rds.StopActivityStreamInput{

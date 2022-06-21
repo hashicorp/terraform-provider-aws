@@ -62,7 +62,7 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.CreateImageVersion(input)
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker Image Version %s: %w", name, err)
+		return fmt.Errorf("error creating SageMaker Image Version %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -81,10 +81,10 @@ func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Sagemaker Image Version (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Image Version (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading Sagemaker Image Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker Image Version (%s): %w", d.Id(), err)
 
 	}
 
@@ -110,7 +110,7 @@ func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Sagemaker Image Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting SageMaker Image Version (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitImageVersionDeleted(conn, d.Id()); err != nil {

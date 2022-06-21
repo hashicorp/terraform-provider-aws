@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -245,15 +244,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	input := &eks.CreateClusterInput{
-		EncryptionConfig:   expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
-		Logging:            expandEksLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
+		EncryptionConfig:   testAccClusterConfig_expandEncryption(d.Get("encryption_config").([]interface{})),
+		Logging:            expandLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
+		ResourcesVpcConfig: testAccClusterConfig_expandVPCRequest(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 	}
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
-		input.KubernetesNetworkConfig = expandEksNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+		input.KubernetesNetworkConfig = expandNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -266,7 +265,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EKS Cluster: %s", input)
 	var output *eks.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateCluster(input)
@@ -340,27 +339,27 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.Arn)
 
-	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
+	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return fmt.Errorf("error setting certificate_authority: %w", err)
 	}
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
+	if err := d.Set("enabled_cluster_log_types", flattenEnabledLogTypes(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %w", err)
 	}
 
-	if err := d.Set("encryption_config", flattenEksEncryptionConfig(cluster.EncryptionConfig)); err != nil {
+	if err := d.Set("encryption_config", flattenEncryptionConfig(cluster.EncryptionConfig)); err != nil {
 		return fmt.Errorf("error setting encryption_config: %w", err)
 	}
 
 	d.Set("endpoint", cluster.Endpoint)
 
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return fmt.Errorf("error setting identity: %w", err)
 	}
 
-	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
 	}
 
@@ -370,7 +369,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 
-	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
@@ -420,7 +419,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 1 {
 			input := &eks.AssociateEncryptionConfigInput{
 				ClusterName:      aws.String(d.Id()),
-				EncryptionConfig: expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
+				EncryptionConfig: testAccClusterConfig_expandEncryption(d.Get("encryption_config").([]interface{})),
 			}
 
 			log.Printf("[DEBUG] Associating EKS Cluster (%s) encryption config: %s", d.Id(), input)
@@ -442,7 +441,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enabled_cluster_log_types") {
 		input := &eks.UpdateClusterConfigInput{
-			Logging: expandEksLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
+			Logging: expandLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 			Name:    aws.String(d.Id()),
 		}
 
@@ -465,7 +464,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:               aws.String(d.Id()),
-			ResourcesVpcConfig: expandEksVpcConfigUpdateRequest(d.Get("vpc_config").([]interface{})),
+			ResourcesVpcConfig: testAccClusterConfig_expandVPCUpdateRequest(d.Get("vpc_config").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating EKS Cluster (%s) VPC config: %s", d.Id(), input)
@@ -547,7 +546,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
+func testAccClusterConfig_expandEncryption(tfList []interface{}) []*eks.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -562,7 +561,7 @@ func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
 		}
 
 		apiObject := &eks.EncryptionConfig{
-			Provider: expandEksProvider(tfMap["provider"].([]interface{})),
+			Provider: expandProvider(tfMap["provider"].([]interface{})),
 		}
 
 		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
@@ -575,7 +574,7 @@ func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
 	return apiObjects
 }
 
-func expandEksProvider(tfList []interface{}) *eks.Provider {
+func expandProvider(tfList []interface{}) *eks.Provider {
 	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {
@@ -591,7 +590,7 @@ func expandEksProvider(tfList []interface{}) *eks.Provider {
 	return apiObject
 }
 
-func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
+func testAccClusterConfig_expandVPCRequest(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
 	}
@@ -612,7 +611,7 @@ func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 	return vpcConfigRequest
 }
 
-func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
+func testAccClusterConfig_expandVPCUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
 	}
@@ -631,7 +630,7 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 	return vpcConfigRequest
 }
 
-func expandEksNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
+func expandNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkConfigRequest {
 	tfMap, ok := tfList[0].(map[string]interface{})
 
 	if !ok {
@@ -651,7 +650,7 @@ func expandEksNetworkConfigRequest(tfList []interface{}) *eks.KubernetesNetworkC
 	return apiObject
 }
 
-func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
+func expandLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
 	vEksLogTypes := []interface{}{}
 	for _, eksLogType := range eks.LogType_Values() {
 		vEksLogTypes = append(vEksLogTypes, eksLogType)
@@ -672,7 +671,7 @@ func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
 	}
 }
 
-func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{} {
+func flattenCertificate(certificate *eks.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
 	}
@@ -684,19 +683,19 @@ func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{
 	return []map[string]interface{}{m}
 }
 
-func flattenEksIdentity(identity *eks.Identity) []map[string]interface{} {
+func flattenIdentity(identity *eks.Identity) []map[string]interface{} {
 	if identity == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"oidc": flattenEksOidc(identity.Oidc),
+		"oidc": flattenOIDC(identity.Oidc),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
+func flattenOIDC(oidc *eks.OIDC) []map[string]interface{} {
 	if oidc == nil {
 		return []map[string]interface{}{}
 	}
@@ -708,7 +707,7 @@ func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenEksEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
+func flattenEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -717,7 +716,7 @@ func flattenEksEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"provider":  flattenEksProvider(apiObject.Provider),
+			"provider":  flattenProvider(apiObject.Provider),
 			"resources": aws.StringValueSlice(apiObject.Resources),
 		}
 
@@ -727,7 +726,7 @@ func flattenEksEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{
 	return tfList
 }
 
-func flattenEksProvider(apiObject *eks.Provider) []interface{} {
+func flattenProvider(apiObject *eks.Provider) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -739,7 +738,7 @@ func flattenEksProvider(apiObject *eks.Provider) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]interface{} {
+func flattenVPCConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]interface{} {
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
@@ -757,7 +756,7 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 	return []map[string]interface{}{m}
 }
 
-func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
+func flattenEnabledLogTypes(logging *eks.Logging) *schema.Set {
 	enabledLogTypes := []*string{}
 
 	if logging != nil {
@@ -774,7 +773,7 @@ func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
 	return flex.FlattenStringSet(enabledLogTypes)
 }
 
-func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {
+func flattenNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

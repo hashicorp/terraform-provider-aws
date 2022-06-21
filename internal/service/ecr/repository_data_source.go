@@ -109,7 +109,7 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
-	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 

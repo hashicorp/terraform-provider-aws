@@ -16,12 +16,12 @@ func TestAccConnectContactFlowDataSource_contactFlowID(t *testing.T) {
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowDataSourceConfig_ContactFlowID(rName, resourceName),
+				Config: testAccContactFlowDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -45,12 +45,12 @@ func TestAccConnectContactFlowDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowDataSourceConfig_Name(rName, rName2),
+				Config: testAccContactFlowDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -91,7 +91,7 @@ resource "aws_connect_contact_flow" "test" {
 	`, rName, rName2)
 }
 
-func testAccContactFlowDataSourceConfig_ContactFlowID(rName, rName2 string) string {
+func testAccContactFlowDataSourceConfig_id(rName, rName2 string) string {
 	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id     = aws_connect_instance.test.id
@@ -100,7 +100,7 @@ data "aws_connect_contact_flow" "test" {
 `)
 }
 
-func testAccContactFlowDataSourceConfig_Name(rName, rName2 string) string {
+func testAccContactFlowDataSourceConfig_name(rName, rName2 string) string {
 	return fmt.Sprintf(testAccContactFlowBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id

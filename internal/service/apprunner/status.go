@@ -12,9 +12,6 @@ const (
 	AutoScalingConfigurationStatusActive   = "active"
 	AutoScalingConfigurationStatusInactive = "inactive"
 
-	VpcConnectorStatusActive   = "ACTIVE"
-	VpcConnectorStatusInactive = "INACTIVE"
-
 	CustomDomainAssociationStatusActive                          = "active"
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
@@ -42,7 +39,7 @@ func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunn
 	}
 }
 
-func StatusVpcConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusVPCConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeVpcConnectorInput{
 			VpcConnectorArn: aws.String(arn),

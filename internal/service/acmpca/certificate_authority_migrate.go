@@ -11,13 +11,13 @@ func resourceCertificateAuthorityMigrateState(v int, is *terraform.InstanceState
 	switch v {
 	case 0:
 		log.Println("[INFO] Found ACM PCA Certificate Authority state v0; migrating to v1")
-		return migrateAcmpcaCertificateAuthorityStateV0toV1(is)
+		return migrateCertificateAuthorityStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateAcmpcaCertificateAuthorityStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateCertificateAuthorityStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty ACM PCA Certificate Authority state; nothing to migrate.")
 		return is, nil

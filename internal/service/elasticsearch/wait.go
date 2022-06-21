@@ -137,5 +137,19 @@ func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName st
 		return err
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
+		Target:                    []string{ConfigStatusNotFound},
+		Refresh:                   domainConfigStatus(conn, domainName),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

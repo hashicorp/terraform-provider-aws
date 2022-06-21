@@ -3,6 +3,7 @@ package s3_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -14,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
@@ -36,7 +37,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationBasic(rName, s3.StorageClassStandard),
+				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassStandard),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -52,7 +53,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfigurationBasic(rName, s3.StorageClassGlacier),
+				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassGlacier),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -68,7 +69,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfigurationWithSseKmsEncryptedObjects(rName),
+				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -107,7 +108,7 @@ func TestAccS3BucketReplicationConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationBasic(rName, s3.StorageClassStandard),
+				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassStandard),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketReplicationConfiguration(), resourceName),
@@ -135,7 +136,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithMultipleDestinationsEmptyFilter(rName),
+				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
@@ -194,7 +195,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithMultipleDestinationsNonEmptyFilter(rName),
+				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
@@ -259,7 +260,7 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithMultipleDestinationsTwoDestination(rName),
+				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
@@ -313,7 +314,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithAccessControlTranslation(rName),
+				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -337,7 +338,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketReplicationConfigurationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rName),
+				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -390,7 +391,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationRulesDestination(rName),
+				Config: testAccBucketReplicationConfigurationConfig_rulesDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -412,7 +413,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketReplicationConfigurationWithAccessControlTranslation(rName),
+				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -458,7 +459,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationRTC(rName),
+				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -511,7 +512,7 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationReplicaMods(rName),
+				Config: testAccBucketReplicationConfigurationConfig_replicaMods(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -559,7 +560,7 @@ func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_prefix_withoutIdConfig(rName),
+				Config: testAccBucketReplicationConfigurationConfig_prefixNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -600,7 +601,7 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithoutStorageClass(rName),
+				Config: testAccBucketReplicationConfigurationConfig_noStorageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -642,7 +643,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithV2ConfigurationNoTags(rName),
+				Config: testAccBucketReplicationConfigurationConfig_v2NoTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -686,7 +687,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_schemaV2SameRegion(rName, rNameDestination),
+				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -730,7 +731,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2DestinationMetrics(t *testi
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_schemaV2DestinationMetrics_statusOnly(rName, s3.StorageClassStandard),
+				Config: testAccBucketReplicationConfigurationConfig_schemaV2DestinationMetricsStatusOnly(rName, s3.StorageClassStandard),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -769,7 +770,7 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_existingObjectReplication(rName, rNameDestination),
+				Config: testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -815,7 +816,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *t
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_filter_emptyConfigurationBlock(rName),
+				Config: testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -857,7 +858,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_filter_emptyPrefix(rName),
+				Config: testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -903,7 +904,7 @@ func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_filter_tag(rName, "testkey", "testvalue"),
+				Config: testAccBucketReplicationConfigurationConfig_filterTag(rName, "testkey", "testvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -947,7 +948,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_filter_andOperator_prefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
+				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -974,7 +975,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketReplicationConfiguration_filter_andOperator_tags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
+				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -1022,7 +1023,7 @@ func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfiguration_filter_withoutIdConfig(rName),
+				Config: testAccBucketReplicationConfigurationConfig_filterNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
@@ -1059,7 +1060,7 @@ func TestAccS3BucketReplicationConfiguration_withoutPrefix(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketReplicationConfigurationWithoutPrefix(rName),
+				Config: testAccBucketReplicationConfigurationConfig_noPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 				),
@@ -1089,7 +1090,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withReplicationV2_PrefixAndTags(rName),
+				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
@@ -1101,7 +1102,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfiguration_Migrate_NoChangeConfig(rName),
+				Config: testAccBucketReplicationConfigurationConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -1131,7 +1132,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withReplicationV2_PrefixAndTags(rName),
+				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExistsWithProvider(bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
@@ -1143,7 +1144,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketReplicationConfiguration_Migrate_WithChangeConfig(rName),
+				Config: testAccBucketReplicationConfigurationConfig_migrateChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -1164,9 +1165,9 @@ func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provi
 		}
 		input := &s3.GetBucketReplicationInput{Bucket: aws.String(rs.Primary.ID)}
 
-		output, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 			return conn.GetBucketReplication(input)
-		})
+		}, s3.ErrCodeNoSuchBucket)
 
 		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
 			continue
@@ -1262,7 +1263,7 @@ resource "aws_s3_bucket_versioning" "source" {
 `, rName)
 }
 
-func testAccBucketReplicationConfigurationBasic(rName, storageClass string) string {
+func testAccBucketReplicationConfigurationConfig_basic(rName, storageClass string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
@@ -1286,7 +1287,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, storageClass)
 }
 
-func testAccBucketReplicationConfiguration_prefix_withoutIdConfig(rName string) string {
+func testAccBucketReplicationConfigurationConfig_prefixNoID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
@@ -1309,7 +1310,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`)
 }
 
-func testAccBucketReplicationConfiguration_filter_withoutIdConfig(rName string) string {
+func testAccBucketReplicationConfigurationConfig_filterNoID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
@@ -1337,7 +1338,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`)
 }
 
-func testAccBucketReplicationConfigurationRTC(rName string) string {
+func testAccBucketReplicationConfigurationConfig_rtc(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		`
@@ -1378,7 +1379,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`)
 }
 
-func testAccBucketReplicationConfigurationReplicaMods(rName string) string {
+func testAccBucketReplicationConfigurationConfig_replicaMods(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
@@ -1411,7 +1412,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithMultipleDestinationsEmptyFilter(rName string) string {
+func testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -1504,7 +1505,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName))
 }
 
-func testAccBucketReplicationConfigurationWithMultipleDestinationsNonEmptyFilter(rName string) string {
+func testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -1610,7 +1611,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName))
 }
 
-func testAccBucketReplicationConfigurationWithMultipleDestinationsTwoDestination(rName string) string {
+func testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestination(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -1676,7 +1677,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName))
 }
 
-func testAccBucketReplicationConfigurationWithSseKmsEncryptedObjects(rName string) string {
+func testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 resource "aws_kms_key" "test" {
   provider                = "awsalternate"
@@ -1717,7 +1718,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithAccessControlTranslation(rName string) string {
+func testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 data "aws_caller_identity" "current" {}
 
@@ -1748,7 +1749,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationRulesDestination(rName string) string {
+func testAccBucketReplicationConfigurationConfig_rulesDestination(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 data "aws_caller_identity" "current" {}
 
@@ -1775,7 +1776,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rName string) string {
+func testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 data "aws_caller_identity" "current" {}
 
@@ -1821,7 +1822,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithoutStorageClass(rName string) string {
+func testAccBucketReplicationConfigurationConfig_noStorageClass(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
@@ -1844,7 +1845,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfigurationWithV2ConfigurationNoTags(rName string) string {
+func testAccBucketReplicationConfigurationConfig_v2NoTags(rName string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + `
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
@@ -1875,7 +1876,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`
 }
 
-func testAccBucketReplicationConfiguration_schemaV2SameRegion(rName, rNameDestination string) string {
+func testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1953,7 +1954,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, rName, rNameDestination)
 }
 
-func testAccBucketReplicationConfiguration_existingObjectReplication(rName, rNameDestination string) string {
+func testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2038,7 +2039,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 `, rName, rNameDestination)
 }
 
-func testAccBucketReplicationConfiguration_filter_emptyConfigurationBlock(rName string) string {
+func testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		`
@@ -2066,7 +2067,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`)
 }
 
-func testAccBucketReplicationConfiguration_filter_emptyPrefix(rName string) string {
+func testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
@@ -2096,7 +2097,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 	)
 }
 
-func testAccBucketReplicationConfiguration_filter_tag(rName, key, value string) string {
+func testAccBucketReplicationConfigurationConfig_filterTag(rName, key, value string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -2132,7 +2133,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, key, value))
 }
 
-func testAccBucketReplicationConfiguration_filter_andOperator_tags(rName, key1, value1, key2, value2 string) string {
+func testAccBucketReplicationConfigurationConfig_filterAndOperatorTags(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -2170,7 +2171,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, key1, value1, key2, value2))
 }
 
-func testAccBucketReplicationConfiguration_filter_andOperator_prefixAndTags(rName, key1, value1, key2, value2 string) string {
+func testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		fmt.Sprintf(`
@@ -2209,7 +2210,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, key1, value1, key2, value2))
 }
 
-func testAccBucketReplicationConfiguration_schemaV2DestinationMetrics_statusOnly(rName, storageClass string) string {
+func testAccBucketReplicationConfigurationConfig_schemaV2DestinationMetricsStatusOnly(rName, storageClass string) string {
 	return testAccBucketReplicationConfigurationBase(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket_replication_configuration" "test" {
   depends_on = [
@@ -2243,7 +2244,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }`, storageClass)
 }
 
-func testAccBucketReplicationConfigurationWithoutPrefix(rName string) string {
+func testAccBucketReplicationConfigurationConfig_noPrefix(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBucketReplicationConfigurationBase(rName),
 		`
@@ -2323,7 +2324,7 @@ resource "aws_s3_bucket_versioning" "destination" {
 `, rName)
 }
 
-func testAccBucketReplicationConfiguration_Migrate_NoChangeConfig(rName string) string {
+func testAccBucketReplicationConfigurationConfig_migrateNoChange(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccBucketReplicationConfigurationMigrationBase(rName), `
@@ -2366,7 +2367,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 	)
 }
 
-func testAccBucketReplicationConfiguration_Migrate_WithChangeConfig(rName string) string {
+func testAccBucketReplicationConfigurationConfig_migrateChange(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccBucketReplicationConfigurationMigrationBase(rName), `

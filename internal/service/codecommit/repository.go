@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceRepository() *schema.Resource {
@@ -137,14 +138,14 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	out, err := conn.GetRepository(input)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
+		names.LogNotFoundRemoveState(names.CodeCommit, names.ErrActionReading, ResRepository, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
-			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		} else {
-			return fmt.Errorf("Error reading CodeCommit Repository: %s", err.Error())
-		}
+		return names.Error(names.CodeCommit, names.ErrActionReading, ResRepository, d.Id(), err)
 	}
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)

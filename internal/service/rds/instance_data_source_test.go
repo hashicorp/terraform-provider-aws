@@ -19,12 +19,12 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allocated_storage"),
@@ -72,7 +72,7 @@ func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 	})
 }
 
-func testAccInstanceDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		acctest.ConfigAvailableAZsNoOptIn(),

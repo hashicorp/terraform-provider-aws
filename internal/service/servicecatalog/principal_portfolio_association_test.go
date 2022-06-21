@@ -22,10 +22,10 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrincipalPortfolioAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
@@ -49,10 +49,10 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPrincipalPortfolioAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPrincipalPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),

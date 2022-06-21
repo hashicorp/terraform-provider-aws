@@ -21,15 +21,15 @@ func testAccVirtualRouter_basic(t *testing.T) {
 	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualRouterConfig_basic(meshName, vrName),
+				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(resourceName, &vr),
+					testAccCheckVirtualRouterExists(resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -45,9 +45,9 @@ func testAccVirtualRouter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualRouterConfig_updated(meshName, vrName),
+				Config: testAccVirtualRouterConfig_updated(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(resourceName, &vr),
+					testAccCheckVirtualRouterExists(resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -75,15 +75,15 @@ func testAccVirtualRouter_tags(t *testing.T) {
 	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVirtualRouterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, "foo", "bar", "good", "bad"),
+				Config: testAccVirtualRouterConfig_tags(meshName, vrName, "foo", "bar", "good", "bad"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(
+					testAccCheckVirtualRouterExists(
 						resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
@@ -94,9 +94,9 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, "foo2", "bar", "good", "bad2"),
+				Config: testAccVirtualRouterConfig_tags(meshName, vrName, "foo2", "bar", "good", "bad2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(
+					testAccCheckVirtualRouterExists(
 						resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
@@ -107,9 +107,9 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualRouterConfig_basic(meshName, vrName),
+				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualRouterExists(
+					testAccCheckVirtualRouterExists(
 						resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "0"),
@@ -125,7 +125,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
+func testAccCheckVirtualRouterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +149,7 @@ func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAppmeshVirtualRouterExists(name string, v *appmesh.VirtualRouterData) resource.TestCheckFunc {
+func testAccCheckVirtualRouterExists(name string, v *appmesh.VirtualRouterData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
 
@@ -175,7 +175,7 @@ func testAccCheckAppmeshVirtualRouterExists(name string, v *appmesh.VirtualRoute
 	}
 }
 
-func testAccAppmeshVirtualRouterConfig_basic(meshName, vrName string) string {
+func testAccVirtualRouterConfig_basic(meshName, vrName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -197,7 +197,7 @@ resource "aws_appmesh_virtual_router" "test" {
 `, meshName, vrName)
 }
 
-func testAccAppmeshVirtualRouterConfig_updated(meshName, vrName string) string {
+func testAccVirtualRouterConfig_updated(meshName, vrName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q
@@ -219,7 +219,7 @@ resource "aws_appmesh_virtual_router" "test" {
 `, meshName, vrName)
 }
 
-func testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVirtualRouterConfig_tags(meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
   name = %[1]q

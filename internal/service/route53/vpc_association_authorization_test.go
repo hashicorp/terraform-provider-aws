@@ -26,16 +26,16 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
+		CheckDestroy:      testAccCheckVPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
+				Config: testAccVPCAssociationAuthorizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccRoute53VPCAssociationAuthorizationConfig(),
+				Config:            testAccVPCAssociationAuthorizationConfig_basic(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -55,12 +55,12 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
+		CheckDestroy:      testAccCheckVPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
+				Config: testAccVPCAssociationAuthorizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -69,7 +69,7 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) error {
+func testAccCheckVPCAssociationAuthorizationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -103,7 +103,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCAssociationAuthorizationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -140,7 +140,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 	}
 }
 
-func testAccRoute53VPCAssociationAuthorizationConfig() string {
+func testAccVPCAssociationAuthorizationConfig_basic() string {
 	return acctest.ConfigAlternateAccountProvider() + `
 resource "aws_vpc" "test" {
   cidr_block           = "10.6.0.0/16"

@@ -23,7 +23,7 @@ resource "aws_sqs_queue" "terraform_queue" {
   })
   redrive_allow_policy = jsonencode({
     redrivePermission = "byQueue",
-    sourceQueueArns   = ["${aws_sqs_queue.terraform_queue_deadletter.arn}"]
+    sourceQueueArns   = [aws_sqs_queue.terraform_queue_deadletter.arn]
   })
 
   tags = {

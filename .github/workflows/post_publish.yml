@@ -1,23 +1,41 @@
 name: Post Publish
 on:
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        type: string
+        description: 'Semver release tag e.g. v1.1.0'
+        required: true
   workflow_run:
     workflows: [Release]
     types:
       - completed
 jobs:
-  on-success:
+  on-success-or-workflow-dispatch:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    outputs:
+      release-tag: ${{ steps.release-tag.outputs.tag }}
     steps:
-      - uses: actions/download-artifact@v3
+      - if: github.event_name == 'workflow_run'
+        name: Download Artifact from Release workflow
+        uses: dawidd6/action-download-artifact@v2
         with:
-          name: release_tag
-          path: release_tag.data
+          workflow: release.yml
+          name: release-tag
       - name: Output Release Tag
         id: release-tag
         run: |
-          value=`cat release_tag.data`
-          echo ::set-output name=tag_name::$value
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo ::set-output name=tag::${{ github.event.inputs.release-tag }}
+          else
+            value=`cat release-tag.data`
+            echo ::set-output name=tag::$value
+          fi
+  tidy-asana:
+    needs: [ on-success-or-workflow-dispatch ]
+    runs-on: ubuntu-latest
+    steps:
       - name: Tidy Asana
         uses: breathingdust/github-asana-tidy@v1
         with:
@@ -26,13 +44,17 @@ jobs:
           asana_workspace_gid: '90955849329269'
           asana_project_gid: '632425409545160'
           asana_github_url_field_gid: '1134594824474912'
-          github_release_name: ${{ steps.release-tag.outputs.tag_name }}
+          github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Archive Released Cards
+  archive-release-cards:
+    needs: [ on-success-or-workflow-dispatch ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Archive Release Cards
         uses: breathingdust/github-project-archive@v1
         with:
           github_done_column_id: 11513756
-          github_release_name: ${{ steps.release-tag.outputs.tag_name }}
+          github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   on-failure:
     runs-on: ubuntu-latest

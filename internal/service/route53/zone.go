@@ -84,7 +84,7 @@ func ResourceZone() *schema.Resource {
 						},
 					},
 				},
-				Set: route53HostedZoneVPCHash,
+				Set: hostedZoneVPCHash,
 			},
 
 			"zone_id": {
@@ -141,7 +141,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
 
-	var vpcs []*route53.VPC = expandRoute53VPCs(d.Get("vpc").(*schema.Set).List(), region)
+	var vpcs []*route53.VPC = expandVPCs(d.Get("vpc").(*schema.Set).List(), region)
 
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
@@ -157,7 +157,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(CleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	if output.ChangeInfo != nil {
-		if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+		if err := waitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 			return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) creation: %s", d.Id(), err)
 		}
 	}
@@ -169,7 +169,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	// Associate additional VPCs beyond the first
 	if len(vpcs) > 1 {
 		for _, vpc := range vpcs[1:] {
-			err := route53HostedZoneVPCAssociate(conn, d.Id(), vpc)
+			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
 				return err
@@ -241,7 +241,7 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting name_servers: %s", err)
 	}
 
-	if err := d.Set("vpc", flattenRoute53VPCs(output.VPCs)); err != nil {
+	if err := d.Set("vpc", flattenVPCs(output.VPCs)); err != nil {
 		return fmt.Errorf("error setting vpc: %s", err)
 	}
 
@@ -308,8 +308,8 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			vpc := expandRoute53VPC(vpcRaw.(map[string]interface{}), region)
-			err := route53HostedZoneVPCAssociate(conn, d.Id(), vpc)
+			vpc := expandVPC(vpcRaw.(map[string]interface{}), region)
+			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
 				return err
@@ -321,8 +321,8 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			vpc := expandRoute53VPC(vpcRaw.(map[string]interface{}), region)
-			err := route53HostedZoneVPCDisassociate(conn, d.Id(), vpc)
+			vpc := expandVPC(vpcRaw.(map[string]interface{}), region)
+			err := hostedZoneVPCDisassociate(conn, d.Id(), vpc)
 
 			if err != nil {
 				return err
@@ -595,7 +595,7 @@ func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]str
 	return ns, nil
 }
 
-func expandRoute53VPCs(l []interface{}, currentRegion string) []*route53.VPC {
+func expandVPCs(l []interface{}, currentRegion string) []*route53.VPC {
 	vpcs := []*route53.VPC{}
 
 	for _, mRaw := range l {
@@ -603,13 +603,13 @@ func expandRoute53VPCs(l []interface{}, currentRegion string) []*route53.VPC {
 			continue
 		}
 
-		vpcs = append(vpcs, expandRoute53VPC(mRaw.(map[string]interface{}), currentRegion))
+		vpcs = append(vpcs, expandVPC(mRaw.(map[string]interface{}), currentRegion))
 	}
 
 	return vpcs
 }
 
-func expandRoute53VPC(m map[string]interface{}, currentRegion string) *route53.VPC {
+func expandVPC(m map[string]interface{}, currentRegion string) *route53.VPC {
 	vpc := &route53.VPC{
 		VPCId:     aws.String(m["vpc_id"].(string)),
 		VPCRegion: aws.String(currentRegion),
@@ -622,7 +622,7 @@ func expandRoute53VPC(m map[string]interface{}, currentRegion string) *route53.V
 	return vpc
 }
 
-func flattenRoute53VPCs(vpcs []*route53.VPC) []interface{} {
+func flattenVPCs(vpcs []*route53.VPC) []interface{} {
 	l := []interface{}{}
 
 	for _, vpc := range vpcs {
@@ -641,7 +641,7 @@ func flattenRoute53VPCs(vpcs []*route53.VPC) []interface{} {
 	return l
 }
 
-func route53HostedZoneVPCAssociate(conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
+func hostedZoneVPCAssociate(conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
 	input := &route53.AssociateVPCWithHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
@@ -654,14 +654,14 @@ func route53HostedZoneVPCAssociate(conn *route53.Route53, zoneID string, vpc *ro
 		return fmt.Errorf("error associating Route53 Hosted Zone (%s) to VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
-	if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+	if err := waitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 		return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) association to VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
 	return nil
 }
 
-func route53HostedZoneVPCDisassociate(conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
+func hostedZoneVPCDisassociate(conn *route53.Route53, zoneID string, vpc *route53.VPC) error {
 	input := &route53.DisassociateVPCFromHostedZoneInput{
 		HostedZoneId: aws.String(zoneID),
 		VPC:          vpc,
@@ -674,14 +674,14 @@ func route53HostedZoneVPCDisassociate(conn *route53.Route53, zoneID string, vpc 
 		return fmt.Errorf("error disassociating Route53 Hosted Zone (%s) from VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
-	if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+	if err := waitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 		return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) disassociation from VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
 	return nil
 }
 
-func route53HostedZoneVPCHash(v interface{}) int {
+func hostedZoneVPCHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["vpc_id"].(string)))
@@ -689,7 +689,7 @@ func route53HostedZoneVPCHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func route53WaitForChangeSynchronization(conn *route53.Route53, changeID string) error {
+func waitForChangeSynchronization(conn *route53.Route53, changeID string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	conf := resource.StateChangeConf{

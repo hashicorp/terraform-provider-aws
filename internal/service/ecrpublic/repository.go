@@ -118,7 +118,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CatalogData = expandEcrPublicRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{}))
+		input.CatalogData = expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating ECR Public repository: %#v", input)
@@ -206,7 +206,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if catalogOut != nil {
-		flatCatalogData := flattenEcrPublicRepositoryCatalogData(catalogOut)
+		flatCatalogData := flattenRepositoryCatalogData(catalogOut)
 		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]interface{})) > 0 && catalogData.([]interface{})[0] != nil {
 			catalogDataMap := catalogData.([]interface{})[0].(map[string]interface{})
 			if v, ok := catalogDataMap["logo_image_blob"].(string); ok && len(v) > 0 {
@@ -287,7 +287,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceRepositoryRead(d, meta)
 }
 
-func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
+func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -319,7 +319,7 @@ func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCat
 	return tfMap
 }
 
-func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpublic.RepositoryCatalogDataInput {
+func expandRepositoryCatalogData(tfMap map[string]interface{}) *ecrpublic.RepositoryCatalogDataInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -362,7 +362,7 @@ func resourceRepositoryUpdateCatalogData(conn *ecrpublic.ECRPublic, d *schema.Re
 			input := ecrpublic.PutRepositoryCatalogDataInput{
 				RepositoryName: aws.String(d.Id()),
 				RegistryId:     aws.String(d.Get("registry_id").(string)),
-				CatalogData:    expandEcrPublicRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{})),
+				CatalogData:    expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{})),
 			}
 
 			_, err := conn.PutRepositoryCatalogData(&input)

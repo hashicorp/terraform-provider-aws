@@ -29,10 +29,10 @@ var sliceServiceNames = []string{
 	"imagebuilder",
 	"licensemanager",
 	"neptune",
-	"opensearchservice",
 	"rds",
 	"resourcegroupstaggingapi",
 	"route53resolver",
+	"secretsmanager",
 }
 
 type TemplateData struct {

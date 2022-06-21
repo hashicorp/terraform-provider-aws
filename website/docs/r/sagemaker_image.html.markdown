@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_image"
 description: |-
-  Provides a Sagemaker Image resource.
+  Provides a SageMaker Image resource.
 ---
 
 # Resource: aws_sagemaker_image
 
-Provides a Sagemaker Image resource.
+Provides a SageMaker Image resource.
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Images can be imported using the `name`, e.g.,
+SageMaker Code Images can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_image.test_image my-code-repo

@@ -122,7 +122,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		input.HoursOfOperationId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		hoursOfOperationSummary, err := dataSourceGetConnectHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
+		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Hours of Operation Summary by name (%s): %w", name, err))
@@ -168,7 +168,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func dataSourceGetConnectHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {
+func dataSourceGetHoursOfOperationSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HoursOfOperationSummary, error) {
 	var result *connect.HoursOfOperationSummary
 
 	input := &connect.ListHoursOfOperationsInput{

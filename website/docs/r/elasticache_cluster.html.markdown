@@ -113,8 +113,11 @@ The following arguments are optional:
 * `az_mode` - (Optional, Memcached only) Whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`.
 * `engine_version` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
-  See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
-  in the AWS Documentation for supported versions. When `engine` is `redis` and the version is 6 or higher, only the major version can be set, e.g., `6.x`, otherwise, specify the full version desired, e.g., `5.0.6`. The actual engine version used is returned in the attribute `engine_version_actual`, , see [Attributes Reference](#attributes-reference) below.
+  See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
+  When `engine` is `redis` and the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
+  or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
+  Otherwise, specify the full version desired, e.g., `5.0.6`.
+  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
@@ -138,7 +141,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the created ElastiCache Cluster.
-* `engine_version_actual` - The running version of the cache engine.
+* `engine_version_actual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.

@@ -19,6 +19,8 @@ expect:
 
 ## Pull Request Lifecycle
 
+**Note:** For detailed information on how pull requests are prioritized, please see the [prioritization guide](./prioritization.md).
+
 1. [Fork the GitHub repository](https://help.github.com/en/articles/fork-a-repo),
    modify the code, and [create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork).
    You are welcome to submit your pull request for commentary or review before

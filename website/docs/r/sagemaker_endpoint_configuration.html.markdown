@@ -1,5 +1,5 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint_configuration"
 description: |-
@@ -40,7 +40,7 @@ The following arguments are supported:
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `data_capture_config` - (Optional) Specifies the parameters to capture input/output of Sagemaker models endpoints. Fields are documented below.
+* `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
 
 The `production_variants` block supports:

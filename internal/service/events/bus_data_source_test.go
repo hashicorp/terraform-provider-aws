@@ -16,12 +16,12 @@ func TestAccEventsBusDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventsBusDataSourceConfig(busName),
+				Config: testAccBusDataSourceConfig_basic(busName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -31,7 +31,7 @@ func TestAccEventsBusDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEventsBusDataSourceConfig(busName string) string {
+func testAccBusDataSourceConfig_basic(busName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q

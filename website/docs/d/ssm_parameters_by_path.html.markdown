@@ -36,6 +36,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arns` - The ARNs of the parameters.
-* `names` - The names of the parametes.
+* `names` - The names of the parameters.
 * `types` - The types of the parameters.
 * `values` - The value of the parameters.

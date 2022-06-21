@@ -36,13 +36,13 @@ func testAccLambdaFunctionAssociation_basic(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -64,13 +64,13 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 	resourceName := "aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLambdaFunctionAssociationDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckLambdaFunctionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
@@ -94,7 +94,7 @@ func testAccCheckLambdaFunctionAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByARNWithContext(context.Background(), conn, instanceID, functionArn)
 
 		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 			continue
@@ -130,7 +130,7 @@ func testAccCheckLambdaFunctionAssociationExists(resourceName string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
-		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByARNWithContext(context.Background(), conn, instanceID, functionArn)
 
 		if err != nil {
 			return fmt.Errorf("error finding Connect Lambda Function Association by Function Arn (%s): %w", functionArn, err)
@@ -185,7 +185,7 @@ resource "aws_connect_instance" "test" {
 `, rName, rName2)
 }
 
-func testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationConfig_basic(rName string, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaFunctionAssociationConfigBase(rName, rName2), `
 resource "aws_connect_lambda_function_association" "test" {

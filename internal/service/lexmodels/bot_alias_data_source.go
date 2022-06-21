@@ -23,7 +23,7 @@ func DataSourceBotAlias() *schema.Resource {
 			"bot_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"bot_version": {
 				Type:     schema.TypeString,
@@ -48,7 +48,7 @@ func DataSourceBotAlias() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotAliasName,
+				ValidateFunc: validBotAliasName,
 			},
 		},
 	}

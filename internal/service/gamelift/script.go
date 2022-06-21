@@ -12,14 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexGameLiftScript = `aws_gamelift_script`
+const scriptMutex = `aws_gamelift_script`
 
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
@@ -107,8 +106,8 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
-		defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
+		conns.GlobalMutexKV.Lock(scriptMutex)
+		defer conns.GlobalMutexKV.Unlock(scriptMutex)
 
 		file, err := loadFileContent(v.(string))
 		if err != nil {
@@ -119,7 +118,7 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Creating GameLift Script: %s", input)
 	var out *gamelift.CreateScriptOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateScript(&input)
 		if err != nil {
@@ -213,8 +212,8 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("zip_file") {
 			if v, ok := d.GetOk("zip_file"); ok {
-				conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
-				defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
+				conns.GlobalMutexKV.Lock(scriptMutex)
+				defer conns.GlobalMutexKV.Unlock(scriptMutex)
 
 				file, err := loadFileContent(v.(string))
 				if err != nil {

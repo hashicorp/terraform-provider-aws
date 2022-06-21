@@ -169,7 +169,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
+		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
@@ -280,7 +280,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("endpoint_configuration"); ok {
-			endpointConfiguration := expandApiGatewayEndpointConfiguration(v.([]interface{}))
+			endpointConfiguration := expandEndpointConfiguration(v.([]interface{}))
 
 			if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
 				if output.EndpointConfiguration != nil {
@@ -427,7 +427,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)
 	}
 
-	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(api.EndpointConfiguration)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
 	}
 
@@ -661,7 +661,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if v, ok := d.GetOk("endpoint_configuration"); ok {
-				endpointConfiguration := expandApiGatewayEndpointConfiguration(v.([]interface{}))
+				endpointConfiguration := expandEndpointConfiguration(v.([]interface{}))
 
 				if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
 					if output.EndpointConfiguration != nil {
@@ -757,7 +757,7 @@ func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.EndpointConfiguration {
+func expandEndpointConfiguration(l []interface{}) *apigateway.EndpointConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
@@ -775,7 +775,7 @@ func expandApiGatewayEndpointConfiguration(l []interface{}) *apigateway.Endpoint
 	return endpointConfiguration
 }
 
-func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.EndpointConfiguration) []interface{} {
+func flattenEndpointConfiguration(endpointConfiguration *apigateway.EndpointConfiguration) []interface{} {
 	if endpointConfiguration == nil {
 		return []interface{}{}
 	}

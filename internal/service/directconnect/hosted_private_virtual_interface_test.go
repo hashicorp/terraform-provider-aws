@@ -42,7 +42,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
+				Config: testAccHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -66,7 +66,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 			},
 			// Test import.
 			{
-				Config:            testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
+				Config:            testAccHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -101,7 +101,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 		CheckDestroy:      testAccCheckHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(connectionId, rName, bgpAsn, vlan),
+				Config: testAccHostedPrivateVirtualInterfaceConfig_accepterTags(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -127,7 +127,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 				),
 			},
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, bgpAsn, vlan),
+				Config: testAccHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -157,14 +157,14 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 }
 
 func testAccCheckHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_private_virtual_interface")
+	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_hosted_private_virtual_interface")
 }
 
 func testAccCheckHostedPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckDxVirtualInterfaceExists(name, vif)
+	return testAccCheckVirtualInterfaceExists(name, vif)
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName string, bgpAsn, vlan int) string {
+func testAccHostedPrivateVirtualInterfaceConfig_base(cid, rName string, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
 resource "aws_dx_hosted_private_virtual_interface" "test" {
@@ -195,8 +195,8 @@ resource "aws_vpn_gateway" "test" {
 `, cid, rName, bgpAsn, vlan)
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + `
+func testAccHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
+	return testAccHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + `
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -206,8 +206,8 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
 `
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string, bgpAsn, vlan int) string {
+	return testAccHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -223,8 +223,8 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
 `, rName)
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, bgpAsn, vlan int) string {
-	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, bgpAsn, vlan int) string {
+	return testAccHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 

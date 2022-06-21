@@ -21,15 +21,15 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverEndpointConfig_initial(rInt, "INBOUND", name),
+				Config: testAccEndpointConfig_initial(rInt, "INBOUND", name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -54,15 +54,15 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	updatedName := fmt.Sprintf("terraform-testacc-r53-rupdated-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverEndpointConfig_initial(rInt, "OUTBOUND", initialName),
+				Config: testAccEndpointConfig_initial(rInt, "OUTBOUND", initialName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -71,9 +71,9 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverEndpointConfig_updated(rInt, "OUTBOUND", updatedName),
+				Config: testAccEndpointConfig_updated(rInt, "OUTBOUND", updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverEndpointExists(resourceName, &ep),
+					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
@@ -85,7 +85,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
+func testAccCheckEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -110,7 +110,7 @@ func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
+func testAccCheckEndpointExists(n string, ep *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -151,7 +151,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccRoute53ResolverEndpointConfig_base(rInt int) string {
+func testAccEndpointConfig_base(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
@@ -222,7 +222,7 @@ resource "aws_security_group" "sg2" {
 `, rInt)
 }
 
-func testAccRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
+func testAccEndpointConfig_initial(rInt int, direction, name string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -249,10 +249,10 @@ resource "aws_route53_resolver_endpoint" "foo" {
     Usage       = "original"
   }
 }
-`, testAccRoute53ResolverEndpointConfig_base(rInt), direction, name)
+`, testAccEndpointConfig_base(rInt), direction, name)
 }
 
-func testAccRoute53ResolverEndpointConfig_updated(rInt int, direction, name string) string {
+func testAccEndpointConfig_updated(rInt int, direction, name string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -277,5 +277,5 @@ resource "aws_route53_resolver_endpoint" "foo" {
     Usage = "changed"
   }
 }
-`, testAccRoute53ResolverEndpointConfig_base(rInt), direction, name)
+`, testAccEndpointConfig_base(rInt), direction, name)
 }

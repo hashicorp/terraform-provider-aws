@@ -248,8 +248,8 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenLakeFormationPermissions(cleanPermissions))
-	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(cleanPermissions))
+	d.Set("permissions", flattenPermissions(cleanPermissions))
+	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
@@ -258,7 +258,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
-		if err := d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
+		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
 			return fmt.Errorf("error setting data_location: %w", err)
 		}
 	} else {
@@ -266,7 +266,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return fmt.Errorf("error setting database: %w", err)
 		}
 	} else {
@@ -283,7 +283,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -291,7 +291,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -310,7 +310,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		// since perm list could include Table, get the right one
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table_with_columns: %w", err)
 				}
 				twcSet = true

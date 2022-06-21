@@ -232,7 +232,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(endpoint.EndpointArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -256,7 +256,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Endpoint (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Endpoint (%s) tags: %w", d.Id(), err)
 		}
 	}
 

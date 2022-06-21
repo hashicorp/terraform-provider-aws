@@ -3,11 +3,15 @@ package opensearch
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
 	UpgradeStatusUnknown = "Unknown"
+	ConfigStatusNotFound = "NotFound"
+	ConfigStatusUnknown  = "Unknown"
+	ConfigStatusExists   = "Exists"
 )
 
 func statusUpgradeStatus(conn *opensearchservice.OpenSearchService, name string) resource.StateRefreshFunc {
@@ -27,5 +31,24 @@ func statusUpgradeStatus(conn *opensearchservice.OpenSearchService, name string)
 		}
 
 		return out, aws.StringValue(out.StepStatus), nil
+	}
+}
+
+func domainConfigStatus(conn *opensearchservice.OpenSearchService, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
+			DomainName: aws.String(name),
+		})
+
+		if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+			// if first return value is nil, WaitForState treats as not found - here not found is treated differently
+			return "not nil", ConfigStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, ConfigStatusUnknown, err
+		}
+
+		return out, ConfigStatusExists, nil
 	}
 }

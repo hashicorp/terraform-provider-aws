@@ -156,7 +156,7 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("rule_config", []interface{}{flattenRoute53RecoveryControlConfigRuleConfig(result.RuleConfig)})
+			d.Set("rule_config", []interface{}{flattenRuleConfig(result.RuleConfig)})
 		} else {
 			d.Set("rule_config", nil)
 		}
@@ -181,7 +181,7 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if result.RuleConfig != nil {
-			d.Set("rule_config", []interface{}{flattenRoute53RecoveryControlConfigRuleConfig(result.RuleConfig)})
+			d.Set("rule_config", []interface{}{flattenRuleConfig(result.RuleConfig)})
 		} else {
 			d.Set("rule_config", nil)
 		}
@@ -218,7 +218,7 @@ func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %w", err)
 	}
 
-	_, err = waitRoute53RecoveryControlConfigSafetyRuleDeleted(conn, d.Id())
+	_, err = waitSafetyRuleDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
@@ -238,7 +238,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
-		RuleConfig:       expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
+		RuleConfig:       testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
 		AssertedControls: flex.ExpandStringList(d.Get("asserted_controls").([]interface{})),
 	}
 
@@ -260,7 +260,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waitSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -274,7 +274,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 		Name:            aws.String(d.Get("name").(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
-		RuleConfig:      expandRoute53RecoveryControlConfigRuleConfig(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
+		RuleConfig:      testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
 		GatingControls:  flex.ExpandStringList(d.Get("gating_controls").([]interface{})),
 		TargetControls:  flex.ExpandStringList(d.Get("target_controls").([]interface{})),
 	}
@@ -297,7 +297,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waitRoute53RecoveryControlConfigSafetyRuleCreated(conn, d.Id()); err != nil {
+	if _, err := waitSafetyRuleCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -360,7 +360,7 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 	return resourceControlPanelRead(d, meta)
 }
 
-func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) *r53rcc.RuleConfig {
+func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *r53rcc.RuleConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -381,7 +381,7 @@ func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func flattenRoute53RecoveryControlConfigRuleConfig(apiObject *r53rcc.RuleConfig) map[string]interface{} {
+func flattenRuleConfig(apiObject *r53rcc.RuleConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

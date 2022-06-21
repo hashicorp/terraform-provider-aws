@@ -17,10 +17,10 @@ func TestAccIoTThingType_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingTypeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingTypeConfig_basic(rInt),
@@ -45,10 +45,10 @@ func TestAccIoTThingType_full(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingTypeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingTypeConfig_full(rInt),
@@ -82,13 +82,13 @@ func TestAccIoTThingType_tags(t *testing.T) {
 	resourceName := "aws_iot_thing_type.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingTypeDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIoTThingTypeTags1(rName, "key1", "user@example"),
+				Config: testAccThingTypeConfig_tags1(rName, "key1", "user@example"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists("aws_iot_thing_type.foo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -101,7 +101,7 @@ func TestAccIoTThingType_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIoTThingTypeTags2(rName, "key1", "user@example", "key2", "value2"),
+				Config: testAccThingTypeConfig_tags2(rName, "key1", "user@example", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists("aws_iot_thing_type.foo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -110,7 +110,7 @@ func TestAccIoTThingType_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIoTThingTypeTags1(rName, "key2", "value2"),
+				Config: testAccThingTypeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists("aws_iot_thing_type.foo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +212,7 @@ resource "aws_iot_thing_type" "foo" {
 `, rName)
 }
 
-func testAccIoTThingTypeTags1(rName, tagKey1, tagValue1 string) string {
+func testAccThingTypeConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
   name       = "tf_acc_iot_thing_type_%[1]s"
@@ -225,7 +225,7 @@ resource "aws_iot_thing_type" "foo" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccIoTThingTypeTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccThingTypeConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
   name       = "tf_acc_iot_thing_type_%[1]s"

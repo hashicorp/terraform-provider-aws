@@ -371,7 +371,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Waiting for Storage Gateway Gateway (%s) to be connected", d.Id())
 
-	if _, err = waitStorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Connected: %w", d.Id(), err)
 	}
 
@@ -401,14 +401,14 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
-		input := expandStorageGatewayGatewayDomain(v.([]interface{}), d.Id())
+		input := expandGatewayDomain(v.([]interface{}), d.Id())
 		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), aws.StringValue(input.DomainName))
 		_, err := conn.JoinDomain(input)
 		if err != nil {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
 		log.Printf("[DEBUG] Waiting for Storage Gateway Gateway (%s) to be connected", d.Id())
-		if _, err = waitStorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+		if _, err = waitGatewayJoinDomainJoined(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}
@@ -595,7 +595,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("endpoint_type", output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
 
-	if err := d.Set("gateway_network_interface", flattenStorageGatewayGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {
+	if err := d.Set("gateway_network_interface", flattenGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {
 		return fmt.Errorf("error setting gateway_network_interface: %w", err)
 	}
 
@@ -675,7 +675,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("smb_active_directory_settings") {
-		input := expandStorageGatewayGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
+		input := expandGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
 		domainName := aws.StringValue(input.DomainName)
 
 		log.Printf("[DEBUG] Joining Storage Gateway to Active Directory domain: %s", input)
@@ -685,7 +685,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error joining Storage Gateway Gateway (%s) to Active Directory domain (%s): %w", d.Id(), domainName, err)
 		}
 
-		if _, err = waitStorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+		if _, err = waitGatewayJoinDomainJoined(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for Storage Gateway Gateway (%s) to join Active Directory domain (%s): %w", d.Id(), domainName, err)
 		}
 	}
@@ -811,7 +811,7 @@ func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.JoinDomainInput {
+func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.JoinDomainInput {
 	if l == nil || l[0] == nil {
 		return nil
 	}
@@ -840,7 +840,7 @@ func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *stor
 	return domain
 }
 
-func flattenStorageGatewayGatewayNetworkInterfaces(nis []*storagegateway.NetworkInterface) []interface{} {
+func flattenGatewayNetworkInterfaces(nis []*storagegateway.NetworkInterface) []interface{} {
 	if len(nis) == 0 {
 		return nil
 	}

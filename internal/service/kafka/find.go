@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
+func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeCluster(input)
+	output, err := conn.DescribeClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -33,12 +35,12 @@ func FindClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error)
 	return output.ClusterInfo, nil
 }
 
-func FindClusterOperationByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
+func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
 	input := &kafka.DescribeClusterOperationInput{
 		ClusterOperationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeClusterOperation(input)
+	output, err := conn.DescribeClusterOperationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

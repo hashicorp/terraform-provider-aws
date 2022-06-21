@@ -197,7 +197,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err = d.Set("dns_entry", flattenVpcEndpointDnsEntries(vpce.DnsEntries))
+	err = d.Set("dns_entry", flattenVPCEndpointDNSEntries(vpce.DnsEntries))
 	if err != nil {
 		return fmt.Errorf("error setting dns_entry: %w", err)
 	}
@@ -217,7 +217,7 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting route_table_ids: %w", err)
 	}
 	d.Set("requester_managed", vpce.RequesterManaged)
-	err = d.Set("security_group_ids", flattenVpcEndpointSecurityGroupIds(vpce.Groups))
+	err = d.Set("security_group_ids", flattenVPCEndpointSecurityGroupIds(vpce.Groups))
 	if err != nil {
 		return fmt.Errorf("error setting security_group_ids: %w", err)
 	}

@@ -64,7 +64,7 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var hasPolicyAttachment bool
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(conn, role, policyARN)

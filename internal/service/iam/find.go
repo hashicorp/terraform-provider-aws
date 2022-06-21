@@ -306,3 +306,42 @@ func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam
 
 	return output, nil
 }
+
+func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
+	accessKeys, err := FindAccessKeys(ctx, conn, username)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, accessKey := range accessKeys {
+		if aws.StringValue(accessKey.AccessKeyId) == id {
+			return accessKey, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
+	var accessKeys []*iam.AccessKeyMetadata
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+	err := conn.ListAccessKeysPages(input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	return accessKeys, err
+}

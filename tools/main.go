@@ -10,5 +10,6 @@ import (
 	_ "github.com/hashicorp/go-changelog/cmd/changelog-build"
 	_ "github.com/katbyte/terrafmt"
 	_ "github.com/pavius/impi/cmd/impi"
+	_ "github.com/rhysd/actionlint/cmd/actionlint"
 	_ "github.com/terraform-linters/tflint"
 )
