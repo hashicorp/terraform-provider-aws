@@ -86,7 +86,7 @@ func resourceVPCEndpointServiceAllowedPrincipalDelete(d *schema.ResourceData, me
 		ServiceId:               aws.String(serviceID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return nil
 	}
 

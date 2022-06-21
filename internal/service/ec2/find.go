@@ -210,7 +210,7 @@ func FindClientVPNEndpoints(conn *ec2.EC2, input *ec2.DescribeClientVpnEndpoints
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -303,7 +303,7 @@ func FindClientVPNAuthorizationRules(conn *ec2.EC2, input *ec2.DescribeClientVpn
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -369,7 +369,7 @@ func FindClientVPNNetworkAssociations(conn *ec2.EC2, input *ec2.DescribeClientVp
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound, errCodeInvalidClientVPNAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNAssociationIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -449,7 +449,7 @@ func FindClientVPNRoutes(conn *ec2.EC2, input *ec2.DescribeClientVpnRoutesInput)
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2560,7 +2560,7 @@ func FindVPCEndpoints(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) ([]*e
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2637,7 +2637,7 @@ func FindVPCEndpointServiceConfigurations(conn *ec2.EC2, input *ec2.DescribeVpcE
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2732,7 +2732,7 @@ func FindVPCEndpointServicePermissions(conn *ec2.EC2, input *ec2.DescribeVpcEndp
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
