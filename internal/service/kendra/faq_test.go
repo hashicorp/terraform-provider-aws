@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFaq_basic(t *testing.T) {
+func testAccFaq_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -61,7 +61,7 @@ func TestAccFaq_basic(t *testing.T) {
 	})
 }
 
-func TestAccFaq_description(t *testing.T) {
+func testAccFaq_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -96,7 +96,7 @@ func TestAccFaq_description(t *testing.T) {
 	})
 }
 
-func TestAccFaq_fileFormat(t *testing.T) {
+func testAccFaq_fileFormat(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -131,7 +131,7 @@ func TestAccFaq_fileFormat(t *testing.T) {
 	})
 }
 
-func TestAccFaq_languageCode(t *testing.T) {
+func testAccFaq_languageCode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -166,7 +166,7 @@ func TestAccFaq_languageCode(t *testing.T) {
 	})
 }
 
-func TestAccFaq_tags(t *testing.T) {
+func testAccFaq_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,7 +218,7 @@ func TestAccFaq_tags(t *testing.T) {
 	})
 }
 
-func TestAccFaq_disappears(t *testing.T) {
+func testAccFaq_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

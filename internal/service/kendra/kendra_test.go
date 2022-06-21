@@ -34,6 +34,14 @@ func TestAccKendra_serial(t *testing.T) {
 			"RoleARN":      testAccThesaurus_roleARN,
 			"SourceS3Path": testAccThesaurus_sourceS3Path,
 		},
+		"Faq": {
+			"basic":        testAccFaq_basic,
+			"disappears":   testAccFaq_disappears,
+			"tags":         testAccFaq_tags,
+			"Description":  testAccFaq_description,
+			"FileFormat":   testAccFaq_fileFormat,
+			"LanguageCode": testAccFaq_languageCode,
+		},
 	}
 
 	for group, m := range testCases {
