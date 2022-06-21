@@ -61,6 +61,41 @@ func TestAccFaq_basic(t *testing.T) {
 	})
 }
 
+func TestAccFaq_description(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description for kendra faq"
+	resourceName := "aws_kendra_faq.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFaqDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFaqConfig_description(rName, rName2, rName3, rName4, rName5, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFaqExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFaqDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -260,4 +295,22 @@ resource "aws_kendra_faq" "test" {
   }
 }
 `, rName5))
+}
+
+func testAccFaqConfig_description(rName, rName2, rName3, rName4, rName5, description string) string {
+	return acctest.ConfigCompose(
+		testAccFaqConfigBase(rName, rName2, rName3, rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_faq" "test" {
+  index_id    = aws_kendra_index.test.id
+  name        = %[1]q
+  description = %[2]q
+  role_arn    = aws_iam_role.test_faq.arn
+
+  s3_path {
+    bucket = aws_s3_bucket.test.id
+    key    = aws_s3_object.test.key
+  }
+}
+`, rName5, description))
 }
