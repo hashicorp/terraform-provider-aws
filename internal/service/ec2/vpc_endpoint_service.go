@@ -1,7 +1,6 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -270,48 +268,55 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types") {
-		modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
+		input := &ec2.ModifyVpcEndpointServiceConfigurationInput{
 			ServiceId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("private_dns_name") {
-			modifyCfgReq.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
-		}
-
 		if d.HasChange("acceptance_required") {
-			modifyCfgReq.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
+			input.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
 		}
 
-		setVPCEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
-			&modifyCfgReq.AddGatewayLoadBalancerArns, &modifyCfgReq.RemoveGatewayLoadBalancerArns)
-
-		setVPCEndpointServiceUpdateLists(d, "network_load_balancer_arns",
-			&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns)
-
-		setVPCEndpointServiceUpdateLists(d, "supported_ip_address_types",
-			&modifyCfgReq.AddSupportedIpAddressTypes, &modifyCfgReq.RemoveSupportedIpAddressTypes)
-
-		log.Printf("[DEBUG] Modifying VPC Endpoint Service configuration: %#v", modifyCfgReq)
-		if _, err := conn.ModifyVpcEndpointServiceConfiguration(modifyCfgReq); err != nil {
-			return fmt.Errorf("Error modifying VPC Endpoint Service configuration: %s", err.Error())
+		if d.HasChange("gateway_load_balancer_arns") {
+			setVPCEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
+				&input.AddGatewayLoadBalancerArns, &input.RemoveGatewayLoadBalancerArns)
 		}
 
-		if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
-			return err
+		if d.HasChange("network_load_balancer_arns") {
+			setVPCEndpointServiceUpdateLists(d, "network_load_balancer_arns",
+				&input.AddNetworkLoadBalancerArns, &input.RemoveNetworkLoadBalancerArns)
+		}
+
+		if d.HasChange("private_dns_name") {
+			input.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
+		}
+
+		if d.HasChange("supported_ip_address_types") {
+			setVPCEndpointServiceUpdateLists(d, "supported_ip_address_types",
+				&input.AddSupportedIpAddressTypes, &input.RemoveSupportedIpAddressTypes)
+		}
+
+		log.Printf("[DEBUG] Updating EC2 VPC Endpoint Service: %s", input)
+		_, err := conn.ModifyVpcEndpointServiceConfiguration(input)
+
+		if err != nil {
+			return fmt.Errorf("updating EC2 VPC Endpoint Service (%s): %w", d.Id(), err)
+		}
+
+		if _, err := WaitVPCEndpointServiceAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EC2 VPC Endpoint Service (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("allowed_principals") {
-		modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
+		input := &ec2.ModifyVpcEndpointServicePermissionsInput{
 			ServiceId: aws.String(d.Id()),
 		}
 
 		setVPCEndpointServiceUpdateLists(d, "allowed_principals",
-			&modifyPermReq.AddAllowedPrincipals, &modifyPermReq.RemoveAllowedPrincipals)
+			&input.AddAllowedPrincipals, &input.RemoveAllowedPrincipals)
 
-		log.Printf("[DEBUG] Modifying VPC Endpoint Service permissions: %#v", modifyPermReq)
-		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
-			return fmt.Errorf("Error modifying VPC Endpoint Service permissions: %s", err.Error())
+		if _, err := conn.ModifyVpcEndpointServicePermissions(input); err != nil {
+			return fmt.Errorf("modifying EC2 VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
 		}
 	}
 
@@ -319,7 +324,7 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPC Endpoint Service (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating EC2 VPC Endpoint Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -353,87 +358,19 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func flattenPrivateDNSNameConfiguration(apiObject *ec2.PrivateDnsNameConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func vpcEndpointServiceStateRefresh(conn *ec2.EC2, svcId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		log.Printf("[DEBUG] Reading VPC Endpoint Service Configuration: %s", svcId)
-		resp, err := conn.DescribeVpcEndpointServiceConfigurations(&ec2.DescribeVpcEndpointServiceConfigurationsInput{
-			ServiceIds: aws.StringSlice([]string{svcId}),
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidVpcEndpointServiceId.NotFound") {
-				return false, ec2.ServiceStateDeleted, nil
-			}
-
-			return nil, "", err
-		}
-
-		svcCfg := resp.ServiceConfigurations[0]
-		state := aws.StringValue(svcCfg.ServiceState)
-		// No use in retrying if the endpoint service is in a failed state.
-		if state == ec2.ServiceStateFailed {
-			return nil, state, errors.New("VPC Endpoint Service is in a failed state")
-		}
-		return svcCfg, state, nil
-	}
-}
-
-func vpcEndpointServiceWaitUntilAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.ServiceStatePending},
-		Target:     []string{ec2.ServiceStateAvailable},
-		Refresh:    vpcEndpointServiceStateRefresh(conn, d.Id()),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for VPC Endpoint Service %s to become available: %s", d.Id(), err.Error())
-	}
-
-	return nil
-}
-
 func setVPCEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
-	if d.HasChange(key) {
-		o, n := d.GetChange(key)
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+	o, n := d.GetChange(key)
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
 
-		add := flex.ExpandStringSet(ns.Difference(os))
-		if len(add) > 0 {
-			*a = add
-		}
+	add := flex.ExpandStringSet(ns.Difference(os))
+	if len(add) > 0 {
+		*a = add
+	}
 
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		if len(remove) > 0 {
-			*r = remove
-		}
+	remove := flex.ExpandStringSet(os.Difference(ns))
+	if len(remove) > 0 {
+		*r = remove
 	}
 }
 
@@ -461,4 +398,30 @@ func flattenAllowedPrincipals(apiObjects []*ec2.AllowedPrincipal) []*string {
 	}
 
 	return tfList
+}
+
+func flattenPrivateDNSNameConfiguration(apiObject *ec2.PrivateDnsNameConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
