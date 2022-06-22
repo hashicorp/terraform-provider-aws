@@ -2245,6 +2245,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
     severity: WARNING
+  - id: cloudwatchrum-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in func name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchrum-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in const name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
+    severity: WARNING
+  - id: cloudwatchrum-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in var name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
+    severity: WARNING
   - id: codeartifact-in-func-name
     languages:
       - go
@@ -2868,19 +2911,4 @@ rules:
             - pattern-regex: "(?i)Connect"
             - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

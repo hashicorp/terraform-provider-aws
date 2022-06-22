@@ -2866,3 +2866,33 @@ rules:
           patterns:
             - pattern-regex: "(?i)QuickSight"
     severity: WARNING
+  - id: ram-in-func-name
+    languages:
+      - go
+    message: Do not use "RAM" in func name inside ram package
+    paths:
+      include:
+        - internal/service/ram
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ram-in-test-name
+    languages:
+      - go
+    message: Include "RAM" in test name
+    paths:
+      include:
+        - internal/service/ram/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccRAM"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
