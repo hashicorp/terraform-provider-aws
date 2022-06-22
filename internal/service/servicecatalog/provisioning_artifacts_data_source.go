@@ -23,17 +23,17 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"accept_language": {
+				Type:         schema.TypeString,
+				Default:      AcceptLanguageEnglish,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+			},
 			"provisioning_artifact_details": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"accept_language": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      AcceptLanguageEnglish,
-							ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
-						},
 						"active": {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -71,10 +71,10 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 
 func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
-	product_id := aws.String(d.Get("product_id").(string))
 
 	input := &servicecatalog.ListProvisioningArtifactsInput{
-		ProductId: product_id,
+		ProductId:      aws.String(d.Get("product_id").(string)),
+		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
 	}
 
 	output, err := conn.ListProvisioningArtifacts(input)
