@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
+func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
@@ -45,7 +45,7 @@ func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 	})
 }
 
-func testAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
+func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
