@@ -239,13 +239,13 @@ func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 }
 
 const (
-	OutsideIpAddressTypePrivateIpv4 = "PrivateIpv4"
-	OutsideIpAddressTypePublicIpv4  = "PublicIpv4"
+	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
+	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
 )
 
-func outsideIpAddressType_Values() []string {
+func outsideIPAddressType_Values() []string {
 	return []string{
-		OutsideIpAddressTypePrivateIpv4,
-		OutsideIpAddressTypePublicIpv4,
+		OutsideIPAddressTypePrivateIPv4,
+		OutsideIPAddressTypePublicIPv4,
 	}
 }

@@ -72,7 +72,7 @@ func TestAccSiteVPNCustomerGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNCustomerGateway_privateIpv4(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_privateIPv4(t *testing.T) {
 	var gateway ec2.CustomerGateway
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_customer_gateway.test"
