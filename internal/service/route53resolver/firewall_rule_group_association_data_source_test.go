@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRoute53ResolverFirewallRuleGroupAssociationDataSource_basic(t *testing.T) {
+func TestAccRuleGroupAssociationDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_rule_group_association.test"
 
 	resource.Test(t, resource.TestCase{
@@ -18,7 +18,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociationDataSource_basic(t *testi
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResolverFirewallRuleGroupAssociationDataSourceConfig_basic(),
+				Config: testAccRuleGroupAssociationDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "route53resolver", regexp.MustCompile(`firewall-rule-group-association/.+`)),
@@ -38,7 +38,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociationDataSource_basic(t *testi
 	})
 }
 
-func testAccResolverFirewallRuleGroupAssociationDataSourceConfig_basic() string {
+func testAccRuleGroupAssociationDataSourceConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
