@@ -237,3 +237,15 @@ func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 
 	return slice
 }
+
+const (
+	OutsideIpAddressTypePrivateIpv4 = "PrivateIpv4"
+	OutsideIpAddressTypePublicIpv4  = "PublicIpv4"
+)
+
+func vpnTunnelOptionsOutsideIpAddressType_Values() []string {
+	return []string{
+		OutsideIpAddressTypePrivateIpv4,
+		OutsideIpAddressTypePublicIpv4,
+	}
+}

@@ -80,7 +80,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validOutsideAddressType(),
+				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsOutsideIpAddressType_Values(), false),
 			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
@@ -549,7 +549,7 @@ func ResourceVPNConnection() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			CustomizeDiffValidateOutsideIpAddressType,
+			customizeDiffValidateOutsideIpAddressType,
 			verify.SetTagsDiff,
 		),
 	}
@@ -1520,17 +1520,9 @@ func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	)
 }
 
-func validOutsideAddressType() schema.SchemaValidateFunc {
-	allowedTypes := []string{
-		"PrivateIpv4",
-		"PublicIpv4",
-	}
-	return validation.StringInSlice(allowedTypes, false)
-}
-
-// CustomizeDiffValidateOutsideIpAddressType validates that if provided if `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` nust be provided
-func CustomizeDiffValidateOutsideIpAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == "PublicIpV4" {
+// customizeDiffValidateOutsideIpAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
+func customizeDiffValidateOutsideIpAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == OutsideIpAddressTypePublicIpv4 {
 		return nil
 	}
 
