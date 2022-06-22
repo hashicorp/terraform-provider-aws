@@ -71,7 +71,7 @@ func ResourceFaq() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9]{1}[a-zA-Z0-9-]{0,35}`),
+					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
