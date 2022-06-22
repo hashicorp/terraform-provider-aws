@@ -191,8 +191,8 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 				Config: testAccVPCEndpointConfig_gatewayRouteTableAndPolicyModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
 				),
 			},
 			{

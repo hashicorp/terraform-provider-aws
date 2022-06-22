@@ -211,7 +211,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
