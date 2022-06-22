@@ -3,7 +3,7 @@ subcategory: "CE (Cost Explorer)"
 layout: "aws"
 page_title: "AWS: aws_ce_cost_allocation_tag"
 description: |-
-  Provides a CE Cost Cost Allocation Tag
+  Provides a CE Cost Allocation Tag
 ---
 
 # Resource: aws_ce_cost_allocation_tag
