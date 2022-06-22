@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAppMonitor_basic(t *testing.T) {
+func TestAccRUMAppMonitor_basic(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
@@ -62,7 +62,7 @@ func TestAccAppMonitor_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppMonitor_tags(t *testing.T) {
+func TestAccRUMAppMonitor_tags(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
@@ -107,7 +107,7 @@ func TestAccAppMonitor_tags(t *testing.T) {
 	})
 }
 
-func TestAccAppMonitor_disappears(t *testing.T) {
+func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	var appMon cloudwatchrum.AppMonitor
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rum_app_monitor.test"
