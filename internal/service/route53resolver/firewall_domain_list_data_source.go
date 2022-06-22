@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceResolverFirewallDomainList() *schema.Resource {
+func DataSourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResolverFirewallDomainListRead,
+		Read: dataSourceFirewallDomainListRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -58,7 +58,7 @@ func DataSourceResolverFirewallDomainList() *schema.Resource {
 	}
 }
 
-func dataSourceResolverFirewallDomainListRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallDomainListInput{
@@ -72,7 +72,7 @@ func dataSourceResolverFirewallDomainListRead(d *schema.ResourceData, meta inter
 	}
 
 	if output == nil {
-		return fmt.Errorf("no  Route53 Firewall Domain List found matching criteria; try different search")
+		return fmt.Errorf("no Route53 Firewall Domain List found matching criteria; try different search")
 	}
 
 	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
