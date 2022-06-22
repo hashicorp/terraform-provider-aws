@@ -209,7 +209,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						"name": "tags",
-						"type": "map<text,text>",
+						"type": "map<text, text>",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
@@ -663,7 +663,7 @@ resource "aws_keyspaces_table" "test" {
 
     column {
       name = "tags"
-      type = "map<text,text>"
+      type = "map<text, text>"
     }
 
     partition_key {
