@@ -91,8 +91,6 @@ func TestAccSiteVPNCustomerGateway_privateIpv4(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
 				),
