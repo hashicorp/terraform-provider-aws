@@ -344,56 +344,64 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("policy", "route_table_ids", "subnet_ids", "security_group_ids", "private_dns_enabled", "ip_address_type") {
-		req := &ec2.ModifyVpcEndpointInput{
+	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_ids") {
+		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("ip_address_type") {
-			req.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+		if d.HasChange("dns_options") {
+			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
+
+		if d.HasChange("ip_address_type") {
+			input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+		}
+
+		if d.HasChange("private_dns_enabled") {
+			input.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
+		}
+
+		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringLists(d, "route_table_ids")
+		input.AddSecurityGroupIds, input.RemoveSecurityGroupIds = flattenAddAndRemoveStringLists(d, "security_group_ids")
+		input.AddSubnetIds, input.RemoveSubnetIds = flattenAddAndRemoveStringLists(d, "subnet_ids")
 
 		if d.HasChange("policy") {
 			o, n := d.GetChange("policy")
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
 				policy, err := structure.NormalizeJsonString(d.Get("policy"))
+
 				if err != nil {
-					return fmt.Errorf("policy contains an invalid JSON: %s", err)
+					return fmt.Errorf("policy contains invalid JSON: %w", err)
 				}
 
 				if policy == "" {
-					req.ResetPolicy = aws.Bool(true)
+					input.ResetPolicy = aws.Bool(true)
 				} else {
-					req.PolicyDocument = aws.String(policy)
+					input.PolicyDocument = aws.String(policy)
 				}
 			}
 		}
 
-		setVPCEndpointUpdateLists(d, "route_table_ids", &req.AddRouteTableIds, &req.RemoveRouteTableIds)
-		setVPCEndpointUpdateLists(d, "subnet_ids", &req.AddSubnetIds, &req.RemoveSubnetIds)
-		setVPCEndpointUpdateLists(d, "security_group_ids", &req.AddSecurityGroupIds, &req.RemoveSecurityGroupIds)
-
-		if d.HasChange("private_dns_enabled") {
-			req.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
-		}
-
-		log.Printf("[DEBUG] Updating VPC Endpoint: %#v", req)
-		if _, err := conn.ModifyVpcEndpoint(req); err != nil {
-			return fmt.Errorf("Error updating VPC Endpoint: %s", err)
-		}
-
-		_, err := WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		log.Printf("[DEBUG] Updating EC2 VPC Endpoint: %s", input)
+		_, err := conn.ModifyVpcEndpoint(input)
 
 		if err != nil {
-			return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 VPC Endpoint (%s): %w", d.Id(), err)
+		}
+
+		if _, err := WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -451,24 +459,6 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceID, serviceName string, timeout time.D
 	}
 
 	return nil
-}
-
-func setVPCEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
-	if d.HasChange(key) {
-		o, n := d.GetChange(key)
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		add := flex.ExpandStringSet(ns.Difference(os))
-		if len(add) > 0 {
-			*a = add
-		}
-
-		remove := flex.ExpandStringSet(os.Difference(ns))
-		if len(remove) > 0 {
-			*r = remove
-		}
-	}
 }
 
 func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
@@ -551,4 +541,26 @@ func flattenSecurityGroupIdentifiers(apiObjects []*ec2.SecurityGroupIdentifier) 
 	}
 
 	return tfList
+}
+
+func flattenAddAndRemoveStringLists(d *schema.ResourceData, key string) ([]*string, []*string) {
+	if !d.HasChange(key) {
+		return nil, nil
+	}
+
+	var add, del []*string
+
+	o, n := d.GetChange(key)
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+
+	if v := flex.ExpandStringSet(ns.Difference(os)); len(v) > 0 {
+		add = v
+	}
+
+	if v := flex.ExpandStringSet(os.Difference(ns)); len(v) > 0 {
+		del = v
+	}
+
+	return add, del
 }
