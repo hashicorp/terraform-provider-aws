@@ -46,7 +46,7 @@ The following arguments are required:
 
 ### Filter
 
-**Note** At least one comparator must be included with each filter.
+**Note** One comparator must be included with each filter.
 
 * `criteria` - (Required) The filter criteria.
 * `contains` - (Optional) Contains comparator.

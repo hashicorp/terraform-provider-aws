@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -57,9 +58,10 @@ func ResourceArchiveRule() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"exists": {
-							Type:     nullable.TypeNullableBool,
-							Optional: true,
-							Computed: true,
+							Type:         nullable.TypeNullableBool,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableBool,
 						},
 						"neq": {
 							Type:     schema.TypeList,
@@ -113,6 +115,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
 	}
+
 	out, err := FindArchiveRule(ctx, conn, analyzerName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -222,7 +225,11 @@ func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 		val["criteria"] = key
 		val["contains"] = aws.ToStringSlice(value.Contains)
 		val["eq"] = aws.ToStringSlice(value.Eq)
-		val["exists"] = aws.ToBool(value.Exists)
+
+		if value.Exists != nil {
+			val["exists"] = strconv.FormatBool(aws.ToBool(value.Exists))
+		}
+
 		val["neq"] = aws.ToStringSlice(value.Neq)
 
 		l = append(l, val)

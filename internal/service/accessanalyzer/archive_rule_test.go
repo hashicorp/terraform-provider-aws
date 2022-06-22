@@ -16,10 +16,6 @@ import (
 )
 
 func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archiverule.test"
@@ -51,10 +47,6 @@ func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 }
 
 func testAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archiverule.test"
