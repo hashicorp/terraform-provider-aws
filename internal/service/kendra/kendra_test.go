@@ -12,10 +12,20 @@ func TestAccKendra_serial(t *testing.T) {
 			"Name":        testAccExperience_Name,
 			"RoleARN":     testAccExperience_roleARN,
 			"Configuration_ContentSourceConfiguration_DirectPutContent":                    testAccExperience_Configuration_ContentSourceConfiguration_DirectPutContent,
+			"Configuration_ContentSourceConfiguration_FaqIDs":                              testAccExperience_Configuration_ContentSourceConfiguration_FaqIDs,
+			"Configuration_ContentSourceConfiguration_updateFaqIDs":                        testAccExperience_Configuration_ContentSourceConfiguration_updateFaqIDs,
 			"Configuration_UserIdentityConfiguration":                                      testAccExperience_Configuration_UserIdentityConfiguration,
 			"Configuration_ContentSourceConfigurationAndUserIdentityConfiguration":         testAccExperience_Configuration_ContentSourceConfigurationAndUserIdentityConfiguration,
 			"Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved": testAccExperience_Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved,
 			"Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved": testAccExperience_Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved,
+		},
+		"Faq": {
+			"basic":        testAccFaq_basic,
+			"disappears":   testAccFaq_disappears,
+			"tags":         testAccFaq_tags,
+			"Description":  testAccFaq_description,
+			"FileFormat":   testAccFaq_fileFormat,
+			"LanguageCode": testAccFaq_languageCode,
 		},
 		"Index": {
 			"basic":                testAccIndex_basic,
@@ -45,14 +55,6 @@ func TestAccKendra_serial(t *testing.T) {
 			"Name":         testAccThesaurus_name,
 			"RoleARN":      testAccThesaurus_roleARN,
 			"SourceS3Path": testAccThesaurus_sourceS3Path,
-		},
-		"Faq": {
-			"basic":        testAccFaq_basic,
-			"disappears":   testAccFaq_disappears,
-			"tags":         testAccFaq_tags,
-			"Description":  testAccFaq_description,
-			"FileFormat":   testAccFaq_fileFormat,
-			"LanguageCode": testAccFaq_languageCode,
 		},
 	}
 

@@ -291,6 +291,92 @@ func testAccExperience_Configuration_ContentSourceConfiguration_DirectPutContent
 	})
 }
 
+func testAccExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kendra_experience.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckExperienceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_faqIDs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExperienceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.content_source_configuration.0.faq_ids.*", "aws_kendra_faq.test", "faq_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccExperience_Configuration_ContentSourceConfiguration_updateFaqIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kendra_experience.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckExperienceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_faqIDs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExperienceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "configuration.0.content_source_configuration.0.faq_ids.*", "aws_kendra_faq.test", "faq_id"),
+				),
+			},
+			{
+				Config: testAccExperienceConfig_configuration_contentSourceConfiguration_empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExperienceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccExperience_Configuration_UserIdentityConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -754,6 +840,74 @@ resource "aws_kendra_experience" "test" {
   }
 }
 `, rName, directPutContent))
+}
+
+func testAccExperienceConfig_configuration_contentSourceConfiguration_faqIDs(rName string) string {
+	return acctest.ConfigCompose(
+		testAccExperienceBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  source = "test-fixtures/basic.csv"
+  key    = "test/basic.csv"
+}
+
+data "aws_iam_policy_document" "faq" {
+  statement {
+    sid    = "AllowKendraToAccessS3"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject"
+    ]
+    resources = [
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "faq" {
+  name        = "%[1]s-faq"
+  description = "Allow Kendra to access S3"
+  policy      = data.aws_iam_policy_document.faq.json
+}
+
+resource "aws_iam_role_policy_attachment" "faq" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.faq.arn
+}
+
+resource "aws_kendra_faq" "test" {
+  depends_on = [aws_iam_role_policy_attachment.faq]
+
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  s3_path {
+    bucket = aws_s3_bucket.test.id
+    key    = aws_s3_object.test.key
+  }
+}
+
+resource "aws_kendra_experience" "test" {
+  depends_on = [aws_iam_role_policy_attachment.experience]
+
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  configuration {
+    content_source_configuration {
+      faq_ids = [aws_kendra_faq.test.faq_id]
+    }
+  }
+}
+`, rName))
 }
 
 func testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId string) string {
