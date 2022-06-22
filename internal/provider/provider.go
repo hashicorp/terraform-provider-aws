@@ -1652,6 +1652,7 @@ func Provider() *schema.Provider {
 
 			"aws_location_map":         location.ResourceMap(),
 			"aws_location_place_index": location.ResourcePlaceIndex(),
+			"aws_location_tracker":     location.ResourceTracker(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
