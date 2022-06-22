@@ -27,7 +27,7 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostAllocationTagConfig(rName, "Active"),
+				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
@@ -41,7 +41,7 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCostAllocationTagConfig(rName, "Inactive"),
+				Config: testAccCostAllocationTagConfig_basic(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
@@ -49,7 +49,7 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
 				),
 			}, {
-				Config: testAccCostAllocationTagConfig(rName, "Active"),
+				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
@@ -82,7 +82,7 @@ func testAccCheckCostAllocationTagExists(resourceName string, output *costexplor
 	}
 }
 
-func testAccCostAllocationTagConfig(rName, status string) string {
+func testAccCostAllocationTagConfig_basic(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_allocation_tag" "test" {
   tag_key = %[1]q
