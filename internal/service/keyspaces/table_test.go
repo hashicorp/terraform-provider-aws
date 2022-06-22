@@ -166,7 +166,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"name":     "region",
 						"order_by": "DESC",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "11"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						"name": "id",
 						"type": "text",
