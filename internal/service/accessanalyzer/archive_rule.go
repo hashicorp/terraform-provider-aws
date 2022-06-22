@@ -128,7 +128,9 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading AccessAnalyzer ArchiveRule (%s): %s", d.Id(), err)
 	}
 
+	d.Set("analyzer_name", analyzerName)
 	d.Set("filter", flattenFilter(out.Filter))
+	d.Set("rule_name", out.RuleName)
 
 	return nil
 }
@@ -218,7 +220,7 @@ func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 		return nil
 	}
 
-	l := make([]interface{}, 0, 0)
+	l := make([]interface{}, 0)
 
 	for key, value := range filter {
 		val := make(map[string]interface{})

@@ -20,7 +20,7 @@ func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archiverule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
@@ -34,7 +34,6 @@ func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "false"),
 				),
 			},
 			{
@@ -51,7 +50,7 @@ func testAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archiverule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
