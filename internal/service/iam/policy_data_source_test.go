@@ -91,7 +91,7 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_ARN(policyName, "/"),
+				Config: testAccPolicyDataSourceConfig_arn(policyName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -117,7 +117,7 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_Name(policyName, "/"),
+				Config: testAccPolicyDataSourceConfig_name(policyName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -145,7 +145,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDataSourceConfig_PathPrefix(policyName, policyPath),
+				Config: testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -170,7 +170,7 @@ func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyDataSourceConfig_NonExistent(policyName, policyPath),
+				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),
 				ExpectError: regexp.MustCompile(`no IAM policy found matching criteria`),
 			},
 		},
@@ -201,7 +201,7 @@ EOF
 }`, policyName, policyPath)
 }
 
-func testAccPolicyDataSourceConfig_ARN(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_arn(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		`
@@ -211,7 +211,7 @@ data "aws_iam_policy" "test" {
 `)
 }
 
-func testAccPolicyDataSourceConfig_Name(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_name(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		`
@@ -221,7 +221,7 @@ data "aws_iam_policy" "test" {
 `)
 }
 
-func testAccPolicyDataSourceConfig_PathPrefix(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		fmt.Sprintf(`
@@ -232,7 +232,7 @@ data "aws_iam_policy" "test" {
 `, policyPath))
 }
 
-func testAccPolicyDataSourceConfig_NonExistent(policyName, policyPath string) string {
+func testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath string) string {
 	return acctest.ConfigCompose(
 		testAccPolicyBaseDataSourceConfig(policyName, policyPath),
 		fmt.Sprintf(`

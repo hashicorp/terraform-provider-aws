@@ -131,7 +131,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
 	_, err := conn.ModifyVpcEndpoint(input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIDNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return nil
 	}
 

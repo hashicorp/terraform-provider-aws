@@ -32,7 +32,7 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, schedule1),
+				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -50,10 +50,10 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB_Updated(rName, schedule2, updatedTimezone),
+				Config: testAccScheduledActionConfig_dynamoDBUpdated(rName, schedule2, updatedTimezone),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa2),
-					testAccCheckAppautoscalingScheduledActionNotRecreated(&sa1, &sa2),
+					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
@@ -86,7 +86,7 @@ func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ECS(rName, ts),
+				Config: testAccScheduledActionConfig_ecs(rName, ts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -119,7 +119,7 @@ func TestAccAppAutoScalingScheduledAction_emr(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_EMR(rName, ts),
+				Config: testAccScheduledActionConfig_emr(rName, ts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -151,7 +151,7 @@ func TestAccAppAutoScalingScheduledAction_Name_duplicate(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_Name_Duplicate(rName),
+				Config: testAccScheduledActionConfig_duplicateName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa1),
 					testAccCheckScheduledActionExists(resourceName2, &sa2),
@@ -176,7 +176,7 @@ func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_SpotFleet(rName, ts, validUntil),
+				Config: testAccScheduledActionConfig_spotFleet(rName, ts, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -213,7 +213,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleAtExpression_timezone(t *testi
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, at, timezone, startTime, endTime),
+				Config: testAccScheduledActionConfig_timezone(rName, at, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -248,7 +248,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_basic(t *testin
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_Schedule(rName, cron),
+				Config: testAccScheduledActionConfig_schedule(rName, cron),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -286,7 +286,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_timezone(t *tes
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, cron, timezone, startTime, endTime),
+				Config: testAccScheduledActionConfig_timezone(rName, cron, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -328,7 +328,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, cron, scheduleTimezone, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339)),
+				Config: testAccScheduledActionConfig_timezone(rName, cron, scheduleTimezone, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -346,7 +346,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleCronExpression_startEndTimeTim
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_Schedule(rName, cron),
+				Config: testAccScheduledActionConfig_schedule(rName, cron),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -381,7 +381,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_basic(t *testin
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_Schedule(rName, rate),
+				Config: testAccScheduledActionConfig_schedule(rName, rate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -419,7 +419,7 @@ func TestAccAppAutoScalingScheduledAction_ScheduleRateExpression_timezone(t *tes
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, rate, timezone, startTime, endTime),
+				Config: testAccScheduledActionConfig_timezone(rName, rate, timezone, startTime, endTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -454,7 +454,7 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MinCapacity(rName, schedule, 1),
+				Config: testAccScheduledActionConfig_minCapacity(rName, schedule, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -472,20 +472,20 @@ func TestAccAppAutoScalingScheduledAction_minCapacity(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MinCapacity(rName, schedule, 2),
+				Config: testAccScheduledActionConfig_minCapacity(rName, schedule, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa2),
-					testAccCheckAppautoscalingScheduledActionNotRecreated(&sa1, &sa2),
+					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MaxCapacity(rName, schedule, 10),
+				Config: testAccScheduledActionConfig_maxCapacity(rName, schedule, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa2),
-					testAccCheckAppautoscalingScheduledActionNotRecreated(&sa1, &sa2),
+					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
@@ -509,7 +509,7 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MaxCapacity(rName, schedule, 10),
+				Config: testAccScheduledActionConfig_maxCapacity(rName, schedule, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -527,20 +527,20 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MaxCapacity(rName, schedule, 8),
+				Config: testAccScheduledActionConfig_maxCapacity(rName, schedule, 8),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa2),
-					testAccCheckAppautoscalingScheduledActionNotRecreated(&sa1, &sa2),
+					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", ""),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "8"),
 				),
 			},
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_MinCapacity(rName, schedule, 1),
+				Config: testAccScheduledActionConfig_minCapacity(rName, schedule, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &sa2),
-					testAccCheckAppautoscalingScheduledActionNotRecreated(&sa1, &sa2),
+					testAccCheckScheduledActionNotRecreated(&sa1, &sa2),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", ""),
@@ -598,7 +598,7 @@ func testAccCheckScheduledActionExists(name string, obj *applicationautoscaling.
 	}
 }
 
-func testAccCheckAppautoscalingScheduledActionNotRecreated(i, j *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionNotRecreated(i, j *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
 			return fmt.Errorf("Application Auto Scaling scheduled action recreated")
@@ -608,7 +608,7 @@ func testAccCheckAppautoscalingScheduledActionNotRecreated(i, j *applicationauto
 	}
 }
 
-func testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, ts string) string {
+func testAccScheduledActionConfig_dynamoDB(rName, ts string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -646,7 +646,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, ts)
 }
 
-func testAccAppautoscalingScheduledActionConfig_DynamoDB_Updated(rName, ts, timezone string) string {
+func testAccScheduledActionConfig_dynamoDBUpdated(rName, ts, timezone string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -685,7 +685,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, ts, timezone)
 }
 
-func testAccAppautoscalingScheduledActionConfig_ECS(rName, ts string) string {
+func testAccScheduledActionConfig_ecs(rName, ts string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -740,7 +740,7 @@ resource "aws_ecs_service" "test" {
 `, rName, ts)
 }
 
-func testAccAppautoscalingScheduledActionConfig_EMR(rName, ts string) string {
+func testAccScheduledActionConfig_emr(rName, ts string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -1072,7 +1072,7 @@ resource "aws_iam_role_policy_attachment" "autoscale_role" {
 `, rName, ts)
 }
 
-func testAccAppautoscalingScheduledActionConfig_Name_Duplicate(rName string) string {
+func testAccScheduledActionConfig_duplicateName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test2" {
   name           = "%[1]s-2"
@@ -1142,7 +1142,7 @@ resource "aws_appautoscaling_scheduled_action" "test" {
 `, rName)
 }
 
-func testAccAppautoscalingScheduledActionConfig_SpotFleet(rName, ts, validUntil string) string {
+func testAccScheduledActionConfig_spotFleet(rName, ts, validUntil string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -1222,7 +1222,7 @@ resource "aws_spot_fleet_request" "test" {
 `, rName, ts, validUntil)
 }
 
-func testAccAppautoscalingScheduledActionConfig_Schedule(rName, schedule string) string {
+func testAccScheduledActionConfig_schedule(rName, schedule string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -1259,7 +1259,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, schedule)
 }
 
-func testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, schedule, timezone, startTime, endTime string) string {
+func testAccScheduledActionConfig_timezone(rName, schedule, timezone, startTime, endTime string) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -1300,7 +1300,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, timezone, schedule, startTime, endTime)
 }
 
-func testAccAppautoscalingScheduledActionConfig_MinCapacity(rName, ts string, minCapacity int) string {
+func testAccScheduledActionConfig_minCapacity(rName, ts string, minCapacity int) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
@@ -1337,7 +1337,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, ts, minCapacity)
 }
 
-func testAccAppautoscalingScheduledActionConfig_MaxCapacity(rName, ts string, maxCapacity int) string {
+func testAccScheduledActionConfig_maxCapacity(rName, ts string, maxCapacity int) string {
 	return fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q

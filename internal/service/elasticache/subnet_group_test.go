@@ -25,7 +25,7 @@ func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig(sdkacctest.RandInt()),
+				Config: testAccSubnetGroupConfig_basic(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(
@@ -55,7 +55,7 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupUpdatePreConfig(rInt),
+				Config: testAccSubnetGroupConfig_updatePre(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					testAccCheckSubnetGroupAttrs(&csg, resourceName, 1),
@@ -69,7 +69,7 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccSubnetGroupUpdatePostConfig(rInt),
+				Config: testAccSubnetGroupConfig_updatePost(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					testAccCheckSubnetGroupAttrs(&csg, resourceName, 2),
@@ -91,7 +91,7 @@ func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupTags1(rInt, "key1", "value1"),
+				Config: testAccSubnetGroupConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -108,7 +108,7 @@ func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: testAccSubnetGroupTags2(rInt, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSubnetGroupConfig_tags2(rInt, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -120,7 +120,7 @@ func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSubnetGroupTags1(rInt, "key2", "value2"),
+				Config: testAccSubnetGroupConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -209,7 +209,7 @@ func testAccCheckSubnetGroupAttrs(csg *elasticache.CacheSubnetGroup, n string, c
 	}
 }
 
-func testAccSubnetGroupConfig(rInt int) string {
+func testAccSubnetGroupConfig_basic(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
@@ -239,7 +239,7 @@ resource "aws_elasticache_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccSubnetGroupUpdatePreConfig(rInt int) string {
+func testAccSubnetGroupConfig_updatePre(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
@@ -267,7 +267,7 @@ resource "aws_elasticache_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccSubnetGroupUpdatePostConfig(rInt int) string {
+func testAccSubnetGroupConfig_updatePost(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
@@ -308,7 +308,7 @@ resource "aws_elasticache_subnet_group" "test" {
 `, rInt))
 }
 
-func testAccSubnetGroupTags1(rInt int, tag1Key, tag1Value string) string {
+func testAccSubnetGroupConfig_tags1(rInt int, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
@@ -342,7 +342,7 @@ resource "aws_elasticache_subnet_group" "test" {
 `, rInt, tag1Key, tag1Value))
 }
 
-func testAccSubnetGroupTags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccSubnetGroupConfig_tags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"

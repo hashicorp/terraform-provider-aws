@@ -21,7 +21,7 @@ func TestAccLambdaLayerVersionDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionBasicDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
@@ -52,7 +52,7 @@ func TestAccLambdaLayerVersionDataSource_version(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionVersionDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_version(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
@@ -73,7 +73,7 @@ func TestAccLambdaLayerVersionDataSource_runtime(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionRuntimesDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_runtimes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
@@ -94,28 +94,28 @@ func TestAccLambdaLayerVersionDataSource_architectures(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionArchitecturesX86DataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_architecturesX86(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
 				),
 			},
 			{
-				Config: testAccLayerVersionArchitecturesARMDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_architecturesARM(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
 				),
 			},
 			{
-				Config: testAccLayerVersionArchitecturesX86ARMDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_architecturesX86ARM(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
 				),
 			},
 			{
-				Config: testAccLayerVersionArchitecturesNoneDataSourceConfig(rName),
+				Config: testAccLayerVersionDataSourceConfig_architecturesNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
@@ -125,7 +125,7 @@ func TestAccLambdaLayerVersionDataSource_architectures(t *testing.T) {
 	})
 }
 
-func testAccLayerVersionBasicDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -139,7 +139,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionVersionDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_version(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -160,7 +160,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionRuntimesDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_runtimes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -181,7 +181,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionArchitecturesX86DataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_architecturesX86(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -198,7 +198,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionArchitecturesARMDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_architecturesARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -214,7 +214,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionArchitecturesX86ARMDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_architecturesX86ARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -230,7 +230,7 @@ data "aws_lambda_layer_version" "test" {
 `, rName)
 }
 
-func testAccLayerVersionArchitecturesNoneDataSourceConfig(rName string) string {
+func testAccLayerVersionDataSourceConfig_architecturesNone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"

@@ -1690,6 +1690,44 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 `
 }
 
+func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = [%[1]q]
+  }
+}
+`, architecture)
+}
+
+// ConfigLatestAmazonLinux2HVMEBSX8664AMI returns the configuration for a data source that
+// describes the latest Amazon Linux 2 x86_64 AMI using HVM virtualization and an EBS root device.
+// The data source is named 'amzn2-ami-minimal-hvm-ebs-x86_64'.
+func ConfigLatestAmazonLinux2HVMEBSX8664AMI() string {
+	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesX8664)
+}
+
+// ConfigLatestAmazonLinux2HVMEBSARM64AMI returns the configuration for a data source that
+// describes the latest Amazon Linux 2 arm64 AMI using HVM virtualization and an EBS root device.
+// The data source is named 'amzn2-ami-minimal-hvm-ebs-arm64'.
+func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
+	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesArm64)
+}
+
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}

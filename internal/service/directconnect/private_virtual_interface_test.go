@@ -239,7 +239,7 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrivateVirtualInterfaceConfig_SiteLink_basic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
+				Config: testAccPrivateVirtualInterfaceConfig_siteLinkBasic(connectionId, rName, amzAsn, bgpAsn, vlan, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -261,7 +261,7 @@ func TestAccDirectConnectPrivateVirtualInterface_siteLink(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPrivateVirtualInterfaceConfig_SiteLink_updated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
+				Config: testAccPrivateVirtualInterfaceConfig_siteLinkUpdated(connectionId, rName, amzAsn, bgpAsn, vlan, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -392,7 +392,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan)
 }
 
-func testAccPrivateVirtualInterfaceConfig_SiteLink_basic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccPrivateVirtualInterfaceConfig_siteLinkBasic(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d
@@ -411,7 +411,7 @@ resource "aws_dx_private_virtual_interface" "test" {
 `, cid, rName, amzAsn, bgpAsn, vlan, sitelink_enabled)
 }
 
-func testAccPrivateVirtualInterfaceConfig_SiteLink_updated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
+func testAccPrivateVirtualInterfaceConfig_siteLinkUpdated(cid, rName string, amzAsn, bgpAsn, vlan int, sitelink_enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = %[3]d

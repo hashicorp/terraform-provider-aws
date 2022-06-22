@@ -33,7 +33,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentNameConfig(rName),
+				Config: testAccDeploymentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}/deployment/1`)),
@@ -71,7 +71,7 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_PredefinedStrategy(rName, strategy),
+				Config: testAccDeploymentConfig_predefinedStrategy(rName, strategy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_strategy_id", strategy),
@@ -102,7 +102,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentTags1(rName, "key1", "value1"),
+				Config: testAccDeploymentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -115,7 +115,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeploymentTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeploymentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -124,7 +124,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeploymentTags1(rName, "key2", "value2"),
+				Config: testAccDeploymentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +212,7 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 `, rName)
 }
 
-func testAccDeploymentNameConfig(rName string) string {
+func testAccDeploymentConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
@@ -227,7 +227,7 @@ resource "aws_appconfig_deployment" "test"{
 `, rName))
 }
 
-func testAccDeploymentConfig_PredefinedStrategy(rName, strategy string) string {
+func testAccDeploymentConfig_predefinedStrategy(rName, strategy string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
@@ -242,7 +242,7 @@ resource "aws_appconfig_deployment" "test"{
 `, rName, strategy))
 }
 
-func testAccDeploymentTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDeploymentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`
@@ -260,7 +260,7 @@ resource "aws_appconfig_deployment" "test"{
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccDeploymentTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeploymentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentBaseConfig(rName),
 		fmt.Sprintf(`

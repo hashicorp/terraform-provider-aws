@@ -24,7 +24,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameDataSourceConfig_RegionalCertificateARN(rName, key, certificate),
+				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
@@ -46,7 +46,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDomainNameDataSourceConfig_RegionalCertificateARN(domainName, key, certificate string) string {
+func testAccDomainNameDataSourceConfig_regionalCertificateARN(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"

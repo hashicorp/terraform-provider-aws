@@ -88,7 +88,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 		CheckDestroy:      testAccCheckIdentityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderIDPIdentifierConfig(userPoolName, "test"),
+				Config: testAccIdentityProviderConfig_identifier(userPoolName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
@@ -101,7 +101,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIdentityProviderIDPIdentifierConfig(userPoolName, "test2"),
+				Config: testAccIdentityProviderConfig_identifier(userPoolName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
@@ -281,7 +281,7 @@ resource "aws_cognito_identity_provider" "test" {
 `, userPoolName)
 }
 
-func testAccIdentityProviderIDPIdentifierConfig(userPoolName, attribute string) string {
+func testAccIdentityProviderConfig_identifier(userPoolName, attribute string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = %[1]q

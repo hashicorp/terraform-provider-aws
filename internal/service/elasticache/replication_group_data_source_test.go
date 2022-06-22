@@ -64,7 +64,7 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupDataSourceConfig_ClusterMode(rName),
+				Config: testAccReplicationGroupDataSourceConfig_clusterMode(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
@@ -97,7 +97,7 @@ func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupDataSourceConfig_MultiAZ(rName),
+				Config: testAccReplicationGroupDataSourceConfig_multiAZ(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
@@ -115,7 +115,7 @@ func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReplicationGroupDataSourceConfig_NonExistent,
+				Config:      testAccReplicationGroupDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`couldn't find resource`),
 			},
 		},
@@ -136,7 +136,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
@@ -171,7 +171,7 @@ data "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccReplicationGroupDataSourceConfig_ClusterMode(rName string) string {
+func testAccReplicationGroupDataSourceConfig_clusterMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -192,7 +192,7 @@ data "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccReplicationGroupDataSourceConfig_MultiAZ(rName string) string {
+func testAccReplicationGroupDataSourceConfig_multiAZ(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
@@ -209,7 +209,7 @@ data "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-const testAccReplicationGroupDataSourceConfig_NonExistent = `
+const testAccReplicationGroupDataSourceConfig_nonExistent = `
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = "tf-acc-test-nonexistent"
 }
