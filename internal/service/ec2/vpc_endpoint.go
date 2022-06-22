@@ -265,14 +265,12 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: aws.StringValue(vpce.OwnerId),
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-
 	serviceName := aws.StringValue(vpce.ServiceName)
-	d.Set("service_name", serviceName)
-	d.Set("state", vpce.State)
-	d.Set("vpc_id", vpce.VpcId)
-	d.Set("ip_address_type", vpce.IpAddressType)
 
+	d.Set("arn", arn)
+	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
+		return fmt.Errorf("setting dns_entry: %w", err)
+	}
 	if vpce.DnsOptions != nil {
 		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
 			return fmt.Errorf("setting dns_options: %w", err)
@@ -280,38 +278,34 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("dns_options", nil)
 	}
-
-	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"prefix-list-name": serviceName,
-		}),
-	})
-	if err != nil {
-		return fmt.Errorf("error reading Prefix List (%s): %s", serviceName, err)
-	}
-	if respPl == nil || len(respPl.PrefixLists) == 0 {
-		d.Set("cidr_blocks", []interface{}{})
-	} else if len(respPl.PrefixLists) > 1 {
-		return fmt.Errorf("multiple prefix lists associated with the service name '%s'. Unexpected", serviceName)
-	} else {
-		pl := respPl.PrefixLists[0]
-
-		d.Set("prefix_list_id", pl.PrefixListId)
-		err = d.Set("cidr_blocks", flex.FlattenStringList(pl.Cidrs))
-		if err != nil {
-			return fmt.Errorf("error setting cidr_blocks: %s", err)
-		}
-	}
-
-	err = d.Set("dns_entry", flattenVPCEndpointDNSEntries(vpce.DnsEntries))
-	if err != nil {
-		return fmt.Errorf("error setting dns_entry: %s", err)
-	}
-	err = d.Set("network_interface_ids", flex.FlattenStringSet(vpce.NetworkInterfaceIds))
-	if err != nil {
-		return fmt.Errorf("error setting network_interface_ids: %s", err)
-	}
+	d.Set("ip_address_type", vpce.IpAddressType)
+	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
 	d.Set("owner_id", vpce.OwnerId)
+	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
+	d.Set("requester_managed", vpce.RequesterManaged)
+	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
+	d.Set("security_group_ids", flattenSecurityGroupIdentifiers(vpce.Groups))
+	d.Set("service_name", serviceName)
+	d.Set("state", vpce.State)
+	d.Set("subnet_ids", aws.StringValueSlice(vpce.SubnetIds))
+	// VPC endpoints don't have types in GovCloud, so set type to default if empty
+	if v := aws.StringValue(vpce.VpcEndpointType); v == "" {
+		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
+	} else {
+		d.Set("vpc_endpoint_type", v)
+	}
+	d.Set("vpc_id", vpce.VpcId)
+
+	if pl, err := FindPrefixListByName(conn, serviceName); err != nil {
+		if tfresource.NotFound(err) {
+			d.Set("cidr_blocks", nil)
+		} else {
+			return fmt.Errorf("reading EC2 Prefix List (%s): %w", serviceName, err)
+		}
+	} else {
+		d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
+		d.Set("prefix_list_id", pl.PrefixListId)
+	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
 
@@ -327,36 +321,15 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("policy", policyToSet)
 
-	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-	err = d.Set("route_table_ids", flex.FlattenStringSet(vpce.RouteTableIds))
-	if err != nil {
-		return fmt.Errorf("error setting route_table_ids: %s", err)
-	}
-	d.Set("requester_managed", vpce.RequesterManaged)
-	err = d.Set("security_group_ids", flattenVPCEndpointSecurityGroupIds(vpce.Groups))
-	if err != nil {
-		return fmt.Errorf("error setting security_group_ids: %s", err)
-	}
-	err = d.Set("subnet_ids", flex.FlattenStringSet(vpce.SubnetIds))
-	if err != nil {
-		return fmt.Errorf("error setting subnet_ids: %s", err)
-	}
-	// VPC endpoints don't have types in GovCloud, so set type to default if empty
-	if vpceType := aws.StringValue(vpce.VpcEndpointType); vpceType == "" {
-		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
-	} else {
-		d.Set("vpc_endpoint_type", vpceType)
-	}
-
 	tags := KeyValueTags(vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -498,29 +471,6 @@ func setVPCEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*stri
 	}
 }
 
-func flattenVPCEndpointDNSEntries(dnsEntries []*ec2.DnsEntry) []interface{} {
-	vDnsEntries := []interface{}{}
-
-	for _, dnsEntry := range dnsEntries {
-		vDnsEntries = append(vDnsEntries, map[string]interface{}{
-			"dns_name":       aws.StringValue(dnsEntry.DnsName),
-			"hosted_zone_id": aws.StringValue(dnsEntry.HostedZoneId),
-		})
-	}
-
-	return vDnsEntries
-}
-
-func flattenVPCEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *schema.Set {
-	vSecurityGroupIds := []interface{}{}
-
-	for _, group := range groups {
-		vSecurityGroupIds = append(vSecurityGroupIds, aws.StringValue(group.GroupId))
-	}
-
-	return schema.NewSet(schema.HashString, vSecurityGroupIds)
-}
-
 func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
@@ -535,6 +485,42 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 	return apiObject
 }
 
+func flattenDNSEntry(apiObject *ec2.DnsEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DnsName; v != nil {
+		tfMap["dns_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenDNSEntries(apiObjects []*ec2.DnsEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenDNSEntry(apiObject))
+	}
+
+	return tfList
+}
+
 func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -547,4 +533,22 @@ func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func flattenSecurityGroupIdentifiers(apiObjects []*ec2.SecurityGroupIdentifier) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []string
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, aws.StringValue(apiObject.GroupId))
+	}
+
+	return tfList
 }
