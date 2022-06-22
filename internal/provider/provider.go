@@ -821,7 +821,7 @@ func Provider() *schema.Provider {
 			"aws_route53_zone":                    route53.DataSourceZone(),
 
 			"aws_route53_resolver_endpoint":            route53resolver.DataSourceEndpoint(),
-			"aws_route53_resolver_firewall_rule_group": route53resolver.DataSourceResolverFirewallRuleGroup(),
+			"aws_route53_resolver_firewall_rule_group": route53resolver.DataSourceFirewallRuleGroup(),
 			"aws_route53_resolver_rule":                route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":               route53resolver.DataSourceRules(),
 
