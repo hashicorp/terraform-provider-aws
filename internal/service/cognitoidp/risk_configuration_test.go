@@ -26,7 +26,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 		CheckDestroy:      testAccCheckRiskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRiskConfigurationConfigRiskException(rName),
+				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
@@ -44,7 +44,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRiskConfigurationConfigRiskExceptionUpdated(rName),
+				Config: testAccRiskConfigurationConfig_riskExceptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
@@ -73,7 +73,7 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 		CheckDestroy:      testAccCheckRiskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRiskConfigurationConfigRiskExceptionClient(rName),
+				Config: testAccRiskConfigurationConfig_riskExceptionClient(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
@@ -106,7 +106,7 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 		CheckDestroy:      testAccCheckRiskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRiskConfigurationConfigCompromised(rName),
+				Config: testAccRiskConfigurationConfig_compromised(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
@@ -139,7 +139,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 		CheckDestroy:      testAccCheckRiskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRiskConfigurationConfigRiskException(rName),
+				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
@@ -195,7 +195,7 @@ func testAccCheckRiskConfigurationExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRiskConfigurationConfigRiskException(rName string) string {
+func testAccRiskConfigurationConfig_riskException(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -211,7 +211,7 @@ resource "aws_cognito_risk_configuration" "test" {
 `, rName)
 }
 
-func testAccRiskConfigurationConfigRiskExceptionUpdated(rName string) string {
+func testAccRiskConfigurationConfig_riskExceptionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -228,7 +228,7 @@ resource "aws_cognito_risk_configuration" "test" {
 `, rName)
 }
 
-func testAccRiskConfigurationConfigCompromised(rName string) string {
+func testAccRiskConfigurationConfig_compromised(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -247,7 +247,7 @@ resource "aws_cognito_risk_configuration" "test" {
 `, rName)
 }
 
-func testAccRiskConfigurationConfigRiskExceptionClient(rName string) string {
+func testAccRiskConfigurationConfig_riskExceptionClient(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
