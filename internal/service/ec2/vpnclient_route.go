@@ -144,7 +144,7 @@ func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) erro
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound, errCodeInvalidClientVPNRouteNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNRouteNotFound) {
 		return nil
 	}
 

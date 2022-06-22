@@ -14,13 +14,15 @@ on:
 
 jobs:
   semgrep:
+    name: Semgrep Code Quality Scan
     runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
     steps:
     - uses: actions/checkout@v3
       with:
        fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
+    - run: semgrep --config .semgrep.yml
   naming_cac:
     name: Semgrep Naming Scan Caps/AWS/EC2
     runs-on: ubuntu-latest

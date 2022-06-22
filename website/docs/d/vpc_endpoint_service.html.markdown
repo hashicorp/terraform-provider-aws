@@ -85,5 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `owner` - The AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - The private DNS name for the service.
 * `service_id` - The ID of the endpoint service.
+* `supported_ip_address_types` - The supported IP address types.
 * `tags` - A map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
