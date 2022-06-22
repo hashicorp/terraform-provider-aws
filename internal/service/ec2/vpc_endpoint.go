@@ -31,6 +31,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		Read:   resourceVPCEndpointRead,
 		Update: resourceVPCEndpointUpdate,
 		Delete: resourceVPCEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -91,7 +92,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -126,14 +126,12 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"service_name": {
 				Type:     schema.TypeString,
@@ -149,7 +147,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -182,41 +179,53 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &ec2.CreateVpcEndpointInput{
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
-		VpcEndpointType:   aws.String(d.Get("vpc_endpoint_type").(string)),
-		ServiceName:       aws.String(d.Get("service_name").(string)),
+	serviceName := d.Get("service_name").(string)
+	input := &ec2.CreateVpcEndpointInput{
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "vpc-endpoint"),
+		ServiceName:       aws.String(serviceName),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcEndpoint),
+		VpcEndpointType:   aws.String(d.Get("vpc_endpoint_type").(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+	}
+
+	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		input.IpAddressType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v)
+
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %s", err)
+			return fmt.Errorf("policy contains invalid JSON: %w", err)
 		}
-		req.PolicyDocument = aws.String(policy)
+
+		input.PolicyDocument = aws.String(policy)
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
-		req.IpAddressType = aws.String(v.(string))
+	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		req.DnsOptions = expandDNSOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	setVPCEndpointCreateList(d, "route_table_ids", &req.RouteTableIds)
-	setVPCEndpointCreateList(d, "subnet_ids", &req.SubnetIds)
-	setVPCEndpointCreateList(d, "security_group_ids", &req.SecurityGroupIds)
+	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
-	log.Printf("[DEBUG] Creating VPC Endpoint: %#v", req)
-	resp, err := conn.CreateVpcEndpoint(req)
+	log.Printf("[DEBUG] Creating EC2 VPC Endpoint: %s", input)
+	output, err := conn.CreateVpcEndpoint(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating VPC Endpoint: %s", err)
+		return fmt.Errorf("creating EC2 VPC Endpoint (%s): %w", serviceName, err)
 	}
 
-	vpce := resp.VpcEndpoint
+	vpce := output.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
 	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == vpcEndpointStatePendingAcceptance {
@@ -225,10 +234,8 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %w", d.Id(), err)
+	if _, err = WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceVPCEndpointRead(d, meta)
@@ -266,8 +273,12 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vpce.VpcId)
 	d.Set("ip_address_type", vpce.IpAddressType)
 
-	if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
-		return fmt.Errorf("error setting dns_options: %w", err)
+	if vpce.DnsOptions != nil {
+		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+			return fmt.Errorf("setting dns_options: %w", err)
+		}
+	} else {
+		d.Set("dns_options", nil)
 	}
 
 	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
@@ -419,11 +430,10 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DeleteVpcEndpointsInput{
+	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
+	output, err := conn.DeleteVpcEndpoints(&ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: aws.StringSlice([]string{d.Id()}),
-	}
-
-	output, err := conn.DeleteVpcEndpoints(input)
+	})
 
 	if err == nil && output != nil {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
@@ -434,61 +444,40 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
 	}
 
-	_, err = WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC Endpoint (%s) to delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Duration) error {
-	describeSvcReq := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-	describeSvcReq.Filters = BuildAttributeFilterList(
-		map[string]string{
-			"service-name": svcName,
-		},
-	)
-
-	describeSvcResp, err := conn.DescribeVpcEndpointServiceConfigurations(describeSvcReq)
-	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", svcName, err)
-	}
-	if describeSvcResp == nil || len(describeSvcResp.ServiceConfigurations) == 0 {
-		return fmt.Errorf("No matching VPC Endpoint Service found")
-	}
-
-	acceptEpReq := &ec2.AcceptVpcEndpointConnectionsInput{
-		ServiceId:      describeSvcResp.ServiceConfigurations[0].ServiceId,
-		VpcEndpointIds: aws.StringSlice([]string{vpceId}),
-	}
-
-	log.Printf("[DEBUG] Accepting VPC Endpoint connection: %#v", acceptEpReq)
-	_, err = conn.AcceptVpcEndpointConnections(acceptEpReq)
-	if err != nil {
-		return fmt.Errorf("error accepting VPC Endpoint (%s) connection: %s", vpceId, err)
-	}
-
-	_, err = WaitVPCEndpointAccepted(conn, vpceId, timeout)
-
-	if err != nil {
-		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted: %w", vpceId, err)
+	if _, err = WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func setVPCEndpointCreateList(d *schema.ResourceData, key string, c *[]*string) {
-	if v, ok := d.GetOk(key); ok {
-		list := v.(*schema.Set)
-		if list.Len() > 0 {
-			*c = flex.ExpandStringSet(list)
-		}
+func vpcEndpointAccept(conn *ec2.EC2, vpceID, serviceName string, timeout time.Duration) error {
+	serviceConfiguration, err := FindVPCEndpointServiceConfigurationByServiceName(conn, serviceName)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 VPC Endpoint Service Configuration (%s): %w", serviceName, err)
 	}
+
+	input := &ec2.AcceptVpcEndpointConnectionsInput{
+		ServiceId:      serviceConfiguration.ServiceId,
+		VpcEndpointIds: aws.StringSlice([]string{vpceID}),
+	}
+
+	log.Printf("[DEBUG] Accepting EC2 VPC Endpoint connection: %s", input)
+	_, err = conn.AcceptVpcEndpointConnections(input)
+
+	if err != nil {
+		return fmt.Errorf("accepting EC2 VPC Endpoint (%s) connection: %w", vpceID, err)
+	}
+
+	if _, err = WaitVPCEndpointAccepted(conn, vpceID, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) acceptance: %w", vpceID, err)
+	}
+
+	return nil
 }
 
 func setVPCEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
@@ -532,18 +521,18 @@ func flattenVPCEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *
 	return schema.NewSet(schema.HashString, vSecurityGroupIds)
 }
 
-func expandDNSOptions(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	config := &ec2.DnsOptionsSpecification{}
+	apiObject := &ec2.DnsOptionsSpecification{}
 
 	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
-		config.DnsRecordIpType = aws.String(v)
+		apiObject.DnsRecordIpType = aws.String(v)
 	}
 
-	return config
+	return apiObject
 }
 
 func flattenDNSOptions(apiObject *ec2.DnsOptions) map[string]interface{} {

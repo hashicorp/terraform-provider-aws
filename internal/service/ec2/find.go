@@ -2651,6 +2651,16 @@ func FindVPCEndpointServiceConfigurations(conn *ec2.EC2, input *ec2.DescribeVpcE
 	return output, nil
 }
 
+func FindVPCEndpointServiceConfigurationByServiceName(conn *ec2.EC2, name string) (*ec2.ServiceConfiguration, error) {
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"service-name": name,
+		}),
+	}
+
+	return FindVPCEndpointServiceConfiguration(conn, input)
+}
+
 func FindVPCEndpointServices(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServicesInput) ([]*ec2.ServiceDetail, []string, error) {
 	var serviceDetails []*ec2.ServiceDetail
 	var serviceNames []string
