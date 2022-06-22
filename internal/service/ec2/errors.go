@@ -57,6 +57,7 @@ const (
 	errCodeInvalidPlacementGroupUnknown                   = "InvalidPlacementGroup.Unknown"
 	errCodeInvalidPoolIDNotFound                          = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                    = "InvalidPrefixListID.NotFound"
+	errCodeInvalidPrefixListIdNotFound                    = "InvalidPrefixListId.NotFound"
 	errCodeInvalidRouteNotFound                           = "InvalidRoute.NotFound"
 	errCodeInvalidRouteTableIDNotFound                    = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                    = "InvalidRouteTableId.NotFound"
