@@ -43,10 +43,26 @@ func DataSourceVPCEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"dns_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dns_record_ip_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"ip_address_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"network_interface_ids": {
@@ -148,6 +164,8 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return tfresource.SingularDataSourceFindError("EC2 VPC Endpoint", err)
 	}
 
+	d.SetId(aws.StringValue(vpce.VpcEndpointId))
+
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -157,11 +175,18 @@ func dataSourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	serviceName := aws.StringValue(vpce.ServiceName)
 
-	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 	d.Set("arn", arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return fmt.Errorf("setting dns_entry: %w", err)
 	}
+	if vpce.DnsOptions != nil {
+		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+			return fmt.Errorf("setting dns_options: %w", err)
+		}
+	} else {
+		d.Set("dns_options", nil)
+	}
+	d.Set("ip_address_type", vpce.IpAddressType)
 	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
 	d.Set("owner_id", vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
