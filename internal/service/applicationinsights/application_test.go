@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccApplication_basic(t *testing.T) {
+func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 	var app applicationinsights.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
@@ -59,7 +59,7 @@ func TestAccApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccApplication_autoConfig(t *testing.T) {
+func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 	var app applicationinsights.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
@@ -91,7 +91,7 @@ func TestAccApplication_autoConfig(t *testing.T) {
 	})
 }
 
-func TestAccApplication_tags(t *testing.T) {
+func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 	var app applicationinsights.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
@@ -136,7 +136,7 @@ func TestAccApplication_tags(t *testing.T) {
 	})
 }
 
-func TestAccApplication_disappears(t *testing.T) {
+func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	var app applicationinsights.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
