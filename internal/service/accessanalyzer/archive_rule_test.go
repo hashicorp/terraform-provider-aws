@@ -18,7 +18,7 @@ import (
 func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_accessanalyzer_archiverule.test"
+	resourceName := "aws_accessanalyzer_archive_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -48,7 +48,7 @@ func testAccAccessAnalyzerArchiveRule_basic(t *testing.T) {
 func testAccAccessAnalyzerArchiveRule_disappears(t *testing.T) {
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_accessanalyzer_archiverule.test"
+	resourceName := "aws_accessanalyzer_archive_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -75,7 +75,7 @@ func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_accessanalyzer_archiverule" {
+		if rs.Type != "aws_accessanalyzer_archive_rule" {
 			continue
 		}
 
@@ -142,7 +142,7 @@ func testAccArchiveRuleConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccArchiveRuleBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_accessanalyzer_archiverule" "test" {
+resource "aws_accessanalyzer_archive_rule" "test" {
   analyzer_name = aws_accessanalyzer_analyzer.test.analyzer_name
   rule_name     = %[1]q
 

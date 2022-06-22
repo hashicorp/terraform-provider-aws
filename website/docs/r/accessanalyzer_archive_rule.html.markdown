@@ -1,12 +1,12 @@
 ---
 subcategory: "IAM Access Analyzer"
 layout: "aws"
-page_title: "AWS: aws_accessanalyzer_archiverule"
+page_title: "AWS: aws_accessanalyzer_archive_rule"
 description: |-
   Terraform resource for managing an AWS AccessAnalyzer Archive Rule.
 ---
 
-# Resource: aws_accessanalyzer_archiverule
+# Resource: aws_accessanalyzer_archive_rule
 
 Terraform resource for managing an AWS AccessAnalyzer Archive Rule.
 
@@ -15,7 +15,7 @@ Terraform resource for managing an AWS AccessAnalyzer Archive Rule.
 ### Basic Usage
 
 ```terraform
-resource "aws_accessanalyzer_archiverule" "example" {
+resource "aws_accessanalyzer_archive_rule" "example" {
   analyser_name = "example-analyzer"
   rule_name     = "example-rule"
 
@@ -66,5 +66,5 @@ In addition to all arguments above, the following attributes are exported:
 AccessAnalyzer ArchiveRule can be imported using the `analyzer_name/rule_name`, e.g.,
 
 ```
-$ terraform import aws_accessanalyzer_archiverule.example example-analyzer/example-rule
+$ terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule
 ```
