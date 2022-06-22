@@ -96,7 +96,6 @@ func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{
 }
 
 func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.ProvisioningArtifactDetail) []interface{} {
-
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -107,7 +106,6 @@ func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.Provisionin
 		if apiObject == nil {
 			continue
 		}
-
 		tfList = append(tfList, flattenProvisioningArtifactDetail(apiObject))
 	}
 
