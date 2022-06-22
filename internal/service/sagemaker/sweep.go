@@ -735,32 +735,19 @@ func sweepNotebookInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
 		for _, instance := range page.NotebookInstances {
 			name := aws.StringValue(instance.NotebookInstanceName)
-			status := aws.StringValue(instance.NotebookInstanceStatus)
 
-			input := &sagemaker.DeleteNotebookInstanceInput{
-				NotebookInstanceName: instance.NotebookInstanceName,
-			}
-
-			log.Printf("[INFO] Stopping SageMaker Notebook Instance: %s", name)
-			if status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
-				if err := StopNotebookInstance(conn, name); err != nil {
-					log.Printf("[ERROR] Error stopping SageMaker Notebook Instance (%s): %s", name, err)
-					continue
-				}
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance: %s", name)
-			if _, err := conn.DeleteNotebookInstance(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Notebook Instance (%s): %s", name, err)
-				continue
-			}
-
-			if _, err := WaitNotebookInstanceDeleted(conn, name); err != nil {
-				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
+			r := ResourceNotebookInstance()
+			d := r.Data(nil)
+			d.SetId(name)
+			err = r.Delete(d, client)
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -770,14 +757,14 @@ func sweepNotebookInstances(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Notebook Instance sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Notebook Instances: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SageMaker Notbook Instances: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepStudioLifecyclesConfig(region string) error {
