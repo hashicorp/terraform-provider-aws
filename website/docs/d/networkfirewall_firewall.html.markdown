@@ -51,6 +51,9 @@ The following arguments are supported:
 * `arn` - The Amazon Resource Name (ARN) that identifies the resource policy.
 * `delete_protection` - A boolean flag indicating whether it is possible to delete the firewall. 
 * `description` - A friendly description of the firewall.
+* `encryption_configuration` - AWS Key Management (KMS) encryption settings for the firewall.
+    * `key_id` - The ID of the AWS Key Management (KMS) customer managed key.
+    * `type` - The type of the AWS Key Management (KMS) key use by the firewall.
 * `firewall_policy_arn` - The Amazon Resource Name (ARN) of the VPC Firewall policy.
 * `firewall_policy_change_protection` - A boolean flag indicating whether it is possible to change the associated firewall policy. 
 * `firewall_status` - Nested list of information about the current status of the firewall.

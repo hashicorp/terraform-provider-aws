@@ -34,13 +34,29 @@ func DataSourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encryption_configuration": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"firewall_policy_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"firewall_policy_change_protection": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"firewall_status": {
 				Type:     schema.TypeList,
@@ -153,6 +169,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	d.Set("name", firewall.FirewallName)
+	d.Set("encryption_configuration", flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration))
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
 	d.Set("firewall_status", flattenDataSourceFirewallStatus(output.FirewallStatus))
@@ -185,13 +202,13 @@ func flattenDataSourceFirewallStatus(status *networkfirewall.FirewallStatus) []i
 	return []interface{}{m}
 }
 
-func flattenDataSourceSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
-	if s == nil {
+func flattenDataSourceSyncStates(state map[string]*networkfirewall.SyncState) []interface{} {
+	if state == nil {
 		return nil
 	}
 
-	syncStates := make([]interface{}, 0, len(s))
-	for k, v := range s {
+	syncStates := make([]interface{}, 0, len(state))
+	for k, v := range state {
 		m := map[string]interface{}{
 			"availability_zone": k,
 			"attachment":        flattenDataSourceSyncStateAttachment(v.Attachment),
@@ -202,22 +219,22 @@ func flattenDataSourceSyncStates(s map[string]*networkfirewall.SyncState) []inte
 	return syncStates
 }
 
-func flattenDataSourceSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
-	if a == nil {
+func flattenDataSourceSyncStateAttachment(attach *networkfirewall.Attachment) []interface{} {
+	if attach == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id": aws.StringValue(a.EndpointId),
-		"subnet_id":   aws.StringValue(a.SubnetId),
+		"endpoint_id": aws.StringValue(attach.EndpointId),
+		"subnet_id":   aws.StringValue(attach.SubnetId),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenDataSourceSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
-	mappings := make([]interface{}, 0, len(sm))
-	for _, s := range sm {
+func flattenDataSourceSubnetMappings(subnet []*networkfirewall.SubnetMapping) []interface{} {
+	mappings := make([]interface{}, 0, len(subnet))
+	for _, s := range subnet {
 		m := map[string]interface{}{
 			"subnet_id": aws.StringValue(s.SubnetId),
 		}
@@ -225,4 +242,17 @@ func flattenDataSourceSubnetMappings(sm []*networkfirewall.SubnetMapping) []inte
 	}
 
 	return mappings
+}
+
+func flattenDataSourceEncryptionConfiguration(encrypt *networkfirewall.EncryptionConfiguration) []interface{} {
+	if encrypt == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"key_id": aws.StringValue(encrypt.KeyId),
+		"type":   aws.StringValue(encrypt.Type),
+	}
+
+	return []interface{}{m}
 }
