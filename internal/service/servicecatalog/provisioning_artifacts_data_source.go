@@ -80,7 +80,7 @@ func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{
 	output, err := conn.ListProvisioningArtifacts(input)
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)
+		return fmt.Errorf("error describing provisioning artifact: %w", err)
 	}
 	if output == nil {
 		return fmt.Errorf("no provisioning artifacts found matching criteria; try different search")
@@ -89,8 +89,8 @@ func dataSourceProvisioningArtifactsRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting provisioning artifact details: %w", err)
 	}
 
-	d.SetId(aws.StringValue(output.ProvisioningArtifactDetails[0].Id))
 	d.SetId(d.Get("product_id").(string))
+	d.Set("accept_language", d.Get("accept_language").(string))
 
 	return nil
 }
