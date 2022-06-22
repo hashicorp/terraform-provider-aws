@@ -845,11 +845,12 @@ func Provider() *schema.Provider {
 
 			"aws_serverlessapplicationrepository_application": serverlessrepo.DataSourceApplication(),
 
-			"aws_servicecatalog_constraint":            servicecatalog.DataSourceConstraint(),
-			"aws_servicecatalog_launch_paths":          servicecatalog.DataSourceLaunchPaths(),
-			"aws_servicecatalog_portfolio_constraints": servicecatalog.DataSourcePortfolioConstraints(),
-			"aws_servicecatalog_portfolio":             servicecatalog.DataSourcePortfolio(),
-			"aws_servicecatalog_product":               servicecatalog.DataSourceProduct(),
+			"aws_servicecatalog_constraint":             servicecatalog.DataSourceConstraint(),
+			"aws_servicecatalog_launch_paths":           servicecatalog.DataSourceLaunchPaths(),
+			"aws_servicecatalog_portfolio_constraints":  servicecatalog.DataSourcePortfolioConstraints(),
+			"aws_servicecatalog_portfolio":              servicecatalog.DataSourcePortfolio(),
+			"aws_servicecatalog_product":                servicecatalog.DataSourceProduct(),
+			"aws_servicecatalog_provisioning_artifacts": servicecatalog.DataSourceProvisioningArtifacts(),
 
 			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(),
 
