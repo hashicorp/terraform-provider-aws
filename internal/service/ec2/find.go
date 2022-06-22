@@ -2651,6 +2651,16 @@ func FindVPCEndpointServiceConfigurations(conn *ec2.EC2, input *ec2.DescribeVpcE
 	return output, nil
 }
 
+func FindVPCEndpointServiceConfigurationByServiceName(conn *ec2.EC2, name string) (*ec2.ServiceConfiguration, error) {
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"service-name": name,
+		}),
+	}
+
+	return FindVPCEndpointServiceConfiguration(conn, input)
+}
+
 func FindVPCEndpointServices(conn *ec2.EC2, input *ec2.DescribeVpcEndpointServicesInput) ([]*ec2.ServiceDetail, []string, error) {
 	var serviceDetails []*ec2.ServiceDetail
 	var serviceNames []string
@@ -4703,6 +4713,65 @@ func FindPlacementGroupByName(conn *ec2.EC2, name string) (*ec2.PlacementGroup, 
 	}
 
 	return placementGroup, nil
+}
+
+func FindPrefixList(conn *ec2.EC2, input *ec2.DescribePrefixListsInput) (*ec2.PrefixList, error) {
+	output, err := FindPrefixLists(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindPrefixLists(conn *ec2.EC2, input *ec2.DescribePrefixListsInput) ([]*ec2.PrefixList, error) {
+	var output []*ec2.PrefixList
+
+	err := conn.DescribePrefixListsPages(input, func(page *ec2.DescribePrefixListsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.PrefixLists {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindPrefixListByName(conn *ec2.EC2, name string) (*ec2.PrefixList, error) {
+	input := &ec2.DescribePrefixListsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"prefix-list-name": name,
+		}),
+	}
+
+	return FindPrefixList(conn, input)
 }
 
 func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn *ec2.EC2, serviceID, vpcEndpointID string) (*ec2.VpcEndpointConnection, error) {
