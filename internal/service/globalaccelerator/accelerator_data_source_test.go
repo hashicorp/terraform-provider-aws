@@ -22,7 +22,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_Data_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcceleratorWithDataSourceConfig(rName),
+				Config: testAccAcceleratorDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "attributes.#", resourceName, "attributes.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attributes.0.flow_logs_enabled", resourceName, "attributes.0.flow_logs_enabled"),
@@ -58,7 +58,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_Data_basic(t *testing.T) {
 	})
 }
 
-func testAccAcceleratorWithDataSourceConfig(rName string) string {
+func testAccAcceleratorDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name = %[1]q

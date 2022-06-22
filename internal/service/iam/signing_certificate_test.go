@@ -29,7 +29,7 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateBasicConfig(rName, certificate),
+				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
@@ -62,7 +62,7 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Inactive", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -74,14 +74,14 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Active", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Active", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 				),
 			},
 			{
-				Config: testAccSigningCertificateConfigStatus(rName, "Inactive", certificate),
+				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
@@ -106,7 +106,7 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSigningCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningCertificateBasicConfig(rName, certificate),
+				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(resourceName, &cred),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
@@ -174,7 +174,7 @@ func testAccCheckSigningCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSigningCertificateBasicConfig(rName, cert string) string {
+func testAccSigningCertificateConfig_basic(rName, cert string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
@@ -187,7 +187,7 @@ resource "aws_iam_signing_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(cert))
 }
 
-func testAccSigningCertificateConfigStatus(rName, status, cert string) string {
+func testAccSigningCertificateConfig_status(rName, status, cert string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q

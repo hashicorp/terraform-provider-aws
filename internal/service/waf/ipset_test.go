@@ -220,7 +220,7 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig_IPSetDescriptors(rName, strings.Join(ipSetDescriptors, "\n")),
+				Config: testAccIPSetConfig_ipSetDescriptors(rName, strings.Join(ipSetDescriptors, "\n")),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "2048"),
@@ -505,7 +505,7 @@ resource "aws_waf_ipset" "test" {
 `, name)
 }
 
-func testAccIPSetConfig_IPSetDescriptors(name, ipSetDescriptors string) string {
+func testAccIPSetConfig_ipSetDescriptors(name, ipSetDescriptors string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "test" {
   name = %[1]q

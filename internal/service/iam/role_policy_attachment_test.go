@@ -30,7 +30,7 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachConfig(rInt),
+				Config: testAccRolePolicyAttachmentConfig_attach(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 1, &out),
 					testAccCheckRolePolicyAttachmentAttributes([]string{testPolicy}, &out),
@@ -58,7 +58,7 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccRolePolicyAttachUpdateConfig(rInt),
+				Config: testAccRolePolicyAttachmentConfig_attachUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists("aws_iam_role_policy_attachment.test-attach", 2, &out),
 					testAccCheckRolePolicyAttachmentAttributes([]string{testPolicy2, testPolicy3}, &out),
@@ -81,7 +81,7 @@ func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachmentConfig(rName),
+				Config: testAccRolePolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
 					testAccCheckRolePolicyAttachmentDisappears(resourceName),
@@ -107,7 +107,7 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 		CheckDestroy:      testAccCheckRolePolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyAttachmentConfig(rName),
+				Config: testAccRolePolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(iamRoleResourceName, &role),
 					testAccCheckRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
@@ -227,7 +227,7 @@ func testAccRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccRolePolicyAttachConfig(rInt int) string {
+func testAccRolePolicyAttachmentConfig_attach(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "test-role-%d"
@@ -276,7 +276,7 @@ resource "aws_iam_role_policy_attachment" "test-attach" {
 `, rInt, rInt)
 }
 
-func testAccRolePolicyAttachUpdateConfig(rInt int) string {
+func testAccRolePolicyAttachmentConfig_attachUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "test-role-%d"
@@ -370,7 +370,7 @@ resource "aws_iam_role_policy_attachment" "test-attach2" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccRolePolicyAttachmentConfig(rName string) string {
+func testAccRolePolicyAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

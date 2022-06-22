@@ -89,7 +89,7 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_policyTypeNameOnly(rName, policyTypeName),
+				Config: testAccPolicyConfig_typeNameOnly(rName, policyTypeName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", policyTypeName),
@@ -112,7 +112,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_policyTypeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
+				Config: testAccPolicyConfig_typeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
@@ -135,7 +135,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_customSSLSecurityPolicy(rName, "Protocol-TLSv1.1", "DHE-RSA-AES256-SHA256"),
+				Config: testAccPolicyConfig_customSSLSecurity(rName, "Protocol-TLSv1.1", "DHE-RSA-AES256-SHA256"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -152,7 +152,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_customSSLSecurityPolicy(rName, "Protocol-TLSv1.2", "ECDHE-ECDSA-AES128-GCM-SHA256"),
+				Config: testAccPolicyConfig_customSSLSecurity(rName, "Protocol-TLSv1.2", "ECDHE-ECDSA-AES128-GCM-SHA256"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
@@ -186,7 +186,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_predefinedSSLSecurityPolicy(rName, predefinedSecurityPolicy),
+				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
@@ -198,7 +198,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_predefinedSSLSecurityPolicy(rName, predefinedSecurityPolicyUpdated),
+				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicyUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
@@ -411,7 +411,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 `, rInt))
 }
 
-func testAccPolicyConfig_policyTypeNameOnly(rName, policyType string) string {
+func testAccPolicyConfig_typeNameOnly(rName, policyType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -439,7 +439,7 @@ resource "aws_load_balancer_policy" "test" {
 `, rName, policyType))
 }
 
-func testAccPolicyConfig_customSSLSecurityPolicy(rName, protocol, cipher string) string {
+func testAccPolicyConfig_customSSLSecurity(rName, protocol, cipher string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test" {
   name               = %[1]q
@@ -475,7 +475,7 @@ resource "aws_load_balancer_policy" "test" {
 `, rName, protocol, cipher))
 }
 
-func testAccPolicyConfig_predefinedSSLSecurityPolicy(rName, securityPolicy string) string {
+func testAccPolicyConfig_predefinedSSLSecurity(rName, securityPolicy string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test" {
   name               = %[1]q

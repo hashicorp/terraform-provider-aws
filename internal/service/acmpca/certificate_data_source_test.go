@@ -22,11 +22,11 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateDataSourceConfig_NonExistent,
+				Config:      testAccCertificateDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_ARN(domain),
+				Config: testAccCertificateDataSourceConfig_arn(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
@@ -38,7 +38,7 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCertificateDataSourceConfig_ARN(domain string) string {
+func testAccCertificateDataSourceConfig_arn(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acmpca_certificate" "test" {
   arn                       = aws_acmpca_certificate.test.arn
@@ -76,7 +76,7 @@ data "aws_partition" "current" {}
 `, domain)
 }
 
-const testAccCertificateDataSourceConfig_NonExistent = `
+const testAccCertificateDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate" "test" {
   arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
   certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"

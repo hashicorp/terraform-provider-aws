@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -136,8 +137,9 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cpu_credits": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(CPUCredits_Values(), false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Only work with existing instances
 								if d.Id() == "" {
@@ -156,6 +158,11 @@ func ResourceInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
@@ -500,6 +507,36 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"private_dns_name_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_resource_name_dns_aaaa_record": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"enable_resource_name_dns_a_record": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"hostname_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
+						},
+					},
+				},
+			},
 			"private_ip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -773,6 +810,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
+		DisableApiStop:                    instanceOpts.DisableAPIStop,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		EnclaveOptions:                    instanceOpts.EnclaveOptions,
@@ -792,6 +830,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Monitoring:                        instanceOpts.Monitoring,
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
 		Placement:                         instanceOpts.Placement,
+		PrivateDnsNameOptions:             instanceOpts.PrivateDNSNameOptions,
 		PrivateIpAddress:                  instanceOpts.PrivateIPAddress,
 		SecurityGroupIds:                  instanceOpts.SecurityGroupIDs,
 		SecurityGroups:                    instanceOpts.SecurityGroups,
@@ -902,6 +941,13 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
 
+	instanceType := aws.StringValue(instance.InstanceType)
+	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
+	}
+
 	d.Set("instance_state", instance.State.Name)
 
 	if v := instance.Placement; v != nil {
@@ -949,8 +995,16 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
+	if instance.PrivateDnsNameOptions != nil {
+		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
+			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+		}
+	} else {
+		d.Set("private_dns_name_options", nil)
+	}
+
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
@@ -1129,6 +1183,16 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Instance attributes
 	{
+		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
+			InstanceId: aws.String(d.Id()),
+		})
+		if err != nil {
+			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
+		}
+		d.Set("disable_api_stop", attr.DisableApiStop.Value)
+	}
+	{
 		if isSnowballEdgeInstance(d.Id()) {
 			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
 		} else {
@@ -1168,7 +1232,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
 		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
@@ -1511,6 +1575,12 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("disable_api_stop") && !d.IsNewResource() {
+		if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
 			return err
@@ -1744,8 +1814,32 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
+	if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+	}
+
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func disableInstanceAPIStop(conn *ec2.EC2, id string, disableAPIStop bool) error {
+	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		DisableApiStop: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(disableAPIStop),
+		},
+		InstanceId: aws.String(id),
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %w", id, err)
 	}
 
 	return nil
@@ -2408,9 +2502,13 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 type awsInstanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
+	CpuOptions                        *ec2.CpuOptionsRequest
+	CreditSpecification               *ec2.CreditSpecificationRequest
+	DisableAPIStop                    *bool
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
-	Monitoring                        *ec2.RunInstancesMonitoringEnabled
+	EnclaveOptions                    *ec2.EnclaveOptionsRequest
+	HibernationOptions                *ec2.HibernationOptionsRequest
 	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
 	ImageID                           *string
 	InstanceInitiatedShutdownBehavior *string
@@ -2419,30 +2517,29 @@ type awsInstanceOpts struct {
 	Ipv6Addresses                     []*ec2.InstanceIpv6Address
 	KeyName                           *string
 	LaunchTemplate                    *ec2.LaunchTemplateSpecification
+	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
+	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
+	Monitoring                        *ec2.RunInstancesMonitoringEnabled
 	NetworkInterfaces                 []*ec2.InstanceNetworkInterfaceSpecification
 	Placement                         *ec2.Placement
+	PrivateDNSNameOptions             *ec2.PrivateDnsNameOptionsRequest
 	PrivateIPAddress                  *string
 	SecurityGroupIDs                  []*string
 	SecurityGroups                    []*string
 	SpotPlacement                     *ec2.SpotPlacement
 	SubnetID                          *string
 	UserData64                        *string
-	CreditSpecification               *ec2.CreditSpecificationRequest
-	CpuOptions                        *ec2.CpuOptionsRequest
-	HibernationOptions                *ec2.HibernationOptionsRequest
-	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
-	EnclaveOptions                    *ec2.EnclaveOptionsRequest
-	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
 }
 
 func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &awsInstanceOpts{
+		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
-		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
+		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2472,23 +2569,30 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 
 	instanceType := d.Get("instance_type").(string)
 
-	// Set default cpu_credits as Unlimited for T3 instance type
+	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
 		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-			CpuCredits: aws.String("unlimited"),
+			CpuCredits: aws.String(CPUCreditsUnlimited),
 		}
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
-		// Only T2 and T3 are burstable performance instance types and supports Unlimited.
-		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				opts.CreditSpecification = expandCreditSpecificationRequest(v)
-			} else {
-				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
+		if instanceType != "" {
+			instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+
+			if err != nil {
+				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
-		} else {
-			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")
+
+			if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+				if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+					opts.CreditSpecification = expandCreditSpecificationRequest(v)
+				} else {
+					log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
+				}
+			} else {
+				log.Print("[WARN] credit_specification is defined but instance type does not support burstable performance. Ignoring...")
+			}
 		}
 	}
 
@@ -2637,6 +2741,10 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 
 	if v, ok := d.GetOk("maintenance_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		opts.MaintenanceOptions = expandInstanceMaintenanceOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return opts, nil
@@ -3032,6 +3140,50 @@ func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions
 	return tfMap
 }
 
+func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *ec2.PrivateDnsNameOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.PrivateDnsNameOptionsRequest{}
+
+	if v, ok := tfMap["enable_resource_name_dns_aaaa_record"].(bool); ok {
+		apiObject.EnableResourceNameDnsAAAARecord = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["enable_resource_name_dns_a_record"].(bool); ok {
+		apiObject.EnableResourceNameDnsARecord = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["hostname_type"].(string); ok && v != "" {
+		apiObject.HostnameType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPrivateDNSNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EnableResourceNameDnsAAAARecord; v != nil {
+		tfMap["enable_resource_name_dns_aaaa_record"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.EnableResourceNameDnsARecord; v != nil {
+		tfMap["enable_resource_name_dns_a_record"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.HostnameType; v != nil {
+		tfMap["hostname_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
 func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
@@ -3211,4 +3363,40 @@ func findInstanceTagValue(conn *ec2.EC2, instanceID, tagKey string) (string, err
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
 func isSnowballEdgeInstance(id string) bool {
 	return strings.Contains(id, "s.")
+}
+
+// InstanceType describes an EC2 instance type.
+type InstanceType struct {
+	// e.g. "m6i"
+	Type string
+	// e.g. "m"
+	Family string
+	// e.g. 6
+	Generation int
+	// e.g. "i"
+	AdditionalCapabilities string
+	// e.g. "9xlarge"
+	Size string
+}
+
+func ParseInstanceType(s string) (*InstanceType, error) {
+	matches := regexp.MustCompile(`(([[:alpha:]]+)([[:digit:]])+([[:alpha:]]*))\.([[:alnum:]]+)`).FindStringSubmatch(s)
+
+	if matches == nil {
+		return nil, fmt.Errorf("invalid EC2 Instance Type name: %s", s)
+	}
+
+	generation, err := strconv.Atoi(matches[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &InstanceType{
+		Type:                   matches[1],
+		Family:                 matches[2],
+		Generation:             generation,
+		AdditionalCapabilities: matches[4],
+		Size:                   matches[5],
+	}, nil
 }

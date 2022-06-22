@@ -231,7 +231,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rName, rootDomain, domain),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
@@ -249,7 +249,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rName, rootDomain, domain),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
@@ -273,7 +273,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 			},
 			// Test disabling mutual TLS authentication.
 			{
-				Config: testAccDomainNameMututalTLSAuthenticationMissingConfig(rootDomain, domain),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
@@ -308,7 +308,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.
 		CheckDestroy:      testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rName, rootDomain, domain),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationNoObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
@@ -349,7 +349,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 		CheckDestroy:      testAccCheckDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfigMututalTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
@@ -525,7 +525,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, index))
 }
 
-func testAccDomainNameMututalTLSAuthenticationNoObjectVersionConfig(rName, rootDomain, domain string) string {
+func testAccDomainNameConfig_mutualTLSAuthenticationNoObjectVersion(rName, rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
@@ -557,7 +557,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName))
 }
 
-func testAccDomainNameMututalTLSAuthenticationObjectVersionConfig(rName, rootDomain, domain string) string {
+func testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
@@ -597,7 +597,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName))
 }
 
-func testAccDomainNameMututalTLSAuthenticationMissingConfig(rootDomain, domain string) string {
+func testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
@@ -613,7 +613,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `)
 }
 
-func testAccDomainNameConfigMututalTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key string) string {
+func testAccDomainNameConfig_mutualTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`

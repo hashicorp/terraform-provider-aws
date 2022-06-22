@@ -35,7 +35,7 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig(rInt),
+				Config: testAccClusterEndpointConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(readerResourceName, &customReaderEndpoint),
 					testAccCheckClusterEndpointAttributes(&customReaderEndpoint),
@@ -80,7 +80,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointTags1Config(rInt, "key1", "value1"),
+				Config: testAccClusterEndpointConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -93,7 +93,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterEndpointTags2Config(rInt, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterEndpointConfig_tags2(rInt, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -102,7 +102,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterEndpointTags1Config(rInt, "key2", "value2"),
+				Config: testAccClusterEndpointConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -255,7 +255,7 @@ resource "aws_rds_cluster_instance" "test2" {
 `, n))
 }
 
-func testAccClusterEndpointConfig(n int) string {
+func testAccClusterEndpointConfig_basic(n int) string {
 	return acctest.ConfigCompose(
 		testAccClusterEndpointBaseConfig(n),
 		fmt.Sprintf(`
@@ -277,7 +277,7 @@ resource "aws_rds_cluster_endpoint" "default" {
 `, n))
 }
 
-func testAccClusterEndpointTags1Config(n int, tagKey1, tagValue1 string) string {
+func testAccClusterEndpointConfig_tags1(n int, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccClusterEndpointBaseConfig(n),
 		fmt.Sprintf(`
@@ -295,7 +295,7 @@ resource "aws_rds_cluster_endpoint" "reader" {
 `, n, tagKey1, tagValue1))
 }
 
-func testAccClusterEndpointTags2Config(n int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterEndpointConfig_tags2(n int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccClusterEndpointBaseConfig(n),
 		fmt.Sprintf(`

@@ -15,10 +15,10 @@ import (
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 )
 
-const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
+const envVarGithubTokenUsageWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
 
 func TestAccCodePipelineWebhook_basic(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -88,7 +88,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -123,7 +123,7 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -156,7 +156,7 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_tags(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -172,7 +172,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1value", "tag2value", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1value", "tag2value", githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -182,7 +182,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebhookWithTagsConfig(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
+				Config: testAccWebhookConfig_tags(rName, "tag1valueUpdate", "tag2valueUpdate", githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -220,7 +220,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_disappears(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -249,7 +249,7 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -400,7 +400,7 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName)
 }
 
-func testAccWebhookWithTagsConfig(rName, tag1, tag2, githubToken string) string {
+func testAccWebhookConfig_tags(rName, tag1, tag2, githubToken string) string {
 	return testAccWebhookConfig_base(rName, githubToken) + fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
   name            = %[1]q

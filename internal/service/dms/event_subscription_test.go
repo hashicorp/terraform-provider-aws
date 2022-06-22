@@ -127,7 +127,7 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 		CheckDestroy:      testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_eventCategories2(rName, "creation", "failure"),
+				Config: testAccEventSubscriptionConfig_categories2(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
@@ -141,7 +141,7 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionConfig_eventCategories2(rName, "configuration change", "deletion"),
+				Config: testAccEventSubscriptionConfig_categories2(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
@@ -340,7 +340,7 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, enabled))
 }
 
-func testAccEventSubscriptionConfig_eventCategories2(rName string, eventCategory1 string, eventCategory2 string) string {
+func testAccEventSubscriptionConfig_categories2(rName string, eventCategory1 string, eventCategory2 string) string {
 	return acctest.ConfigCompose(
 		testAccEventSubscriptionConfigBase(rName),
 		fmt.Sprintf(`

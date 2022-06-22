@@ -20,7 +20,7 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionDataConfig(rName),
+				Config: testAccDistributionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain_name", resourceName, "domain_name"),
@@ -36,9 +36,9 @@ func TestAccCloudFrontDistributionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDistributionDataConfig(rName string) string {
+func testAccDistributionDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDistributionS3WithTagsConfig(rName), `
+		testAccDistributionConfig_s3Tags(rName), `
 data "aws_cloudfront_distribution" "test" {
   id = aws_cloudfront_distribution.s3_distribution.id
 }

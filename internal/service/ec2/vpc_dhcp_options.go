@@ -26,38 +26,45 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		// Keep in sync with aws_default_vpc_dhcp_options' schema.
+		// See notes in vpc_default_vpc_dhcp_options.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"domain_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"domain_name_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_name_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"ntp_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -246,6 +253,10 @@ func newDHCPOptionsMap(tfToApi map[string]string) *dhcpOptionsMap {
 
 // dhcpConfigurationsToResourceData sets Terraform ResourceData from a list of AWS API DHCP configurations.
 func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*ec2.DhcpConfiguration, d *schema.ResourceData) error {
+	for v := range m.tfToApi {
+		d.Set(v, nil)
+	}
+
 	for _, dhcpConfiguration := range dhcpConfigurations {
 		apiName := aws.StringValue(dhcpConfiguration.Key)
 		if tfName, ok := m.apiToTf[apiName]; ok {

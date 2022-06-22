@@ -98,6 +98,7 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -115,6 +116,7 @@ func init() {
 			"aws_elastic_beanstalk_environment",
 			"aws_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 		F: sweepKeyPairs,
 	})
@@ -159,6 +161,7 @@ func init() {
 			"aws_instance",
 			"aws_launch_template",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 		},
 	})
 
@@ -178,6 +181,11 @@ func init() {
 	resource.AddTestSweepers("aws_spot_fleet_request", &resource.Sweeper{
 		Name: "aws_spot_fleet_request",
 		F:    sweepSpotFleetRequests,
+	})
+
+	resource.AddTestSweepers("aws_spot_instance_request", &resource.Sweeper{
+		Name: "aws_spot_instance_request",
+		F:    sweepSpotInstanceRequests,
 	})
 
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
@@ -222,6 +230,7 @@ func init() {
 			"aws_route53_resolver_endpoint",
 			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
+			"aws_spot_instance_request",
 			"aws_vpc_endpoint",
 		},
 	})
@@ -326,10 +335,16 @@ func init() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr_allocation", &resource.Sweeper{
+		Name: "aws_vpc_ipam_pool_cidr_allocation",
+		F:    sweepIPAMPoolCIDRAllocations,
+	})
+
 	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
 		Name: "aws_vpc_ipam_pool_cidr",
 		F:    sweepIPAMPoolCIDRs,
 		Dependencies: []string{
+			"aws_vpc_ipam_pool_cidr_allocation",
 			"aws_vpc",
 		},
 	})
@@ -1536,6 +1551,57 @@ func sweepSpotFleetRequests(region string) error {
 	return errs.ErrorOrNil()
 }
 
+func sweepSpotInstanceRequests(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).EC2Conn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeSpotInstanceRequestsPages(&ec2.DescribeSpotInstanceRequestsInput{}, func(page *ec2.DescribeSpotInstanceRequestsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		if len(page.SpotInstanceRequests) == 0 {
+			log.Print("[DEBUG] No Spot Instance Requests to sweep")
+			return false
+		}
+
+		for _, config := range page.SpotInstanceRequests {
+			id := aws.StringValue(config.SpotInstanceRequestId)
+
+			r := ResourceSpotInstanceRequest()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("spot_instance_id", config.InstanceId)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Instance Requests for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
 func sweepSubnets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -2289,6 +2355,76 @@ func sweepCustomerGateways(region string) error {
 	return nil
 }
 
+func sweepIPAMPoolCIDRAllocations(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeIpamPoolsInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			poolID := aws.StringValue(v.IpamPoolId)
+			input := &ec2.GetIpamPoolAllocationsInput{
+				IpamPoolId: v.IpamPoolId,
+			}
+
+			err := conn.GetIpamPoolAllocationsPages(input, func(page *ec2.GetIpamPoolAllocationsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.IpamPoolAllocations {
+					r := ResourceIPAMPoolCIDRAllocation()
+					d := r.Data(nil)
+					d.SetId(encodeIPAMPoolCIDRAllocationID(aws.StringValue(v.IpamPoolAllocationId), poolID))
+					d.Set("ipam_pool_id", poolID)
+					d.Set("ipam_pool_allocation_id", v.IpamPoolAllocationId)
+					d.Set("cidr", v.Cidr)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if sweep.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pool (%s) Allocations (%s): %w", poolID, region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IPAM Pool Allocations sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IPAM Pools (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pool Allocations (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func sweepIPAMPoolCIDRs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -2350,7 +2486,7 @@ func sweepIPAMPoolCIDRs(region string) error {
 	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IPAM Pool CIDRs (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

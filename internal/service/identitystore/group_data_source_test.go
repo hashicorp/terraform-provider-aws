@@ -28,7 +28,7 @@ func TestAccIdentityStoreGroupDataSource_displayName(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDisplayNameDataSourceConfig(name),
+				Config: testAccGroupDataSourceConfig_displayName(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "display_name", name),
@@ -55,7 +55,7 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupGroupIDDataSourceConfig(name, groupID),
+				Config: testAccGroupDataSourceConfig_id(name, groupID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_id", groupID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
@@ -73,7 +73,7 @@ func TestAccIdentityStoreGroupDataSource_nonExistent(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupNonExistentDataSourceConfig,
+				Config:      testAccGroupDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`no Identity Store Group found matching criteria`),
 			},
 		},
@@ -94,7 +94,7 @@ func testAccPreCheckGroupID(t *testing.T) {
 	}
 }
 
-func testAccGroupDisplayNameDataSourceConfig(name string) string {
+func testAccGroupDataSourceConfig_displayName(name string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -108,7 +108,7 @@ data "aws_identitystore_group" "test" {
 `, name)
 }
 
-func testAccGroupGroupIDDataSourceConfig(name, id string) string {
+func testAccGroupDataSourceConfig_id(name, id string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -125,7 +125,7 @@ data "aws_identitystore_group" "test" {
 `, name, id)
 }
 
-const testAccGroupNonExistentDataSourceConfig = `
+const testAccGroupDataSourceConfig_nonExistent = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_identitystore_group" "test" {

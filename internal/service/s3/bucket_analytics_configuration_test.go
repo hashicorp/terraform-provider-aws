@@ -30,7 +30,7 @@ func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -60,13 +60,13 @@ func TestAccS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfiguration_removed(rName),
+				Config: testAccBucketAnalyticsConfigurationConfig_removed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationRemoved(rName, rName),
 				),
@@ -90,7 +90,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfiguration(originalACName, originalBucketName),
+				Config: testAccBucketAnalyticsConfigurationConfig_basic(originalACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
@@ -100,7 +100,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfiguration(updatedACName, originalBucketName),
+				Config: testAccBucketAnalyticsConfigurationConfig_basic(updatedACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					testAccCheckBucketAnalyticsConfigurationRemoved(originalACName, originalBucketName),
@@ -111,7 +111,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfigurationUpdateBucket(updatedACName, originalBucketName, updatedBucketName),
+				Config: testAccBucketAnalyticsConfigurationConfig_update(updatedACName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					testAccCheckBucketAnalyticsConfigurationRemoved(updatedACName, originalBucketName),
@@ -140,7 +140,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
+				Config:      testAccBucketAnalyticsConfigurationConfig_emptyFilter(rName, rName),
 				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
@@ -163,7 +163,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -172,7 +172,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -205,7 +205,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -215,7 +215,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1Update),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -251,7 +251,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -262,7 +262,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -301,7 +301,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -312,7 +312,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
@@ -346,13 +346,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 				),
 			},
 			{
-				Config: testAccBucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -377,7 +377,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
+				Config:      testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(rName, rName),
 				ExpectError: regexp.MustCompile(`running pre-apply refresh`),
 			},
 		},
@@ -397,7 +397,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *t
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(rName, rName),
+				Config: testAccBucketAnalyticsConfigurationConfig_defaultStorageClassAnalysis(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
@@ -433,7 +433,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 		CheckDestroy:      testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAnalyticsConfigurationWithFullStorageClassAnalysis(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationConfig_fullStorageClassAnalysis(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
@@ -508,7 +508,7 @@ func testAccCheckBucketAnalyticsConfigurationRemoved(name, bucket string) resour
 	}
 }
 
-func testAccBucketAnalyticsConfiguration(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_basic(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -521,7 +521,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccBucketAnalyticsConfiguration_removed(bucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_removed(bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "%s"
@@ -529,7 +529,7 @@ resource "aws_s3_bucket" "test" {
 `, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_update(name, originalBucket, updatedBucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test_2.bucket
@@ -546,7 +546,7 @@ resource "aws_s3_bucket" "test_2" {
 `, name, originalBucket, updatedBucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithEmptyFilter(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_emptyFilter(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -562,7 +562,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithFilterPrefix(name, bucket, prefix string) string {
+func testAccBucketAnalyticsConfigurationConfig_filterPrefix(name, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -579,7 +579,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithFilterSingleTag(name, bucket, tag string) string {
+func testAccBucketAnalyticsConfigurationConfig_filterSingleTag(name, bucket, tag string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -598,7 +598,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
+func testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(name, bucket, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -618,7 +618,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag1, tag2, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
+func testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -640,7 +640,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, tag1, tag2, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -656,7 +656,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationConfig_defaultStorageClassAnalysis(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -683,7 +683,7 @@ resource "aws_s3_bucket" "destination" {
 `, name, bucket)
 }
 
-func testAccBucketAnalyticsConfigurationWithFullStorageClassAnalysis(name, bucket, prefix string) string {
+func testAccBucketAnalyticsConfigurationConfig_fullStorageClassAnalysis(name, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
