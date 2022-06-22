@@ -82,6 +82,10 @@ func ResourceThesaurus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"thesaurus_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -185,6 +189,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("role_arn", out.RoleArn)
 	d.Set("status", out.Status)
+	d.Set("thesaurus_id", out.Id)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
 		return diag.Errorf("setting complex argument: %s", err)
