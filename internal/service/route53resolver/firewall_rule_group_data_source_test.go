@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
+func TestAccFirewallRuleGroupDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_rule_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -18,7 +18,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDomainListDataSourceConfig_basic(),
+				Config: testAccFirewallRuleGroupDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "route53resolver", regexp.MustCompile(`firewall-rule-group/.+`)),
@@ -37,7 +37,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFirewallDomainListDataSourceConfig_basic() string {
+func testAccFirewallRuleGroupDataSourceConfig_basic() string {
 	return `
 resource "aws_route53_resolver_firewall_rule_group" "test" {
   name = "test"
