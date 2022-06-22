@@ -674,7 +674,7 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 	})
 }
 
-func TestAccEventsTarget_ecs_noPropagateTags(t *testing.T) {
+func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
@@ -686,7 +686,7 @@ func TestAccEventsTarget_ecs_noPropagateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetECSWithNoPropagateTagsConfig(rName),
+				Config: testAccTargetConfig_ecsNoPropagateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
@@ -1699,7 +1699,7 @@ resource "aws_cloudwatch_event_target" "test" {
 `
 }
 
-func testAccTargetECSWithNoPropagateTagsConfig(rName string) string {
+func testAccTargetConfig_ecsNoPropagateTags(rName string) string {
 	return testAccTargetECSBaseConfig(rName) + `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
