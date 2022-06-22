@@ -106,75 +106,6 @@ func ResourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-
-			"production_variants": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variant_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"model_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-
-						"initial_instance_count": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-
-						"instance_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInstanceType_Values(), false),
-						},
-
-						"initial_variant_weight": {
-							Type:         schema.TypeFloat,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.FloatAtLeast(0),
-							Default:      1,
-						},
-
-						"accelerator_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantAcceleratorType_Values(), false),
-						},
-					},
-				},
-			},
-
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
 			"data_capture_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -270,6 +201,89 @@ func ResourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validName,
+			},
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"production_variants": {
+				Type:     schema.TypeList,
+				Required: true,
+				MinItems: 1,
+				MaxItems: 10,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"accelerator_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantAcceleratorType_Values(), false),
+						},
+						"initial_instance_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"initial_variant_weight": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.FloatAtLeast(0),
+							Default:      1,
+						},
+						"instance_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInstanceType_Values(), false),
+						},
+						"model_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"serverless_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_concurrency": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 200),
+									},
+									"memory_size_in_mb": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntInSlice([]int{1024, 2048, 3072, 4096, 5120, 6144}),
+									},
+								},
+							},
+						},
+						"variant_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -412,9 +426,15 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 		data := lRaw.(map[string]interface{})
 
 		l := &sagemaker.ProductionVariant{
-			InstanceType:         aws.String(data["instance_type"].(string)),
-			ModelName:            aws.String(data["model_name"].(string)),
-			InitialInstanceCount: aws.Int64(int64(data["initial_instance_count"].(int))),
+			ModelName: aws.String(data["model_name"].(string)),
+		}
+
+		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
+			l.InitialInstanceCount = aws.Int64(int64(v))
+		}
+
+		if v, ok := data["instance_type"].(string); ok && v != "" {
+			l.InstanceType = aws.String(v)
 		}
 
 		if v, ok := data["variant_name"]; ok {
@@ -431,6 +451,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.AcceleratorType = aws.String(v)
 		}
 
+		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
+			l.ServerlessConfig = expandServerlessConfig(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -443,11 +467,21 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 	for _, i := range list {
 		l := map[string]interface{}{
 			"accelerator_type":       aws.StringValue(i.AcceleratorType),
-			"initial_instance_count": aws.Int64Value(i.InitialInstanceCount),
 			"initial_variant_weight": aws.Float64Value(i.InitialVariantWeight),
-			"instance_type":          aws.StringValue(i.InstanceType),
 			"model_name":             aws.StringValue(i.ModelName),
 			"variant_name":           aws.StringValue(i.VariantName),
+		}
+
+		if i.InitialInstanceCount != nil {
+			l["initial_instance_count"] = aws.Int64Value(i.InitialInstanceCount)
+		}
+
+		if i.InstanceType != nil {
+			l["instance_type"] = aws.StringValue(i.InstanceType)
+		}
+
+		if i.ServerlessConfig != nil {
+			l["serverless_config"] = flattenServerlessConfig(i.ServerlessConfig)
 		}
 
 		result = append(result, l)
@@ -646,6 +680,26 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 	return c
 }
 
+func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVariantServerlessConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantServerlessConfig{}
+
+	if v, ok := m["max_concurrency"].(int); ok {
+		c.MaxConcurrency = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["memory_size_in_mb"].(int); ok {
+		c.MemorySizeInMB = aws.Int64(int64(v))
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -711,6 +765,24 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 
 	if config.SuccessTopic != nil {
 		cfg["success_topic"] = aws.StringValue(config.SuccessTopic)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenServerlessConfig(config *sagemaker.ProductionVariantServerlessConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.MaxConcurrency != nil {
+		cfg["max_concurrency"] = aws.Int64Value(config.MaxConcurrency)
+	}
+
+	if config.MemorySizeInMB != nil {
+		cfg["memory_size_in_mb"] = aws.Int64Value(config.MemorySizeInMB)
 	}
 
 	return []map[string]interface{}{cfg}
