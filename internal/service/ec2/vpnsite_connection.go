@@ -80,7 +80,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsOutsideIpAddressType_Values(), false),
+				ValidateFunc: validation.StringInSlice(outsideIpAddressType_Values(), false),
 			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,

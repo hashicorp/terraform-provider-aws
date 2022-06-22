@@ -243,7 +243,7 @@ const (
 	OutsideIpAddressTypePublicIpv4  = "PublicIpv4"
 )
 
-func vpnTunnelOptionsOutsideIpAddressType_Values() []string {
+func outsideIpAddressType_Values() []string {
 	return []string{
 		OutsideIpAddressTypePrivateIpv4,
 		OutsideIpAddressTypePublicIpv4,
