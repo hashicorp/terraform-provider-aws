@@ -1591,6 +1591,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
+			"aws_kendra_experience":                   kendra.ResourceExperience(),
 			"aws_kendra_faq":                          kendra.ResourceFaq(),
 			"aws_kendra_index":                        kendra.ResourceIndex(),
 			"aws_kendra_query_suggestions_block_list": kendra.ResourceQuerySuggestionsBlockList(),
