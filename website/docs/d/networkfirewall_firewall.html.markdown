@@ -32,7 +32,7 @@ By Both
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
-  arn = aws_networkfirewall_firewall.arn
+  arn  = aws_networkfirewall_firewall.arn
   name = "Test"
 }
 ```
