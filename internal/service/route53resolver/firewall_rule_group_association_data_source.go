@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func DataSourceResolverFirewallRuleGroupAssociation() *schema.Resource {
+func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResolverFirewallFirewallRuleGroupAssociationRead,
+		Read: dataSourceRuleGroupAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -69,7 +69,7 @@ func DataSourceResolverFirewallRuleGroupAssociation() *schema.Resource {
 	}
 }
 
-func dataSourceResolverFirewallFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.GetFirewallRuleGroupAssociationInput{
