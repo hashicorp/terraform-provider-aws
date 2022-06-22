@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
+func TestAccFirewallDomainListDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_domain_list.test"
 
 	resource.Test(t, resource.TestCase{
