@@ -2882,3 +2882,32 @@ rules:
           patterns:
             - pattern-regex: "(?i)QuickSight"
     severity: WARNING
+  - id: quicksight-in-var-name
+    languages:
+      - go
+    message: Do not use "QuickSight" in var name inside quicksight package
+    paths:
+      include:
+        - internal/service/quicksight
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)QuickSight"
+    severity: WARNING
+  - id: ram-in-func-name
+    languages:
+      - go
+    message: Do not use "RAM" in func name inside ram package
+    paths:
+      include:
+        - internal/service/ram
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
