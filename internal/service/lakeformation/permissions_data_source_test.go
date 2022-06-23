@@ -88,6 +88,68 @@ func testAccPermissionsDataSource_database(t *testing.T) {
 	})
 }
 
+func testAccPermissionsDataSource_lfTag(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dataSourceName := "data.aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsDataSourceConfig_lfTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.#", dataSourceName, "lf_tag.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", dataSourceName, "lf_tag.0.key"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", dataSourceName, "lf_tag.0.values"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.0", dataSourceName, "permissions.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.1", dataSourceName, "permissions.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.#", dataSourceName, "permissions_with_grant_option.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.0", dataSourceName, "permissions_with_grant_option.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.1", dataSourceName, "permissions_with_grant_option.1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dataSourceName := "data.aws_lakeformation_permissions.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.#", dataSourceName, "lf_tag_policy.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.resource_type", dataSourceName, "lf_tag_policy.0.resource_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.#", dataSourceName, "lf_tag_policy.0.expression.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", dataSourceName, "lf_tag_policy.0.expression.0.key"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", dataSourceName, "lf_tag_policy.0.expression.0.values"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.0", dataSourceName, "permissions.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.1", dataSourceName, "permissions.1"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.2", dataSourceName, "permissions.2"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.#", dataSourceName, "permissions_with_grant_option.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.0", dataSourceName, "permissions_with_grant_option.0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissionsDataSource_table(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
@@ -311,6 +373,149 @@ data "aws_lakeformation_permissions" "test" {
 
   database {
     name = aws_glue_catalog_database.test.name
+  }
+}
+`, rName)
+}
+
+func testAccPermissionsDataSourceConfig_lfTag(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = %[1]q
+  values = ["value1", "value2"]
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions                   = ["ASSOCIATE", "DESCRIBE"]
+  permissions_with_grant_option = ["ASSOCIATE", "DESCRIBE"]
+  principal                     = aws_iam_role.test.arn
+
+  lf_tag {
+    key    = aws_lakeformation_lf_tag.test.key
+    values = aws_lakeformation_lf_tag.test.values
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+data "aws_lakeformation_permissions" "test" {
+  principal = aws_lakeformation_permissions.test.principal
+
+  lf_tag {
+    key    = aws_lakeformation_lf_tag.test.key
+    values = aws_lakeformation_lf_tag.test.values
+  }
+}
+`, rName)
+}
+
+func testAccPermissionsDataSourceConfig_lfTagPolicy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = %[1]q
+  values = ["value1", "value2"]
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
+  permissions_with_grant_option = ["CREATE_TABLE"]
+  principal                     = aws_iam_role.test.arn
+
+  lf_tag_policy {
+    resource_type = "DATABASE"
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test.key
+      values = aws_lakeformation_lf_tag.test.values
+    }
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_lf_tag.test,
+  ]
+}
+
+data "aws_lakeformation_permissions" "test" {
+  principal = aws_lakeformation_permissions.test.principal
+
+  lf_tag_policy {
+    resource_type = "DATABASE"
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test.key
+      values = aws_lakeformation_lf_tag.test.values
+    }
   }
 }
 `, rName)

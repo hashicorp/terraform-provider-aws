@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -710,6 +711,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
+			"aws_kendra_faq":   kendra.DataSourceFaq(),
 			"aws_kendra_index": kendra.DataSourceIndex(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
@@ -917,6 +919,8 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
 			"aws_acmpca_policy":                            acmpca.ResourcePolicy(),
 
+			"aws_applicationinsights_application": applicationinsights.ResourceApplication(),
+
 			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
 			"aws_prometheus_rule_group_namespace":     amp.ResourceRuleGroupNamespace(),
@@ -1047,9 +1051,10 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_cost_category":        ce.ResourceCostCategory(),
 			"aws_ce_anomaly_monitor":      ce.ResourceAnomalyMonitor(),
 			"aws_ce_anomaly_subscription": ce.ResourceAnomalySubscription(),
+			"aws_ce_cost_allocation_tag":  ce.ResourceCostAllocationTag(),
+			"aws_ce_cost_category":        ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1150,6 +1155,7 @@ func Provider() *schema.Provider {
 
 			"aws_cognito_identity_provider":          cognitoidp.ResourceIdentityProvider(),
 			"aws_cognito_resource_server":            cognitoidp.ResourceResourceServer(),
+			"aws_cognito_risk_configuration":         cognitoidp.ResourceRiskConfiguration(),
 			"aws_cognito_user":                       cognitoidp.ResourceUser(),
 			"aws_cognito_user_group":                 cognitoidp.ResourceUserGroup(),
 			"aws_cognito_user_in_group":              cognitoidp.ResourceUserInGroup(),

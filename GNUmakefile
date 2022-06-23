@@ -199,6 +199,8 @@ semgrep:
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep -c .semgrep.yml
+	@semgrep -c .semgrep-caps-aws-ec2.yml
+	@semgrep -c .semgrep-configs.yml
 	@semgrep -c .semgrep-service-name0.yml
 	@semgrep -c .semgrep-service-name1.yml
 	@semgrep -c .semgrep-service-name2.yml
