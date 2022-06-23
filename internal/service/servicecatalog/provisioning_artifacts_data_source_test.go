@@ -115,10 +115,10 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
 }
 
 func testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain string) string {
-	return acctest.ConfigCompose(testAccProvisioningArtifactsDataSourceBaseConfig(rName, domain), fmt.Sprint(`
+	return acctest.ConfigCompose(testAccProvisioningArtifactsDataSourceBaseConfig(rName, domain), `
 data "aws_servicecatalog_provisioning_artifacts" "test" {
   accept_language = "en"
   product_id      = aws_servicecatalog_product.test.id
 }
-`))
+`)
 }
