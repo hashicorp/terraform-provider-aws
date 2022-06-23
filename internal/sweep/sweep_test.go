@@ -16,6 +16,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
