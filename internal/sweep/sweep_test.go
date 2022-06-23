@@ -107,6 +107,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
