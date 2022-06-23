@@ -154,7 +154,7 @@ func testAccCheckVPCEConfigurationExists(n string, v *devicefarm.VPCEConfigurati
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindVPCEConfigurationByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindVPCEConfigurationByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func testAccCheckVPCEConfigurationDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindVPCEConfigurationByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindVPCEConfigurationByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

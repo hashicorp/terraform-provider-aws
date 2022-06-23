@@ -95,7 +95,7 @@ func resourceVPCEConfigurationRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpceConf, err := FindVPCEConfigurationByArn(conn, d.Id())
+	vpceConf, err := FindVPCEConfigurationByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm VPCE Configuration (%s) not found, removing from state", d.Id())

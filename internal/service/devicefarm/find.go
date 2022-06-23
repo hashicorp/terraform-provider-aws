@@ -158,7 +158,7 @@ func FindTestGridProjectByARN(conn *devicefarm.DeviceFarm, arn string) (*devicef
 	return output.TestGridProject, nil
 }
 
-func FindVPCEConfigurationByArn(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.VPCEConfiguration, error) {
+func FindVPCEConfigurationByARN(conn *devicefarm.DeviceFarm, arn string) (*devicefarm.VPCEConfiguration, error) {
 
 	input := &devicefarm.GetVPCEConfigurationInput{
 		Arn: aws.String(arn),
