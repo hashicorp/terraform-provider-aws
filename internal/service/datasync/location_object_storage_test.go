@@ -30,7 +30,7 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig(rName),
+				Config: testAccLocationObjectStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -62,7 +62,7 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig(rName),
+				Config: testAccLocationObjectStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
@@ -86,7 +86,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 		CheckDestroy: testAccCheckLocationObjectStorageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -99,7 +99,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationObjectStorageTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationObjectStorageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage2),
 					testAccCheckLocationObjectStorageNotRecreated(&locationObjectStorage1, &locationObjectStorage2),
@@ -109,7 +109,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationObjectStorageTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(resourceName, &locationObjectStorage3),
 					testAccCheckLocationObjectStorageNotRecreated(&locationObjectStorage2, &locationObjectStorage3),
@@ -272,7 +272,7 @@ resource "aws_datasync_agent" "test" {
 `, rName))
 }
 
-func testAccLocationObjectStorageConfig(rName string) string {
+func testAccLocationObjectStorageConfig_basic(rName string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
@@ -282,7 +282,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName)
 }
 
-func testAccLocationObjectStorageTags1Config(rName, key1, value1 string) string {
+func testAccLocationObjectStorageConfig_tags1(rName, key1, value1 string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
@@ -296,7 +296,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName, key1, value1)
 }
 
-func testAccLocationObjectStorageTags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccLocationObjectStorageConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
