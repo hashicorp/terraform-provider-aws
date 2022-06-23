@@ -21,7 +21,6 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain),
