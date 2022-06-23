@@ -95,9 +95,7 @@ func init() {
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
-	}
+	ProviderFactories = factoriesInit(nil, []string{ProviderName})
 }
 
 // factoriesInit creates ProviderFactories for the provider under testing.
