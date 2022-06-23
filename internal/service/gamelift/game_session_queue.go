@@ -36,6 +36,10 @@ func ResourceGameSessionQueue() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
+			"notification_target": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"player_latency_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -84,6 +88,11 @@ func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) er
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
 		Tags:                  Tags(tags.IgnoreAWS()),
 	}
+
+	if v, ok := d.GetOk("notification_target"); ok {
+		input.NotificationTarget = aws.String(v.(string))
+	}
+
 	log.Printf("[INFO] Creating GameLift Session Queue: %s", input)
 	out, err := conn.CreateGameSessionQueue(&input)
 	if err != nil {
@@ -130,6 +139,7 @@ func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) erro
 	arn := aws.StringValue(sessionQueue.GameSessionQueueArn)
 	d.Set("arn", arn)
 	d.Set("name", sessionQueue.Name)
+	d.Set("notification_target", sessionQueue.NotificationTarget)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
 	if err := d.Set("destinations", flattenGameSessionQueueDestinations(sessionQueue.Destinations)); err != nil {
 		return fmt.Errorf("error setting destinations: %s", err)
@@ -193,6 +203,10 @@ func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) er
 		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
+	}
+
+	if v, ok := d.GetOk("notification_target"); ok {
+		input.NotificationTarget = aws.String(v.(string))
 	}
 
 	_, err := conn.UpdateGameSessionQueue(&input)
