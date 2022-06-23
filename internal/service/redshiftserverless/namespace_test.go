@@ -166,10 +166,10 @@ resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 
   tags = {
-    %[1]q = %[2]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
 func testAccNamespaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -178,9 +178,9 @@ resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
