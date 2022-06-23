@@ -531,7 +531,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryServiceCreate(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed creating Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -566,7 +566,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed adding tags after create for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
@@ -594,7 +594,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.DescribeServices(&input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Service (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
@@ -1129,7 +1129,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed updating tags for Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
