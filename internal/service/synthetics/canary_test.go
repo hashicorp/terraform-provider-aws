@@ -400,6 +400,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				Config: testAccCanaryConfig_runEnvVariables1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 				),
 			},
@@ -413,15 +414,9 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				Config: testAccCanaryConfig_runEnvVariables2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test2", "result2"),
-				),
-			},
-			{
-				Config: testAccCanaryConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCanaryExists(resourceName, &conf),
-					resource.TestCheckNoResourceAttr(resourceName, "run_config.0.environment_variables"),
 				),
 			},
 		},
