@@ -1877,6 +1877,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
+// CheckVPCExists returns a resource.TestCheckFunc which checks whether the VPC represented by the specified Terraform resource exists at AWS.
 func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1889,6 +1890,33 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+// TODO: Temporary during go-vcr development.
+// CheckVPCExistsX returns a resource.TestCheckFunc which checks whether the VPC represented by the specified Terraform resource exists at AWS.
+func CheckVPCExistsX(t *testing.T, n string, v *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No VPC ID is set")
+		}
+
+		conn := ProviderInstanceState(t).EC2Conn
 
 		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
 

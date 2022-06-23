@@ -1,0 +1,229 @@
+package acctest
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"sync"
+	"testing"
+
+	"github.com/dnaeon/go-vcr/cassette"
+	"github.com/dnaeon/go-vcr/recorder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+)
+
+const (
+	envVarVCRMode = "VCR_MODE"
+	envVarVCRPath = "VCR_PATH"
+)
+
+var (
+	providerInstanceStatesLock = sync.RWMutex{}
+	providerInstanceStates     = make(map[string]interface{}, 0)
+)
+
+func ProviderInstanceState(t *testing.T) *conns.AWSClient {
+	providerInstanceStatesLock.RLock()
+	v, ok := providerInstanceStates[t.Name()]
+	providerInstanceStatesLock.RUnlock()
+
+	if !ok {
+		v = Provider.Meta()
+	}
+
+	return v.(*conns.AWSClient)
+}
+
+func isVCREnabled() bool {
+	return os.Getenv(envVarVCRMode) != "" && os.Getenv(envVarVCRPath) != ""
+}
+
+func vcrMode() (recorder.Mode, error) {
+	switch v := os.Getenv(envVarVCRMode); v {
+	case "RECORDING":
+		return recorder.ModeRecording, nil
+	case "REPLAYING":
+		return recorder.ModeReplaying, nil
+	default:
+		return recorder.ModeDisabled, fmt.Errorf("unsupported value for %s: %s", envVarVCRMode, v)
+	}
+}
+
+// vcrEnabledProviderFactories returns provider factories ready for use with VCR.
+func vcrEnabledProviderFactories(t *testing.T, input map[string]func() (*schema.Provider, error)) map[string]func() (*schema.Provider, error) {
+	output := make(map[string]func() (*schema.Provider, error), len(input))
+
+	for k, fn := range input {
+		fn := fn
+
+		output[k] = func() (*schema.Provider, error) {
+			provider, err := fn()
+
+			if err != nil {
+				return nil, err
+			}
+
+			provider.ConfigureContextFunc = vcrProviderConfigureContextFunc(provider.ConfigureContextFunc, t.Name())
+
+			return provider, nil
+		}
+	}
+
+	return output
+}
+
+// vcrProviderConfigureContextFunc returns a provider configuration function returning cached provider instance state.
+// This is necessary as ConfigureContextFunc is called multiple times for a given test, each time creating a new HTTP client.
+// VCR requires a single HTTP client to handle all interactions.
+func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		providerInstanceStatesLock.RLock()
+		v, ok := providerInstanceStates[testName]
+		providerInstanceStatesLock.RUnlock()
+
+		if ok {
+			return v, nil
+		}
+
+		v, diags := configureFunc(ctx, d)
+
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		vcrMode, err := vcrMode()
+
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
+		c := v.(*conns.AWSClient)
+
+		recorder, err := recorder.NewAsMode(path, vcrMode, c.Session.Config.HTTPClient.Transport)
+
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		// Defines how VCR will match requests to responses.
+		recorder.SetMatcher(func(r *http.Request, i cassette.Request) bool {
+			// Default matcher compares method and URL only.
+			if !cassette.DefaultMatcher(r, i) {
+				return false
+			}
+
+			if r.Body == nil {
+				return true
+			}
+
+			contentType := r.Header.Get("Content-Type")
+			// If body contains media, don't try to compare.
+			if strings.Contains(contentType, "multipart/related") {
+				return true
+			}
+
+			var b bytes.Buffer
+			if _, err := b.ReadFrom(r.Body); err != nil {
+				log.Printf("[DEBUG] Failed to read request body from cassette: %v", err)
+				return false
+			}
+
+			r.Body = ioutil.NopCloser(&b)
+			body := b.String()
+			// If body matches identically, we are done.
+			if body == i.Body {
+				return true
+			}
+
+			// JSON might be the same, but reordered. Try parsing json and comparing
+			if strings.Contains(contentType, "application/json") {
+				var requestJson, cassetteJson interface{}
+
+				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
+					log.Printf("[DEBUG] Failed to unmarshal request json: %v", err)
+					return false
+				}
+
+				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
+					log.Printf("[DEBUG] Failed to unmarshal cassette json: %v", err)
+					return false
+				}
+
+				return reflect.DeepEqual(requestJson, cassetteJson)
+			}
+
+			return false
+		})
+
+		c.Session.Config.HTTPClient.Transport = recorder
+
+		providerInstanceStatesLock.Lock()
+		providerInstanceStates[testName] = v
+		providerInstanceStatesLock.Unlock()
+
+		return v, nil
+	}
+}
+
+func vcrFileName(name string) string {
+	return strings.ReplaceAll(name, "/", "_")
+}
+
+// closeVCRRecorder closes the VCR recorder, saving the cassette.
+func closeVCRRecorder(t *testing.T) {
+	testName := t.Name()
+	providerInstanceStatesLock.RLock()
+	providerInstanceState, ok := providerInstanceStates[testName]
+	providerInstanceStatesLock.RUnlock()
+
+	if ok {
+		if !t.Failed() {
+			log.Print("[DEBUG] closing VCR recorder")
+			if err := providerInstanceState.(*conns.AWSClient).Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
+				t.Error(err)
+			}
+		}
+
+		providerInstanceStatesLock.Lock()
+		delete(providerInstanceStates, testName)
+		providerInstanceStatesLock.Unlock()
+	}
+}
+
+// ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
+func ParallelTest(t *testing.T, c resource.TestCase) {
+	if isVCREnabled() {
+		log.Print("[DEBUG] initializing VCR")
+		c.ProviderFactories = vcrEnabledProviderFactories(t, c.ProviderFactories)
+		defer closeVCRRecorder(t)
+	} else {
+		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
+	}
+
+	resource.ParallelTest(t, c)
+}
+
+// Test wraps resource.Test, initializing VCR if enabled.
+func Test(t *testing.T, c resource.TestCase) {
+	if isVCREnabled() {
+		log.Print("[DEBUG] initializing VCR")
+		c.ProviderFactories = vcrEnabledProviderFactories(t, c.ProviderFactories)
+		defer closeVCRRecorder(t)
+	} else {
+		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
+	}
+
+	resource.Test(t, c)
+}
