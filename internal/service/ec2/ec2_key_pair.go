@@ -1,9 +1,12 @@
 package ec2
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
+
+	"golang.org/x/crypto/ssh"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -176,4 +179,22 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
+// Any key comment is ignored when comparing values.
+func OpenSSHPublicKeysEqual(v1, v2 string) bool {
+	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
+
+	if err != nil {
+		return false
+	}
+
+	key2, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v2))
+
+	if err != nil {
+		return false
+	}
+
+	return key1.Type() == key2.Type() && bytes.Equal(key1.Marshal(), key2.Marshal())
 }
