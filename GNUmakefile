@@ -34,6 +34,9 @@ gen:
 	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .semgrep-caps-aws-ec2.yml
+	rm -f .semgrep-configs.yml
+	rm -f .semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
