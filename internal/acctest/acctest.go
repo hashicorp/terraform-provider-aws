@@ -68,14 +68,6 @@ func Skip(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// Providers is a static map containing only the main provider instance.
-//
-// Deprecated: Terraform Plugin SDK version 2 uses TestCase.ProviderFactories
-// but supports this value in TestCase.Providers for backwards compatibility.
-// In the future Providers: Providers will be changed to
-// ProviderFactories: ProviderFactories
-var Providers map[string]*schema.Provider
-
 // ProviderFactories is a static map containing only the main provider instance
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
@@ -100,10 +92,6 @@ var testAccProviderConfigure sync.Once
 
 func init() {
 	Provider = provider.Provider()
-
-	Providers = map[string]*schema.Provider{
-		ProviderName: Provider,
-	}
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
