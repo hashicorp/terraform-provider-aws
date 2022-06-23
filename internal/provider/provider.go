@@ -822,9 +822,10 @@ func Provider() *schema.Provider {
 			"aws_route53_traffic_policy_document": route53.DataSourceTrafficPolicyDocument(),
 			"aws_route53_zone":                    route53.DataSourceZone(),
 
-			"aws_route53_resolver_endpoint": route53resolver.DataSourceEndpoint(),
-			"aws_route53_resolver_rule":     route53resolver.DataSourceRule(),
-			"aws_route53_resolver_rules":    route53resolver.DataSourceRules(),
+			"aws_route53_resolver_endpoint":       route53resolver.DataSourceEndpoint(),
+			"aws_route53_resolver_firewall_rules": route53resolver.DataSourceResolverFirewallRules(),
+			"aws_route53_resolver_rule":           route53resolver.DataSourceRule(),
+			"aws_route53_resolver_rules":          route53resolver.DataSourceRules(),
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
