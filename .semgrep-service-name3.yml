@@ -260,6 +260,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)redshiftdataapiservice"
     severity: WARNING
+  - id: redshiftserverless-in-func-name
+    languages:
+      - go
+    message: Do not use "RedshiftServerless" in func name inside redshiftserverless package
+    paths:
+      include:
+        - internal/service/redshiftserverless
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RedshiftServerless"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: redshiftserverless-in-test-name
+    languages:
+      - go
+    message: Include "RedshiftServerless" in test name
+    paths:
+      include:
+        - internal/service/redshiftserverless/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccRedshiftServerless"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: redshiftserverless-in-const-name
+    languages:
+      - go
+    message: Do not use "RedshiftServerless" in const name inside redshiftserverless package
+    paths:
+      include:
+        - internal/service/redshiftserverless
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RedshiftServerless"
+    severity: WARNING
+  - id: redshiftserverless-in-var-name
+    languages:
+      - go
+    message: Do not use "RedshiftServerless" in var name inside redshiftserverless package
+    paths:
+      include:
+        - internal/service/redshiftserverless
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RedshiftServerless"
+    severity: WARNING
   - id: resourcegroups-in-func-name
     languages:
       - go

@@ -234,6 +234,7 @@ variable "service_labels" {
     "rdsdata",
     "redshift",
     "redshiftdata",
+    "redshiftserverless",
     "rekognition",
     "resiliencehub",
     "resourcegroups",

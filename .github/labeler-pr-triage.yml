@@ -806,6 +806,9 @@ service/redshift:
 service/redshiftdata:
   - 'internal/service/redshiftdata/**/*'
   - 'website/**/redshiftdata_*'
+service/redshiftserverless:
+  - 'internal/service/redshiftserverless/**/*'
+  - 'website/**/redshiftserverless_*'
 service/rekognition:
   - 'internal/service/rekognition/**/*'
   - 'website/**/rekognition_*'
