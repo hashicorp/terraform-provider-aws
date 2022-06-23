@@ -3,5 +3,5 @@ data-source/aws_iam_policy: Add validation to prevent setting incompatible param
 ```
 
 ```release-note:bug
- data-source/aws_iam_policy: Now loads tags.
- ```
+data-source/aws_iam_policy: Now loads tags.
+```
