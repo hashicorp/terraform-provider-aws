@@ -90,7 +90,7 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
-	policy, err := FindPolicyByArn(conn, arn)
+	policy, err := FindPolicyByARN(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error reading IAM policy (%s): %w", arn, err)
 	}

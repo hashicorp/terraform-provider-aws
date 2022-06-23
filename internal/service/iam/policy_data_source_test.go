@@ -104,26 +104,6 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicyDataSource_awsManagedArn(t *testing.T) {
-	datasourceName := "data.aws_iam_policy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyDataSourceConfig_awsManagedArn("service-role/AmazonElasticMapReduceforAutoScalingRole"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", "AmazonElasticMapReduceforAutoScalingRole"),
-					resource.TestCheckResourceAttr(datasourceName, "path", "/service-role/"),
-					acctest.CheckResourceAttrGlobalARNAccountID(datasourceName, "arn", "aws", "iam", "policy/service-role/AmazonElasticMapReduceforAutoScalingRole"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIAMPolicyDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
@@ -319,16 +299,6 @@ data "aws_iam_policy" "test" {
   arn = aws_iam_policy.test.arn
 }
 `)
-}
-
-func testAccPolicyDataSourceConfig_awsManagedArn(arnResource string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-data "aws_iam_policy" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/%[1]s"
-}
-`, arnResource)
 }
 
 func testAccPolicyDataSourceConfig_name(policyName, policyPath string) string {

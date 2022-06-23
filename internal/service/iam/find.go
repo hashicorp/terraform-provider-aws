@@ -79,8 +79,8 @@ func FindUserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*
 	return result, nil
 }
 
-// FindPolicyByArn returns the Policy corresponding to the specified ARN.
-func FindPolicyByArn(conn *iam.IAM, arn string) (*iam.Policy, error) {
+// FindPolicyByARN returns the Policy corresponding to the specified ARN.
+func FindPolicyByARN(conn *iam.IAM, arn string) (*iam.Policy, error) {
 	input := &iam.GetPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
