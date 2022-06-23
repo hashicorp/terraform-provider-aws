@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccRuleGroupAssociationDataSource_basic(t *testing.T) {
+func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_resolver_firewall_rule_group_association.test"
 
 	resource.Test(t, resource.TestCase{
