@@ -783,6 +783,8 @@ func Provider() *schema.Provider {
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
 			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
 
+			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
+			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
 			"aws_outposts_outpost_instance_types": outposts.DataSourceOutpostInstanceTypes(),
@@ -1045,8 +1047,10 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_anomaly_monitor": ce.ResourceAnomalyMonitor(),
-			"aws_ce_cost_category":   ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor":      ce.ResourceAnomalyMonitor(),
+			"aws_ce_anomaly_subscription": ce.ResourceAnomalySubscription(),
+			"aws_ce_cost_allocation_tag":  ce.ResourceCostAllocationTag(),
+			"aws_ce_cost_category":        ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1589,6 +1593,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
+			"aws_kendra_experience":                   kendra.ResourceExperience(),
 			"aws_kendra_faq":                          kendra.ResourceFaq(),
 			"aws_kendra_index":                        kendra.ResourceIndex(),
 			"aws_kendra_query_suggestions_block_list": kendra.ResourceQuerySuggestionsBlockList(),
@@ -1650,6 +1655,7 @@ func Provider() *schema.Provider {
 
 			"aws_location_map":         location.ResourceMap(),
 			"aws_location_place_index": location.ResourcePlaceIndex(),
+			"aws_location_tracker":     location.ResourceTracker(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),

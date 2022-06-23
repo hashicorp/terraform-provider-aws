@@ -56,7 +56,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `role_arn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
 * `instance_type` - (Required) The name of ML compute instance type.
-* `platform_identifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1` or `notebook-al2-v1`, depending on which version of Amazon Linux you require.
+* `platform_identifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, or  `notebook-al2-v2`, depending on which version of Amazon Linux you require.
 * `volume_size` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnet_id` - (Optional) The VPC subnet ID.
 * `security_groups` - (Optional) The associated security groups.
@@ -67,7 +67,12 @@ The following arguments are supported:
 * `additional_code_repositories` - (Optional) An array of up to three Git repositories to associate with the notebook instance.
  These can be either the names of Git repositories stored as resources in your account, or the URL of Git repositories in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository. These repositories are cloned at the same level as the default repository of your notebook instance.
 * `default_code_repository` - (Optional) The Git repository associated with the notebook instance as its default code repository. This can be either the name of a Git repository stored as a resource in your account, or the URL of a Git repository in [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) or in any other Git repository.
+* `instance_metadata_service_configuration` - (Optional) Information on the IMDS configuration of the notebook instance. Conflicts with `instance_metadata_service_configuration`. see details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### instance_metadata_service_configuration
+
+* `minimum_instance_metadata_service_version` - (Optional) Indicates the minimum IMDS version that the notebook instance supports. When passed "1" is passed. This means that both IMDSv1 and IMDSv2 are supported. Valid values are `1` and `2`.
 
 ## Attributes Reference
 

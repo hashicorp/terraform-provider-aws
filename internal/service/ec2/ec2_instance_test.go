@@ -38,6 +38,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Unsupported volume type",
 		"HostLimitExceeded",
 		"ReservationCapacityExceeded",
+		"InsufficientInstanceCapacity",
 	)
 }
 
