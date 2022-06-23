@@ -297,7 +297,7 @@ resource "aws_iam_policy" "test" {
 }
 EOF
 
-tags = {
+  tags = {
     "key" = "value"
   }
 }`, policyName, policyPath)
