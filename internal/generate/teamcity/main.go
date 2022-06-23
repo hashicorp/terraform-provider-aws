@@ -15,7 +15,6 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
