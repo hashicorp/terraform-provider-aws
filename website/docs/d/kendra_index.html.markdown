@@ -20,13 +20,13 @@ data "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following attributes are supported:
+The following arguments are supported:
 
 * `id` - (Required) Returns information on a specific Index by id.
 
 ## Attributes Reference
 
-In addition to all of the attributes above, the following attributes are exported:
+In addition to all of the arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
 * `capacity_units` - A block that sets the number of additional document storage and query capacity units that should be used by the index. Documented below.
@@ -46,7 +46,7 @@ In addition to all of the attributes above, the following attributes are exporte
 html#Kendra-CreateIndex-request-UserContextPolicy).
 * `user_group_resolution_configuration` - A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. Documented below.
 * `user_token_configurations` - A block that specifies the user token configuration. Documented below.
-* `tags` - Metadata that helps organize the frameworks you create.
+* `tags` - Metadata that helps organize the Indices you create.
 
 A `capacity_units` block supports the following attributes:
 
