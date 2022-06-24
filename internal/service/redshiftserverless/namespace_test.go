@@ -48,10 +48,10 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 					testAccCheckNamespaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexp.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "db_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -180,9 +180,32 @@ resource "aws_redshiftserverless_namespace" "test" {
 
 func testAccNamespaceConfig_updated(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
-  db_name        = %[1]q
+  iam_roles      = [aws_iam_role.test.arn]
 }
 `, rName)
 }
