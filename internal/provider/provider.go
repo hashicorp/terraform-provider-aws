@@ -1630,6 +1630,7 @@ func Provider() *schema.Provider {
 			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),
+			"aws_lakeformation_resource_lf_tags":   lakeformation.ResourceResourceLFTags(),
 
 			"aws_lambda_alias":                          lambda.ResourceAlias(),
 			"aws_lambda_code_signing_config":            lambda.ResourceCodeSigningConfig(),
