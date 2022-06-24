@@ -162,11 +162,7 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 
 		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

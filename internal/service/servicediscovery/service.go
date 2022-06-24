@@ -177,7 +177,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateService(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Discovery Service (%s): %w", name, err)
+		return fmt.Errorf("creating Service Discovery Service (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Service.Id))
@@ -205,14 +205,26 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
 	d.Set("description", service.Description)
-	if err := d.Set("dns_config", flattenDNSConfig(service.DnsConfig)); err != nil {
-		return fmt.Errorf("error setting dns_config: %w", err)
+	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
+		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting dns_config: %w", err)
+		}
+	} else {
+		d.Set("dns_config", nil)
 	}
-	if err := d.Set("health_check_config", flattenHealthCheckConfig(service.HealthCheckConfig)); err != nil {
-		return fmt.Errorf("error setting health_check_config: %w", err)
+	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
+		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting health_check_config: %w", err)
+		}
+	} else {
+		d.Set("health_check_config", nil)
 	}
-	if err := d.Set("health_check_custom_config", flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig)); err != nil {
-		return fmt.Errorf("error setting health_check_custom_config: %w", err)
+	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
+		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting health_check_custom_config: %w", err)
+		}
+	} else {
+		d.Set("health_check_custom_config", nil)
 	}
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
@@ -220,18 +232,18 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
+		return fmt.Errorf("listing tags for Service Discovery Service (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -259,20 +271,21 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.UpdateService(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Service Discovery Service (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Service Discovery Service (%s): %w", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
 			if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-				return fmt.Errorf("error waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
+				return fmt.Errorf("waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Service Discovery Service (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating Service Discovery Service (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -309,7 +322,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error listing Service Discovery Instances: %w", err))
+			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("listing Service Discovery Instances: %w", err))
 		}
 
 		err = deletionErrs.ErrorOrNil()
@@ -319,7 +332,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting Service Discovery Service: (%s)", d.Id())
+	log.Printf("[INFO] Deleting Service Discovery Service: %s", d.Id())
 	_, err := conn.DeleteService(&servicediscovery.DeleteServiceInput{
 		Id: aws.String(d.Id()),
 	})
@@ -329,153 +342,220 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Service Discovery Service (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandDNSConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {
-	result := &servicediscovery.DnsConfig{}
+func expandDNSConfig(tfMap map[string]interface{}) *servicediscovery.DnsConfig {
+	if len(tfMap) == 0 {
+		return nil
+	}
 
-	result.NamespaceId = aws.String(configured["namespace_id"].(string))
-	dnsRecords := configured["dns_records"].([]interface{})
-	drs := make([]*servicediscovery.DnsRecord, len(dnsRecords))
-	for i := range drs {
-		raw := dnsRecords[i].(map[string]interface{})
-		dr := &servicediscovery.DnsRecord{
-			TTL:  aws.Int64(int64(raw["ttl"].(int))),
-			Type: aws.String(raw["type"].(string)),
+	apiObject := &servicediscovery.DnsConfig{}
+
+	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DnsRecords = expandDNSRecords(v)
+	}
+
+	if v, ok := tfMap["namespace_id"].(string); ok && v != "" {
+		apiObject.NamespaceId = aws.String(v)
+	}
+
+	if v, ok := tfMap["routing_policy"].(string); ok && v != "" {
+		apiObject.RoutingPolicy = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDNSConfigChange(tfMap map[string]interface{}) *servicediscovery.DnsConfigChange {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	apiObject := &servicediscovery.DnsConfigChange{}
+
+	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DnsRecords = expandDNSRecords(v)
+	}
+
+	return apiObject
+}
+
+func expandDNSRecord(tfMap map[string]interface{}) *servicediscovery.DnsRecord {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	apiObject := &servicediscovery.DnsRecord{}
+
+	if v, ok := tfMap["ttl"].(int); ok {
+		apiObject.TTL = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDNSRecords(tfList []interface{}) []*servicediscovery.DnsRecord {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*servicediscovery.DnsRecord
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
 		}
-		drs[i] = dr
-	}
-	result.DnsRecords = drs
-	if v, ok := configured["routing_policy"]; ok && v != "" {
-		result.RoutingPolicy = aws.String(v.(string))
-	}
 
-	return result
-}
+		apiObject := expandDNSRecord(tfMap)
 
-func flattenDNSConfig(config *servicediscovery.DnsConfig) []map[string]interface{} {
-	if config == nil {
-		return nil
-	}
-
-	result := map[string]interface{}{}
-
-	if config.NamespaceId != nil {
-		result["namespace_id"] = aws.StringValue(config.NamespaceId)
-	}
-	if config.RoutingPolicy != nil {
-		result["routing_policy"] = aws.StringValue(config.RoutingPolicy)
-	}
-	if config.DnsRecords != nil {
-		drs := make([]map[string]interface{}, 0)
-		for _, v := range config.DnsRecords {
-			dr := map[string]interface{}{}
-			dr["ttl"] = aws.Int64Value(v.TTL)
-			dr["type"] = aws.StringValue(v.Type)
-			drs = append(drs, dr)
+		if apiObject == nil {
+			continue
 		}
-		result["dns_records"] = drs
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if len(result) < 1 {
+	return apiObjects
+}
+
+func flattenDNSConfig(apiObject *servicediscovery.DnsConfig) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	return []map[string]interface{}{result}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DnsRecords; v != nil {
+		tfMap["dns_records"] = flattenDNSRecords(v)
+	}
+
+	if v := apiObject.NamespaceId; v != nil {
+		tfMap["namespace_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RoutingPolicy; v != nil {
+		tfMap["routing_policy"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func expandDNSConfigChange(configured map[string]interface{}) *servicediscovery.DnsConfigChange {
-	result := &servicediscovery.DnsConfigChange{}
+func flattenDNSRecord(apiObject *servicediscovery.DnsRecord) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-	dnsRecords := configured["dns_records"].([]interface{})
-	drs := make([]*servicediscovery.DnsRecord, len(dnsRecords))
-	for i := range drs {
-		raw := dnsRecords[i].(map[string]interface{})
-		dr := &servicediscovery.DnsRecord{
-			TTL:  aws.Int64(int64(raw["ttl"].(int))),
-			Type: aws.String(raw["type"].(string)),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TTL; v != nil {
+		tfMap["ttl"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenDNSRecords(apiObjects []*servicediscovery.DnsRecord) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
-		drs[i] = dr
-	}
-	result.DnsRecords = drs
 
-	return result
+		tfList = append(tfList, flattenDNSRecord(apiObject))
+	}
+
+	return tfList
 }
 
-func expandHealthCheckConfig(configured map[string]interface{}) *servicediscovery.HealthCheckConfig {
-	if len(configured) < 1 {
+func expandHealthCheckConfig(tfMap map[string]interface{}) *servicediscovery.HealthCheckConfig {
+	if len(tfMap) == 0 {
 		return nil
 	}
-	result := &servicediscovery.HealthCheckConfig{}
 
-	if v, ok := configured["failure_threshold"]; ok && v.(int) != 0 {
-		result.FailureThreshold = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := configured["resource_path"]; ok && v.(string) != "" {
-		result.ResourcePath = aws.String(v.(string))
-	}
-	if v, ok := configured["type"]; ok && v.(string) != "" {
-		result.Type = aws.String(v.(string))
+	apiObject := &servicediscovery.HealthCheckConfig{}
+
+	if v, ok := tfMap["failure_threshold"].(int); ok && v != 0 {
+		apiObject.FailureThreshold = aws.Int64(int64(v))
 	}
 
-	return result
+	if v, ok := tfMap["resource_path"].(string); ok && v != "" {
+		apiObject.ResourcePath = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenHealthCheckConfig(config *servicediscovery.HealthCheckConfig) []map[string]interface{} {
-	if config == nil {
-		return nil
-	}
-	result := map[string]interface{}{}
-
-	if config.FailureThreshold != nil {
-		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
-	}
-	if config.ResourcePath != nil {
-		result["resource_path"] = aws.StringValue(config.ResourcePath)
-	}
-	if config.Type != nil {
-		result["type"] = aws.StringValue(config.Type)
-	}
-
-	if len(result) < 1 {
+func flattenHealthCheckConfig(apiObject *servicediscovery.HealthCheckConfig) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	return []map[string]interface{}{result}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FailureThreshold; v != nil {
+		tfMap["failure_threshold"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.ResourcePath; v != nil {
+		tfMap["resource_path"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
-func expandHealthCheckCustomConfig(configured map[string]interface{}) *servicediscovery.HealthCheckCustomConfig {
-	if len(configured) < 1 {
+func expandHealthCheckCustomConfig(tfMap map[string]interface{}) *servicediscovery.HealthCheckCustomConfig {
+	if len(tfMap) < 1 {
 		return nil
 	}
-	result := &servicediscovery.HealthCheckCustomConfig{}
 
-	if v, ok := configured["failure_threshold"]; ok && v.(int) != 0 {
-		result.FailureThreshold = aws.Int64(int64(v.(int)))
+	apiObject := &servicediscovery.HealthCheckCustomConfig{}
+
+	if v, ok := tfMap["failure_threshold"].(int); ok && v != 0 {
+		apiObject.FailureThreshold = aws.Int64(int64(v))
 	}
 
-	return result
+	return apiObject
 }
 
-func flattenHealthCheckCustomConfig(config *servicediscovery.HealthCheckCustomConfig) []map[string]interface{} {
-	if config == nil {
-		return nil
-	}
-	result := map[string]interface{}{}
-
-	if config.FailureThreshold != nil {
-		result["failure_threshold"] = aws.Int64Value(config.FailureThreshold)
-	}
-
-	if len(result) < 1 {
+func flattenHealthCheckCustomConfig(apiObject *servicediscovery.HealthCheckCustomConfig) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	return []map[string]interface{}{result}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FailureThreshold; v != nil {
+		tfMap["failure_threshold"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
 func deregisterInstance(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
@@ -488,12 +568,12 @@ func deregisterInstance(conn *servicediscovery.ServiceDiscovery, serviceID, inst
 	output, err := conn.DeregisterInstance(input)
 
 	if err != nil {
-		return fmt.Errorf("error deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
+		return fmt.Errorf("deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
 	}
 
 	if output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Service (%s) Instance (%s) deregister: %w", serviceID, instanceID, err)
+			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
 		}
 	}
 
