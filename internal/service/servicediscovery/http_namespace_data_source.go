@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -41,90 +40,38 @@ func DataSourceHTTPNamespace() *schema.Resource {
 
 func dataSourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	input := &servicediscovery.ListNamespacesInput{}
-
-	var filters []*servicediscovery.NamespaceFilter
-
-	filter := &servicediscovery.NamespaceFilter{
-		Condition: aws.String(servicediscovery.FilterConditionEq),
-		Name:      aws.String(servicediscovery.NamespaceFilterNameType),
-		Values:    []*string{aws.String("HTTP")},
-	}
-
-	filters = append(filters, filter)
-
-	input.Filters = filters
-
-	namespaceIds := make([]string, 0)
-
-	err := conn.ListNamespacesPages(input, func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, namespace := range page.Namespaces {
-			if namespace == nil {
-				continue
-			}
-
-			if name == aws.StringValue(namespace.Name) {
-				namespaceIds = append(namespaceIds, aws.StringValue(namespace.Id))
-			}
-		}
-		return !lastPage
-	})
+	nsSummary, err := findNamespaceByNameAndType(conn, name, servicediscovery.NamespaceTypeHttp)
 
 	if err != nil {
-		return fmt.Errorf("error listing Service Discovery Namespaces: %w", err)
+		return fmt.Errorf("reading Service Discovery HTTP Namespace (%s): %w", name, err)
 	}
 
-	if len(namespaceIds) == 0 {
-		return fmt.Errorf("no matching Service Discovery Namespace found")
-	}
+	namespaceID := aws.StringValue(nsSummary.Id)
 
-	if len(namespaceIds) != 1 {
-		return fmt.Errorf("search returned %d Service Discovery Namespaces, please revise so only one is returned", len(namespaceIds))
-	}
-
-	d.SetId(namespaceIds[0])
-
-	resp, err := conn.GetNamespace(&servicediscovery.GetNamespaceInput{
-		Id: aws.String(d.Id()),
-	})
+	ns, err := FindNamespaceByID(conn, namespaceID)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Service Discovery HTTP Namespace (%s): %w", namespaceID, err)
 	}
 
-	arn := aws.StringValue(resp.Namespace.Arn)
+	d.SetId(namespaceID)
+	arn := aws.StringValue(ns.Arn)
 	d.Set("arn", arn)
-	d.Set("description", resp.Namespace.Description)
-	d.Set("http_name", resp.Namespace.Properties.HttpProperties.HttpName)
-	d.Set("name", resp.Namespace.Name)
+	d.Set("description", ns.Description)
+	d.Set("http_name", ns.Properties.HttpProperties.HttpName)
+	d.Set("name", ns.Name)
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

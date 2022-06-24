@@ -34,6 +34,58 @@ func FindInstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscover
 	return output.Instance, nil
 }
 
+func findNamespaces(conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListNamespacesInput) ([]*servicediscovery.NamespaceSummary, error) {
+	var output []*servicediscovery.NamespaceSummary
+
+	err := conn.ListNamespacesPages(input, func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Namespaces {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findNamespacesByType(conn *servicediscovery.ServiceDiscovery, nsType string) ([]*servicediscovery.NamespaceSummary, error) {
+	input := &servicediscovery.ListNamespacesInput{
+		Filters: []*servicediscovery.NamespaceFilter{{
+			Condition: aws.String(servicediscovery.FilterConditionEq),
+			Name:      aws.String(servicediscovery.NamespaceFilterNameType),
+			Values:    aws.StringSlice([]string{nsType}),
+		}},
+	}
+
+	return findNamespaces(conn, input)
+}
+
+func findNamespaceByNameAndType(conn *servicediscovery.ServiceDiscovery, name, nsType string) (*servicediscovery.NamespaceSummary, error) {
+	output, err := findNamespacesByType(conn, nsType)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.Name) == name {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindNamespaceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Namespace, error) {
 	input := &servicediscovery.GetNamespaceInput{
 		Id: aws.String(id),
