@@ -28,7 +28,11 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

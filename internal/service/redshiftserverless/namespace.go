@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,13 +28,60 @@ func ResourceNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"admin_user_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"admin_username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"db_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"default_iam_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"iam_roles": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"log_exports": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"userlog", "connectionlog", "useractivitylog"}, false),
+				},
+			},
+			"namespace_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"namespace_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -51,13 +100,33 @@ func resourceNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 		NamespaceName: aws.String(d.Get("namespace_name").(string)),
 	}
 
-	// if v, ok := d.GetOk("breach_action"); ok {
-	// 	input.BreachAction = aws.String(v.(string))
-	// }
+	if v, ok := d.GetOk("admin_user_password"); ok {
+		input.AdminUserPassword = aws.String(v.(string))
+	}
 
-	// if v, ok := d.GetOk("period"); ok {
-	// 	input.Period = aws.String(v.(string))
-	// }
+	if v, ok := d.GetOk("admin_username"); ok {
+		input.AdminUsername = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("db_name"); ok {
+		input.DbName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_iam_role_arn"); ok {
+		input.DefaultIamRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
+		input.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("log_exports"); ok && v.(*schema.Set).Len() > 0 {
+		input.LogExports = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
 	input.Tags = Tags(tags.IgnoreAWS())
 
@@ -91,12 +160,13 @@ func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(out.NamespaceArn)
 	d.Set("arn", arn)
 	d.Set("namespace_name", out.NamespaceName)
-
-	// d.Set("period", out.Period)
-	// d.Set("limit_type", out.LimitType)
-	// d.Set("feature_type", out.FeatureType)
-	// d.Set("breach_action", out.BreachAction)
-	// d.Set("cluster_identifier", out.ClusterIdentifier)
+	d.Set("namespace_id", out.NamespaceId)
+	d.Set("kms_key_id", out.KmsKeyId)
+	d.Set("admin_username", out.AdminUsername)
+	d.Set("db_name", out.DbName)
+	d.Set("default_iam_role_arn", out.DefaultIamRoleArn)
+	d.Set("log_exports", flex.FlattenStringSet(out.LogExports))
+	d.Set("iam_roles", flex.FlattenStringSet(out.IamRoles))
 
 	tags, err := ListTags(conn, arn)
 
@@ -125,24 +195,44 @@ func resourceNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
 
-	// if d.HasChangesExcept("tags", "tags_all") {
-	// 	input := &redshiftserverless.ModifyNamespaceInput{
-	// 		NamespaceId: aws.String(d.Id()),
-	// 	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &redshiftserverless.UpdateNamespaceInput{
+			NamespaceName: aws.String(d.Id()),
+		}
 
-	// 	if d.HasChange("amount") {
-	// 		input.Amount = aws.Int64(int64(d.Get("amount").(int)))
-	// 	}
+		if d.HasChange("kms_key_id") {
+			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		}
 
-	// 	if d.HasChange("breach_action") {
-	// 		input.BreachAction = aws.String(d.Get("breach_action").(string))
-	// 	}
+		if d.HasChange("default_iam_role_arn") {
+			input.DefaultIamRoleArn = aws.String(d.Get("default_iam_role_arn").(string))
+		}
 
-	// 	_, err := conn.ModifyNamespace(input)
-	// 	if err != nil {
-	// 		return fmt.Errorf("error updating Redshift Serverless Namespace (%s): %w", d.Id(), err)
-	// 	}
-	// }
+		if d.HasChange("admin_username") {
+			input.AdminUserPassword = aws.String(d.Get("admin_username").(string))
+		}
+
+		if d.HasChange("admin_user_password") {
+			input.AdminUsername = aws.String(d.Get("admin_user_password").(string))
+		}
+
+		if d.HasChange("log_exports") {
+			input.LogExports = flex.ExpandStringSet(d.Get("log_exports").(*schema.Set))
+		}
+
+		if d.HasChange("iam_roles") {
+			input.IamRoles = flex.ExpandStringSet(d.Get("iam_roles").(*schema.Set))
+		}
+
+		_, err := conn.UpdateNamespace(input)
+		if err != nil {
+			return fmt.Errorf("error updating Redshift Serverless Namespace (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waitNamespaceUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Redshift Serverless Namespace (%s) to be updated: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -162,7 +252,7 @@ func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 		NamespaceName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting snapshot copy grant: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := conn.DeleteNamespace(&deleteInput)
 
 	if err != nil {
@@ -170,6 +260,10 @@ func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		return err
+	}
+
+	if _, err := waitNamespaceDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Redshift Serverless Namespace (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
