@@ -28,10 +28,10 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 
 		// Keep in sync with aws_vpc_dhcp_options' schema with the following changes:
 		//   - domain_name is Computed-only
-		//   - domain_name_servers is Computed-only
-		//   - netbios_name_servers is Computed-only
+		//   - domain_name_servers is Computed-only and is TypeString
+		//   - netbios_name_servers is Computed-only and is TypeString
 		//   - netbios_node_type is Computed-only
-		//   - ntp_servers is Computed-only
+		//   - ntp_servers is Computed-only and is TypeString
 		//   - owner_id is Optional/Computed
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -43,23 +43,20 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 			},
 			"domain_name_servers": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"netbios_name_servers": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"netbios_node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"ntp_servers": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
