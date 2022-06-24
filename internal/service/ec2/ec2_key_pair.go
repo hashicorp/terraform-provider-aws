@@ -66,6 +66,10 @@ func ResourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_key": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -137,6 +141,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.StringValue(keyPair.KeyName)))
+	d.Set("key_type", keyPair.KeyType)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 
 	tags := KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
