@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccServiceDiscoveryInstance_private(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -60,7 +60,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_public(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -105,7 +105,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_http(t *testing.T) {
-	resourceName := "aws_service_discovery_instance.instance"
+	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
@@ -120,7 +120,7 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_http(rName, domainName, "AWS_EC2_INSTANCE_ID = aws_instance.test_instance.id"),
+				Config: testAccInstanceConfig_http(rName, domainName, "AWS_EC2_INSTANCE_ID = aws_instance.test.id"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
@@ -147,11 +147,11 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceExists(name string) resource.TestCheckFunc {
+func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -207,13 +207,13 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 
 func testAccInstanceConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "sd_register_instance" {
+resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }`, rName)
 }
@@ -244,17 +244,17 @@ func testAccInstanceConfig_http(rName, domainName, attributes string) string {
 
 func testAccInstanceConfig_privateNamespace(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_private_dns_namespace" "sd_register_instance" {
+resource "aws_service_discovery_private_dns_namespace" "test" {
   name        = %[2]q
   description = %[1]q
-  vpc         = aws_vpc.sd_register_instance.id
+  vpc         = aws_vpc.test.id
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_service_discovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_private_dns_namespace.sd_register_instance.id
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 10
@@ -272,15 +272,15 @@ resource "aws_service_discovery_service" "sd_register_instance" {
 
 func testAccInstanceConfig_publicNamespace(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_public_dns_namespace" "sd_register_instance" {
+resource "aws_service_discovery_public_dns_namespace" "test" {
   name = %[2]q
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_service_discovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = aws_service_discovery_public_dns_namespace.sd_register_instance.id
+    namespace_id = aws_service_discovery_public_dns_namespace.test.id
 
     dns_records {
       ttl  = 10
@@ -298,7 +298,7 @@ resource "aws_service_discovery_service" "sd_register_instance" {
 
 func testAccInstanceConfig_httpNamespace(rName, domainName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
-resource "aws_instance" "test_instance" {
+resource "aws_instance" "test" {
   instance_type = "t2.micro"
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -307,20 +307,20 @@ resource "aws_instance" "test_instance" {
   }
 }
 
-resource "aws_service_discovery_http_namespace" "sd_register_instance" {
+resource "aws_service_discovery_http_namespace" "test" {
   name = %[2]q
 }
 
-resource "aws_service_discovery_service" "sd_register_instance" {
+resource "aws_service_discovery_service" "test" {
   name         = %[1]q
-  namespace_id = aws_service_discovery_http_namespace.sd_register_instance.id
+  namespace_id = aws_service_discovery_http_namespace.test.id
 }`, rName, domainName))
 }
 
 func testAccInstanceConfig_basic(instanceID string, attributes string) string {
 	return fmt.Sprintf(`
-resource "aws_service_discovery_instance" "instance" {
-  service_id  = aws_service_discovery_service.sd_register_instance.id
+resource "aws_service_discovery_instance" "test" {
+  service_id  = aws_service_discovery_service.test.id
   instance_id = %[1]q
 
   attributes = {

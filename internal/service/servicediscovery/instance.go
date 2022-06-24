@@ -76,14 +76,14 @@ func resourceInstancePut(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.RegisterInstance(input)
 
 	if err != nil {
-		return fmt.Errorf("error registering Service Discovery Instance (%s): %w", instanceID, err)
+		return fmt.Errorf("registering Service Discovery Instance (%s): %w", instanceID, err)
 	}
 
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Instance (%s) register: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Service Discovery Instance (%s) create: %w", d.Id(), err)
 		}
 	}
 
@@ -102,7 +102,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Service Discovery Instance (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Service Discovery Instance (%s): %w", d.Id(), err)
 	}
 
 	attributes := instance.Attributes
