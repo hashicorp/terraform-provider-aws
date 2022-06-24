@@ -128,6 +128,14 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			return nil, diag.FromErr(err)
 		}
 
+		// Remove sensitive HTTP headers.
+		recorder.AddFilter(func(i *cassette.Interaction) error {
+			delete(i.Request.Headers, "Authorization")
+			delete(i.Request.Headers, "X-Amz-Security-Token")
+
+			return nil
+		})
+
 		// Defines how VCR will match requests to responses.
 		recorder.SetMatcher(func(r *http.Request, i cassette.Request) bool {
 			// Default matcher compares method and URL only.
