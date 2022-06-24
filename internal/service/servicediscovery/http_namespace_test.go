@@ -178,11 +178,11 @@ func testAccCheckHTTPNamespaceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckHTTPNamespaceExists(name string) resource.TestCheckFunc {
+func testAccCheckHTTPNamespaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {

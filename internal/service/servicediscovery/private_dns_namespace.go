@@ -2,15 +2,16 @@ package servicediscovery
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,6 +21,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 		Read:   resourcePrivateDNSNamespaceRead,
 		Update: resourcePrivateDNSNamespaceUpdate,
 		Delete: resourcePrivateDNSNamespaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -33,31 +35,31 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validNamespaceName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"hosted_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validNamespaceName,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hosted_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
@@ -85,26 +87,23 @@ func resourcePrivateDNSNamespaceCreate(d *schema.ResourceData, meta interface{})
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
+	log.Printf("[DEBUG] Creating Service Discovery Private DNS Namespace: %s", input)
 	output, err := conn.CreatePrivateDnsNamespace(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): %w", name, err)
-	}
-
-	if output == nil || output.OperationId == nil {
-		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): creation response missing Operation ID", name)
+		return fmt.Errorf("creating Service Discovery Private DNS Namespace (%s): %w", name, err)
 	}
 
 	operation, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Service Discovery Private DNS Namespace (%s) creation: %w", name, err)
+		return fmt.Errorf("waiting for Service Discovery Private DNS Namespace (%s) create: %w", name, err)
 	}
 
 	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
 
 	if !ok {
-		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): operation response missing Namespace ID", name)
+		return fmt.Errorf("creating Service Discovery Private DNS Namespace (%s): operation response missing Namespace ID", name)
 	}
 
 	d.SetId(aws.StringValue(namespaceID))
@@ -117,42 +116,43 @@ func resourcePrivateDNSNamespaceRead(d *schema.ResourceData, meta interface{}) e
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &servicediscovery.GetNamespaceInput{
-		Id: aws.String(d.Id()),
+	ns, err := FindNamespaceByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Discovery Private DNS Namespace %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("reading Service Discovery Private DNS Namespace (%s): %w", d.Id(), err)
 	}
 
-	arn := aws.StringValue(resp.Namespace.Arn)
-	d.Set("description", resp.Namespace.Description)
+	arn := aws.StringValue(ns.Arn)
 	d.Set("arn", arn)
-	d.Set("name", resp.Namespace.Name)
-	if resp.Namespace.Properties != nil {
-		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
+	d.Set("description", ns.Description)
+	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
+		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
+	} else {
+		d.Set("hosted_zone", nil)
 	}
+	d.Set("name", ns.Name)
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for Service Discovery Private DNS Namespace (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -163,30 +163,30 @@ func resourcePrivateDNSNamespaceUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating Service Discovery Private DNS Namespace (%s) tags: %w", d.Id(), err)
 		}
 	}
 
-	return resourceHTTPNamespaceRead(d, meta)
+	return resourcePrivateDNSNamespaceRead(d, meta)
 }
 
 func resourcePrivateDNSNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	input := &servicediscovery.DeleteNamespaceInput{
+	log.Printf("[INFO] Deleting Service Discovery Private DNS Namespace: %s", d.Id())
+	output, err := conn.DeleteNamespace(&servicediscovery.DeleteNamespaceInput{
 		Id: aws.String(d.Id()),
-	}
-
-	output, err := conn.DeleteNamespace(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Discovery Private DNS Namespace (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Service Discovery Private DNS Namespace (%s): %w", d.Id(), err)
 	}
 
 	if output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Private DNS Namespace (%s) deletion: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Service Discovery Private DNS Namespace (%s) delete: %w", d.Id(), err)
 		}
 	}
 
