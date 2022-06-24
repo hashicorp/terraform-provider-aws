@@ -45,6 +45,78 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 	})
 }
 
+func testAccAnalyzerArchiveRule_updateFilters(t *testing.T) {
+	var archiveRule accessanalyzer.ArchiveRuleSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_archive_rule.test"
+
+	filters := `
+filter {
+  criteria = "error"
+  exists   = true
+}
+`
+
+	filtersUpdated := `
+filter {
+  criteria = "error"
+  exists   = true
+}
+
+filter {
+  criteria = "isPublic"
+  eq       = ["false"]
+}
+`
+
+	filtersRemoved := `
+filter {
+  criteria = "isPublic"
+  eq       = ["true"]
+}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(accessanalyzer.EndpointsID, t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckArchiveRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArchiveRuleConfig_updateFilters(rName, filters),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
+				),
+			},
+			{
+				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
+					resource.TestCheckResourceAttr(resourceName, "filter.1.criteria", "isPublic"),
+					resource.TestCheckResourceAttr(resourceName, "filter.1.eq.0", "false"),
+				),
+			},
+			{
+				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersRemoved),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.eq.0", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -152,4 +224,17 @@ resource "aws_accessanalyzer_archive_rule" "test" {
   }
 }
 `, rName))
+}
+
+func testAccArchiveRuleConfig_updateFilters(rName, filters string) string {
+	return acctest.ConfigCompose(
+		testAccArchiveRuleBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_accessanalyzer_archive_rule" "test" {
+  analyzer_name = aws_accessanalyzer_analyzer.test.analyzer_name
+  rule_name     = %[1]q
+
+  %[2]s
+}
+`, rName, filters))
 }
