@@ -492,7 +492,7 @@ func flattenLFTagPair(apiObject *lakeformation.LFTagPair) map[string]interface{}
 		tfMap["key"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.TagValues; v != nil && len(v) > 0 {
+	if v := apiObject.TagValues; len(v) > 0 {
 		tfMap["value"] = aws.StringValue(apiObject.TagValues[0])
 	}
 
