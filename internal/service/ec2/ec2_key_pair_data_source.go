@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -21,6 +22,10 @@ func DataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"create_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": DataSourceFiltersSchema(),
 			"fingerprint": {
 				Type:     schema.TypeString,
@@ -33,6 +38,10 @@ func DataSourceKeyPair() *schema.Resource {
 			"key_pair_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"key_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"include_public_key": {
 				Type:     schema.TypeBool,
@@ -87,9 +96,11 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("key-pair/%s", keyName),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("create_time", aws.TimeValue(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)
+	d.Set("key_type", keyPair.KeyType)
 	d.Set("include_public_key", input.IncludePublicKey)
 	d.Set("public_key", keyPair.PublicKey)
 

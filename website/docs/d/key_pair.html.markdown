@@ -62,6 +62,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the Key Pair.
 * `arn` - The ARN of the Key Pair.
+* `create_time` - The timestamp for when the key pair was created in ISO 8601 format.
 * `fingerprint` - The SHA-1 digest of the DER encoded private key.
+* `key_type` - The type of key pair.
 * `public_key` - The public key material.
 * `tags` - Any tags assigned to the Key Pair.
