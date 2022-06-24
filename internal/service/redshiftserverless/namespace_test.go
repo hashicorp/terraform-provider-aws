@@ -2,6 +2,7 @@ package redshiftserverless_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -28,7 +29,7 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexp.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
@@ -40,6 +41,19 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNamespaceConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexp.MustCompile("namespace/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "db_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -160,6 +174,15 @@ func testAccNamespaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
+}
+`, rName)
+}
+
+func testAccNamespaceConfig_updated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+  db_name        = %[1]q
 }
 `, rName)
 }
