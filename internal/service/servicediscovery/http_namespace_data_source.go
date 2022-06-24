@@ -32,8 +32,7 @@ func DataSourceHTTPNamespace() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validNamespaceName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -61,7 +60,11 @@ func dataSourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error
 	arn := aws.StringValue(ns.Arn)
 	d.Set("arn", arn)
 	d.Set("description", ns.Description)
-	d.Set("http_name", ns.Properties.HttpProperties.HttpName)
+	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
+		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
+	} else {
+		d.Set("http_name", nil)
+	}
 	d.Set("name", ns.Name)
 
 	tags, err := ListTags(conn, arn)
