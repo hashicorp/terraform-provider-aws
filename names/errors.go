@@ -13,6 +13,7 @@ const (
 	ErrActionDeleting          = "deleting"
 	ErrActionUpdating          = "updating"
 	ErrActionCreating          = "creating"
+	ErrActionSetting           = "setting"
 	ErrActionCheckingExistence = "checking existence"
 	ErrActionCheckingDestroyed = "checking destroyed"
 )
