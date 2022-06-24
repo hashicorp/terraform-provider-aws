@@ -757,6 +757,8 @@ func Provider() *schema.Provider {
 			"aws_mq_broker":                         mq.DataSourceBroker(),
 			"aws_mq_broker_instance_type_offerings": mq.DataSourceBrokerInstanceTypeOfferings(),
 
+			"aws_mwaa_cli_token": mwaa.DataSourceCliToken(),
+
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
