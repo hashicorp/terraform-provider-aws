@@ -309,6 +309,34 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerPrivateDockerRegistry(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Vpc"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_auth_config.0.repository_credentials_provider_arn", "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
@@ -732,6 +760,61 @@ resource "aws_security_group" "test" {
 
 resource "aws_security_group" "bar" {
   name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) string {
+	return testAccModelConfigBase(rName) +
+		acctest.ConfigAvailableAZsNoOptIn() +
+		fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+  enable_network_isolation = true
+
+  primary_container {
+    image = "registry.example.com/test-model"
+
+    image_config {
+      repository_access_mode = "Vpc"
+	    repository_auth_config {
+		    repository_credentials_provider_arn = "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"
+	    }
+    }
+  }
+
+  vpc_config {
+    subnets            = [aws_subnet.test.id]
+    security_group_ids = [aws_security_group.test.id]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s-1"
   vpc_id = aws_vpc.test.id
 
   tags = {
