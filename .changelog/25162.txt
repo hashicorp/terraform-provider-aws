@@ -7,5 +7,5 @@ aws_service_discovery_http_namespace
 ```
 
 ```release-note:enhancement
-resource/aws_service_discovery_http_namespace: Add http_name attribute
+resource/aws_service_discovery_http_namespace: Add `http_name` attribute
 ```
