@@ -87,7 +87,7 @@ The following arguments are optional:
 The following arguments are required:
 
 * `key` – (Required) Key name for an existing LF-tag.
-* `value` - (Required) Value from the possible values for the LF-tag. 
+* `value` - (Required) Value from the possible values for the LF-tag.
 
 The following argument is optional:
 
