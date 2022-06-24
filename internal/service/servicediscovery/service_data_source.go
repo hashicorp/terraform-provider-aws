@@ -2,14 +2,11 @@ package servicediscovery
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceService() *schema.Resource {
@@ -105,80 +102,47 @@ func DataSourceService() *schema.Resource {
 
 func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	input := &servicediscovery.ListServicesInput{}
-
-	var filters []*servicediscovery.ServiceFilter
-
-	filter := &servicediscovery.ServiceFilter{
-		Condition: aws.String(servicediscovery.FilterConditionEq),
-		Name:      aws.String(servicediscovery.ServiceFilterNameNamespaceId),
-		Values:    []*string{aws.String(d.Get("namespace_id").(string))},
-	}
-
-	filters = append(filters, filter)
-
-	input.Filters = filters
-
-	serviceIds := make([]string, 0)
-
-	err := conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, service := range page.Services {
-			if service == nil {
-				continue
-			}
-
-			if name == aws.StringValue(service.Name) {
-				serviceIds = append(serviceIds, aws.StringValue(service.Id))
-			}
-		}
-		return !lastPage
-	})
+	serviceSummary, err := findServiceByNameAndNamespaceID(conn, name, d.Get("namespace_id").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing Service Discovery Services: %w", err)
+		return fmt.Errorf("reading Service Discovery Service (%s): %w", name, err)
 	}
 
-	if len(serviceIds) == 0 {
-		return fmt.Errorf("no matching Service Discovery Service found")
-	}
+	serviceID := aws.StringValue(serviceSummary.Id)
 
-	if len(serviceIds) != 1 {
-		return fmt.Errorf("search returned %d Service Discovery Services, please revise so only one is returned", len(serviceIds))
-	}
-
-	d.SetId(serviceIds[0])
-
-	service, err := FindServiceByID(conn, d.Id())
-
-	if tfresource.NotFound(err) {
-		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	service, err := FindServiceByID(conn, serviceID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Service Discovery Service (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Service Discovery Service (%s): %w", serviceID, err)
 	}
 
+	d.SetId(serviceID)
 	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
 	d.Set("description", service.Description)
-	if err := d.Set("dns_config", flattenDNSConfig(service.DnsConfig)); err != nil {
-		return fmt.Errorf("error setting dns_config: %w", err)
+	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
+		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting dns_config: %w", err)
+		}
+	} else {
+		d.Set("dns_config", nil)
 	}
-	if err := d.Set("health_check_config", flattenHealthCheckConfig(service.HealthCheckConfig)); err != nil {
-		return fmt.Errorf("error setting health_check_config: %w", err)
+	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
+		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting health_check_config: %w", err)
+		}
+	} else {
+		d.Set("health_check_config", nil)
 	}
-	if err := d.Set("health_check_custom_config", flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig)); err != nil {
-		return fmt.Errorf("error setting health_check_custom_config: %w", err)
+	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
+		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting health_check_custom_config: %w", err)
+		}
+	} else {
+		d.Set("health_check_custom_config", nil)
 	}
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
@@ -186,18 +150,11 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
+		return fmt.Errorf("listing tags for Service Discovery Service (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

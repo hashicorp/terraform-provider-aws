@@ -28,14 +28,13 @@ func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config", resourceName, "dns_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config", resourceName, "health_check_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config", resourceName, "health_check_custom_config"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config.#", resourceName, "dns_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config.#", resourceName, "health_check_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config.#", resourceName, "health_check_custom_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -60,14 +59,13 @@ func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_private(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config", resourceName, "dns_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config", resourceName, "health_check_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config", resourceName, "health_check_custom_config"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config.#", resourceName, "dns_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config.#", resourceName, "health_check_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config.#", resourceName, "health_check_custom_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -92,14 +90,13 @@ func TestAccServiceDiscoveryServiceDataSource_public(t *testing.T) {
 				Config: testAccServiceDataSourceConfig_public(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config", resourceName, "dns_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config", resourceName, "health_check_config"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config", resourceName, "health_check_custom_config"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dns_config.#", resourceName, "dns_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_config.#", resourceName, "health_check_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_check_custom_config.#", resourceName, "health_check_custom_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_id", resourceName, "namespace_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -117,8 +114,7 @@ resource "aws_service_discovery_service" "test" {
   namespace_id = aws_service_discovery_http_namespace.test.id
 
   tags = {
-    "tag1" = "value1"
-    "tag2" = "value2"
+    Name = %[1]q
   }
 }
 
@@ -133,10 +129,14 @@ func testAccServiceDataSourceConfig_private(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
   vpc  = aws_vpc.test.id
 }
 
@@ -167,7 +167,7 @@ data "aws_service_discovery_service" "test" {
 func testAccServiceDataSourceConfig_public(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
 }
 
 resource "aws_service_discovery_service" "test" {

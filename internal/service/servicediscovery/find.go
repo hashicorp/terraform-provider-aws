@@ -136,6 +136,58 @@ func FindOperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*ser
 	return output.Operation, nil
 }
 
+func findServices(conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListServicesInput) ([]*servicediscovery.ServiceSummary, error) {
+	var output []*servicediscovery.ServiceSummary
+
+	err := conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Services {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findServicesByNamespaceID(conn *servicediscovery.ServiceDiscovery, namespaceID string) ([]*servicediscovery.ServiceSummary, error) {
+	input := &servicediscovery.ListServicesInput{
+		Filters: []*servicediscovery.ServiceFilter{{
+			Condition: aws.String(servicediscovery.FilterConditionEq),
+			Name:      aws.String(servicediscovery.ServiceFilterNameNamespaceId),
+			Values:    aws.StringSlice([]string{namespaceID}),
+		}},
+	}
+
+	return findServices(conn, input)
+}
+
+func findServiceByNameAndNamespaceID(conn *servicediscovery.ServiceDiscovery, name, namespaceID string) (*servicediscovery.ServiceSummary, error) {
+	output, err := findServicesByNamespaceID(conn, namespaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.Name) == name {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 func FindServiceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Service, error) {
 	input := &servicediscovery.GetServiceInput{
 		Id: aws.String(id),
