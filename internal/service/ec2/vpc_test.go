@@ -597,18 +597,18 @@ func TestAccVPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDestroy,
+		CheckDestroy:      testAccCheckVPCDestroyX(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpcDedicated),
+					acctest.CheckVPCExistsX(t, resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
 				),
 			},
@@ -620,7 +620,7 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpcDefault),
+					acctest.CheckVPCExistsX(t, resourceName, &vpcDefault),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					testAccCheckVPCIDsEqual(&vpcDedicated, &vpcDefault),
 				),
@@ -628,7 +628,7 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpcDedicated),
+					acctest.CheckVPCExistsX(t, resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
 					testAccCheckVPCIDsNotEqual(&vpcDedicated, &vpcDefault),
 				),

@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -18,6 +20,7 @@ import (
 	"github.com/dnaeon/go-vcr/cassette"
 	"github.com/dnaeon/go-vcr/recorder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,9 +31,17 @@ const (
 	envVarVCRPath = "VCR_PATH"
 )
 
+type randomnessSource struct {
+	seed   int64
+	source rand.Source
+}
+
 var (
 	providerInstanceStatesLock = sync.RWMutex{}
 	providerInstanceStates     = make(map[string]interface{}, 0)
+
+	randomnessSourcesLock = sync.RWMutex{}
+	randomnessSources     = make(map[string]*randomnessSource, 0)
 )
 
 func ProviderInstanceState(t *testing.T) *conns.AWSClient {
@@ -177,22 +188,125 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 	}
 }
 
+// vcrRandomnessSource returns a rand.Source for VCR testing.
+// In RECORDING mode, generates a new seed and saves it to a file, using the seed for the source.
+// In REPLAYING mode, reads a seed from a file and creates a source from it.
+func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
+	testName := t.Name()
+
+	randomnessSourcesLock.RLock()
+	s, ok := randomnessSources[testName]
+	randomnessSourcesLock.RUnlock()
+
+	if ok {
+		return s, nil
+	}
+
+	vcrMode, err := vcrMode()
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch vcrMode {
+	case recorder.ModeRecording:
+		seed := rand.Int63()
+		s = &randomnessSource{
+			seed:   seed,
+			source: rand.NewSource(seed),
+		}
+	case recorder.ModeReplaying:
+		seed, err := readSeedFromFile(vcrSeedFile(os.Getenv(envVarVCRPath), testName))
+
+		if err != nil {
+			return nil, fmt.Errorf("no cassette found on disk for %s, please replay this testcase in recording mode - %w", testName, err)
+		}
+
+		s = &randomnessSource{
+			seed:   seed,
+			source: rand.NewSource(seed),
+		}
+	default:
+		t.FailNow()
+	}
+
+	randomnessSourcesLock.Lock()
+	randomnessSources[testName] = s
+	randomnessSourcesLock.Unlock()
+
+	return s, nil
+}
+
 func vcrFileName(name string) string {
 	return strings.ReplaceAll(name, "/", "_")
+}
+
+func vcrSeedFile(path, name string) string {
+	return filepath.Join(path, fmt.Sprintf("%s.seed", vcrFileName(name)))
+}
+
+func readSeedFromFile(fileName string) (int64, error) {
+	// Max number of digits for int64 is 19.
+	data := make([]byte, 19)
+	f, err := os.Open(fileName)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer f.Close()
+
+	_, err = f.Read(data)
+
+	if err != nil {
+		return 0, err
+	}
+
+	// Remove NULL characters from seed.
+	return strconv.ParseInt(string(bytes.Trim(data, "\x00")), 10, 64)
+}
+
+func writeSeedToFile(seed int64, fileName string) error {
+	f, err := os.Create(fileName)
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = f.WriteString(strconv.FormatInt(seed, 10))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette.
 func closeVCRRecorder(t *testing.T) {
 	testName := t.Name()
 	providerInstanceStatesLock.RLock()
-	providerInstanceState, ok := providerInstanceStates[testName]
+	v, ok := providerInstanceStates[testName]
 	providerInstanceStatesLock.RUnlock()
 
 	if ok {
 		if !t.Failed() {
 			log.Print("[DEBUG] closing VCR recorder")
-			if err := providerInstanceState.(*conns.AWSClient).Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
+			if err := v.(*conns.AWSClient).Session.Config.HTTPClient.Transport.(*recorder.Recorder).Stop(); err != nil {
 				t.Error(err)
+			}
+
+			// Save the randomness seed.
+			randomnessSourcesLock.RLock()
+			s, ok := randomnessSources[testName]
+			randomnessSourcesLock.RUnlock()
+
+			if ok {
+				if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
+					t.Error(err)
+				}
 			}
 		}
 
@@ -226,4 +340,24 @@ func Test(t *testing.T, c resource.TestCase) {
 	}
 
 	resource.Test(t, c)
+}
+
+// RandInt is a VCR-friendly replacement for acctest.RandInt.
+func RandInt(t *testing.T) int {
+	if !isVCREnabled() {
+		return sdkacctest.RandInt()
+	}
+
+	s, err := vcrRandomnessSource(t)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return rand.New(s.source).Int()
+}
+
+// RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix.
+func RandomWithPrefix(t *testing.T, prefix string) string {
+	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }
