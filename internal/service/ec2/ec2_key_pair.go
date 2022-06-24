@@ -6,8 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"golang.org/x/crypto/ssh"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -19,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/crypto/ssh"
 )
 
 func ResourceKeyPair() *schema.Resource {
