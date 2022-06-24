@@ -1,6 +1,7 @@
 package servicediscovery
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,10 +21,10 @@ import (
 
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceCreate,
-		Read:   resourceServiceRead,
-		Update: resourceServiceUpdate,
-		Delete: resourceServiceDelete,
+		CreateWithoutTimeout: resourceServiceCreate,
+		ReadWithoutTimeout:   resourceServiceRead,
+		UpdateWithoutTimeout: resourceServiceUpdate,
+		DeleteWithoutTimeout: resourceServiceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -138,7 +140,7 @@ func ResourceService() *schema.Resource {
 	}
 }
 
-func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -174,23 +176,23 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Service Discovery Service: %s", input)
-	output, err := conn.CreateService(input)
+	output, err := conn.CreateServiceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Service Discovery Service (%s): %w", name, err)
+		return diag.Errorf("creating Service Discovery Service (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Service.Id))
 
-	return resourceServiceRead(d, meta)
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	service, err := FindServiceByID(conn, d.Id())
+	service, err := FindServiceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
@@ -199,7 +201,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Service Discovery Service (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(service.Arn)
@@ -207,21 +209,21 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
 		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("setting dns_config: %w", err)
+			return diag.Errorf("setting dns_config: %s", err)
 		}
 	} else {
 		d.Set("dns_config", nil)
 	}
 	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("setting health_check_config: %w", err)
+			return diag.Errorf("setting health_check_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_config", nil)
 	}
 	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("setting health_check_custom_config: %w", err)
+			return diag.Errorf("setting health_check_custom_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_custom_config", nil)
@@ -232,24 +234,24 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Service Discovery Service (%s): %w", arn, err)
+		return diag.Errorf("listing tags for Service Discovery Service (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -268,15 +270,15 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Service.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateService(input)
+		output, err := conn.UpdateServiceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating Service Discovery Service (%s): %w", d.Id(), err)
+			return diag.Errorf("updating Service Discovery Service (%s): %s", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-				return fmt.Errorf("waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
+			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+				return diag.Errorf("waiting for Service Discovery Service (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
@@ -285,14 +287,14 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Service Discovery Service (%s) tags: %w", d.Id(), err)
+			return diag.Errorf("updating Service Discovery Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceServiceRead(d, meta)
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	if d.Get("force_destroy").(bool) {
@@ -302,13 +304,13 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 
 		var deletionErrs *multierror.Error
 
-		err := conn.ListInstancesPages(input, func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
+		err := conn.ListInstancesPagesWithContext(ctx, input, func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, instance := range page.Instances {
-				err := deregisterInstance(conn, d.Id(), aws.StringValue(instance.Id))
+				err := deregisterInstance(ctx, conn, d.Id(), aws.StringValue(instance.Id))
 
 				if err != nil {
 					log.Printf("[ERROR] %s", err)
@@ -328,12 +330,12 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		err = deletionErrs.ErrorOrNil()
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting Service Discovery Service: %s", d.Id())
-	_, err := conn.DeleteService(&servicediscovery.DeleteServiceInput{
+	_, err := conn.DeleteServiceWithContext(ctx, &servicediscovery.DeleteServiceInput{
 		Id: aws.String(d.Id()),
 	})
 
@@ -342,7 +344,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Service Discovery Service (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -558,21 +560,21 @@ func flattenHealthCheckCustomConfig(apiObject *servicediscovery.HealthCheckCusto
 	return tfMap
 }
 
-func deregisterInstance(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
+func deregisterInstance(ctx context.Context, conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
 	input := &servicediscovery.DeregisterInstanceInput{
 		InstanceId: aws.String(instanceID),
 		ServiceId:  aws.String(serviceID),
 	}
 
 	log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
-	output, err := conn.DeregisterInstance(input)
+	output, err := conn.DeregisterInstanceWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
 		}
 	}

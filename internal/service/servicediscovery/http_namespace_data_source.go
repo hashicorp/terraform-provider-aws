@@ -1,10 +1,11 @@
 package servicediscovery
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -12,7 +13,7 @@ import (
 
 func DataSourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHTTPNamespaceRead,
+		ReadWithoutTimeout: dataSourceHTTPNamespaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,23 +38,23 @@ func DataSourceHTTPNamespace() *schema.Resource {
 	}
 }
 
-func dataSourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	nsSummary, err := findNamespaceByNameAndType(conn, name, servicediscovery.NamespaceTypeHttp)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, servicediscovery.NamespaceTypeHttp)
 
 	if err != nil {
-		return fmt.Errorf("reading Service Discovery HTTP Namespace (%s): %w", name, err)
+		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
 	namespaceID := aws.StringValue(nsSummary.Id)
 
-	ns, err := FindNamespaceByID(conn, namespaceID)
+	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
-		return fmt.Errorf("reading Service Discovery HTTP Namespace (%s): %w", namespaceID, err)
+		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
@@ -70,11 +71,11 @@ func dataSourceHTTPNamespaceRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %w", arn, err)
+		return diag.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

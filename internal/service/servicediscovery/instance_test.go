@@ -1,6 +1,7 @@
 package servicediscovery_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -160,7 +161,7 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.TODO(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		return err
 	}
@@ -185,7 +186,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.TODO(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if tfresource.NotFound(err) {
 			continue

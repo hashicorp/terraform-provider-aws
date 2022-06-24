@@ -53,7 +53,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get("name").(string)
 	nsType := d.Get("type").(string)
-	nsSummary, err := findNamespaceByNameAndType(conn, name, nsType)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
 	if err != nil {
 		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
@@ -61,7 +61,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 
 	namespaceID := aws.StringValue(nsSummary.Id)
 
-	ns, err := FindNamespaceByID(conn, namespaceID)
+	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
 		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
