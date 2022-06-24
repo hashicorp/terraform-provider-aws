@@ -34,6 +34,31 @@ func FindInstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscover
 	return output.Instance, nil
 }
 
+func FindNamespaceByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Namespace, error) {
+	input := &servicediscovery.GetNamespaceInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetNamespace(input)
+
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Namespace == nil || output.Namespace.Properties == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Namespace, nil
+}
+
 func FindOperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
 	input := &servicediscovery.GetOperationInput{
 		OperationId: aws.String(id),

@@ -5,20 +5,19 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -53,7 +52,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 
 func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -79,7 +78,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 
 func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -109,7 +108,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 
 func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -163,18 +162,19 @@ func testAccCheckHTTPNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &servicediscovery.GetNamespaceInput{
-			Id: aws.String(rs.Primary.ID),
+		_, err := tfservicediscovery.FindNamespaceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-				continue
-			}
 			return err
 		}
+
+		return fmt.Errorf("Service Discovery HTTP Namespace %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
@@ -185,13 +185,14 @@ func testAccCheckHTTPNamespaceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
-
-		input := &servicediscovery.GetNamespaceInput{
-			Id: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Service Discovery HTTP Namespace ID is set")
 		}
 
-		_, err := conn.GetNamespace(input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+
+		_, err := tfservicediscovery.FindNamespaceByID(conn, rs.Primary.ID)
+
 		return err
 	}
 }
