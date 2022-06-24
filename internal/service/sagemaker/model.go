@@ -69,6 +69,21 @@ func ResourceModel() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.RepositoryAccessMode_Values(), false),
 									},
+									"repository_auth_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_credentials_provider_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -158,6 +173,21 @@ func ResourceModel() *schema.Resource {
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.RepositoryAccessMode_Values(), false),
+									},
+									"repository_auth_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_credentials_provider_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -430,7 +460,23 @@ func expandModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
 		RepositoryAccessMode: aws.String(m["repository_access_mode"].(string)),
 	}
 
+	if v, ok := m["repository_auth_config"]; ok {
+		imageConfig.RepositoryAuthConfig = expandRepositoryAuthConfig(v.([]interface{}))
+	}
+
 	return imageConfig
+}
+
+func expandRepositoryAuthConfig(l []interface{}) *sagemaker.RepositoryAuthConfig {
+	if len(l) == 0 {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	repositoryAuthConfig := &sagemaker.RepositoryAuthConfig{
+		RepositoryCredentialsProviderArn: aws.String(m["repository_credentials_provider_arn"].(string)),
+	}
+
+	return repositoryAuthConfig
 }
 
 func expandContainers(a []interface{}) []*sagemaker.ContainerDefinition {
@@ -481,6 +527,19 @@ func flattenImageConfig(imageConfig *sagemaker.ImageConfig) []interface{} {
 	cfg := make(map[string]interface{})
 
 	cfg["repository_access_mode"] = aws.StringValue(imageConfig.RepositoryAccessMode)
+	cfg["repository_auth_config"] = flattenRepositoryAuthConfig(imageConfig.RepositoryAuthConfig)
+
+	return []interface{}{cfg}
+}
+
+func flattenRepositoryAuthConfig(repositoryAuthConfig *sagemaker.RepositoryAuthConfig) []interface{} {
+	if repositoryAuthConfig == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	cfg["repository_credentials_provider_arn"] = aws.StringValue(repositoryAuthConfig.RepositoryCredentialsProviderArn)
 
 	return []interface{}{cfg}
 }
