@@ -16,8 +16,8 @@ Manages an attachment between one or more existing LF-tags and an existing Lake 
 
 ```terraform
 resource "aws_lakeformation_lf_tag" "example" {
-  key    = "copse"
-  values = ["luffield"]
+  key    = "right"
+  values = ["abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"]
 }
 
 resource "aws_lakeformation_resource_lf_tags" "example" {
@@ -28,8 +28,8 @@ resource "aws_lakeformation_resource_lf_tags" "example" {
   }
 
   lf_tag {
-    key    = aws_lakeformation_lf_tag.example.key
-    values = aws_lakeformation_lf_tag.example.values
+    key   = aws_lakeformation_lf_tag.example.key
+    value = "stowe"
   }
 }
 ```
@@ -38,13 +38,13 @@ resource "aws_lakeformation_resource_lf_tags" "example" {
 
 ```terraform
 resource "aws_lakeformation_lf_tag" "example" {
-  key    = "copse"
-  values = ["luffield"]
+  key    = "right"
+  values = ["abbey", "village", "luffield", "woodcote", "copse", "chapel", "stowe", "club"]
 }
 
 resource "aws_lakeformation_lf_tag" "example2" {
-  key    = "stowe"
-  values = ["brooklands"]
+  key    = "left"
+  values = ["farm", "theloop", "aintree", "brooklands", "maggotts", "becketts", "vale"]
 }
 
 resource "aws_lakeformation_resource_lf_tags" "example" {
@@ -55,13 +55,13 @@ resource "aws_lakeformation_resource_lf_tags" "example" {
   }
 
   lf_tag {
-    key    = aws_lakeformation_lf_tag.example.key
-    values = aws_lakeformation_lf_tag.example.values
+    key   = "right"
+    value = "luffield"
   }
 
   lf_tag {
-    key    = aws_lakeformation_lf_tag.example2.key
-    values = aws_lakeformation_lf_tag.example2.values
+    key   = "left"
+    value = "aintree"
   }
 }
 ```
@@ -70,9 +70,9 @@ resource "aws_lakeformation_resource_lf_tags" "example" {
 
 The following arguments are required:
 
-* `lf_tag` – (Required) Set of LF-tags to attach to the resource.
+* `lf_tag` – (Required) Set of LF-tags to attach to the resource. See below.
 
-One of the following is required:
+Exactly one of the following is required:
 
 * `database` - (Optional) Configuration block for a database resource. See below.
 * `table` - (Optional) Configuration block for a table resource. See below.
@@ -81,6 +81,17 @@ One of the following is required:
 The following arguments are optional:
 
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+
+### lf_tag
+
+The following arguments are required:
+
+* `key` – (Required) Key name for an existing LF-tag.
+* `value` - (Required) Value from the possible values for the LF-tag. 
+
+The following argument is optional:
+
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### database
 

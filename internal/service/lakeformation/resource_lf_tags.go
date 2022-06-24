@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -94,16 +93,11 @@ func ResourceResourceLFTags() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 15,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateLFTagValues(),
-							},
-							Set: schema.HashString,
+						"value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateLFTagValues(),
 						},
 					},
 				},
@@ -429,7 +423,7 @@ func lfTagsHash(v interface{}) int {
 
 	var buf bytes.Buffer
 	buf.WriteString(m["key"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["values"].(*schema.Set)))
+	buf.WriteString(m["value"].(string))
 	buf.WriteString(m["catalog_id"].(string))
 
 	return create.StringHashcode(buf.String())
@@ -450,8 +444,8 @@ func expandLFTagPair(tfMap map[string]interface{}) *lakeformation.LFTagPair {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v != nil {
-		apiObject.TagValues = flex.ExpandStringSet(v)
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.TagValues = aws.StringSlice([]string{v})
 	}
 
 	return apiObject
@@ -499,7 +493,7 @@ func flattenLFTagPair(apiObject *lakeformation.LFTagPair) map[string]interface{}
 	}
 
 	if v := apiObject.TagValues; v != nil && len(v) > 0 {
-		tfMap["values"] = flex.FlattenStringList(apiObject.TagValues)
+		tfMap["value"] = aws.StringValue(apiObject.TagValues[0])
 	}
 
 	return tfMap
