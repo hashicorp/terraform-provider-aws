@@ -33,13 +33,15 @@ func ResourceNamespace() *schema.Resource {
 				Computed: true,
 			},
 			"admin_user_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"admin_username": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				Computed:  true,
 			},
 			"db_name": {
 				Type:     schema.TypeString,
