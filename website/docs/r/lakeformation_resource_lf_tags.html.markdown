@@ -62,7 +62,7 @@ resource "aws_lakeformation_resource_lf_tags" "example" {
   lf_tag {
     key    = aws_lakeformation_lf_tag.example2.key
     values = aws_lakeformation_lf_tag.example2.values
-  }  
+  }
 }
 ```
 
