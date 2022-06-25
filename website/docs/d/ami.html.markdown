@@ -39,7 +39,7 @@ data "aws_ami" "example" {
 
 ## Argument Reference
 
-* `owners` - (Optional) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
