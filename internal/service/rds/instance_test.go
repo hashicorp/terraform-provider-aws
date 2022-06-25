@@ -29,19 +29,19 @@ func TestAccRDSInstance_basic(t *testing.T) {
 
 	var dbInstance1 rds.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		CheckDestroy:      testAccCheckInstanceDestroyX(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance1),
+					testAccCheckInstanceExistsX(t, resourceName, &dbInstance1),
 					testAccCheckInstanceAttributes(&dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
@@ -3590,6 +3590,33 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
+// TODO: Temporary during go-vcr development.
+func testAccCheckInstanceDestroyX(t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderInstanceState(t).RDSConn
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_instance" {
+				continue
+			}
+
+			_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *v.Engine != "mysql" {
@@ -3798,6 +3825,32 @@ func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckF
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+// TODO: Temporary during go-vcr development.
+func testAccCheckInstanceExistsX(t *testing.T, n string, v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DB Instance ID is set")
+		}
+
+		conn := acctest.ProviderInstanceState(t).RDSConn
 
 		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
