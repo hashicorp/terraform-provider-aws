@@ -339,6 +339,10 @@ func closeVCRRecorder(t *testing.T) {
 		providerInstanceStatesLock.Lock()
 		delete(providerInstanceStates, testName)
 		providerInstanceStatesLock.Unlock()
+
+		randomnessSourcesLock.Lock()
+		delete(randomnessSources, testName)
+		randomnessSourcesLock.Unlock()
 	}
 }
 
