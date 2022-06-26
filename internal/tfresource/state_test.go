@@ -8,23 +8,24 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FailedStateRefreshFunc() tfresource.StateRefreshFunc {
+func FailedStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		return nil, "", errors.New("failed")
 	}
 }
 
-func TimeoutStateRefreshFunc() tfresource.StateRefreshFunc {
+func TimeoutStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		time.Sleep(100 * time.Second)
 		return nil, "", errors.New("failed")
 	}
 }
 
-func SuccessfulStateRefreshFunc() tfresource.StateRefreshFunc {
+func SuccessfulStateRefreshFunc() resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		return struct{}{}, "running", nil
 	}
@@ -55,7 +56,7 @@ func NewStateGenerator(sequence []string) *StateGenerator {
 	return r
 }
 
-func InconsistentStateRefreshFunc() tfresource.StateRefreshFunc {
+func InconsistentStateRefreshFunc() resource.StateRefreshFunc {
 	sequence := []string{
 		"done", "replicating",
 		"done", "done", "done",
@@ -75,7 +76,7 @@ func InconsistentStateRefreshFunc() tfresource.StateRefreshFunc {
 	}
 }
 
-func UnknownPendingStateRefreshFunc() tfresource.StateRefreshFunc {
+func UnknownPendingStateRefreshFunc() resource.StateRefreshFunc {
 	sequence := []string{
 		"unknown1", "unknown2", "done",
 	}

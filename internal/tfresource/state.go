@@ -3,6 +3,7 @@ package tfresource
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,18 +21,17 @@ var RefreshGracePeriod = 30 * time.Second
 //
 // `state` is the latest state of that object. And `err` is any error that
 // may have happened while refreshing the state.
-type StateRefreshFunc func() (result interface{}, state string, err error)
 
 // StateChangeConf is the configuration struct used for `WaitForState`.
 type StateChangeConf struct {
-	Delay          time.Duration    // Wait this time before starting checks
-	Pending        []string         // States that are "allowed" and will continue trying
-	Refresh        StateRefreshFunc // Refreshes the current state
-	Target         []string         // Target state
-	Timeout        time.Duration    // The amount of time to wait before timeout
-	MinTimeout     time.Duration    // Smallest time to wait before refreshes
-	PollInterval   time.Duration    // Override MinTimeout/backoff and only poll this often
-	NotFoundChecks int              // Number of times to allow not found (nil result from Refresh)
+	Delay          time.Duration             // Wait this time before starting checks
+	Pending        []string                  // States that are "allowed" and will continue trying
+	Refresh        resource.StateRefreshFunc // Refreshes the current state
+	Target         []string                  // Target state
+	Timeout        time.Duration             // The amount of time to wait before timeout
+	MinTimeout     time.Duration             // Smallest time to wait before refreshes
+	PollInterval   time.Duration             // Override MinTimeout/backoff and only poll this often
+	NotFoundChecks int                       // Number of times to allow not found (nil result from Refresh)
 
 	// This is to work around inconsistent APIs
 	ContinuousTargetOccurence int // Number of times the Target state has to occur continuously
@@ -85,8 +85,13 @@ func (conf *StateChangeConf) WaitForStateContext(ctx context.Context) (interface
 	go func() {
 		defer close(resCh)
 
+		delayDuration := conf.Delay
+		if isVCRReplaying() {
+			delayDuration = 0
+		}
+
 		select {
-		case <-time.After(conf.Delay):
+		case <-time.After(delayDuration):
 		case <-cancelCh:
 			return
 		}
@@ -99,10 +104,15 @@ func (conf *StateChangeConf) WaitForStateContext(ctx context.Context) (interface
 			resCh <- result
 
 			// wait and watch for cancellation
+			waitDuration := wait
+			if isVCRReplaying() {
+				waitDuration = 0
+			}
+
 			select {
 			case <-cancelCh:
 				return
-			case <-time.After(wait):
+			case <-time.After(waitDuration):
 				// first round had no wait
 				if wait == 0 {
 					wait = 100 * time.Millisecond
@@ -279,4 +289,8 @@ func (conf *StateChangeConf) WaitForStateContext(ctx context.Context) (interface
 // Deprecated: Please use WaitForStateContext to ensure proper plugin shutdown
 func (conf *StateChangeConf) WaitForState() (interface{}, error) {
 	return conf.WaitForStateContext(context.Background())
+}
+
+func isVCRReplaying() bool {
+	return os.Getenv("VCR_MODE") == "REPLAYING" && os.Getenv("VCR_PATH") != ""
 }
