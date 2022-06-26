@@ -1376,7 +1376,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(identifier)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &tfresource.StateChangeConf{
 		Pending:    resourceInstanceCreatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
 		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),

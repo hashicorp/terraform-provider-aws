@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -151,7 +152,7 @@ func waitDBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN str
 }
 
 func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &tfresource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusAvailable,
 			InstanceStatusBackingUp,
