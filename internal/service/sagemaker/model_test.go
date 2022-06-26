@@ -325,7 +325,7 @@ func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
 					testAccCheckModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Vpc"),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_auth_config.0.repository_credentials_provider_arn", "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_auth_config.0.repository_credentials_provider_arn", "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"), //lintignore:AWSAT003,AWSAT005
 				),
 			},
 			{
@@ -767,6 +767,7 @@ resource "aws_security_group" "bar" {
 `, rName))
 }
 
+//lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
