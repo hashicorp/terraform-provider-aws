@@ -3,5 +3,5 @@ resource/aws_key_pair: Added 2 new attributes - `key_type` and `create_time`
 ```
 
 ```release-note:enhancement
-data/aws_key_pair: Get the public key material by setting the attribute `include_public_key`
+data/aws_key_pair: New attribute `public_key` populated by setting the new `include_public_key` argument
 ```
