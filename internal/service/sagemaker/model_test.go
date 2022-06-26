@@ -774,8 +774,8 @@ func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) stri
 		acctest.ConfigAvailableAZsNoOptIn() +
 		fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
-  name               = %[1]q
-  execution_role_arn = aws_iam_role.test.arn
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
   enable_network_isolation = true
 
   primary_container {
@@ -783,9 +783,10 @@ resource "aws_sagemaker_model" "test" {
 
     image_config {
       repository_access_mode = "Vpc"
-	    repository_auth_config {
-		    repository_credentials_provider_arn = "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"
-	    }
+
+      repository_auth_config {
+        repository_credentials_provider_arn = "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"
+      }
     }
   }
 
