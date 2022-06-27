@@ -452,11 +452,15 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 
 		remaining = len(p.Ipv6Ranges)
 		for _, ipv6 := range p.Ipv6Ranges {
+			if ipv6.CidrIpv6 == nil {
+				continue
+			}
+			expectedCidrIpv6 := strings.ToLower(aws.StringValue(ipv6.CidrIpv6))
 			for _, ipv6ip := range r.Ipv6Ranges {
-				if ipv6.CidrIpv6 == nil || ipv6ip.CidrIpv6 == nil {
+				if ipv6ip.CidrIpv6 == nil {
 					continue
 				}
-				if aws.StringValue(ipv6.CidrIpv6) == aws.StringValue(ipv6ip.CidrIpv6) {
+				if expectedCidrIpv6 == aws.StringValue(ipv6ip.CidrIpv6) {
 					remaining--
 				}
 			}
