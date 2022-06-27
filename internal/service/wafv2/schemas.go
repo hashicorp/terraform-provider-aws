@@ -142,6 +142,11 @@ func byteMatchStatementSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"field_to_match": fieldToMatchSchema(),
+				"oversize_handling": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+				},
 				"positional_constraint": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -152,11 +157,6 @@ func byteMatchStatementSchema() *schema.Schema {
 						wafv2.PositionalConstraintExactly,
 						wafv2.PositionalConstraintStartsWith,
 					}, false),
-				},
-				"oversize_handling": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 				},
 				"search_string": {
 					Type:         schema.TypeString,
