@@ -711,8 +711,9 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
-			"aws_kendra_faq":   kendra.DataSourceFaq(),
-			"aws_kendra_index": kendra.DataSourceIndex(),
+			"aws_kendra_faq":       kendra.DataSourceFaq(),
+			"aws_kendra_index":     kendra.DataSourceIndex(),
+			"aws_kendra_thesaurus": kendra.DataSourceThesaurus(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
