@@ -22,16 +22,16 @@ func TestAccVPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDestroyX(t),
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsX(t, resourceName, &vpc),
+					acctest.CheckVPCExists(resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
@@ -597,18 +597,18 @@ func TestAccVPC_tenancy(t *testing.T) {
 	var vpcDedicated ec2.Vpc
 	var vpcDefault ec2.Vpc
 	resourceName := "aws_vpc.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	acctest.ParallelTest(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDestroyX(t),
+		CheckDestroy:      testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsX(t, resourceName, &vpcDedicated),
+					acctest.CheckVPCExists(resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
 				),
 			},
@@ -620,7 +620,7 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsX(t, resourceName, &vpcDefault),
+					acctest.CheckVPCExists(resourceName, &vpcDefault),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					testAccCheckVPCIDsEqual(&vpcDedicated, &vpcDefault),
 				),
@@ -628,7 +628,7 @@ func TestAccVPC_tenancy(t *testing.T) {
 			{
 				Config: testAccVPCConfig_dedicatedTenancy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsX(t, resourceName, &vpcDedicated),
+					acctest.CheckVPCExists(resourceName, &vpcDedicated),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "dedicated"),
 					testAccCheckVPCIDsNotEqual(&vpcDedicated, &vpcDefault),
 				),
@@ -947,33 +947,6 @@ func testAccCheckVPCDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-// TODO: Temporary during go-vcr development.
-func testAccCheckVPCDestroyX(t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderInstanceState(t).EC2Conn
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpc" {
-				continue
-			}
-
-			_, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("EC2 VPC %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckVPCUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
