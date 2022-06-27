@@ -41,6 +41,10 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"latest": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"trace_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,6 +58,10 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 						},
 					},
 				},
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -141,6 +149,8 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("arn", arn)
 	d.Set("observability_configuration_name", config.ObservabilityConfigurationName)
 	d.Set("observability_configuration_revision", config.ObservabilityConfigurationRevision)
+	d.Set("latest", config.Latest)
+	d.Set("status", config.Status)
 
 	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
 		return diag.Errorf("error setting trace_configuration: %s", err)
@@ -221,16 +231,16 @@ func expandTraceConfigurations(tfMap map[string]interface{}) *apprunner.TraceCon
 	return traceConfiguration
 }
 
-func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration) map[string]interface{} {
+func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration) []interface{} {
 	if traceConfiguration == nil {
-		return nil
+		return []interface{}{}
 	}
 
-	tfMap := map[string]interface{}{}
+	values := map[string]interface{}{}
 
-	if v := traceConfiguration.Vendor; v != nil {
-		tfMap["vendor"] = aws.StringValue(v)
+	if traceConfiguration.Vendor != nil {
+		values["vendor"] = aws.StringValue(traceConfiguration.Vendor)
 	}
 
-	return tfMap
+	return []interface{}{values}
 }
