@@ -234,7 +234,6 @@ RDS Performance Insights (PI)
 Recycle Bin (RBin)
 Redshift
 Redshift Data
-Redshift Serverless
 Rekognition
 Resilience Hub
 Resource Groups

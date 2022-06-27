@@ -239,7 +239,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -553,7 +552,6 @@ type AWSClient struct {
 	RUMConn                          *cloudwatchrum.CloudWatchRUM
 	RedshiftConn                     *redshift.Redshift
 	RedshiftDataConn                 *redshiftdataapiservice.RedshiftDataAPIService
-	RedshiftServerlessConn           *redshiftserverless.RedshiftServerless
 	RekognitionConn                  *rekognition.Rekognition
 	ResilienceHubConn                *resiliencehub.ResilienceHub
 	ResourceGroupsConn               *resourcegroups.ResourceGroups

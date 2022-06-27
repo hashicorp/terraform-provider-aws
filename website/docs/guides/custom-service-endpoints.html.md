@@ -299,7 +299,6 @@ provider "aws" {
   <li><code>rdsdata</code> (or <code>rdsdataservice</code>)</li>
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
-  <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
   <li><code>resourcegroups</code></li>

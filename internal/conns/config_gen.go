@@ -235,7 +235,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -529,7 +528,6 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		RUMConn:                          cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RUM])})),
 		RedshiftConn:                     redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Redshift])})),
 		RedshiftDataConn:                 redshiftdataapiservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftData])})),
-		RedshiftServerlessConn:           redshiftserverless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftServerless])})),
 		RekognitionConn:                  rekognition.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Rekognition])})),
 		ResilienceHubConn:                resiliencehub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResilienceHub])})),
 		ResourceGroupsConn:               resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResourceGroups])})),
