@@ -48,13 +48,14 @@ func TestAccKendra_serial(t *testing.T) {
 			"SourceS3Path": testAccQuerySuggestionsBlockList_SourceS3Path,
 		},
 		"Thesaurus": {
-			"basic":        testAccThesaurus_basic,
-			"disappears":   testAccThesaurus_disappears,
-			"tags":         testAccThesaurus_tags,
-			"Description":  testAccThesaurus_description,
-			"Name":         testAccThesaurus_name,
-			"RoleARN":      testAccThesaurus_roleARN,
-			"SourceS3Path": testAccThesaurus_sourceS3Path,
+			"basic":            testAccThesaurus_basic,
+			"disappears":       testAccThesaurus_disappears,
+			"tags":             testAccThesaurus_tags,
+			"Description":      testAccThesaurus_description,
+			"Name":             testAccThesaurus_name,
+			"RoleARN":          testAccThesaurus_roleARN,
+			"SourceS3Path":     testAccThesaurus_sourceS3Path,
+			"DataSource_basic": testAccThesaurusDataSource_basic,
 		},
 	}
 
