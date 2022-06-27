@@ -46,6 +46,37 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_observability_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckObservabilityConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObservabilityConfigurationConfig_traceConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObservabilityConfigurationExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_observability_configuration.test"
@@ -134,7 +165,7 @@ func testAccCheckObservabilityConfigurationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if output != nil && output.ObservabilityConfiguration != nil && aws.StringValue(output.ObservabilityConfiguration.Status) != "inactive" {
+		if output != nil && output.ObservabilityConfiguration != nil && aws.StringValue(output.ObservabilityConfiguration.Status) != apprunner.ObservabilityConfigurationStatusInactive {
 			return fmt.Errorf("App Runner Observability Configuration (%s) still exists", rs.Primary.ID)
 		}
 	}
@@ -177,6 +208,17 @@ func testAccObservabilityConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_observability_configuration" "test" {
   observability_configuration_name = %[1]q
+}
+`, rName)
+}
+
+func testAccObservabilityConfigurationConfig_traceConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_observability_configuration" "test" {
+  observability_configuration_name = %[1]q
+  trace_configuration {
+    vendor = "AWSXRAY"
+  }
 }
 `, rName)
 }
