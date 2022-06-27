@@ -134,8 +134,8 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id = aws_route53_resolver_firewall_rule_group.test.id
-  action = %[1]q
+  id       = aws_route53_resolver_firewall_rule_group.test.id
+  action   = %[1]q
   priority = %[2]q
 }
 `, action, priority))
@@ -144,7 +144,7 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id = aws_route53_resolver_firewall_rule_group.test.id
+  id     = aws_route53_resolver_firewall_rule_group.test.id
   action = %[1]q
 }
 `, action))
@@ -153,7 +153,7 @@ data "aws_route53_resolver_firewall_rules" "test" {
 func testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority string) string {
 	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
 data "aws_route53_resolver_firewall_rules" "test" {
-  id = aws_route53_resolver_firewall_rule_group.test.id
+  id       = aws_route53_resolver_firewall_rule_group.test.id
   priority = %[1]q
 }
 `, priority))
