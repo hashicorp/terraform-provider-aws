@@ -69,6 +69,10 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		ObservabilityConfigurationName: aws.String(name),
 	}
 
+	if v, ok := d.GetOk("trace_configuration"); ok {
+		input.TraceConfiguration = expandTraceConfigurations(v.(map[string]interface{}))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -137,4 +141,18 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	}
 
 	return nil
+}
+
+func expandTraceConfigurations(tfMap map[string]interface{}) *apprunner.TraceConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	traceConfiguration := &apprunner.TraceConfiguration{}
+
+	if v, ok := tfMap["vendor"].(string); ok {
+		traceConfiguration.Vendor = aws.String(v)
+	}
+
+	return traceConfiguration
 }
