@@ -18,8 +18,8 @@ const (
 	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
 
-	ObservabilityConfigurationStatusActive   = "active"
-	ObservabilityConfigurationStatusInactive = "inactive"
+	ObservabilityConfigurationStatusActive   = "ACTIVE"
+	ObservabilityConfigurationStatusInactive = "INACTIVE"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
