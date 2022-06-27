@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -30,12 +32,38 @@ func ResourceSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"scheduled_action_name": {
+			"autoscaling_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"autoscaling_group_name": {
+			"desired_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"end_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validScheduleTimestamp,
+			},
+			"max_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"min_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"recurrence": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"scheduled_action_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -46,34 +74,8 @@ func ResourceSchedule() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validScheduleTimestamp,
 			},
-			"end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validScheduleTimestamp,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"recurrence": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"min_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"max_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"desired_capacity": {
-				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
@@ -112,7 +114,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	if attr, ok := d.GetOk("start_time"); ok {
 		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule Start Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule Start Time: %w", err)
 		}
 		params.StartTime = aws.Time(t)
 	}
@@ -120,7 +122,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	if attr, ok := d.GetOk("end_time"); ok {
 		t, err := time.Parse(ScheduleTimeLayout, attr.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing AWS Autoscaling Group Schedule End Time: %w", err)
 		}
 		params.EndTime = aws.Time(t)
 	}
@@ -155,7 +157,7 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Creating Autoscaling Scheduled Action: %s", d.Get("scheduled_action_name").(string))
 	_, err := conn.PutScheduledUpdateGroupAction(params)
 	if err != nil {
-		return fmt.Errorf("Error Creating Autoscaling Scheduled Action: %s", err.Error())
+		return fmt.Errorf("Error Creating Autoscaling Scheduled Action: %w", err)
 	}
 
 	d.SetId(d.Get("scheduled_action_name").(string))
@@ -164,15 +166,18 @@ func resourceScheduleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	sa, exists, err := resourceASGScheduledActionRetrieve(d, meta)
-	if err != nil {
-		return err
-	}
+	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	if !exists {
-		log.Printf("[WARN] Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
+	sa, err := FindScheduledUpdateGroupAction(conn, d.Get("autoscaling_group_name").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Scheduled Action %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	d.Set("autoscaling_group_name", sa.AutoScalingGroupName)
@@ -214,45 +219,64 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	params := &autoscaling.DeleteScheduledActionInput{
+	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
+	_, err := conn.DeleteScheduledAction(&autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		ScheduledActionName:  aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil
 	}
 
-	log.Printf("[INFO] Deleting Autoscaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Autoscaling Scheduled Action: %s", err.Error())
+		return fmt.Errorf("deleting Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceASGScheduledActionRetrieve(d *schema.ResourceData, meta interface{}) (*autoscaling.ScheduledUpdateGroupAction, bool, error) {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
-
-	params := &autoscaling.DescribeScheduledActionsInput{
-		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		ScheduledActionNames: []*string{aws.String(d.Id())},
+func FindScheduledUpdateGroupAction(conn *autoscaling.AutoScaling, asgName, actionName string) (*autoscaling.ScheduledUpdateGroupAction, error) {
+	input := &autoscaling.DescribeScheduledActionsInput{
+		AutoScalingGroupName: aws.String(asgName),
+		ScheduledActionNames: aws.StringSlice([]string{actionName}),
 	}
+	var output []*autoscaling.ScheduledUpdateGroupAction
 
-	log.Printf("[INFO] Describing Autoscaling Scheduled Action: %+v", params)
-	actions, err := conn.DescribeScheduledActions(params)
-	if err != nil {
-		//A ValidationError here can mean that either the Schedule is missing OR the Autoscaling Group is missing
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ValidationError" {
-			log.Printf("[WARN] Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
-			d.SetId("")
-
-			return nil, false, nil
+	err := conn.DescribeScheduledActionsPages(input, func(page *autoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return nil, false, fmt.Errorf("Error retrieving Autoscaling Scheduled Actions: %s", err)
+
+		for _, v := range page.ScheduledUpdateGroupActions {
+			if v == nil || aws.StringValue(v.ScheduledActionName) != actionName {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	if len(actions.ScheduledUpdateGroupActions) != 1 ||
-		aws.StringValue(actions.ScheduledUpdateGroupActions[0].ScheduledActionName) != d.Id() {
-		return nil, false, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return actions.ScheduledUpdateGroupActions[0], true, nil
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }

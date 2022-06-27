@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -139,7 +139,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 	output, err := conn.DescribeDBClusterSnapshots(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
 			log.Printf("[WARN] Neptune DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -186,7 +186,7 @@ func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Deleting Neptune DB Cluster Snapshot: %s", input)
 	_, err := conn.DeleteDBClusterSnapshot(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
@@ -204,7 +204,7 @@ func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string,
 		log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)

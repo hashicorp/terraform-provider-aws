@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,35 +109,35 @@ func ResourceEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
+							Elem:     environmentModuleLoggingConfigurationSchema(),
 						},
 						"scheduler_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
+							Elem:     environmentModuleLoggingConfigurationSchema(),
 						},
 						"task_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
+							Elem:     environmentModuleLoggingConfigurationSchema(),
 						},
 						"webserver_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
+							Elem:     environmentModuleLoggingConfigurationSchema(),
 						},
 						"worker_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
+							Elem:     environmentModuleLoggingConfigurationSchema(),
 						},
 					},
 				},
@@ -199,6 +199,11 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"schedulers": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"service_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,7 +249,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
 		ExecutionRoleArn:     aws.String(d.Get("execution_role_arn").(string)),
 		Name:                 aws.String(d.Get("name").(string)),
-		NetworkConfiguration: expandMwaaEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
+		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
 	}
 
@@ -265,7 +270,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("logging_configuration"); ok {
-		input.LoggingConfiguration = expandMwaaEnvironmentLoggingConfiguration(v.([]interface{}))
+		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("max_workers"); ok {
@@ -290,6 +295,10 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("requirements_s3_path"); ok {
 		input.RequirementsS3Path = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedulers"); ok {
+		input.Schedulers = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
@@ -329,7 +338,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	environment, err := findEnvironmentByName(conn, d.Id())
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] MWAA Environment %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -350,22 +359,23 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set("execution_role_arn", environment.ExecutionRoleArn)
 	d.Set("kms_key", environment.KmsKey)
-	if err := d.Set("last_updated", flattenMwaaLastUpdate(environment.LastUpdate)); err != nil {
+	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
-	if err := d.Set("logging_configuration", flattenMwaaLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
+	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
 	d.Set("name", environment.Name)
-	if err := d.Set("network_configuration", flattenMwaaNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
 	d.Set("plugins_s3_path", environment.PluginsS3Path)
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
+	d.Set("schedulers", environment.Schedulers)
 	d.Set("service_role_arn", environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("status", environment.Status)
@@ -421,7 +431,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("logging_configuration") {
-			input.LoggingConfiguration = expandMwaaEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
+			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
 		}
 
 		if d.HasChange("max_workers") {
@@ -433,7 +443,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
+			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
 		}
 
 		if d.HasChange("plugins_s3_object_version") {
@@ -450,6 +460,10 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("requirements_s3_path") {
 			input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
+		}
+
+		if d.HasChange("schedulers") {
+			input.Schedulers = aws.Int64(int64(d.Get("schedulers").(int)))
 		}
 
 		if d.HasChange("source_bucket_arn") {
@@ -495,7 +509,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 
@@ -511,7 +525,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mwaaEnvironmentModuleLoggingConfigurationSchema() *schema.Resource {
+func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cloud_watch_log_group_arn": {
@@ -533,7 +547,7 @@ func mwaaEnvironmentModuleLoggingConfigurationSchema() *schema.Resource {
 	}
 }
 
-func expandMwaaEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingConfigurationInput {
+func expandEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -543,29 +557,29 @@ func expandMwaaEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingCon
 	m := l[0].(map[string]interface{})
 
 	if v, ok := m["dag_processing_logs"]; ok {
-		input.DagProcessingLogs = expandMwaaEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.DagProcessingLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["scheduler_logs"]; ok {
-		input.SchedulerLogs = expandMwaaEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.SchedulerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["task_logs"]; ok {
-		input.TaskLogs = expandMwaaEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.TaskLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["webserver_logs"]; ok {
-		input.WebserverLogs = expandMwaaEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.WebserverLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := m["worker_logs"]; ok {
-		input.WorkerLogs = expandMwaaEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.WorkerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
 	}
 
 	return input
 }
 
-func expandMwaaEnvironmentModuleLoggingConfiguration(l []interface{}) *mwaa.ModuleLoggingConfigurationInput {
+func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *mwaa.ModuleLoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -579,7 +593,7 @@ func expandMwaaEnvironmentModuleLoggingConfiguration(l []interface{}) *mwaa.Modu
 	return input
 }
 
-func expandMwaaEnvironmentNetworkConfigurationCreate(l []interface{}) *mwaa.NetworkConfiguration {
+func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *mwaa.NetworkConfiguration {
 	m := l[0].(map[string]interface{})
 
 	return &mwaa.NetworkConfiguration{
@@ -588,7 +602,7 @@ func expandMwaaEnvironmentNetworkConfigurationCreate(l []interface{}) *mwaa.Netw
 	}
 }
 
-func expandMwaaEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.UpdateNetworkConfigurationInput {
+func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.UpdateNetworkConfigurationInput {
 	m := l[0].(map[string]interface{})
 
 	return &mwaa.UpdateNetworkConfigurationInput{
@@ -596,7 +610,7 @@ func expandMwaaEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.Upda
 	}
 }
 
-func flattenMwaaLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
+func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	if lastUpdate == nil {
 		return []interface{}{}
 	}
@@ -608,7 +622,7 @@ func flattenMwaaLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	}
 
 	if lastUpdate.Error != nil {
-		m["error"] = flattenMwaaLastUpdateError(lastUpdate.Error)
+		m["error"] = flattenLastUpdateError(lastUpdate.Error)
 	}
 
 	if lastUpdate.Status != nil {
@@ -618,7 +632,7 @@ func flattenMwaaLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenMwaaLastUpdateError(error *mwaa.UpdateError) []interface{} {
+func flattenLastUpdateError(error *mwaa.UpdateError) []interface{} {
 	if error == nil {
 		return []interface{}{}
 	}
@@ -636,7 +650,7 @@ func flattenMwaaLastUpdateError(error *mwaa.UpdateError) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenMwaaLoggingConfiguration(loggingConfiguration *mwaa.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *mwaa.LoggingConfiguration) []interface{} {
 	if loggingConfiguration == nil {
 		return []interface{}{}
 	}
@@ -644,29 +658,29 @@ func flattenMwaaLoggingConfiguration(loggingConfiguration *mwaa.LoggingConfigura
 	m := map[string]interface{}{}
 
 	if loggingConfiguration.DagProcessingLogs != nil {
-		m["dag_processing_logs"] = flattenMwaaModuleLoggingConfiguration(loggingConfiguration.DagProcessingLogs)
+		m["dag_processing_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.DagProcessingLogs)
 	}
 
 	if loggingConfiguration.SchedulerLogs != nil {
-		m["scheduler_logs"] = flattenMwaaModuleLoggingConfiguration(loggingConfiguration.SchedulerLogs)
+		m["scheduler_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.SchedulerLogs)
 	}
 
 	if loggingConfiguration.TaskLogs != nil {
-		m["task_logs"] = flattenMwaaModuleLoggingConfiguration(loggingConfiguration.TaskLogs)
+		m["task_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.TaskLogs)
 	}
 
 	if loggingConfiguration.WebserverLogs != nil {
-		m["webserver_logs"] = flattenMwaaModuleLoggingConfiguration(loggingConfiguration.WebserverLogs)
+		m["webserver_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.WebserverLogs)
 	}
 
 	if loggingConfiguration.WorkerLogs != nil {
-		m["worker_logs"] = flattenMwaaModuleLoggingConfiguration(loggingConfiguration.WorkerLogs)
+		m["worker_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.WorkerLogs)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenMwaaModuleLoggingConfiguration(moduleLoggingConfiguration *mwaa.ModuleLoggingConfiguration) []interface{} {
+func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *mwaa.ModuleLoggingConfiguration) []interface{} {
 	if moduleLoggingConfiguration == nil {
 		return []interface{}{}
 	}
@@ -680,7 +694,7 @@ func flattenMwaaModuleLoggingConfiguration(moduleLoggingConfiguration *mwaa.Modu
 	return []interface{}{m}
 }
 
-func flattenMwaaNetworkConfiguration(networkConfiguration *mwaa.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(networkConfiguration *mwaa.NetworkConfiguration) []interface{} {
 	if networkConfiguration == nil {
 		return []interface{}{}
 	}

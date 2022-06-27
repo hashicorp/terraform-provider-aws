@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ami"
 description: |-
@@ -41,6 +41,8 @@ resource "aws_ami" "example" {
 The following arguments are supported:
 
 * `name` - (Required) A region-unique name for the AMI.
+* `boot_mode` - (Optional) The boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
+* `deprecation_time` - (Optional) The date and time to deprecate the AMI. If you specified a value for seconds, Amazon EC2 rounds the seconds to the nearest minute. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 * `description` - (Optional) A longer, human-readable description for the AMI.
 * `ena_support` - (Optional) Specifies whether enhanced networking with ENA is enabled. Defaults to `false`.
 * `root_device_name` - (Optional) The name of the root device (for example, `/dev/sda1`, or `/dev/xvda`).
@@ -53,6 +55,7 @@ The following arguments are supported:
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tpm_support` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 
@@ -87,6 +90,7 @@ Nested `ebs_block_device` blocks have the following structure:
 * `kms_key_id` - (Optional) The full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
 an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
 if this parameter is not specified, the default CMK for EBS is used
+* `outpost_arn` - (Optional) The ARN of the Outpost on which the snapshot is stored.
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.
 

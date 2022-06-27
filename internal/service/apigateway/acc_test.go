@@ -19,27 +19,27 @@ import (
 
 // API Gateway Edge-Optimized Domain Name can only be created with ACM Certificates in specific regions.
 
-// testAccApigatewayEdgeDomainNameRegion is the chosen API Gateway Domain Name testing region
+// testAccEdgeDomainNameRegion is the chosen API Gateway Domain Name testing region
 //
 // Cached to prevent issues should multiple regions become available.
-var testAccApigatewayEdgeDomainNameRegion string
+var testAccEdgeDomainNameRegion string
 
-// testAccProviderApigatewayEdgeDomainName is the API Gateway Domain Name provider instance
+// testAccProviderEdgeDomainName is the API Gateway Domain Name provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckApigatewayEdgeDomainName(t) must be called before using this provider instance.
-var testAccProviderApigatewayEdgeDomainName *schema.Provider
+// testAccPreCheckEdgeDomainName(t) must be called before using this provider instance.
+var testAccProviderEdgeDomainName *schema.Provider
 
-// testAccProviderApigatewayEdgeDomainNameConfigure ensures the provider is only configured once
-var testAccProviderApigatewayEdgeDomainNameConfigure sync.Once
+// testAccProviderEdgeDomainNameConfigure ensures the provider is only configured once
+var testAccProviderEdgeDomainNameConfigure sync.Once
 
-// testAccPreCheckApigatewayEdgeDomainName verifies AWS credentials and that API Gateway Domain Name is supported
-func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
+// testAccPreCheckEdgeDomainName verifies AWS credentials and that API Gateway Domain Name is supported
+func testAccPreCheckEdgeDomainName(t *testing.T) {
 	acctest.PreCheckPartitionHasService(apigateway.EndpointsID, t)
 
-	region := testAccGetApigatewayEdgeDomainNameRegion()
+	region := testAccGetEdgeDomainNameRegion()
 
 	if region == "" {
 		t.Skip("API Gateway Domain Name not available in this AWS Partition")
@@ -47,14 +47,14 @@ func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
-	testAccProviderApigatewayEdgeDomainNameConfigure.Do(func() {
-		testAccProviderApigatewayEdgeDomainName = provider.Provider()
+	testAccProviderEdgeDomainNameConfigure.Do(func() {
+		testAccProviderEdgeDomainName = provider.Provider()
 
 		config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderApigatewayEdgeDomainName.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderEdgeDomainName.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -66,18 +66,18 @@ func testAccPreCheckApigatewayEdgeDomainName(t *testing.T) {
 	})
 }
 
-// testAccApigatewayEdgeDomainNameRegionProviderConfig is the Terraform provider configuration for API Gateway Domain Name region testing
+// testAccEdgeDomainNameRegionProviderConfig is the Terraform provider configuration for API Gateway Domain Name region testing
 //
 // Testing API Gateway Domain Name assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccApigatewayEdgeDomainNameRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetApigatewayEdgeDomainNameRegion())
+func testAccEdgeDomainNameRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetEdgeDomainNameRegion())
 }
 
-// testAccGetApigatewayEdgeDomainNameRegion returns the API Gateway Domain Name region for testing
-func testAccGetApigatewayEdgeDomainNameRegion() string {
-	if testAccApigatewayEdgeDomainNameRegion != "" {
-		return testAccApigatewayEdgeDomainNameRegion
+// testAccEdgeDomainNameRegion returns the API Gateway Domain Name region for testing
+func testAccGetEdgeDomainNameRegion() string {
+	if testAccEdgeDomainNameRegion != "" {
+		return testAccEdgeDomainNameRegion
 	}
 
 	// AWS Commercial: https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
@@ -85,18 +85,18 @@ func testAccGetApigatewayEdgeDomainNameRegion() string {
 	// AWS China - edge custom domain names not supported: https://docs.amazonaws.cn/en_us/aws/latest/userguide/api-gateway.html
 	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
-		testAccApigatewayEdgeDomainNameRegion = endpoints.UsEast1RegionID
+		testAccEdgeDomainNameRegion = endpoints.UsEast1RegionID
 	}
 
-	return testAccApigatewayEdgeDomainNameRegion
+	return testAccEdgeDomainNameRegion
 }
 
-// testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName ensures the Terraform state exactly matches the expected API Gateway Edge Domain Name format
-func testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
+// testAccCheckResourceAttrRegionalARNEdgeDomainName ensures the Terraform state exactly matches the expected API Gateway Edge Domain Name format
+func testAccCheckResourceAttrRegionalARNEdgeDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
 			Partition: acctest.Partition(),
-			Region:    testAccGetApigatewayEdgeDomainNameRegion(),
+			Region:    testAccGetEdgeDomainNameRegion(),
 			Resource:  fmt.Sprintf("/domainnames/%s", domain),
 			Service:   arnService,
 		}.String()
@@ -105,8 +105,8 @@ func testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, a
 	}
 }
 
-// testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName ensures the Terraform state exactly matches the expected API Gateway Regional Domain Name format
-func testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
+// testAccCheckResourceAttrRegionalARNRegionalDomainName ensures the Terraform state exactly matches the expected API Gateway Regional Domain Name format
+func testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, attributeName, arnService string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
 			Partition: acctest.Partition(),

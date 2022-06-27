@@ -18,7 +18,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_codeartifact_domain" "example" {
-  domain         = "example.com"
+  domain         = "example"
   encryption_key = aws_kms_key.example.arn
 }
 

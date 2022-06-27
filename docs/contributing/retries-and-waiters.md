@@ -229,7 +229,7 @@ import (
 	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
 
 	// Ensure to add IAM eventual consistency timeout in case of retries
-	err = resource.Retry(tfiam.PropagationTimeout+waiter.ThingOperationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout+ThingOperationTimeout, func() *resource.RetryError {
 		// Only retry IAM eventual consistency errors up to that timeout
 		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 
@@ -522,7 +522,7 @@ func ThingDeleted(conn *example.Example, id string) (*example.Thing, error) {
 function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to create resource ...
 
-	if _, err := waiter.ThingCreated(conn, d.Id()); err != nil {
+	if _, err := ThingCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Example Thing (%s) creation: %w", d.Id(), err)
 	}
 
@@ -532,7 +532,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to delete resource ...
 
-	if _, err := waiter.ThingDeleted(conn, d.Id()); err != nil {
+	if _, err := ThingDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Example Thing (%s) deletion: %w", d.Id(), err)
 	}
 

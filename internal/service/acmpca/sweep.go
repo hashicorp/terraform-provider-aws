@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -54,7 +54,7 @@ func sweepCertificateAuthorities(region string) error {
 				CertificateAuthorityArn: aws.String(arn),
 				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 			})
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -70,7 +70,7 @@ func sweepCertificateAuthorities(region string) error {
 			CertificateAuthorityArn:     aws.String(arn),
 			PermanentDeletionTimeInDays: aws.Int64(7),
 		})
-		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

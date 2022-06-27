@@ -23,13 +23,13 @@ func TestAccKMSAlias_basic(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasNameConfig(rName),
+				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`alias/.+`)),
@@ -53,13 +53,13 @@ func TestAccKMSAlias_disappears(t *testing.T) {
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasNameConfig(rName),
+				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceAlias(), resourceName),
@@ -76,13 +76,13 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasNameGeneratedConfig(rName),
+				Config: testAccAliasConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, resource.UniqueIDSuffixLength))),
@@ -104,13 +104,13 @@ func TestAccKMSAlias_namePrefix(t *testing.T) {
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasNamePrefixConfig(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+				Config: testAccAliasConfig_namePrefix(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
@@ -134,13 +134,13 @@ func TestAccKMSAlias_updateKeyID(t *testing.T) {
 	key2ResourceName := "aws_kms_key.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasNameConfig(rName),
+				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, "arn"),
@@ -148,7 +148,7 @@ func TestAccKMSAlias_updateKeyID(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAliasUpdatedKeyIDConfig(rName),
+				Config: testAccAliasConfig_updatedKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, "arn"),
@@ -172,13 +172,13 @@ func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasMultipleConfig(rName),
+				Config: testAccAliasConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
@@ -203,13 +203,13 @@ func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAliasDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAliasDiffSuppressConfig(rName),
+				Config: testAccAliasConfig_diffSuppress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(resourceName, &alias),
 					resource.TestCheckResourceAttrSet(resourceName, "target_key_arn"),
@@ -223,7 +223,7 @@ func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 			{
 				ExpectNonEmptyPlan: false,
 				PlanOnly:           true,
-				Config:             testAccAliasDiffSuppressConfig(rName),
+				Config:             testAccAliasConfig_diffSuppress(rName),
 			},
 		},
 	})
@@ -278,7 +278,7 @@ func testAccCheckAliasExists(name string, v *kms.AliasListEntry) resource.TestCh
 	}
 }
 
-func testAccAliasNameConfig(rName string) string {
+func testAccAliasConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -292,7 +292,7 @@ resource "aws_kms_alias" "test" {
 `, rName)
 }
 
-func testAccAliasNameGeneratedConfig(rName string) string {
+func testAccAliasConfig_nameGenerated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -305,7 +305,7 @@ resource "aws_kms_alias" "test" {
 `, rName)
 }
 
-func testAccAliasNamePrefixConfig(rName, namePrefix string) string {
+func testAccAliasConfig_namePrefix(rName, namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -319,7 +319,7 @@ resource "aws_kms_alias" "test" {
 `, rName, namePrefix)
 }
 
-func testAccAliasUpdatedKeyIDConfig(rName string) string {
+func testAccAliasConfig_updatedKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -338,7 +338,7 @@ resource "aws_kms_alias" "test" {
 `, rName)
 }
 
-func testAccAliasMultipleConfig(rName string) string {
+func testAccAliasConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -357,7 +357,7 @@ resource "aws_kms_alias" "test2" {
 `, rName)
 }
 
-func testAccAliasDiffSuppressConfig(rName string) string {
+func testAccAliasConfig_diffSuppress(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

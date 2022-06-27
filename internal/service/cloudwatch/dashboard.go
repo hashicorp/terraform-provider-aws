@@ -6,12 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDashboard() *schema.Resource {
@@ -64,13 +65,14 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetDashboard(&params)
+	if !d.IsNewResource() && IsDashboardNotFoundErr(err) {
+		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResDashboard, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if IsDashboardNotFoundErr(err) {
-			log.Printf("[WARN] CloudWatch Dashboard %q not found, removing", dashboardName)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Reading dashboard failed: %s", err)
+		return names.Error(names.CloudWatch, names.ErrActionReading, ResDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)

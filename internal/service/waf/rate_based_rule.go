@@ -110,7 +110,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResource(*resp.Rule.RuleId, noPredicates, newPredicates, d.Get("rate_limit"), conn)
+		err := updateRateBasedRuleResource(*resp.Rule.RuleId, noPredicates, newPredicates, d.Get("rate_limit"), conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
 		}
@@ -191,7 +191,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
+		err := updateRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
@@ -216,7 +216,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		noPredicates := []interface{}{}
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
+		err := updateRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
 		}
@@ -238,13 +238,13 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func updateWafRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit interface{}, conn *waf.WAF) error {
+func updateRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),
-			Updates:     diffWafRulePredicates(oldP, newP),
+			Updates:     DiffRulePredicates(oldP, newP),
 			RateLimit:   aws.Int64(int64(rateLimit.(int))),
 		}
 

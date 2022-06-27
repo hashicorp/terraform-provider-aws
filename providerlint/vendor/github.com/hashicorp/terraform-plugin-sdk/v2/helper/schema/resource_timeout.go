@@ -137,7 +137,13 @@ func (t *ResourceTimeout) ConfigDecode(s *Resource, c *terraform.ResourceConfig)
 
 				*timeout = rt
 			}
-			return nil
+
+			// This early return, which makes this function handle a single
+			// timeout configuration block, should likely not be here but the
+			// SDK has never raised an error for multiple blocks nor made any
+			// precedence decisions for them in the past.
+			// It is left here for compatibility reasons.
+			return nil //nolint:staticcheck
 		}
 	}
 

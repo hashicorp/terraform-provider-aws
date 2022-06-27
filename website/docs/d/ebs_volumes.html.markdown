@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_volumes"
 description: |-

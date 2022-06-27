@@ -17,6 +17,7 @@ type applyConfig struct {
 	parallelism  int
 	reattachInfo ReattachInfo
 	refresh      bool
+	replaceAddrs []string
 	state        string
 	stateOut     string
 	targets      []string
@@ -73,6 +74,10 @@ func (opt *RefreshOption) configureApply(conf *applyConfig) {
 	conf.refresh = opt.refresh
 }
 
+func (opt *ReplaceOption) configureApply(conf *applyConfig) {
+	conf.replaceAddrs = append(conf.replaceAddrs, opt.address)
+}
+
 func (opt *VarOption) configureApply(conf *applyConfig) {
 	conf.vars = append(conf.vars, opt.assignment)
 }
@@ -126,6 +131,15 @@ func (tf *Terraform) applyCmd(ctx context.Context, opts ...ApplyOption) (*exec.C
 	args = append(args, "-refresh="+strconv.FormatBool(c.refresh))
 
 	// string slice opts: split into separate args
+	if c.replaceAddrs != nil {
+		err := tf.compatible(ctx, tf0_15_2, nil)
+		if err != nil {
+			return nil, fmt.Errorf("replace option was introduced in Terraform 0.15.2: %w", err)
+		}
+		for _, addr := range c.replaceAddrs {
+			args = append(args, "-replace="+addr)
+		}
+	}
 	if c.targets != nil {
 		for _, ta := range c.targets {
 			args = append(args, "-target="+ta)

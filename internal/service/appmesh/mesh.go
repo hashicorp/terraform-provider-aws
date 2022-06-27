@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -188,7 +188,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", resp.Mesh.Metadata.MeshOwner)
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshMeshSpec(resp.Mesh.Spec))
+	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -249,7 +249,7 @@ func resourceMeshDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

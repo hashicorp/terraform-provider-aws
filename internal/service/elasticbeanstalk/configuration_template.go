@@ -192,7 +192,8 @@ func resourceConfigurationTemplateOptionSettingsUpdate(conn *elasticbeanstalk.El
 		var remove []*elasticbeanstalk.ConfigurationOptionSetting
 		for _, r := range rm {
 			for _, a := range add {
-				if *r.Namespace == *a.Namespace && *r.OptionName == *a.OptionName {
+				if aws.StringValue(r.Namespace) == aws.StringValue(a.Namespace) &&
+					aws.StringValue(r.OptionName) == aws.StringValue(a.OptionName) {
 					continue
 				}
 				remove = append(remove, r)

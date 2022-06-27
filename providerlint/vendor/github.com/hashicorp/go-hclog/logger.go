@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -66,6 +67,12 @@ type Octal int
 // A simple shortcut to format numbers in binary when displayed with the normal
 // text output. For example: L.Info("bits", Binary(17))
 type Binary int
+
+// A simple shortcut to format strings with Go quoting. Control and
+// non-printable characters will be escaped with their backslash equivalents in
+// output. Intended for untrusted or multiline strings which should be logged
+// as concisely as possible.
+type Quote string
 
 // ColorOption expresses how the output should be colored, if at all.
 type ColorOption uint8
@@ -206,12 +213,23 @@ type StandardLoggerOptions struct {
 	// [DEBUG] and strip it off before reapplying it.
 	InferLevels bool
 
+	// Indicate that some minimal parsing should be done on strings to try
+	// and detect their level and re-emit them while ignoring possible
+	// timestamp values in the beginning of the string.
+	// This supports the strings like [ERROR], [ERR] [TRACE], [WARN], [INFO],
+	// [DEBUG] and strip it off before reapplying it.
+	// The timestamp detection may result in false positives and incomplete
+	// string outputs.
+	InferLevelsWithTimestamp bool
+
 	// ForceLevel is used to force all output from the standard logger to be at
 	// the specified level. Similar to InferLevels, this will strip any level
 	// prefix contained in the logged string before applying the forced level.
 	// If set, this override InferLevels.
 	ForceLevel Level
 }
+
+type TimeFunction = func() time.Time
 
 // LoggerOptions can be used to configure a new logger.
 type LoggerOptions struct {
@@ -235,8 +253,15 @@ type LoggerOptions struct {
 	// Include file and line information in each log line
 	IncludeLocation bool
 
+	// AdditionalLocationOffset is the number of additional stack levels to skip
+	// when finding the file and line information for the log line
+	AdditionalLocationOffset int
+
 	// The time format to use instead of the default
 	TimeFormat string
+
+	// A function which is called to get the time object that is formatted using `TimeFormat`
+	TimeFn TimeFunction
 
 	// Control whether or not to display the time at all. This is required
 	// because setting TimeFormat to empty assumes the default format.
@@ -245,6 +270,9 @@ type LoggerOptions struct {
 	// Color the output. On Windows, colored logs are only avaiable for io.Writers that
 	// are concretely instances of *os.File.
 	Color ColorOption
+
+	// Only color the header, not the body. This can help with readability of long messages.
+	ColorHeaderOnly bool
 
 	// A function which is called with the log information and if it returns true the value
 	// should not be logged.

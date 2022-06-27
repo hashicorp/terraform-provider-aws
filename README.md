@@ -22,7 +22,7 @@ Please note: We take Terraform's security and our users' trust very seriously. I
 
 ## Quick Starts
 
-- [Using the provider](https://www.terraform.io/docs/providers/aws/index.html)
+- [Using the provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Provider development](docs/contributing)
 
 ## Documentation

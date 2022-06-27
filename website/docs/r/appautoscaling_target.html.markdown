@@ -1,5 +1,5 @@
 ---
-subcategory: "Application Autoscaling"
+subcategory: "Application Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_target"
 description: |-

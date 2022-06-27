@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -333,17 +333,18 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).NeptuneConn
-	deleteOpts := neptune.DeleteEventSubscriptionInput{
+
+	log.Printf("[DEBUG] Deleting Neptune Event Subscription: %s", d.Id())
+	_, err := conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
+		return nil
 	}
 
-	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
-			log.Printf("[WARN] Neptune Event Subscription %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error deleting Neptune Event Subscription %s: %s", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting Neptune Event Subscription (%s): %w", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -355,9 +356,10 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		Delay:      30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err = stateConf.WaitForState()
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Neptune Event Subscription %s: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for Neptune Event Subscription (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -392,7 +394,7 @@ func resourceEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*nep
 
 	describeResp, err := conn.DescribeEventSubscriptions(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 			log.Printf("[DEBUG] Neptune Event Subscription (%s) not found", name)
 			return nil, nil
 		}

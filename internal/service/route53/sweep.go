@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +22,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_health_check", &resource.Sweeper{
 		Name: "aws_route53_health_check",
-		F:    sweepHealthchecks,
+		F:    sweepHealthChecks,
 	})
 
 	resource.AddTestSweepers("aws_route53_key_signing_key", &resource.Sweeper{
@@ -35,6 +35,19 @@ func init() {
 		F:    sweepQueryLogs,
 	})
 
+	resource.AddTestSweepers("aws_route53_traffic_policy", &resource.Sweeper{
+		Name: "aws_route53_traffic_policy",
+		F:    sweepTrafficPolicies,
+		Dependencies: []string{
+			"aws_route53_traffic_policy_instance",
+		},
+	})
+
+	resource.AddTestSweepers("aws_route53_traffic_policy_instance", &resource.Sweeper{
+		Name: "aws_route53_traffic_policy_instance",
+		F:    sweepTrafficPolicyInstances,
+	})
+
 	resource.AddTestSweepers("aws_route53_zone", &resource.Sweeper{
 		Name: "aws_route53_zone",
 		Dependencies: []string{
@@ -43,12 +56,13 @@ func init() {
 			"aws_service_discovery_private_dns_namespace",
 			"aws_elb",
 			"aws_route53_key_signing_key",
+			"aws_route53_traffic_policy",
 		},
 		F: sweepZones,
 	})
 }
 
-func sweepHealthchecks(region string) error {
+func sweepHealthChecks(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -87,7 +101,7 @@ func sweepHealthchecks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Health Checks for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Health Checks for %s: %w", region, err))
 	}
 
@@ -166,7 +180,7 @@ func sweepKeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error getting Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
@@ -221,6 +235,92 @@ func sweepQueryLogs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func sweepTrafficPolicies(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).Route53Conn
+	input := &route53.ListTrafficPoliciesInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = listTrafficPoliciesPages(conn, input, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficPolicySummaries {
+			r := ResourceTrafficPolicy()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Route 53 Traffic Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Route 53 Traffic Policies (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTrafficPolicyInstances(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).Route53Conn
+	input := &route53.ListTrafficPolicyInstancesInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = listTrafficPolicyInstancesPages(conn, input, func(page *route53.ListTrafficPolicyInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficPolicyInstances {
+			r := ResourceTrafficPolicyInstance()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Route 53 Traffic Policy Instances (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Route 53 Traffic Policy Instances (%s): %w", region, err)
+	}
+
+	return nil
+}
+
 func sweepZones(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
@@ -270,7 +370,7 @@ func sweepZones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 

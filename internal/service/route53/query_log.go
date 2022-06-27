@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +72,7 @@ func resourceQueryLogRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Route53 query logging configuration: %#v", input)
 	out, err := r53.GetQueryLoggingConfig(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") || tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig) || tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			log.Printf("[WARN] Route53 Query Logging Config (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -102,7 +102,7 @@ func resourceQueryLogDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Deleting Route53 query logging configuration: %#v", input)
 	_, err := r53.DeleteQueryLoggingConfig(input)
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig) {
 		return nil
 	}
 

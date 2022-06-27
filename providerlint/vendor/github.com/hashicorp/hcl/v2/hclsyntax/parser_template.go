@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/apparentlymart/go-textseg/v12/textseg"
+	"github.com/apparentlymart/go-textseg/v13/textseg"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -413,13 +413,44 @@ Token:
 			close := p.Peek()
 			if close.Type != TokenTemplateSeqEnd {
 				if !p.recovery {
-					diags = append(diags, &hcl.Diagnostic{
-						Severity: hcl.DiagError,
-						Summary:  "Extra characters after interpolation expression",
-						Detail:   "Expected a closing brace to end the interpolation expression, but found extra characters.",
-						Subject:  &close.Range,
-						Context:  hcl.RangeBetween(startRange, close.Range).Ptr(),
-					})
+					switch close.Type {
+					case TokenEOF:
+						diags = append(diags, &hcl.Diagnostic{
+							Severity: hcl.DiagError,
+							Summary:  "Unclosed template interpolation sequence",
+							Detail:   "There is no closing brace for this interpolation sequence before the end of the file. This might be caused by incorrect nesting inside the given expression.",
+							Subject:  &startRange,
+						})
+					case TokenColon:
+						diags = append(diags, &hcl.Diagnostic{
+							Severity: hcl.DiagError,
+							Summary:  "Extra characters after interpolation expression",
+							Detail:   "Template interpolation doesn't expect a colon at this location. Did you intend this to be a literal sequence to be processed as part of another language? If so, you can escape it by starting with \"$${\" instead of just \"${\".",
+							Subject:  &close.Range,
+							Context:  hcl.RangeBetween(startRange, close.Range).Ptr(),
+						})
+					default:
+						if (close.Type == TokenCQuote || close.Type == TokenOQuote) && end == TokenCQuote {
+							// We'll get here if we're processing a _quoted_
+							// template and we find an errant quote inside an
+							// interpolation sequence, which suggests that
+							// the interpolation sequence is missing its terminator.
+							diags = append(diags, &hcl.Diagnostic{
+								Severity: hcl.DiagError,
+								Summary:  "Unclosed template interpolation sequence",
+								Detail:   "There is no closing brace for this interpolation sequence before the end of the quoted template. This might be caused by incorrect nesting inside the given expression.",
+								Subject:  &startRange,
+							})
+						} else {
+							diags = append(diags, &hcl.Diagnostic{
+								Severity: hcl.DiagError,
+								Summary:  "Extra characters after interpolation expression",
+								Detail:   "Expected a closing brace to end the interpolation expression, but found extra characters.\n\nThis can happen when you include interpolation syntax for another language, such as shell scripting, but forget to escape the interpolation start token. If this is an embedded sequence for another language, escape it by starting with \"$${\" instead of just \"${\".",
+								Subject:  &close.Range,
+								Context:  hcl.RangeBetween(startRange, close.Range).Ptr(),
+							})
+						}
+					}
 				}
 				p.recover(TokenTemplateSeqEnd)
 			} else {

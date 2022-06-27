@@ -19,15 +19,15 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyConfig(rName),
+				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontCachePolicyExists(resourceName),
+					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -62,15 +62,15 @@ func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyConfig(rName),
+				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontCachePolicyExists(resourceName),
+					testAccCheckCachePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceCachePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,15 +84,15 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontCachePolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyItemsConfig(rName),
+				Config: testAccCachePolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontCachePolicyExists(resourceName),
+					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -128,9 +128,9 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCachePolicyItemsUpdatedConfig(rName),
+				Config: testAccCachePolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontCachePolicyExists(resourceName),
+					testAccCheckCachePolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -160,7 +160,50 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFrontCachePolicyDestroy(s *terraform.State) error {
+func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_cache_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCachePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachePolicyConfig_zeroTTLs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCachePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_ttl", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "min_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_ttl", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookie_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.header_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.headers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_string_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_strings.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCachePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -184,7 +227,7 @@ func testAccCheckCloudFrontCachePolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudFrontCachePolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckCachePolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -207,7 +250,7 @@ func testAccCheckCloudFrontCachePolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCachePolicyConfig(rName string) string {
+func testAccCachePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name = %[1]q
@@ -229,7 +272,7 @@ resource "aws_cloudfront_cache_policy" "test" {
 `, rName)
 }
 
-func testAccCachePolicyItemsConfig(rName string) string {
+func testAccCachePolicyConfig_items(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name        = %[1]q
@@ -270,7 +313,7 @@ resource "aws_cloudfront_cache_policy" "test" {
 `, rName)
 }
 
-func testAccCachePolicyItemsUpdatedConfig(rName string) string {
+func testAccCachePolicyConfig_itemsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
   name        = %[1]q
@@ -301,6 +344,32 @@ resource "aws_cloudfront_cache_policy" "test" {
 
     query_strings_config {
       query_string_behavior = "all"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccCachePolicyConfig_zeroTTLs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_cache_policy" "test" {
+  name = %[1]q
+
+  default_ttl = 0
+  max_ttl     = 0
+  min_ttl     = 0
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+
+    headers_config {
+      header_behavior = "none"
+    }
+
+    query_strings_config {
+      query_string_behavior = "none"
     }
   }
 }

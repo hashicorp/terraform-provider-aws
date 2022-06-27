@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -96,7 +96,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, 
 
 	lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(request)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the SageMaker notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
 			d.SetId("")
 			return nil
@@ -162,7 +162,7 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
 	if err != nil {
 
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			return nil
 		}
 

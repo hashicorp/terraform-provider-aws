@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +61,7 @@ func sweepMaintenanceWindows(region string) error {
 
 			_, err := conn.DeleteMaintenanceWindow(input)
 
-			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 				continue
 			}
 

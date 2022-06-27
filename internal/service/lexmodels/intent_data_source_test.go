@@ -19,8 +19,8 @@ func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -51,8 +51,8 @@ func TestAccLexModelsIntentDataSource_withVersion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:        acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(

@@ -12,6 +12,12 @@ import (
 // implemented by the tftypes package. Types define the shape and
 // characteristics of data coming from or being sent to Terraform.
 type Type interface {
+	// AttributePathStepper requires each Type to implement the
+	// ApplyTerraform5AttributePathStep method, so Type is compatible with
+	// WalkAttributePath. The method should return the Type found at that
+	// AttributePath within the Type or ErrInvalidStep.
+	AttributePathStepper
+
 	// Is is used to determine what type a Type implementation is. It is
 	// the recommended method for determining whether two types are
 	// equivalent or not.

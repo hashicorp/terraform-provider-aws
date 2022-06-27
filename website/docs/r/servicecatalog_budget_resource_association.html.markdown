@@ -36,6 +36,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the association.
 
+## Timeouts
+
+`aws_servicecatalog_budget_resource_association` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
+- `delete` - (Default `3 minutes`)
+
 ## Import
 
 `aws_servicecatalog_budget_resource_association` can be imported using the budget name and resource ID, e.g.,

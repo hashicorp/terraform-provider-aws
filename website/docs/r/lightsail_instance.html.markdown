@@ -102,8 +102,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
 * `created_at` - The timestamp when the instance was created.
+* `cpu_count` - The number of vCPUs the instance has.
+* `ram_size` - The amount of RAM in GB on the instance (e.g., 1.0).
 * `ipv6_address` - (**Deprecated**) The first IPv6 address of the Lightsail instance. Use `ipv6_addresses` attribute instead.
 * `ipv6_addresses` - List of IPv6 addresses for the Lightsail instance.
+* `private_ip_address` - The private IP address of the instance.
+* `public_ip_address` - The public IP address of the instance.
+* `is_static_ip` - A Boolean value indicating whether this instance has a static IP assigned to it.
+* `username` - The user name for connecting to the instance (e.g., ec2-user).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

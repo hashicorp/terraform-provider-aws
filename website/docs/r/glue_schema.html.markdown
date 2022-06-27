@@ -28,7 +28,7 @@ The following arguments are supported:
 
 * `schema_name` – (Required) The Name of the schema.
 * `registry_arn` - (Required) The ARN of the Glue Registry to create the schema in.
-* `data_format` - (Required) The data format of the schema definition. Currently only `AVRO` is supported.
+* `data_format` - (Required) The data format of the schema definition. Valid values are `AVRO`, `JSON` and `PROTOBUF`.
 * `compatibility` - (Required) The compatibility mode of the schema. Values values are: `NONE`, `DISABLED`, `BACKWARD`, `BACKWARD_ALL`, `FORWARD`, `FORWARD_ALL`, `FULL`, and `FULL_ALL`.
 * `schema_definition` - (Required) The schema definition using the `data_format` setting for `schema_name`.
 * `description` – (Optional) A description of the schema.

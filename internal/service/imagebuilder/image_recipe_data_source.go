@@ -86,6 +86,22 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"parameter": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -114,6 +130,10 @@ func DataSourceImageRecipe() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tftags.TagsSchema(),
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -150,8 +170,8 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(imageRecipe.Arn))
 	d.Set("arn", imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenImageBuilderInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenImageBuilderComponentConfigurations(imageRecipe.Components))
+	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
+	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set("description", imageRecipe.Description)
 	d.Set("name", imageRecipe.Name)
@@ -159,6 +179,11 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 	d.Set("tags", KeyValueTags(imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
+	if imageRecipe.AdditionalInstanceConfiguration != nil {
+		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
+	}
+
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 

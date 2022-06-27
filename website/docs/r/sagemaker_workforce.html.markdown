@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workforce"
 description: |-
-  Provides a Sagemaker Workforce resource.
+  Provides a SageMaker Workforce resource.
 ---
 
 # Resource: aws_sagemaker_workforce
 
-Provides a Sagemaker Workforce resource.
+Provides a SageMaker Workforce resource.
 
 ## Example Usage
 
@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Workforces can be imported using the `workforce_name`, e.g.,
+SageMaker Workforces can be imported using the `workforce_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_workforce.example example

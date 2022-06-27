@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 //statusStackState fetches the fleet and its state
@@ -55,5 +56,22 @@ func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, nam
 		}
 
 		return imageBuilder, aws.StringValue(imageBuilder.State), nil
+	}
+}
+
+//statusUserAvailable fetches the user available
+func statusUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		user, err := FindUserByUserNameAndAuthType(ctx, conn, username, authType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return user, userAvailable, nil
 	}
 }

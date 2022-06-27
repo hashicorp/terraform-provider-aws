@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_snapshot"
 description: |-

@@ -15,6 +15,23 @@ type List struct {
 	_ []struct{}
 }
 
+// ApplyTerraform5AttributePathStep applies an AttributePathStep to a List,
+// returning the Type found at that AttributePath within the List. If the
+// AttributePathStep cannot be applied to the List, an ErrInvalidStep error
+// will be returned.
+func (l List) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
+	switch s := step.(type) {
+	case ElementKeyInt:
+		if int64(s) < 0 {
+			return nil, ErrInvalidStep
+		}
+
+		return l.ElementType, nil
+	default:
+		return nil, ErrInvalidStep
+	}
+}
+
 // Equal returns true if the two Lists are exactly equal. Unlike Is, passing in
 // a List with no ElementType will always return false.
 func (l List) Equal(o Type) bool {
@@ -70,9 +87,7 @@ func valueFromList(typ Type, in interface{}) (Value, error) {
 	case []Value:
 		var valType Type
 		for pos, v := range value {
-			if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
-				return Value{}, NewAttributePath().WithElementKeyInt(pos).NewErrorf("invalid value %s for %s", v, v.Type())
-			} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+			if !v.Type().UsableAs(typ) {
 				return Value{}, NewAttributePath().WithElementKeyInt(pos).NewErrorf("can't use %s as %s", v.Type(), typ)
 			}
 			if valType == nil {

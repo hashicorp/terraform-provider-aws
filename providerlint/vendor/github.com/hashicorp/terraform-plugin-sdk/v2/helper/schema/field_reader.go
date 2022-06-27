@@ -171,7 +171,7 @@ func addrToSchema(addr []string, schemaMap map[string]*Schema) []*Schema {
 // "foo.#" for a list "foo" and that the indexes are "foo.0", "foo.1", etc.
 // after that point.
 func readListField(
-	r FieldReader, addr []string, schema *Schema) (FieldReadResult, error) {
+	r FieldReader, addr []string) (FieldReadResult, error) {
 	addrPadded := make([]string, len(addr)+1)
 	copy(addrPadded, addr)
 	addrPadded[len(addrPadded)-1] = "#"

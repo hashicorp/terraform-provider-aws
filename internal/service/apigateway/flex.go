@@ -112,11 +112,11 @@ func FlattenThrottleSettings(settings *apigateway.ThrottleSettings) []map[string
 	if settings != nil {
 		r := make(map[string]interface{})
 		if settings.BurstLimit != nil {
-			r["burst_limit"] = *settings.BurstLimit
+			r["burst_limit"] = aws.Int64Value(settings.BurstLimit)
 		}
 
 		if settings.RateLimit != nil {
-			r["rate_limit"] = *settings.RateLimit
+			r["rate_limit"] = aws.Float64Value(settings.RateLimit)
 		}
 
 		result = append(result, r)

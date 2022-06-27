@@ -25,6 +25,10 @@ resource "aws_dax_cluster" "bar" {
 
 The following arguments are supported:
 
+* `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
+cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
+Default value is `NONE`.
+
 * `cluster_name` – (Required) Group identifier. DAX converts this name to
 lowercase
 

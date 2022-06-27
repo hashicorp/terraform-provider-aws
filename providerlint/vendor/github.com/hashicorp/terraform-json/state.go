@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hashicorp/go-version"
+	"github.com/zclconf/go-cty/cty"
 )
 
-// StateFormatVersions represents the versions of the JSON state format
+// StateFormatVersionConstraints defines the versions of the JSON state format
 // that are supported by this package.
-var StateFormatVersions = []string{"0.1", "0.2"}
+var StateFormatVersionConstraints = ">= 0.1, < 2.0"
 
 // State is the top-level representation of a Terraform state.
 type State struct {
@@ -50,9 +53,19 @@ func (s *State) Validate() error {
 		return errors.New("unexpected state input, format version is missing")
 	}
 
-	if !isStringInSlice(StateFormatVersions, s.FormatVersion) {
-		return fmt.Errorf("unsupported state format version: expected %q, got %q",
-			StateFormatVersions, s.FormatVersion)
+	constraint, err := version.NewConstraint(StateFormatVersionConstraints)
+	if err != nil {
+		return fmt.Errorf("invalid version constraint: %w", err)
+	}
+
+	version, err := version.NewVersion(s.FormatVersion)
+	if err != nil {
+		return fmt.Errorf("invalid format version %q: %w", s.FormatVersion, err)
+	}
+
+	if !constraint.Check(version) {
+		return fmt.Errorf("unsupported state format version: %q does not satisfy %q",
+			version, constraint)
 	}
 
 	return nil
@@ -163,4 +176,31 @@ type StateOutput struct {
 
 	// The value of the output.
 	Value interface{} `json:"value,omitempty"`
+
+	// The type of the output.
+	Type cty.Type `json:"type,omitempty"`
+}
+
+// jsonStateOutput describes an output value in a middle-step internal
+// representation before marshalled into a more useful StateOutput with cty.Type.
+//
+// This avoid panic on marshalling cty.NilType (from cty upstream)
+// which the default Go marshaller cannot ignore because it's a
+// not nil-able struct.
+type jsonStateOutput struct {
+	Sensitive bool            `json:"sensitive"`
+	Value     interface{}     `json:"value,omitempty"`
+	Type      json.RawMessage `json:"type,omitempty"`
+}
+
+func (so *StateOutput) MarshalJSON() ([]byte, error) {
+	jsonSa := &jsonStateOutput{
+		Sensitive: so.Sensitive,
+		Value:     so.Value,
+	}
+	if so.Type != cty.NilType {
+		outputType, _ := so.Type.MarshalJSON()
+		jsonSa.Type = outputType
+	}
+	return json.Marshal(jsonSa)
 }

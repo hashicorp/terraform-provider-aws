@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,9 +68,9 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPortfolioShareDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioShareConfig_organizationalUnit(rName),

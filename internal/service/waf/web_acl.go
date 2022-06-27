@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -158,7 +158,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+			DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -187,7 +187,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	loggingConfiguration := d.Get("logging_configuration").([]interface{})
 	if len(loggingConfiguration) == 1 {
 		input := &waf.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, arn),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
 		}
 
 		if _, err := conn.PutLoggingConfiguration(input); err != nil {
@@ -201,7 +201,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -249,7 +249,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.WebACL.WebACLArn)
 	arn := aws.StringValue(resp.WebACL.WebACLArn)
 
-	if err := d.Set("default_action", flattenAction(resp.WebACL.DefaultAction)); err != nil {
+	if err := d.Set("default_action", FlattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("error setting default_action: %w", err)
 	}
 	d.Set("name", resp.WebACL.Name)
@@ -271,7 +271,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("rules", flattenWebACLRules(resp.WebACL.Rules)); err != nil {
+	if err := d.Set("rules", FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rules: %w", err)
 	}
 
@@ -287,7 +287,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if getLoggingConfigurationOutput != nil {
-		loggingConfiguration = flattenWAFLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
 	}
 
 	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
@@ -308,7 +308,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -324,7 +324,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
 			}
 
 			if _, err := conn.PutLoggingConfiguration(input); err != nil {
@@ -363,7 +363,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -394,7 +394,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandWAFLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
+func expandLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -405,14 +405,14 @@ func expandWAFLoggingConfiguration(l []interface{}, resourceARN string) *waf.Log
 		LogDestinationConfigs: []*string{
 			aws.String(m["log_destination"].(string)),
 		},
-		RedactedFields: expandWAFRedactedFields(m["redacted_fields"].([]interface{})),
+		RedactedFields: expandRedactedFields(m["redacted_fields"].([]interface{})),
 		ResourceArn:    aws.String(resourceARN),
 	}
 
 	return loggingConfiguration
 }
 
-func expandWAFRedactedFields(l []interface{}) []*waf.FieldToMatch {
+func expandRedactedFields(l []interface{}) []*waf.FieldToMatch {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -430,20 +430,20 @@ func expandWAFRedactedFields(l []interface{}) []*waf.FieldToMatch {
 			continue
 		}
 
-		redactedFields = append(redactedFields, expandFieldToMatch(fieldToMatch.(map[string]interface{})))
+		redactedFields = append(redactedFields, ExpandFieldToMatch(fieldToMatch.(map[string]interface{})))
 	}
 
 	return redactedFields
 }
 
-func flattenWAFLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
 	if loggingConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"log_destination": "",
-		"redacted_fields": flattenWAFRedactedFields(loggingConfiguration.RedactedFields),
+		"redacted_fields": flattenRedactedFields(loggingConfiguration.RedactedFields),
 	}
 
 	if len(loggingConfiguration.LogDestinationConfigs) > 0 {
@@ -453,7 +453,7 @@ func flattenWAFLoggingConfiguration(loggingConfiguration *waf.LoggingConfigurati
 	return []interface{}{m}
 }
 
-func flattenWAFRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
+func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 	if len(fieldToMatches) == 0 {
 		return []interface{}{}
 	}
@@ -493,12 +493,12 @@ func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
 			newR = append(newR[:idx], newR[idx+1:]...)
 			continue
 		}
-		updates = append(updates, expandWebACLUpdate(waf.ChangeActionDelete, aclRule))
+		updates = append(updates, ExpandWebACLUpdate(waf.ChangeActionDelete, aclRule))
 	}
 
 	for _, nr := range newR {
 		aclRule := nr.(map[string]interface{})
-		updates = append(updates, expandWebACLUpdate(waf.ChangeActionInsert, aclRule))
+		updates = append(updates, ExpandWebACLUpdate(waf.ChangeActionInsert, aclRule))
 	}
 	return updates
 }

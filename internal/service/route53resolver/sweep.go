@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,10 +32,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_config",
-		F:    sweepFirewallsConfig,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_config_association",
-		},
+		F:    sweepFirewallConfig,
 	})
 
 	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
@@ -168,7 +165,7 @@ func sweepEndpoints(region string) error {
 			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 				ResolverEndpointId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -198,7 +195,7 @@ func sweepEndpoints(region string) error {
 	return errors
 }
 
-func sweepFirewallsConfig(region string) error {
+func sweepFirewallConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -211,13 +208,14 @@ func sweepFirewallsConfig(region string) error {
 			return !lastPage
 		}
 
-		for _, firewallRuleGroup := range page.FirewallConfigs {
-			id := aws.StringValue(firewallRuleGroup.Id)
+		for _, firewallConfig := range page.FirewallConfigs {
+			id := aws.StringValue(firewallConfig.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall config: %s", id)
 			r := ResourceFirewallConfig()
 			d := r.Data(nil)
 			d.SetId(id)
+			d.Set("resource_id", firewallConfig.ResourceId)
 			err := r.Delete(d, client)
 
 			if err != nil {
@@ -575,7 +573,7 @@ func sweepRuleAssociations(region string) error {
 				ResolverRuleId: resolverRuleAssociation.ResolverRuleId,
 				VPCId:          resolverRuleAssociation.VPCId,
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if sweep.SkipSweepError(err) {
@@ -635,7 +633,7 @@ func sweepRules(region string) error {
 			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 				ResolverRuleId: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {

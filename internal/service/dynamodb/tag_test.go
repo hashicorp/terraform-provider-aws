@@ -17,13 +17,13 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -44,13 +44,13 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTag(), resourceName),
@@ -77,13 +77,13 @@ func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamodbTagConfigResourceArnTableReplica(rName),
+				Config: testAccTagConfig_resourceARNTableReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccDynamodbTagConfigResourceArnTableReplica(rName),
+				Config:            testAccTagConfig_resourceARNTableReplica(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -97,13 +97,13 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTagDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -116,7 +116,7 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDynamodbTagConfig(rName, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -127,7 +127,7 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 	})
 }
 
-func testAccDynamodbTagConfig(rName string, key string, value string) string {
+func testAccTagConfig_basic(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   hash_key       = "TestTableHashKey"
@@ -153,7 +153,7 @@ resource "aws_dynamodb_tag" "test" {
 `, rName, key, value)
 }
 
-func testAccDynamodbTagConfigResourceArnTableReplica(rName string) string {
+func testAccTagConfig_resourceARNTableReplica(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`

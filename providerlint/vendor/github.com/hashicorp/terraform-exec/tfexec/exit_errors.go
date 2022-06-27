@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"text/template"
 )
 
 // this file contains errors parsed from stderr
@@ -17,8 +18,18 @@ var (
 
 	usageRegexp = regexp.MustCompile(`Too many command line arguments|^Usage: .*Options:.*|Error: Invalid -\d+ option`)
 
-	// "Could not load plugin" is present in 0.13
-	noInitErrRegexp = regexp.MustCompile(`Error: Could not satisfy plugin requirements|Error: Could not load plugin`)
+	noInitErrRegexp = regexp.MustCompile(
+		// UNINITIALISED PROVIDERS/MODULES
+		`Error: Could not satisfy plugin requirements|` +
+			`Error: Could not load plugin|` + // v0.13
+			`Please run \"terraform init\"|` + // v1.1.0 early alpha versions (ref 89b05050)
+			`run:\s+terraform init|` + // v1.1.0 (ref df578afd)
+			`Run\s+\"terraform init\"|` + // v1.2.0
+
+			// UNINITIALISED BACKENDS
+			`Error: Initialization required.|` + // v0.13
+			`Error: Backend initialization required, please run \"terraform init\"`, // v0.15
+	)
 
 	noConfigErrRegexp = regexp.MustCompile(`Error: No configuration files`)
 
@@ -29,6 +40,12 @@ var (
 	tfVersionMismatchErrRegexp        = regexp.MustCompile(`Error: The currently running version of Terraform doesn't meet the|Error: Unsupported Terraform Core version`)
 	tfVersionMismatchConstraintRegexp = regexp.MustCompile(`required_version = "(.+)"|Required version: (.+)\b`)
 	configInvalidErrRegexp            = regexp.MustCompile(`There are some problems with the configuration, described below.`)
+
+	stateLockErrRegexp     = regexp.MustCompile(`Error acquiring the state lock`)
+	stateLockInfoRegexp    = regexp.MustCompile(`Lock Info:\n\s*ID:\s*([^\n]+)\n\s*Path:\s*([^\n]+)\n\s*Operation:\s*([^\n]+)\n\s*Who:\s*([^\n]+)\n\s*Version:\s*([^\n]+)\n\s*Created:\s*([^\n]+)\n`)
+	statePlanReadErrRegexp = regexp.MustCompile(
+		`Terraform couldn't read the given file as a state or plan file.|` +
+			`Error: Failed to read the given file as a state or plan file`)
 )
 
 func (tf *Terraform) wrapExitError(ctx context.Context, err error, stderr string) error {
@@ -127,6 +144,22 @@ func (tf *Terraform) wrapExitError(ctx context.Context, err error, stderr string
 		}
 	case configInvalidErrRegexp.MatchString(stderr):
 		return &ErrConfigInvalid{stderr: stderr}
+	case stateLockErrRegexp.MatchString(stderr):
+		submatches := stateLockInfoRegexp.FindStringSubmatch(stderr)
+		if len(submatches) == 7 {
+			return &ErrStateLocked{
+				unwrapper: unwrapper{exitErr, ctxErr},
+
+				ID:        submatches[1],
+				Path:      submatches[2],
+				Operation: submatches[3],
+				Who:       submatches[4],
+				Version:   submatches[5],
+				Created:   submatches[6],
+			}
+		}
+	case statePlanReadErrRegexp.MatchString(stderr):
+		return &ErrStatePlanRead{stderr: stderr}
 	}
 
 	return fmt.Errorf("%w\n%s", &unwrapper{exitErr, ctxErr}, stderr)
@@ -203,6 +236,16 @@ func (e *ErrNoInit) Error() string {
 	return e.stderr
 }
 
+type ErrStatePlanRead struct {
+	unwrapper
+
+	stderr string
+}
+
+func (e *ErrStatePlanRead) Error() string {
+	return e.stderr
+}
+
 type ErrNoConfig struct {
 	unwrapper
 
@@ -255,4 +298,34 @@ func (e *ErrTFVersionMismatch) Error() string {
 
 	return fmt.Sprintf("terraform %s not supported by configuration%s",
 		version, requirement)
+}
+
+// ErrStateLocked is returned when the state lock is already held by another process.
+type ErrStateLocked struct {
+	unwrapper
+
+	ID        string
+	Path      string
+	Operation string
+	Who       string
+	Version   string
+	Created   string
+}
+
+func (e *ErrStateLocked) Error() string {
+	tmpl := `Lock Info:
+  ID:        {{.ID}}
+  Path:      {{.Path}}
+  Operation: {{.Operation}}
+  Who:       {{.Who}}
+  Version:   {{.Version}}
+  Created:   {{.Created}}
+`
+
+	t := template.Must(template.New("LockInfo").Parse(tmpl))
+	var out strings.Builder
+	if err := t.Execute(&out, e); err != nil {
+		return "error acquiring the state lock"
+	}
+	return fmt.Sprintf("error acquiring the state lock: %v", out.String())
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,7 +80,7 @@ func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Route53 reusable delegation set: %#v", input)
 	out, err := r53.GetReusableDelegationSet(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchDelegationSet, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 			d.SetId("")
 			return nil
 
@@ -110,7 +110,7 @@ func resourceDelegationSetDelete(d *schema.ResourceData, meta interface{}) error
 	}
 	log.Printf("[DEBUG] Deleting Route53 reusable delegation set: %#v", input)
 	_, err := r53.DeleteReusableDelegationSet(input)
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchDelegationSet, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 		return nil
 	}
 

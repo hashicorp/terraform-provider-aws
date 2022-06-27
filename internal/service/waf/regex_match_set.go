@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -106,7 +106,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRegexMatchSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Regex Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -116,7 +116,7 @@ func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.RegexMatchSet.Name)
-	d.Set("regex_match_tuple", flattenWafRegexMatchTuples(resp.RegexMatchSet.RegexMatchTuples))
+	d.Set("regex_match_tuple", FlattenRegexMatchTuples(resp.RegexMatchSet.RegexMatchTuples))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -180,7 +180,7 @@ func updateRegexMatchSetResource(id string, oldT, newT []interface{}, conn *waf.
 		req := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(id),
-			Updates:         diffWafRegexMatchSetTuples(oldT, newT),
+			Updates:         DiffRegexMatchSetTuples(oldT, newT),
 		}
 
 		return conn.UpdateRegexMatchSet(req)

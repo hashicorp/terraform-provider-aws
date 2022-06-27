@@ -10,19 +10,18 @@ import (
 
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
-	connectInstanceCreatedTimeout = 5 * time.Minute
-	connectInstanceDeletedTimeout = 5 * time.Minute
+	instanceCreatedTimeout = 5 * time.Minute
+	instanceDeletedTimeout = 5 * time.Minute
 
-	connectContactFlowCreateTimeout = 5 * time.Minute
-	connectContactFlowUpdateTimeout = 5 * time.Minute
+	botAssociationCreateTimeout = 5 * time.Minute
 )
 
-func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
+func waitInstanceCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusCreationInProgress},
 		Target:  []string{connect.InstanceStatusActive},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: connectInstanceCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -37,12 +36,12 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId 
 // We don't have a PENDING_DELETION or DELETED for the Connect instance.
 // If the Connect Instance has an associated EXISTING DIRECTORY, removing the connect instance
 // will cause an error because it is still has authorized applications.
-func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
+func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusActive},
-		Target:  []string{InstanceStatusStatusNotFound},
+		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusInstance(ctx, conn, instanceId),
-		Timeout: connectInstanceDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

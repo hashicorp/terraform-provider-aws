@@ -40,6 +40,13 @@ resource "aws_apprunner_service" "example" {
     }
   }
 
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.connector.arn
+    }
+  }
+
   tags = {
     Name = "example-apprunner-service"
   }
@@ -57,9 +64,10 @@ resource "aws_apprunner_service" "example" {
       image_configuration {
         port = "8000"
       }
-      image_identifier      = "public.ecr.aws/jg/hello:latest"
+      image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
+    auto_deployment_enabled = false
   }
 
   tags = {
@@ -82,6 +90,7 @@ The following arguments are optional:
 * `health_check_configuration` - (Forces new resource) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
 * `instance_configuration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
 * `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `network_configuration` - Configuration settings related to network traffic of the web application that the App Runner service runs.
 
 ### Encryption Configuration
 
@@ -105,7 +114,7 @@ The `health_check_configuration` block supports the following arguments:
 The `instance_configuration` block supports the following arguments:
 
 * `cpu` - (Optional) The number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
-* `instance_role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
+* `instance_role_arn` - (Optional) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
 * `memory` - (Optional) The amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
 
 ### Source Configuration
@@ -125,6 +134,14 @@ The `authentication_configuration` block supports the following arguments:
 
 * `access_role_arn` - (Optional) ARN of the IAM role that grants the App Runner service access to a source repository. Required for ECR image repositories (but not for ECR Public)
 * `connection_arn` - (Optional) ARN of the App Runner connection that enables the App Runner service to connect to a source repository. Required for GitHub code repositories.
+
+### Network Configuration
+
+The `network_configuration` block supports the following arguments:
+
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
+* `egress_type` - (Optional) The type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
+* `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
 
 ### Code Repository
 

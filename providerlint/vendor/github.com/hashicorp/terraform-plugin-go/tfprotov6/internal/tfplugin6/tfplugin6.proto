@@ -1,6 +1,6 @@
-// Terraform Plugin RPC protocol version 6.0
+// Terraform Plugin RPC protocol version 6.2
 //
-// This file defines version 6.0 of the RPC protocol. To implement a plugin
+// This file defines version 6.2 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -128,13 +128,16 @@ message Schema {
 
         repeated Attribute attributes = 1;
         NestingMode nesting = 3;
-        int64 min_items = 4;
-        int64 max_items = 5;
+
+        // MinItems and MaxItems were never used in the protocol, and have no
+        // effect on validation.
+        int64 min_items = 4 [deprecated = true];
+        int64 max_items = 5 [deprecated = true];
     }
 
     // The version of the schema.
     // Schemas are versioned, so that providers can upgrade a saved resource
-    // state when the schema is changed. 
+    // state when the schema is changed.
     int64 version = 1;
 
     // Block is the top level configuration block for this schema.
@@ -262,15 +265,28 @@ message PlanResourceChange {
         DynamicValue prior_state = 2;
         DynamicValue proposed_new_state = 3;
         DynamicValue config = 4;
-        bytes prior_private = 5; 
+        bytes prior_private = 5;
         DynamicValue provider_meta = 6;
     }
 
     message Response {
         DynamicValue planned_state = 1;
         repeated AttributePath requires_replace = 2;
-        bytes planned_private = 3; 
+        bytes planned_private = 3;
         repeated Diagnostic diagnostics = 4;
+
+        // This may be set only by the helper/schema "SDK" in the main Terraform
+        // repository, to request that Terraform Core >=0.12 permit additional
+        // inconsistencies that can result from the legacy SDK type system
+        // and its imprecise mapping to the >=0.12 type system.
+        // The change in behavior implied by this flag makes sense only for the
+        // specific details of the legacy SDK type system, and are not a general
+        // mechanism to avoid proper type handling in providers.
+        //
+        //     ====              DO NOT USE THIS              ====
+        //     ==== THIS MUST BE LEFT UNSET IN ALL OTHER SDKS ====
+        //     ====              DO NOT USE THIS              ====
+        bool legacy_type_system = 5;
     }
 }
 
@@ -280,13 +296,26 @@ message ApplyResourceChange {
         DynamicValue prior_state = 2;
         DynamicValue planned_state = 3;
         DynamicValue config = 4;
-        bytes planned_private = 5; 
+        bytes planned_private = 5;
         DynamicValue provider_meta = 6;
     }
     message Response {
         DynamicValue new_state = 1;
-        bytes private = 2; 
+        bytes private = 2;
         repeated Diagnostic diagnostics = 3;
+
+        // This may be set only by the helper/schema "SDK" in the main Terraform
+        // repository, to request that Terraform Core >=0.12 permit additional
+        // inconsistencies that can result from the legacy SDK type system
+        // and its imprecise mapping to the >=0.12 type system.
+        // The change in behavior implied by this flag makes sense only for the
+        // specific details of the legacy SDK type system, and are not a general
+        // mechanism to avoid proper type handling in providers.
+        //
+        //     ====              DO NOT USE THIS              ====
+        //     ==== THIS MUST BE LEFT UNSET IN ALL OTHER SDKS ====
+        //     ====              DO NOT USE THIS              ====
+        bool legacy_type_system = 4;
     }
 }
 

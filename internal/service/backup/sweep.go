@@ -16,6 +16,16 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_backup_framework", &resource.Sweeper{
+		Name: "aws_backup_framework",
+		F:    sweepFramework,
+	})
+
+	resource.AddTestSweepers("aws_backup_report_plan", &resource.Sweeper{
+		Name: "aws_backup_report_plan",
+		F:    sweepReportPlan,
+	})
+
 	resource.AddTestSweepers("aws_backup_vault_lock_configuration", &resource.Sweeper{
 		Name: "aws_backup_vault_lock_configuration",
 		F:    sweepVaultLockConfiguration,
@@ -40,6 +50,90 @@ func init() {
 			"aws_backup_vault_policy",
 		},
 	})
+}
+
+func sweepFramework(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).BackupConn
+	input := &backup.ListFrameworksInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListFrameworksPages(input, func(page *backup.ListFrameworksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, framework := range page.Frameworks {
+			r := ResourceFramework()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(framework.FrameworkName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Backup Framework sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Frameworks for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Frameworks for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepReportPlan(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).BackupConn
+	input := &backup.ListReportPlansInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListReportPlansPages(input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, reportPlan := range page.ReportPlans {
+			r := ResourceReportPlan()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(reportPlan.ReportPlanName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Backup Report Plans sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Report Plans for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Report Plans for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepVaultLockConfiguration(region string) error {
@@ -201,8 +295,14 @@ func sweepVaults(region string) error {
 		for _, vault := range page.BackupVaultList {
 			failedToDeleteRecoveryPoint := false
 			name := aws.StringValue(vault.BackupVaultName)
+
+			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
+			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
+				log.Printf("[INFO] Skipping Backup Vault: %s", name)
+				continue
+			}
 			input := &backup.ListRecoveryPointsByBackupVaultInput{
-				BackupVaultName: aws.String(name),
+				BackupVaultName: vault.BackupVaultName,
 			}
 
 			err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
@@ -211,17 +311,15 @@ func sweepVaults(region string) error {
 				}
 
 				for _, recoveryPoint := range page.RecoveryPoints {
-					arn := aws.StringValue(recoveryPoint.RecoveryPointArn)
-
-					log.Printf("[INFO] Deleting Recovery Point (%s) in Backup Vault (%s)", arn, name)
 					_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
-						BackupVaultName:  aws.String(name),
-						RecoveryPointArn: aws.String(arn),
+						BackupVaultName:  vault.BackupVaultName,
+						RecoveryPointArn: recoveryPoint.RecoveryPointArn,
 					})
 
 					if err != nil {
-						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", arn, name, err)
+						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", aws.StringValue(recoveryPoint.RecoveryPointArn), name, err)
 						failedToDeleteRecoveryPoint = true
+						return true
 					}
 				}
 
@@ -230,12 +328,6 @@ func sweepVaults(region string) error {
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Reovery Points in Backup Vault (%s) for %s: %w", name, region, err))
-			}
-
-			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
-			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
-				log.Printf("[INFO] Skipping Backup Vault: %s", name)
-				continue
 			}
 
 			// Backup Vault deletion only supported when empty

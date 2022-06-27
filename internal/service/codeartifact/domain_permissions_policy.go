@@ -6,11 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDomainPermissionsPolicy() *schema.Resource {
@@ -40,6 +42,10 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"policy_revision": {
 				Type:     schema.TypeString,
@@ -58,9 +64,15 @@ func resourceDomainPermissionsPolicyPut(d *schema.ResourceData, meta interface{}
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	params := &codeartifact.PutDomainPermissionsPolicyInput{
 		Domain:         aws.String(d.Get("domain").(string)),
-		PolicyDocument: aws.String(d.Get("policy_document").(string)),
+		PolicyDocument: aws.String(policy),
 	}
 
 	if v, ok := d.GetOk("domain_owner"); ok {
@@ -94,20 +106,34 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 		Domain:      aws.String(domainName),
 		DomainOwner: aws.String(domainOwner),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] CodeArtifact Domain Permissions Policy %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
+		return names.Error(names.CodeArtifact, names.ErrActionReading, ResDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)
 	d.Set("domain_owner", domainOwner)
 	d.Set("resource_arn", dm.Policy.ResourceArn)
-	d.Set("policy_document", dm.Policy.Document)
 	d.Set("policy_revision", dm.Policy.Revision)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(dm.Policy.Document))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy_document", policyToSet)
 
 	return nil
 }
@@ -128,7 +154,7 @@ func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interfac
 
 	_, err = conn.DeleteDomainPermissionsPolicy(input)
 
-	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

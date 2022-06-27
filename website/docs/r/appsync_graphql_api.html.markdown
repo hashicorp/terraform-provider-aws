@@ -21,6 +21,15 @@ resource "aws_appsync_graphql_api" "example" {
 }
 ```
 
+### AWS IAM Authentication
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "AWS_IAM"
+  name                = "example"
+}
+```
+
 ### AWS Cognito User Pool Authentication
 
 ```terraform
@@ -36,12 +45,50 @@ resource "aws_appsync_graphql_api" "example" {
 }
 ```
 
-### AWS IAM Authentication
+### OpenID Connect Authentication
 
 ```terraform
 resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "AWS_IAM"
+  authentication_type = "OPENID_CONNECT"
   name                = "example"
+
+  openid_connect_config {
+    issuer = "https://example.com"
+  }
+}
+```
+
+### AWS Lambda Authorizer Authentication
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "AWS_LAMBDA"
+  name                = "example"
+
+  lambda_authorizer_config {
+    authorizer_uri = "arn:aws:lambda:us-east-1:123456789012:function:custom_lambda_authorizer"
+  }
+}
+
+resource "aws_lambda_permission" "appsync_lambda_authorizer" {
+  statement_id  = "appsync_lambda_authorizer"
+  action        = "lambda:InvokeFunction"
+  function_name = "custom_lambda_authorizer"
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.example.arn
+}
+```
+
+### With Multiple Authentication Providers
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name                = "example"
+
+  additional_authentication_provider {
+    authentication_type = "AWS_IAM"
+  }
 }
 ```
 
@@ -60,32 +107,6 @@ type Query {
   test: Int
 }
 EOF
-}
-```
-
-### OpenID Connect Authentication
-
-```terraform
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "OPENID_CONNECT"
-  name                = "example"
-
-  openid_connect_config {
-    issuer = "https://example.com"
-  }
-}
-```
-
-### With Multiple Authentication Providers
-
-```terraform
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "API_KEY"
-  name                = "example"
-
-  additional_authentication_provider {
-    authentication_type = "AWS_IAM"
-  }
 }
 ```
 
@@ -182,11 +203,12 @@ resource "aws_wafv2_web_acl" "example" {
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
+* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) A user-supplied name for the GraphqlApi.
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
+* `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. Defined below.
 * `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -204,7 +226,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
+* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
 
@@ -225,6 +247,14 @@ The following arguments are supported:
 * `user_pool_id` - (Required) The user pool ID.
 * `app_id_client_regex` - (Optional) A regular expression for validating the incoming Amazon Cognito User Pool app client ID.
 * `aws_region` - (Optional) The AWS region in which the user pool was created.
+
+### lambda_authorizer_config
+
+The following arguments are supported:
+
+* `authorizer_uri` - (Required) The ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
+* `authorizer_result_ttl_in_seconds` - (Optional) The number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
+* `identity_validation_expression` - (Optional) A regular expression for validation of tokens before the Lambda function is called.
 
 ## Attributes Reference
 

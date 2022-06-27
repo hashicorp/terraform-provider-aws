@@ -16,19 +16,19 @@ import (
 
 func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_memcached_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemcachedLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMemcachedLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemcachedLayerVPCCreateConfig(stackName),
+				Config: testAccMemcachedLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName)),
 			},
 		},
 	})
@@ -36,16 +36,16 @@ func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 
 func TestAccOpsWorksMemcachedLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_memcached_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemcachedLayerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMemcachedLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemcachedLayerTags1Config(stackName, "key1", "value1"),
+				Config: testAccMemcachedLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -53,7 +53,7 @@ func TestAccOpsWorksMemcachedLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMemcachedLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMemcachedLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -62,7 +62,7 @@ func TestAccOpsWorksMemcachedLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMemcachedLayerTags1Config(stackName, "key2", "value2"),
+				Config: testAccMemcachedLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -77,29 +77,31 @@ func testAccCheckMemcachedLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_memcached_layer", s)
 }
 
-func testAccMemcachedLayerVPCCreateConfig(name string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMemcachedLayerConfig_vpcCreate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_memcached_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
     aws_security_group.tf-ops-acc-layer2.id,
   ]
 }
-`, name)
+`, rName))
 }
 
-func testAccMemcachedLayerTags1Config(name, tagKey1, tagValue1 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMemcachedLayerConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_memcached_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
@@ -110,16 +112,17 @@ resource "aws_opsworks_memcached_layer" "test" {
     %[2]q = %[3]q
   }
 }
-`, name, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccMemcachedLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
+func testAccMemcachedLayerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
+		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_memcached_layer" "test" {
-  stack_id = aws_opsworks_stack.tf-acc.id
-  name     = "%s"
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
 
   custom_security_group_ids = [
     aws_security_group.tf-ops-acc-layer1.id,
@@ -131,5 +134,5 @@ resource "aws_opsworks_memcached_layer" "test" {
     %[4]q = %[5]q
   }
 }
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

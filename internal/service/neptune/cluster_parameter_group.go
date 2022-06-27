@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
+const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
@@ -122,7 +122,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
+		err := modifyClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 		if err != nil {
 			return fmt.Errorf("error modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 		}
@@ -220,7 +220,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
-			err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), parameters)
+			err := modifyClusterParameterGroupParameters(conn, d.Id(), parameters)
 			if err != nil {
 				return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
 			}
@@ -256,15 +256,15 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func modifyNeptuneClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+func modifyClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
 	// We can only modify 20 parameters at a time, so walk them until
 	// we've got them all.
 	for parameters != nil {
 		var paramsToModify []*neptune.Parameter
-		if len(parameters) <= neptuneClusterParameterGroupMaxParamsBulkEdit {
+		if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
 			paramsToModify, parameters = parameters[:], nil
 		} else {
-			paramsToModify, parameters = parameters[:neptuneClusterParameterGroupMaxParamsBulkEdit], parameters[neptuneClusterParameterGroupMaxParamsBulkEdit:]
+			paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
 		}
 
 		modifyOpts := neptune.ModifyDBClusterParameterGroupInput{

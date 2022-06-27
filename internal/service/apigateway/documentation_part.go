@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -77,7 +77,7 @@ func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) e
 
 	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
-		Location:   expandApiGatewayDocumentationPartLocation(d.Get("location").([]interface{})),
+		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
 		Properties: aws.String(d.Get("properties").(string)),
 		RestApiId:  aws.String(apiId),
 	})
@@ -104,18 +104,16 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 		RestApiId:           aws.String(apiId),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Documentation Part (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Documentation Part (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received API Gateway Documentation Part: %s", docPart)
-
 	d.Set("rest_api_id", apiId)
-	d.Set("location", flattenApiGatewayDocumentationPartLocation(docPart.Location))
+	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
 	d.Set("properties", docPart.Properties)
 
 	return nil
@@ -173,7 +171,7 @@ func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) e
 	return err
 }
 
-func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
+func expandDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
 	if len(l) == 0 {
 		return nil
 	}
@@ -196,7 +194,7 @@ func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.Docu
 	return out
 }
 
-func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartLocation) []interface{} {
+func flattenDocumentationPartLocation(l *apigateway.DocumentationPartLocation) []interface{} {
 	if l == nil {
 		return []interface{}{}
 	}

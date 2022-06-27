@@ -47,7 +47,7 @@ func sweepAccelerators(region string) error {
 		for _, accelerator := range output.Accelerators {
 			arn := aws.StringValue(accelerator.AcceleratorArn)
 
-			errs := sweepGlobalAcceleratorListeners(client, accelerator.AcceleratorArn)
+			errs := sweepListeners(client, accelerator.AcceleratorArn)
 			if errs != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, errs)
 			}
@@ -75,7 +75,7 @@ func sweepAccelerators(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *string) *multierror.Error {
+func sweepEndpointGroups(client interface{}, listenerArn *string) *multierror.Error {
 	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
 	var sweeperErrs *multierror.Error
 
@@ -109,7 +109,7 @@ func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *strin
 	return sweeperErrs
 }
 
-func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string) *multierror.Error {
+func sweepListeners(client interface{}, acceleratorArn *string) *multierror.Error {
 	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
 	var sweeperErrs *multierror.Error
 
@@ -125,7 +125,7 @@ func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string)
 	}
 
 	for _, listener := range listenersOutput.Listeners {
-		errs := sweepGlobalAcceleratorEndpointGroups(client, listener.ListenerArn)
+		errs := sweepEndpointGroups(client, listener.ListenerArn)
 		if errs != nil {
 			sweeperErrs = multierror.Append(sweeperErrs, errs)
 		}

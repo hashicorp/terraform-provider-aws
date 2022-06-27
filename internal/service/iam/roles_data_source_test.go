@@ -16,9 +16,9 @@ func TestAccIAMRolesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_basic,
@@ -36,9 +36,9 @@ func TestAccIAMRolesDataSource_nameRegex(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_nameRegex(rCount, rName),
@@ -58,9 +58,9 @@ func TestAccIAMRolesDataSource_pathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix),
@@ -77,9 +77,9 @@ func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_nonExistentPathPrefix,
@@ -99,9 +99,9 @@ func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_roles.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),

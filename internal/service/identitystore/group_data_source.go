@@ -65,7 +65,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	input := &identitystore.ListGroupsInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		Filters:         expandIdentityStoreFilters(d.Get("filter").(*schema.Set).List()),
+		Filters:         expandFilters(d.Get("filter").(*schema.Set).List()),
 	}
 
 	var results []*identitystore.Group
@@ -111,7 +111,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandIdentityStoreFilters(l []interface{}) []*identitystore.Filter {
+func expandFilters(l []interface{}) []*identitystore.Filter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

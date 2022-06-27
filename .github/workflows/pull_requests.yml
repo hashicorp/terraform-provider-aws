@@ -2,23 +2,27 @@ on:
   - pull_request_target
 
 name: Pull Request Target (All types)
+
+env:
+  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
+
 jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Apply Labels
-      uses: actions/labeler@v3
+      uses: actions/labeler@v4
       with:
         configuration-path: .github/labeler-pr-triage.yml
         repo-token: ${{ secrets.GITHUB_TOKEN }}
   NeedsTriageLabeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Apply needs-triage Label
-      uses: actions/labeler@v3
-      if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding"]'), github.actor)
+      uses: actions/labeler@v4
+      if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
       with:
         configuration-path: .github/labeler-pr-needs-triage.yml
         repo-token: ${{ secrets.GITHUB_TOKEN }}

@@ -154,13 +154,13 @@ func (c *ResourceConfig) DeepCopy() *ResourceConfig {
 	}
 
 	// Copy, this will copy all the exported attributes
-	copy, err := copystructure.Config{Lock: true}.Copy(c)
+	copiedConfig, err := copystructure.Config{Lock: true}.Copy(c)
 	if err != nil {
 		panic(err)
 	}
 
 	// Force the type
-	result := copy.(*ResourceConfig)
+	result := copiedConfig.(*ResourceConfig)
 
 	return result
 }

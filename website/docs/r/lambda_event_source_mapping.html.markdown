@@ -86,6 +86,26 @@ resource "aws_lambda_event_source_mapping" "example" {
 }
 ```
 
+### SQS with event filter
+
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  event_source_arn = aws_sqs_queue.sqs_queue_test.arn
+  function_name    = aws_lambda_function.example.arn
+
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        body = {
+          Temperature : [{ numeric : [">", 0, "<=", 100] }]
+          Location : ["New York"]
+        }
+      })
+    }
+  }
+}
+```
+
 ### Amazon MQ (ActiveMQ)
 
 ```terraform
@@ -132,8 +152,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `destination_config`: - (Optional) An Amazon SQS queue or Amazon SNS topic destination for failed records. Only available for stream sources (DynamoDB and Kinesis). Detailed below.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
 * `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue, MQ broker or MSK cluster.  It is incompatible with a Self Managed Kafka source.
+* `filter_criteria` - (Optional) The criteria to use for [event filtering](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html) Kinesis stream, DynamoDB stream, SQS queue event sources. Detailed below.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
-* `function_response_types` - (Optional) A list of current response type enums applied to the event source mapping for [AWS Lambda checkpointing](https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html#services-ddb-batchfailurereporting). Only available for stream sources (DynamoDB and Kinesis). Valid values: `ReportBatchItemFailures`.
+* `function_response_types` - (Optional) A list of current response type enums applied to the event source mapping for [AWS Lambda checkpointing](https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html#services-ddb-batchfailurereporting). Only available for SQS and stream sources (DynamoDB and Kinesis). Valid values: `ReportBatchItemFailures`.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum amount of time to gather records before invoking the function, in seconds (between 0 and 300). Records will continue to buffer (or accumulate in the case of an SQS queue event source) until either `maximum_batching_window_in_seconds` expires or `batch_size` has been met. For streaming event sources, defaults to as soon as records are available in the stream. If the batch it reads from the stream/queue only has one record in it, Lambda only sends one record to the function. Only available for stream sources (DynamoDB and Kinesis) and SQS standard queues.
 * `maximum_record_age_in_seconds`: - (Optional) The maximum age of a record that Lambda sends to a function for processing. Only available for stream sources (DynamoDB and Kinesis). Must be either -1 (forever, and the default value) or between 60 and 604800 (inclusive).
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
@@ -153,6 +174,14 @@ resource "aws_lambda_event_source_mapping" "example" {
 #### destination_config on_failure Configuration Block
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
+
+### filter_criteria Configuration Block
+
+* `filter` - (Optional) A set of up to 5 filter. If an event satisfies at least one, Lambda sends the event to the function or adds it to the next batch. Detailed below.
+
+#### filter_criteria filter Configuration Block
+
+* `pattern` - (Optional) A filter pattern up to 4096 characters. See [Filter Rule Syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
 
 ### self_managed_event_source Configuration Block
 

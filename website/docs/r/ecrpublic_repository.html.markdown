@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR Public"
 layout: "aws"
 page_title: "AWS: aws_ecrpublic_repository"
 description: |-

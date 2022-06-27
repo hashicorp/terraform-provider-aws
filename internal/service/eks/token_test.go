@@ -152,8 +152,8 @@ func TestVerifyTokenPreSTSValidations(t *testing.T) {
 	validationErrorTest(t, "k8s-aws-v1.decodingerror", "illegal base64 data")
 	validationErrorTest(t, toToken(":ab:cd.af:/asda"), "missing protocol scheme")
 	validationErrorTest(t, toToken("http://"), "unexpected scheme")
-	validationErrorTest(t, toToken("https://google.com"), fmt.Sprintf("unexpected hostname %q in pre-signed URL", "google.com"))
-	validationErrorTest(t, toToken("https://sts.cn-north-1.amazonaws.com.cn/abc"), "unexpected path in pre-signed URL") //lintignore:AWSAT003
+	validationErrorTest(t, toToken("https://google.com"), fmt.Sprintf("unexpected hostname %q in pre-signed URL", "google.com")) // nosemgrep: domain-names
+	validationErrorTest(t, toToken("https://sts.cn-north-1.amazonaws.com.cn/abc"), "unexpected path in pre-signed URL")          //lintignore:AWSAT003
 	validationErrorTest(t, toToken("https://sts.amazonaws.com/abc"), "unexpected path in pre-signed URL")
 	validationErrorTest(t, toToken("https://sts.amazonaws.com/?NoInWhiteList=abc"), "non-whitelisted query parameter")
 	validationErrorTest(t, toToken("https://sts.amazonaws.com/?action=get&action=post"), "query parameter with multiple values not supported")

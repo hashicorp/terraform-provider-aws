@@ -188,6 +188,12 @@ The following arguments are supported:
 * `path` - (Required) The path of the Amazon DocumentDB or MongoDB target (database/collection).
 * `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table. Default value is `true`.
 
+### Delta Target
+
+* `connection_name` - (Required) The name of the connection to use to connect to the Delta table target.
+* `delta_tables` - (Required) A list of the Amazon S3 paths to the Delta tables.
+* `write_manifest` - (Required) Specifies whether to write the manifest files to the Delta table path.
+
 ### Schema Change Policy
 
 * `delete_behavior` - (Optional) The deletion behavior when the crawler finds a deleted object. Valid values: `LOG`, `DELETE_FROM_DATABASE`, or `DEPRECATE_IN_DATABASE`. Defaults to `DEPRECATE_IN_DATABASE`.
@@ -199,7 +205,7 @@ The following arguments are supported:
 
 ### Recrawl Policy
 
-* `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again or to crawl only folders that were added since the last crawler run. Valid Values are: `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
+* `recrawl_behavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `CRAWL_EVENT_MODE`, `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
 
 ## Attributes Reference
 

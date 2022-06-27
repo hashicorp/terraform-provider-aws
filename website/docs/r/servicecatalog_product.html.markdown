@@ -75,6 +75,16 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Status of the product.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
+## Timeouts
+
+`aws_servicecatalog_product` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `5 minutes`)
+- `delete` - (Default `5 minutes`)
+
 ## Import
 
 `aws_servicecatalog_product` can be imported using the product ID, e.g.,

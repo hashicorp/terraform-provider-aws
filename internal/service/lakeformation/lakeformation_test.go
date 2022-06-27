@@ -19,11 +19,15 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"databaseMultiple":   testAccPermissions_databaseMultiple,
 			"dataLocation":       testAccPermissions_dataLocation,
 			"disappears":         testAccPermissions_disappears,
+			"lfTag":              testAccPermissions_lfTag,
+			"lfTagPolicy":        testAccPermissions_lfTagPolicy,
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
 			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
+			"lfTag":            testAccPermissionsDataSource_lfTag,
+			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
 			"table":            testAccPermissionsDataSource_table,
 			"tableWithColumns": testAccPermissionsDataSource_tableWithColumns,
 		},
@@ -44,6 +48,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardExcludedColumns": testAccPermissions_twcWildcardExcludedColumns,
 			"wildcardSelectOnly":      testAccPermissions_twcWildcardSelectOnly,
 			"wildcardSelectPlus":      testAccPermissions_twcWildcardSelectPlus,
+		},
+		"LFTags": {
+			"basic":      testAccLFTag_basic,
+			"disappears": testAccLFTag_disappears,
+			"values":     testAccLFTag_values,
 		},
 	}
 

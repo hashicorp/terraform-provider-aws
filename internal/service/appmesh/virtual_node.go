@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,7 +81,7 @@ func ResourceVirtualNode() *schema.Resource {
 													ValidateFunc: validation.StringLenBetween(1, 255),
 												},
 
-												"client_policy": appmeshVirtualNodeClientPolicySchema(),
+												"client_policy": VirtualNodeClientPolicySchema(),
 											},
 										},
 									},
@@ -96,7 +96,7 @@ func ResourceVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"client_policy": appmeshVirtualNodeClientPolicySchema(),
+									"client_policy": VirtualNodeClientPolicySchema(),
 								},
 							},
 						},
@@ -879,8 +879,8 @@ func ResourceVirtualNode() *schema.Resource {
 	}
 }
 
-// appmeshVirtualNodeClientPolicySchema returns the schema for `client_policy` attributes.
-func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
+// VirtualNodeClientPolicySchema returns the schema for `client_policy` attributes.
+func VirtualNodeClientPolicySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1152,7 +1152,7 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_date", resp.VirtualNode.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualNode.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshVirtualNodeSpec(resp.VirtualNode.Spec))
+	err = d.Set("spec", flattenVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %w", err)
 	}
@@ -1220,7 +1220,7 @@ func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
 
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 

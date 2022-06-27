@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -106,7 +106,7 @@ func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error reading RAM Resource Share (%s) Principal Association (%s): %s", resourceShareArn, principal, err)
 	}
 
-	if association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated {
+	if !d.IsNewResource() && (association == nil || aws.StringValue(association.Status) == ram.ResourceShareAssociationStatusDisassociated) {
 		log.Printf("[WARN] RAM resource share principal association with ARN (%s) found, but empty or disassociated - removing from state", d.Id())
 		d.SetId("")
 		return nil

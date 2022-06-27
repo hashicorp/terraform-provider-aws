@@ -4,7 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/hashicorp/go-version"
 )
+
+// ValidateFormatVersionConstraints defines the versions of the JSON
+// validate format that are supported by this package.
+var ValidateFormatVersionConstraints = ">= 0.1, < 2.0"
 
 // Pos represents a position in a config file
 type Pos struct {
@@ -110,10 +116,19 @@ func (vo *ValidateOutput) Validate() error {
 		return nil
 	}
 
-	supportedVersion := "0.1"
-	if vo.FormatVersion != supportedVersion {
-		return fmt.Errorf("unsupported validation output format version: expected %q, got %q",
-			supportedVersion, vo.FormatVersion)
+	constraint, err := version.NewConstraint(ValidateFormatVersionConstraints)
+	if err != nil {
+		return fmt.Errorf("invalid version constraint: %w", err)
+	}
+
+	version, err := version.NewVersion(vo.FormatVersion)
+	if err != nil {
+		return fmt.Errorf("invalid format version %q: %w", vo.FormatVersion, err)
+	}
+
+	if !constraint.Check(version) {
+		return fmt.Errorf("unsupported validation output format version: %q does not satisfy %q",
+			version, constraint)
 	}
 
 	return nil

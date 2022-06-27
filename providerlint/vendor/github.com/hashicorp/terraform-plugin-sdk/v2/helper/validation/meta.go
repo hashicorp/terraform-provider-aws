@@ -66,8 +66,21 @@ func ToDiagFunc(validator schema.SchemaValidateFunc) schema.SchemaValidateDiagFu
 	return func(i interface{}, p cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
 
-		attr := p[len(p)-1].(cty.GetAttrStep)
-		ws, es := validator(i, attr.Name)
+		// A practitioner-friendly key for any SchemaValidateFunc output.
+		// Generally this should be the last attribute name on the path.
+		// If not found for some unexpected reason, an empty string is fine
+		// as the diagnostic will have the full attribute path anyways.
+		var key string
+
+		// Reverse search for last cty.GetAttrStep
+		for i := len(p) - 1; i >= 0; i-- {
+			if pathStep, ok := p[i].(cty.GetAttrStep); ok {
+				key = pathStep.Name
+				break
+			}
+		}
+
+		ws, es := validator(i, key)
 
 		for _, w := range ws {
 			diags = append(diags, diag.Diagnostic{

@@ -15,14 +15,13 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 		Read: dataSourceVPCPeeringConnectionsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"filter": DataSourceFiltersSchema(),
 			"ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -30,38 +29,32 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeVpcPeeringConnectionsInput{}
+	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	req.Filters = append(req.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, BuildTagFilterList(
 		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
 	)...)
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
-	if len(req.Filters) == 0 {
-		// Don't send an empty filters list; the EC2 API won't accept it.
-		req.Filters = nil
+	if len(input.Filters) == 0 {
+		input.Filters = nil
 	}
 
-	resp, err := conn.DescribeVpcPeeringConnections(req)
+	output, err := FindVPCPeeringConnections(conn, input)
+
 	if err != nil {
-		return err
-	}
-	if resp == nil || len(resp.VpcPeeringConnections) == 0 {
-		return fmt.Errorf("no matching VPC peering connections found")
+		return fmt.Errorf("error reading EC2 VPC Peering Connections: %w", err)
 	}
 
-	var ids []string
-	for _, pcx := range resp.VpcPeeringConnections {
-		ids = append(ids, aws.StringValue(pcx.VpcPeeringConnectionId))
+	var vpcPeeringConnectionIDs []string
+
+	for _, v := range output {
+		vpcPeeringConnectionIDs = append(vpcPeeringConnectionIDs, aws.StringValue(v.VpcPeeringConnectionId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	err = d.Set("ids", ids)
-	if err != nil {
-		return err
-	}
+	d.Set("ids", vpcPeeringConnectionIDs)
 
 	return nil
 }

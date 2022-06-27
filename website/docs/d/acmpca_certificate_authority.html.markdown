@@ -1,5 +1,5 @@
 ---
-subcategory: "ACM PCA"
+subcategory: "ACM PCA (Certificate Manager Private Certificate Authority)"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority"
 description: |-

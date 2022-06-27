@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,7 +90,7 @@ func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeProtection(input)
 
-	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Shield Protection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -134,7 +134,7 @@ func resourceProtectionDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteProtection(input)
 
-	if tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb_listener_rule"
 description: |-

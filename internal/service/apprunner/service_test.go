@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository(rName),
+				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
@@ -46,6 +46,11 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.instance_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_url"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
@@ -74,19 +79,19 @@ func TestAccAppRunnerService_ImageRepository_autoScaling(t *testing.T) {
 	autoScalingResourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository(rName),
+				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAppRunnerService_imageRepository_autoScalingConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_autoScalingConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_configuration_arn", autoScalingResourceName, "arn"),
@@ -107,13 +112,13 @@ func TestAccAppRunnerService_ImageRepository_encryption(t *testing.T) {
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository_encryptionConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_encryptionConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -127,7 +132,7 @@ func TestAccAppRunnerService_ImageRepository_encryption(t *testing.T) {
 			},
 			{
 				// Test resource recreation; EncryptionConfiguration (or lack thereof) Forces New resource
-				Config: testAccAppRunnerService_imageRepository(rName),
+				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
@@ -142,13 +147,13 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository_healthCheckConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_healthCheckConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
@@ -166,7 +171,7 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 			},
 			{
 				// Test resource recreation; HealthConfiguration Forces New resource
-				Config: testAccAppRunnerService_imageRepository_updateHealthCheckConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_updateHealthCheckConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", "1"),
@@ -186,19 +191,48 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
+func TestAccAppRunnerService_ImageRepository_instance_NoInstanceRole(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_ImageRepository_InstanceConfiguration_noInstanceRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.instance_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3072"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_service.test"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository_instanceConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_instanceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -213,7 +247,7 @@ func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName),
+				Config: testAccServiceConfig_ImageRepository_updateInstanceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -228,13 +262,44 @@ func TestAccAppRunnerService_ImageRepository_instance(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppRunnerService_imageRepository(rName),
+				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.cpu"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.memory"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "4096"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.instance_role_arn"), // The IAM Role is not unset
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppRunnerService_ImageRepository_networkConfiguration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_service.test"
+	vpcConnectorResourceName := "aws_apprunner_vpc_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_ImageRepository_networkConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.egress_configuration.0.egress_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_configuration.0.egress_configuration.0.vpc_connector_arn", vpcConnectorResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -246,13 +311,13 @@ func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentVars(t *testing.T
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository_runtimeEnvVars(rName),
+				Config: testAccServiceConfig_ImageRepository_runtimeEnvVars(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
@@ -276,13 +341,13 @@ func TestAccAppRunnerService_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerService_imageRepository(rName),
+				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceService(), resourceName),
@@ -298,13 +363,13 @@ func TestAccAppRunnerService_tags(t *testing.T) {
 	resourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAppRunner(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apprunner.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppRunnerServiceConfigTags1(rName, "key1", "value1"),
+				Config: testAccServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -317,7 +382,7 @@ func TestAccAppRunnerService_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppRunnerServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -326,7 +391,7 @@ func TestAccAppRunnerService_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppRunnerServiceConfigTags1(rName, "key2", "value2"),
+				Config: testAccServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -398,7 +463,7 @@ func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheckAppRunner(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 	ctx := context.Background()
 
@@ -415,7 +480,7 @@ func testAccPreCheckAppRunner(t *testing.T) {
 	}
 }
 
-func testAccAppRunnerService_imageRepository(rName string) string {
+func testAccServiceConfig_imageRepository(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -433,7 +498,7 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_runtimeEnvVars(rName string) string {
+func testAccServiceConfig_ImageRepository_runtimeEnvVars(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -454,7 +519,7 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_autoScalingConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_autoScalingConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_auto_scaling_configuration_version" "test" {
   auto_scaling_configuration_name = %[1]q
@@ -479,7 +544,7 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_encryptionConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_encryptionConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -507,7 +572,7 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_healthCheckConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_healthCheckConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -531,7 +596,7 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_updateHealthCheckConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_updateHealthCheckConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -556,7 +621,65 @@ resource "aws_apprunner_service" "test" {
 `, rName)
 }
 
-func testAccAppRunnerIAMRole(rName string) string {
+func testAccServiceConfig_ImageRepository_networkConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_apprunner_vpc_connector" "test" {
+  vpc_connector_name = %[1]q
+  subnets            = [aws_subnet.test.id]
+  security_groups    = [aws_security_group.test.id]
+}
+
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.test.arn
+    }
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -582,9 +705,9 @@ EOF
 `, rName)
 }
 
-func testAccAppRunnerService_imageRepository_instanceConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_instanceConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAppRunnerIAMRole(rName),
+		testAccIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -609,9 +732,33 @@ resource "aws_apprunner_service" "test" {
 `, rName))
 }
 
-func testAccAppRunnerService_imageRepository_updateInstanceConfiguration(rName string) string {
+func testAccServiceConfig_ImageRepository_InstanceConfiguration_noInstanceRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  instance_configuration {
+    cpu    = "1 vCPU"
+    memory = "3 GB"
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_ImageRepository_updateInstanceConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAppRunnerIAMRole(rName),
+		testAccIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -636,7 +783,7 @@ resource "aws_apprunner_service" "test" {
 `, rName))
 }
 
-func testAccAppRunnerServiceConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccServiceConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
@@ -658,7 +805,7 @@ resource "aws_apprunner_service" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAppRunnerServiceConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccServiceConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q

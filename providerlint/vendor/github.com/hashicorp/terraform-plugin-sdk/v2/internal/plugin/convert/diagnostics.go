@@ -1,34 +1,61 @@
 package convert
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 )
 
 // AppendProtoDiag appends a new diagnostic from a warning string or an error.
 // This panics if d is not a string or error.
-func AppendProtoDiag(diags []*tfprotov5.Diagnostic, d interface{}) []*tfprotov5.Diagnostic {
+func AppendProtoDiag(ctx context.Context, diags []*tfprotov5.Diagnostic, d interface{}) []*tfprotov5.Diagnostic {
 	switch d := d.(type) {
 	case cty.PathError:
 		ap := PathToAttributePath(d.Path)
-		diags = append(diags, &tfprotov5.Diagnostic{
+		diagnostic := &tfprotov5.Diagnostic{
 			Severity:  tfprotov5.DiagnosticSeverityError,
 			Summary:   d.Error(),
 			Attribute: ap,
-		})
+		}
+
+		if diagnostic.Summary == "" {
+			logging.HelperSchemaWarn(ctx, "detected empty error string for diagnostic in AppendProtoDiag for cty.PathError type")
+			diagnostic.Summary = "Empty Error String"
+			diagnostic.Detail = "This is always a bug in the provider and should be reported to the provider developers."
+		}
+
+		diags = append(diags, diagnostic)
 	case diag.Diagnostics:
 		diags = append(diags, DiagsToProto(d)...)
 	case error:
-		diags = append(diags, &tfprotov5.Diagnostic{
+		if d == nil {
+			logging.HelperSchemaDebug(ctx, "skipping diagnostic for nil error in AppendProtoDiag")
+			return diags
+		}
+
+		diagnostic := &tfprotov5.Diagnostic{
 			Severity: tfprotov5.DiagnosticSeverityError,
 			Summary:  d.Error(),
-		})
+		}
+
+		if diagnostic.Summary == "" {
+			logging.HelperSchemaWarn(ctx, "detected empty error string for diagnostic in AppendProtoDiag for error type")
+			diagnostic.Summary = "Error Missing Message"
+			diagnostic.Detail = "This is always a bug in the provider and should be reported to the provider developers."
+		}
+
+		diags = append(diags, diagnostic)
 	case string:
+		if d == "" {
+			logging.HelperSchemaDebug(ctx, "skipping diagnostic for empty string in AppendProtoDiag")
+			return diags
+		}
+
 		diags = append(diags, &tfprotov5.Diagnostic{
 			Severity: tfprotov5.DiagnosticSeverityWarning,
 			Summary:  d,
@@ -68,18 +95,17 @@ func ProtoToDiags(ds []*tfprotov5.Diagnostic) diag.Diagnostics {
 func DiagsToProto(diags diag.Diagnostics) []*tfprotov5.Diagnostic {
 	var ds []*tfprotov5.Diagnostic
 	for _, d := range diags {
-		if err := d.Validate(); err != nil {
-			panic(fmt.Errorf("Invalid diagnostic: %s. This is always a bug in the provider implementation", err))
-		}
 		protoDiag := &tfprotov5.Diagnostic{
+			Severity:  tfprotov5.DiagnosticSeverityError,
 			Summary:   d.Summary,
 			Detail:    d.Detail,
 			Attribute: PathToAttributePath(d.AttributePath),
 		}
-		if d.Severity == diag.Error {
-			protoDiag.Severity = tfprotov5.DiagnosticSeverityError
-		} else if d.Severity == diag.Warning {
+		if d.Severity == diag.Warning {
 			protoDiag.Severity = tfprotov5.DiagnosticSeverityWarning
+		}
+		if d.Summary == "" {
+			protoDiag.Summary = "Empty Summary: This is always a bug in the provider and should be reported to the provider developers."
 		}
 		ds = append(ds, protoDiag)
 	}
@@ -93,13 +119,13 @@ func AttributePathToPath(ap *tftypes.AttributePath) cty.Path {
 		return p
 	}
 	for _, step := range ap.Steps() {
-		switch step.(type) {
+		switch step := step.(type) {
 		case tftypes.AttributeName:
-			p = p.GetAttr(string(step.(tftypes.AttributeName)))
+			p = p.GetAttr(string(step))
 		case tftypes.ElementKeyString:
-			p = p.Index(cty.StringVal(string(step.(tftypes.ElementKeyString))))
+			p = p.Index(cty.StringVal(string(step)))
 		case tftypes.ElementKeyInt:
-			p = p.Index(cty.NumberIntVal(int64(step.(tftypes.ElementKeyInt))))
+			p = p.Index(cty.NumberIntVal(int64(step)))
 		}
 	}
 	return p

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(suffix),
+				Config: testAccFleetConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
@@ -50,20 +50,20 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDisplayNameConfig(suffix, "display1"),
+				Config: testAccFleetConfig_displayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
 				),
 			},
 			{
-				Config: testAccFleetDisplayNameConfig(suffix, "display2"),
+				Config: testAccFleetConfig_displayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
@@ -83,20 +83,20 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetOptimizeForEndUserLocationConfig(suffix, false),
+				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "false"),
 				),
 			},
 			{
-				Config: testAccFleetOptimizeForEndUserLocationConfig(suffix, true),
+				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
@@ -116,13 +116,13 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetAuditStreamARNConfig(rName),
+				Config: testAccFleetConfig_auditStreamARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", "arn"),
@@ -142,13 +142,13 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetNetworkConfig(rName, "192.168.0.0/16"),
+				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
@@ -158,7 +158,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetNetworkConfig(rName, "10.0.0.0/16"),
+				Config: testAccFleetConfig_network(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
@@ -173,7 +173,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccFleetConfig(rName),
+				Config:      testAccFleetConfig_basic(rName),
 				ExpectError: regexp.MustCompile(`Company Network Configuration cannot be removed`),
 			},
 		},
@@ -183,16 +183,15 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
-	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDeviceCaCertificateConfig(rName, fName),
+				Config: testAccFleetConfig_deviceCaCertificate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
@@ -204,7 +203,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFleetConfig(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "device_ca_certificate", ""),
@@ -217,16 +216,16 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
-	fName := "test-fixtures/saml-metadata.xml"
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetIdentityProviderConfig(rName, fName),
+				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
@@ -239,7 +238,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccFleetConfig(rName),
+				Config:      testAccFleetConfig_basic(rName),
 				ExpectError: regexp.MustCompile(`Identity Provider Configuration cannot be removed`),
 			},
 		},
@@ -251,13 +250,13 @@ func TestAccWorkLinkFleet_disappears(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, worklink.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFleetDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, worklink.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					testAccCheckFleetDisappears(resourceName),
@@ -319,7 +318,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// Return nil if the Worklink Fleet is already destroyed
-			if tfawserr.ErrMessageContains(err, worklink.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 				return nil
 			}
 
@@ -369,7 +368,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccFleetConfig(r string) string {
+func testAccFleetConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%s"
@@ -377,7 +376,7 @@ resource "aws_worklink_fleet" "test" {
 `, r)
 }
 
-func testAccFleetDisplayNameConfig(r, displayName string) string {
+func testAccFleetConfig_displayName(r, displayName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name         = "tf-worklink-fleet-%s"
@@ -386,7 +385,7 @@ resource "aws_worklink_fleet" "test" {
 `, r, displayName)
 }
 
-func testAccFleetOptimizeForEndUserLocationConfig(r string, b bool) string {
+func testAccFleetConfig_optimizeForEndUserLocation(r string, b bool) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name                           = "tf-worklink-fleet-%s"
@@ -441,10 +440,10 @@ resource "aws_subnet" "test" {
 `, cidrBlock, rName, rName)
 }
 
-func testAccFleetNetworkConfig(r, cidrBlock string) string {
-	return fmt.Sprintf(`
-%s
-
+func testAccFleetConfig_network(r, cidrBlock string) string {
+	return acctest.ConfigCompose(
+		testAccFleetNetworkConfig_Base(r, cidrBlock),
+		fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%s"
 
@@ -454,43 +453,43 @@ resource "aws_worklink_fleet" "test" {
     security_group_ids = [aws_security_group.test.id]
   }
 }
-`, testAccFleetNetworkConfig_Base(r, cidrBlock), r)
+`, r))
 }
 
-func testAccFleetAuditStreamARNConfig(r string) string {
+func testAccFleetConfig_auditStreamARN(r string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "AmazonWorkLink-%s_kinesis_test"
+  name        = "AmazonWorkLink-%[1]s_kinesis_test"
   shard_count = 1
 }
 
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
   audit_stream_arn = aws_kinesis_stream.test_stream.arn
 }
-`, r, r)
+`, r)
 }
 
-func testAccFleetDeviceCaCertificateConfig(r string, fName string) string {
+func testAccFleetConfig_deviceCaCertificate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
-  device_ca_certificate = file("%s")
+  device_ca_certificate = file("./test-fixtures/worklink-device-ca-certificate.pem")
 }
-`, r, fName)
+`, rName)
 }
 
-func testAccFleetIdentityProviderConfig(r string, fName string) string {
+func testAccFleetConfig_identityProvider(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
-  name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%[1]s"
 
   identity_provider {
     type          = "SAML"
-    saml_metadata = file("%s")
+    saml_metadata = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
   }
 }
-`, r, fName)
+`, rName, idpEntityId)
 }

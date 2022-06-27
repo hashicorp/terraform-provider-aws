@@ -66,12 +66,7 @@ func sweepDomains(region string) error {
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
 
-		input := &elasticsearchservice.DescribeElasticsearchDomainInput{
-			DomainName: domainInfo.DomainName,
-		}
-
-		output, err := conn.DescribeElasticsearchDomain(input)
-
+		output, err := FindDomainByName(conn, name)
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
@@ -79,7 +74,7 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
+		if output != nil && aws.BoolValue(output.Deleted) {
 			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
 			continue
 		}

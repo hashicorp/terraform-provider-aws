@@ -22,7 +22,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 )
 
 // If this is 1, then we've called CleanupClients. This can be used
@@ -203,6 +204,11 @@ type ClientConfig struct {
 	//
 	// You cannot Reattach to a server with this option enabled.
 	AutoMTLS bool
+
+	// GRPCDialOptions allows plugin users to pass custom grpc.DialOption
+	// to create gRPC connections. This only affects plugins using the gRPC
+	// protocol.
+	GRPCDialOptions []grpc.DialOption
 }
 
 // ReattachConfig is used to configure a client to reattach to an
@@ -568,6 +574,8 @@ func (c *Client) Start() (addr net.Addr, err error) {
 
 		c.config.TLSConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			MinVersion:   tls.VersionTLS12,
 			ServerName:   "localhost",
 		}
 	}
@@ -623,17 +631,19 @@ func (c *Client) Start() (addr net.Addr, err error) {
 		// Wait for the command to end.
 		err := cmd.Wait()
 
-		debugMsgArgs := []interface{}{
+		msgArgs := []interface{}{
 			"path", path,
 			"pid", pid,
 		}
 		if err != nil {
-			debugMsgArgs = append(debugMsgArgs,
+			msgArgs = append(msgArgs,
 				[]interface{}{"error", err.Error()}...)
+			c.logger.Error("plugin process exited", msgArgs...)
+		} else {
+			// Log and make sure to flush the logs right away
+			c.logger.Info("plugin process exited", msgArgs...)
 		}
 
-		// Log and make sure to flush the logs write away
-		c.logger.Debug("plugin process exited", debugMsgArgs...)
 		os.Stderr.Sync()
 
 		// Set that we exited, which takes a lock
@@ -768,7 +778,7 @@ func (c *Client) Start() (addr net.Addr, err error) {
 }
 
 // loadServerCert is used by AutoMTLS to read an x.509 cert returned by the
-// server, and load it as the RootCA for the client TLSConfig.
+// server, and load it as the RootCA and ClientCA for the client TLSConfig.
 func (c *Client) loadServerCert(cert string) error {
 	certPool := x509.NewCertPool()
 
@@ -785,6 +795,7 @@ func (c *Client) loadServerCert(cert string) error {
 	certPool.AddCert(x509Cert)
 
 	c.config.TLSConfig.RootCAs = certPool
+	c.config.TLSConfig.ClientCAs = certPool
 	return nil
 }
 

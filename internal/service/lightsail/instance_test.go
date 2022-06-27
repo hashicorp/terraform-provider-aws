@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,9 +27,9 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(lightsailName),
@@ -62,9 +62,9 @@ func TestAccLightsailInstance_name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_basic(lightsailNameWithSpaces),
@@ -108,9 +108,9 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_tags1(lightsailName),
@@ -165,9 +165,9 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(lightsailName),
@@ -222,18 +222,16 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			InstanceName: aws.String(rs.Primary.Attributes["name"]),
 		})
 
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			continue
+		}
+
 		if err == nil {
 			if respInstance.Instance != nil {
 				return fmt.Errorf("LightsailInstance %q still exists", rs.Primary.ID)
 			}
 		}
 
-		// Verify the error
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return nil
-			}
-		}
 		return err
 	}
 

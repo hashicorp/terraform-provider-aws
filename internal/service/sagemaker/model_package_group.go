@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -80,7 +80,7 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(name)
 
 	if _, err := WaitModelPackageGroupCompleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Sagemaker Model Package Group (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceModelPackageGroupRead(d, meta)
@@ -95,7 +95,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Sagemaker Model Package Group (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Model Package Group (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("error reading SageMaker Model Package Group (%s): %w", d.Id(), err)

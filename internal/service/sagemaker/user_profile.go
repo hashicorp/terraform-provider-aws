@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -116,7 +116,17 @@ func ResourceUserProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -145,7 +155,17 @@ func ResourceUserProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -182,7 +202,17 @@ func ResourceUserProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -248,7 +278,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandSagemakerDomainDefaultUserSettings(v.([]interface{}))
+		input.UserSettings = expandDomainDefaultUserSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -270,7 +300,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	userProfileArn := aws.StringValue(output.UserProfileArn)
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(userProfileArn)
+	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
 		return err
 	}
@@ -289,14 +319,14 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(d.Id())
+	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
 		return err
 	}
 
 	UserProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
 			return nil
@@ -312,7 +342,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenSagemakerDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
 		return fmt.Errorf("error setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
@@ -346,7 +376,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &sagemaker.UpdateUserProfileInput{
 			UserProfileName: aws.String(userProfileName),
 			DomainId:        aws.String(domainID),
-			UserSettings:    expandSagemakerDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] SageMaker User Profile update config: %#v", *input)
@@ -383,13 +413,13 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteUserProfile(input); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error deleting SageMaker User Profile (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitUserProfileDeleted(conn, domainID, userProfileName); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return fmt.Errorf("error waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
 		}
 	}
@@ -397,7 +427,7 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeSagemakerUserProfileName(id string) (string, string, error) {
+func decodeUserProfileName(id string) (string, string, error) {
 	userProfileARN, err := arn.Parse(id)
 	if err != nil {
 		return "", "", err

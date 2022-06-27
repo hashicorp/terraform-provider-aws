@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -25,10 +26,10 @@ func TestAccELBBackendServerPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendServerPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),
@@ -93,12 +94,15 @@ func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
 				&elb.DescribeLoadBalancersInput{
 					LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 				})
+
+			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+				continue
+			}
+
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "LoadBalancerNotFound") {
-					continue
-				}
 				return err
 			}
+
 			for _, backendServer := range out.LoadBalancerDescriptions[0].BackendServerDescriptions {
 				policyStrings := []string{}
 				for _, pol := range backendServer.PolicyNames {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) err
 		_, err := conn.CreateBasePathMapping(input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "") {
+			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeBadRequestException) {
 				return resource.NonRetryableError(err)
 			}
 
@@ -161,13 +161,13 @@ func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error
 		BasePath:   aws.String(basePath),
 	})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Gateway base path mapping: %s", err)
+		return fmt.Errorf("error reading API Gateway Base Path Mapping (%s): %w", d.Id(), err)
 	}
 
 	mappingBasePath := aws.StringValue(mapping.BasePath)
@@ -198,7 +198,7 @@ func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			return nil
 		}
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -39,7 +39,7 @@ func ResourceBackup() *schema.Resource {
 			},
 			"file_system_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"kms_key_id": {
@@ -56,6 +56,11 @@ func ResourceBackup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -71,7 +76,22 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &fsx.CreateBackupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
-		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
+	}
+
+	if v, ok := d.GetOk("file_system_id"); ok {
+		input.FileSystemId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("volume_id"); ok {
+		input.VolumeId = aws.String(v.(string))
+	}
+
+	if input.FileSystemId == nil && input.VolumeId == nil {
+		return fmt.Errorf("error creating FSx Backup: %s", "must specify either file_system_id or volume_id")
+	}
+
+	if input.FileSystemId != nil && input.VolumeId != nil {
+		return fmt.Errorf("error creating FSx Backup: %s", "can only specify either file_system_id or volume_id")
 	}
 
 	if len(tags) > 0 {
@@ -126,12 +146,18 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", backup.ResourceARN)
 	d.Set("type", backup.Type)
 
-	fs := backup.FileSystem
-	d.Set("file_system_id", fs.FileSystemId)
+	if backup.FileSystem != nil {
+		fs := backup.FileSystem
+		d.Set("file_system_id", fs.FileSystemId)
+	}
 
 	d.Set("kms_key_id", backup.KmsKeyId)
 
 	d.Set("owner_id", backup.OwnerId)
+
+	if backup.Volume != nil {
+		d.Set("volume_id", backup.Volume.VolumeId)
+	}
 
 	tags := KeyValueTags(backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

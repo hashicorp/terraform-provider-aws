@@ -126,8 +126,8 @@ func TestRuleParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:      "partner event bus 2",
-			InputID:       "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
-			ExpectedPart0: "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f",
+			InputID:       "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
+			ExpectedPart0: "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f",
 			ExpectedPart1: "test",
 		},
 		{

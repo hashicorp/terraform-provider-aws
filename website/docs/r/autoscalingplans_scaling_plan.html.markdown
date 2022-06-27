@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling Plans"
+subcategory: "Auto Scaling Plans"
 layout: "aws"
 page_title: "AWS: aws_autoscalingplans_scaling_plan"
 description: |-

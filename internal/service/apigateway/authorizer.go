@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +26,7 @@ func ResourceAuthorizer() *schema.Resource {
 		Update:        resourceAuthorizerUpdate,
 		Delete:        resourceAuthorizerDelete,
 		CustomizeDiff: resourceAuthorizerCustomizeDiff,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -40,33 +42,9 @@ func ResourceAuthorizer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"authorizer_uri": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
-			},
-			"identity_source": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "method.request.header.Authorization",
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"rest_api_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  apigateway.AuthorizerTypeToken,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigateway.AuthorizerTypeCognitoUserPools,
-					apigateway.AuthorizerTypeRequest,
-					apigateway.AuthorizerTypeToken,
-				}, false),
+				Computed: true,
 			},
 			"authorizer_credentials": {
 				Type:         schema.TypeString,
@@ -79,9 +57,22 @@ func ResourceAuthorizer() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 3600),
 				Default:      DefaultAuthorizerTTL,
 			},
+			"authorizer_uri": {
+				Type:     schema.TypeString,
+				Optional: true, // authorizer_uri is required for authorizer TOKEN/REQUEST
+			},
+			"identity_source": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "method.request.header.Authorization",
+			},
 			"identity_validation_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"provider_arns": {
 				Type:     schema.TypeSet,
@@ -90,6 +81,17 @@ func ResourceAuthorizer() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"rest_api_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigateway.AuthorizerTypeToken,
+				ValidateFunc: validation.StringInSlice(apigateway.AuthorizerType_Values(), false),
 			},
 		},
 	}
@@ -165,19 +167,21 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Authorizer %s", d.Id())
+
+	restApiId := d.Get("rest_api_id").(string)
 	input := apigateway.GetAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		RestApiId:    aws.String(restApiId),
 	}
 
 	authorizer, err := conn.GetAuthorizer(&input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] No API Gateway Authorizer found: %s", input)
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+			log.Printf("[WARN] API Gateway Authorizer (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading API Gateway Authorizer (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Authorizer: %s", authorizer)
 
@@ -195,6 +199,14 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", authorizer.Name)
 	d.Set("type", authorizer.Type)
 	d.Set("provider_arns", flex.FlattenStringSet(authorizer.ProviderARNs))
+
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "apigateway",
+		Region:    meta.(*conns.AWSClient).Region,
+		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", restApiId, d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }

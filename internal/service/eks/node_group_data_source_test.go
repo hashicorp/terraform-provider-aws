@@ -17,17 +17,17 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupNodeGroupNameConfig(rName),
+				Config: testAccNodeGroupConfig_dataSourceName(rName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccNodeGroupDataSourceConfig(rName),
+				Config: testAccNodeGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "ami_type", dataSourceResourceName, "ami_type"),
@@ -48,6 +48,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceResourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids", dataSourceResourceName, "subnet_ids"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "taints.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceResourceName, "version"),
 				),
@@ -56,8 +57,8 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNodeGroupDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupNodeGroupNameConfig(rName), fmt.Sprintf(`
+func testAccNodeGroupDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_dataSourceName(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q

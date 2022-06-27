@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -75,7 +75,7 @@ func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,7 +123,7 @@ func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {

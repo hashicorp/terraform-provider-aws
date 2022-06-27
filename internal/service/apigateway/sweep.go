@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,7 +46,7 @@ func sweepRestAPIs(region string) error {
 			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteRestApi(input)
 				if err != nil {
-					if tfawserr.ErrMessageContains(err, apigateway.ErrCodeTooManyRequestsException, "") {
+					if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeTooManyRequestsException) {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
