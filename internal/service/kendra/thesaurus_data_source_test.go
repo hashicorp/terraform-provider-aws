@@ -12,10 +12,14 @@ import (
 )
 
 func TestAccKendraThesaurusDataSource_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	datasourceName := "data.aws_kendra_thesaurus.test"
 	resourceName := "aws_kendra_thesaurus.test"
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -24,7 +28,7 @@ func TestAccKendraThesaurusDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccThesaurusDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`getting Kendra Thesaurus`),
+				ExpectError: regexp.MustCompile(`reading Kendra Thesaurus`),
 			},
 			{
 				Config: testAccThesaurusDataSourceConfig_basic(rName, rName2),

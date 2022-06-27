@@ -79,6 +79,7 @@ func DataSourceThesaurus() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"term_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -98,7 +99,6 @@ func DataSourceThesaurus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -107,17 +107,13 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).KendraConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id := d.Get("thesaurus_id").(string)
-	indexId := d.Get("index_id").(string)
+	thesaurusID := d.Get("thesaurus_id").(string)
+	indexID := d.Get("index_id").(string)
 
-	resp, err := FindThesaurusByID(ctx, conn, id, indexId)
+	resp, err := FindThesaurusByID(ctx, conn, thesaurusID, indexID)
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Thesaurus (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return diag.Errorf("getting Kendra Thesaurus (%s): empty response", id)
+		return diag.Errorf("reading Kendra Thesaurus (%s): %s", thesaurusID, err)
 	}
 
 	arn := arn.ARN{
@@ -125,9 +121,8 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 		Service:   "kendra",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexId, id),
+		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexID, thesaurusID),
 	}.String()
-
 	d.Set("arn", arn)
 	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("description", resp.Description)
@@ -143,20 +138,22 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(resp.SourceS3Path)); err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("setting source_s3_path: %s", err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
+
 	if err != nil {
-		return diag.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", arn, err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
+	d.SetId(fmt.Sprintf("%s/%s", thesaurusID, indexID))
 
 	return nil
 }
