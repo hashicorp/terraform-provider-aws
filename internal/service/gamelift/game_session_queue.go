@@ -3,6 +3,7 @@ package gamelift
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
@@ -37,8 +38,9 @@ func ResourceGameSessionQueue() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"notification_target": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws:sns:[^:]*:\d{12}:[a-z0-9-_]+$`), "valid SNS topic ARN must be provided"),
 			},
 			"player_latency_policy": {
 				Type:     schema.TypeList,
