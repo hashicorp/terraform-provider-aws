@@ -25,7 +25,7 @@ data "aws_route53_resolver_firewall_rules" "example" {
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 The given filters must match exactly one resolver rule whose data will be exported as attributes.
 
-* `id` - The unique identifier of the firewall rule group that you want to retrieve the rules for. 
+* `id` - The unique identifier of the firewall rule group that you want to retrieve the rules for.
 * `action` - (Optional) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list.
 * `priority` - (Optional) The setting that determines the processing order of the rules in a rule group.
 
@@ -43,4 +43,4 @@ The given filters must match exactly one resolver rule whose data will be export
 * `creator_request_id` - A unique string defined by you to identify the request.
 * `firewall_domain_list_id` - The ID of the domain list that's used in the rule.
 * `modification_time` - The date and time that the rule was last modified, in Unix time format and Coordinated Universal Time (UTC).
-* `name` - The name of the rule. 
+* `name` - The name of the rule.
