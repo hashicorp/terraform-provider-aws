@@ -3,6 +3,7 @@ package apprunner
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
@@ -35,6 +36,10 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"observability_configuration_revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"trace_configuration": {
 				Type:     schema.TypeList,
@@ -107,11 +112,70 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 
 	output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): %w", d.Id(), err))
+	}
+
+	if output == nil || output.ObservabilityConfiguration == nil {
+		return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): empty output", d.Id()))
+	}
+
+	if aws.StringValue(output.ObservabilityConfiguration.Status) == ObservabilityConfigurationStatusInactive {
+		if d.IsNewResource() {
+			return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status)))
+		}
+		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	config := output.ObservabilityConfiguration
+	arn := aws.StringValue(config.ObservabilityConfigurationArn)
+
+	d.Set("arn", arn)
+	d.Set("observability_configuration_name", config.ObservabilityConfigurationName)
+	d.Set("observability_configuration_revision", config.ObservabilityConfigurationRevision)
+
+	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
+		return diag.Errorf("error setting trace_configuration: %s", err)
+	}
+
+	tags, err := ListTags(conn, arn)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Observability Configuration (%s): %s", arn, err))
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
 	return nil
 }
 
 func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating App Runner Observability Configuration (%s) tags: %s", d.Get("arn").(string), err))
+		}
+	}
 
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
@@ -155,4 +219,18 @@ func expandTraceConfigurations(tfMap map[string]interface{}) *apprunner.TraceCon
 	}
 
 	return traceConfiguration
+}
+
+func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration) map[string]interface{} {
+	if traceConfiguration == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := traceConfiguration.Vendor; v != nil {
+		tfMap["vendor"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
