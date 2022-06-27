@@ -98,7 +98,7 @@ func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.A
 		Pending: []string{},
 		Target:  []string{ObservabilityConfigurationStatusActive},
 		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
-		Timeout: AutoScalingConfigurationCreateTimeout,
+		Timeout: ObservabilityConfigurationCreateTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
