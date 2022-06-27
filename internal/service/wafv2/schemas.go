@@ -156,7 +156,7 @@ func byteMatchStatementSchema() *schema.Schema {
 				"oversize_handling": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.OversizeConstraintAction_Values(), false),
+					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 				},
 				"search_string": {
 					Type:         schema.TypeString,
