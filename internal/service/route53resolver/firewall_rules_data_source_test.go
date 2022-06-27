@@ -26,6 +26,8 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 
 	fqdn := acctest.RandomFQDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	action := "ALLOW"
+	priority := "100"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -33,11 +35,56 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallRulesDataSourceBaseConfig(fqdn, rName),
+				Config: testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority),
 				Check:  propagationSleep(),
 			},
 			{
-				Config: testAccFirewallRulesDataSourceConfig_basic(fqdn, rName),
+				Config: testAccFirewallRulesDataSourceConfig_basic(rName, fqdn, action, priority),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creator_request_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_domain_list_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_rule_group_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.modification_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.priority"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.0.name", rName),
+				),
+			},
+			{
+				Config: testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creator_request_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_domain_list_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_rule_group_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.modification_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.priority"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.0.name", rName),
+				),
+			},
+			{
+				Config: testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creator_request_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_domain_list_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.firewall_rule_group_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.modification_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.priority"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.0.name", rName),
+				),
+			},
+			{
+				Config: testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
@@ -55,31 +102,59 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFirewallRulesDataSourceBaseConfig(fqdn, rName string) string {
+func testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_firewall_domain_list" "test" {
-  name    = %[2]q
-  domains = [%[1]q]
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  name = %[1]q
 }
 
-resource "aws_route53_resolver_firewall_rule_group" "test" {
-  name = %[2]q
+resource "aws_route53_resolver_firewall_domain_list" "test" {
+  name    = %[1]q
+  domains = [%[2]q]
 }
 
 resource "aws_route53_resolver_firewall_rule" "test" {
-  name                    = %[2]q
-  action                  = "ALLOW"
+  name                    = %[1]q
+  action                  = %[3]q
   firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
   firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
-  priority                = 100
+  priority                = %[4]q
 }
-`, fqdn, rName)
+`, rName, fqdn, action, priority)
 }
 
-func testAccFirewallRulesDataSourceConfig_basic(fqdn, rName string) string {
-	return acctest.ConfigCompose(testAccFirewallRulesDataSourceBaseConfig(fqdn, rName), `
+func testAccFirewallRulesDataSourceConfig_basic(rName, fqdn, action, priority string) string {
+	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), `
 data "aws_route53_resolver_firewall_rules" "test" {
   id = aws_route53_resolver_firewall_rule_group.test.id
 }
 `)
+}
+
+func testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority string) string {
+	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
+data "aws_route53_resolver_firewall_rules" "test" {
+  id = aws_route53_resolver_firewall_rule_group.test.id
+  action = %[1]q
+  priority = %[2]q
+}
+`, action, priority))
+}
+
+func testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority string) string {
+	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
+data "aws_route53_resolver_firewall_rules" "test" {
+  id = aws_route53_resolver_firewall_rule_group.test.id
+  action = %[1]q
+}
+`, action))
+}
+
+func testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority string) string {
+	return acctest.ConfigCompose(testAccFirewallRulesDataSourceConfig_base(rName, fqdn, action, priority), fmt.Sprintf(`
+data "aws_route53_resolver_firewall_rules" "test" {
+  id = aws_route53_resolver_firewall_rule_group.test.id
+  priority = %[1]q
+}
+`, priority))
 }
