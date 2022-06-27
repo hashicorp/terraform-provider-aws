@@ -7,14 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceDNSNamespace() *schema.Resource {
+func DataSourceHTTPNamespace() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceDNSNamespaceRead,
+		ReadWithoutTimeout: dataSourceHTTPNamespaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -25,38 +24,29 @@ func DataSourceDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone": {
+			"http_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validNamespaceName,
 			},
 			"tags": tftags.TagsSchemaComputed(),
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
-				ValidateFunc: validation.StringInSlice([]string{
-					servicediscovery.NamespaceTypeDnsPublic,
-					servicediscovery.NamespaceTypeDnsPrivate,
-				}, false),
-			},
 		},
 	}
 }
 
-func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	nsType := d.Get("type").(string)
-	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, servicediscovery.NamespaceTypeHttp)
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
+		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
 	namespaceID := aws.StringValue(nsSummary.Id)
@@ -64,24 +54,24 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
+		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
 	arn := aws.StringValue(ns.Arn)
 	d.Set("arn", arn)
 	d.Set("description", ns.Description)
-	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
-		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
+	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
+		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
 	} else {
-		d.Set("hosted_zone", nil)
+		d.Set("http_name", nil)
 	}
 	d.Set("name", ns.Name)
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Service Discovery %s Namespace (%s): %s", nsType, arn, err)
+		return diag.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
