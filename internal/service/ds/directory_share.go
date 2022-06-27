@@ -43,6 +43,10 @@ func ResourceDirectoryShare() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"shared_directory_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"target": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -64,10 +68,6 @@ func ResourceDirectoryShare() *schema.Resource {
 					},
 				},
 			},
-			"shared_directory_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -84,6 +84,7 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 			Type: aws.String(d.Get("target.type").(string)),
 		},
 	}
+
 	if v, ok := d.GetOk("share_notes"); ok {
 		input.ShareNotes = aws.String(v.(string))
 	}
@@ -93,6 +94,7 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
 	d.SetId(fmt.Sprintf("%s/%s", dirId, aws.StringValue(out.SharedDirectoryId)))
 

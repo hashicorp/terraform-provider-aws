@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,9 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDirectoryShare_basic(t *testing.T) {
+func TestAccDSDirectoryShare_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var sharedDirectory directoryservice.SharedDirectory
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory_share.test"
 
 	domainName := acctest.RandomDomainName()
@@ -24,14 +26,14 @@ func TestAccDirectoryShare_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			//acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckDirectoryShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryShareConfig(domainName),
+				Config: testAccDirectoryShareConfig(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
 					testAccCheckDirectoryShareExists(resourceName, &sharedDirectory),
@@ -126,12 +128,12 @@ func testAccCheckDirectoryShareDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDirectoryShareConfig(domain string) string {
+func testAccDirectoryShareConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
-		testAccDirectoryServiceDirectoryConfig(domain),
+		testAccDirectoryConfig_basic(rName, domain),
 		`
-resource "aws_directoryservice_directory_share" "test" {
+resource "aws_directory_service_directory_share" "test" {
   directory_id = aws_directory_service_directory.test.id
   share_notes  = "test"
   target {
@@ -142,6 +144,5 @@ resource "aws_directoryservice_directory_share" "test" {
 data "aws_caller_identity" "receiver" {
   provider = "awsalternate"
 }
-`,
-	)
+`)
 }
