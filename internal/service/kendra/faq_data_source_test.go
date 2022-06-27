@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccKendraFaqDataSource_basic(t *testing.T) {
+func testAccFaqDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_kendra_faq.test"
 	resourceName := "aws_kendra_faq.test"
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

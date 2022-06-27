@@ -20,12 +20,13 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved": testAccExperience_Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved,
 		},
 		"Faq": {
-			"basic":        testAccFaq_basic,
-			"disappears":   testAccFaq_disappears,
-			"tags":         testAccFaq_tags,
-			"Description":  testAccFaq_description,
-			"FileFormat":   testAccFaq_fileFormat,
-			"LanguageCode": testAccFaq_languageCode,
+			"basic":            testAccFaq_basic,
+			"disappears":       testAccFaq_disappears,
+			"tags":             testAccFaq_tags,
+			"Description":      testAccFaq_description,
+			"FileFormat":       testAccFaq_fileFormat,
+			"LanguageCode":     testAccFaq_languageCode,
+			"DataSource_basic": testAccFaqDataSource_basic,
 		},
 		"Index": {
 			"basic":                testAccIndex_basic,
@@ -37,6 +38,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"RoleARN":              testAccIndex_updateRoleARN,
 			"ServerSideEncryption": testAccIndex_serverSideEncryption,
 			"UserTokenJSON":        testAccIndex_updateUserTokenJSON,
+			"DataSource_basic":     testAccIndexDataSource_basic,
 		},
 		"QuerySuggestionsBlockList": {
 			"basic":        testAccQuerySuggestionsBlockList_basic,
