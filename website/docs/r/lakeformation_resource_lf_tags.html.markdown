@@ -21,8 +21,6 @@ resource "aws_lakeformation_lf_tag" "example" {
 }
 
 resource "aws_lakeformation_resource_lf_tags" "example" {
-  catalog_id = data.aws_caller_identity.current.account_id
-
   database {
     name = aws_glue_catalog_database.example.name
   }
@@ -48,8 +46,6 @@ resource "aws_lakeformation_lf_tag" "example2" {
 }
 
 resource "aws_lakeformation_resource_lf_tags" "example" {
-  catalog_id = data.aws_caller_identity.current.account_id
-
   database {
     name = aws_glue_catalog_database.example.name
   }

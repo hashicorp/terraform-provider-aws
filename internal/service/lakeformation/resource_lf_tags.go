@@ -261,7 +261,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				return resource.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation LF Tag Resource: %w", err))
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
