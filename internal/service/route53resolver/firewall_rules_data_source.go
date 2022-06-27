@@ -17,6 +17,14 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"action": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"priority": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"firewall_rules": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -80,10 +88,10 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	firewall_rule_group_id := aws.String(d.Get("id").(string))
 	input := &route53resolver.ListFirewallRulesInput{
-		FirewallRuleGroupId: firewall_rule_group_id,
+		FirewallRuleGroupId: aws.String(d.Get("id").(string)),
 	}
+
 	var results []*route53resolver.FirewallRule
 
 	err := conn.ListFirewallRulesPages(input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
@@ -93,6 +101,12 @@ func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta in
 
 		for _, rule := range page.FirewallRules {
 			if rule == nil {
+				continue
+			}
+			if v, ok := d.GetOk("action"); ok && aws.StringValue(rule.Action) != v.(string) {
+				continue
+			}
+			if v, ok := d.GetOk("priority"); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
 				continue
 			}
 			results = append(results, rule)
@@ -106,11 +120,10 @@ func dataSourceResolverFirewallFirewallRulesRead(d *schema.ResourceData, meta in
 	if len(results) == 0 {
 		return fmt.Errorf("no  Route53 Firewall Rules found matching criteria; try different search")
 	}
-
 	if err := d.Set("firewall_rules", flattenFirewallRules(results)); err != nil {
 		return fmt.Errorf("error setting firewall rule details: %w", err)
 	}
-	d.SetId(aws.StringValue(firewall_rule_group_id))
+	d.SetId(aws.StringValue(aws.String(d.Get("id").(string))))
 
 	return nil
 }
