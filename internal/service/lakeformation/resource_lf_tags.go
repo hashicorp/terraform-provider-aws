@@ -3,6 +3,7 @@ package lakeformation
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -274,27 +274,37 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 		return names.DiagError(names.LakeFormation, names.ErrActionCreating, resourceLFTags, input.String(), err)
 	}
 
-	if output != nil && len(output.Failures) > 0 {
-		var failures *multierror.Error
+	diags := diag.Diagnostics{}
 
+	if output != nil && len(output.Failures) > 0 {
 		for _, v := range output.Failures {
 			if v.LFTag == nil || v.Error == nil {
 				continue
 			}
 
-			origErr := fmt.Errorf("catalog id:%s, tag key:%s, values:%+v", aws.StringValue(v.LFTag.CatalogId), aws.StringValue(v.LFTag.TagKey), aws.StringValueSlice(v.LFTag.TagValues))
-			err := awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), origErr)
-			failures = multierror.Append(failures, err)
+			diags = names.AddWarning(
+				diags,
+				names.LakeFormation,
+				names.ErrActionCreating,
+				resourceLFTags,
+				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.StringValue(v.LFTag.CatalogId), aws.StringValue(v.LFTag.TagKey), aws.StringValueSlice(v.LFTag.TagValues)),
+				awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), nil),
+			)
 		}
 
-		if failures.Len() > 0 {
-			return names.DiagError(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", failures.ErrorOrNil())
+		if len(diags) == len(input.LFTags) {
+			return append(diags,
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  names.ProblemStandardMessage(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", errors.New(fmt.Sprintf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags)))),
+				},
+			)
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return resourceResourceLFTagsRead(ctx, d, meta)
+	return append(resourceResourceLFTagsRead(ctx, d, meta), diags...)
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
