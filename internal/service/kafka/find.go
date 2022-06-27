@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
-	input := &kafka.DescribeClusterInput{
+func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
+	input := &kafka.DescribeClusterV2Input{
 		ClusterArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeClusterWithContext(ctx, input)
+	output, err := conn.DescribeClusterV2WithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{

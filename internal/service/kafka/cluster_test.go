@@ -45,8 +45,8 @@ var (
 	clusterZookeeperConnectStringRegexp = regexp.MustCompile(fmt.Sprintf(clusterBrokerRegexpFormat, clusterPortZookeeper))
 )
 
-func TestAccKafkaCluster_basic(t *testing.T) {
-	var cluster kafka.ClusterInfo
+func TestAccKafkaCluster_Basic_Provisioned(t *testing.T) {
+	var cluster kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -57,7 +57,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_basicProvisioned(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
@@ -68,34 +68,80 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringDefault),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_type", "provisioned"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.instance_type", "kafka.m5.large"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.security_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.configuration_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "provisioned.0.encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.enhanced_monitoring", kafka.EnhancedMonitoringDefault),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.number_of_broker_nodes", "3"),
+					resource.TestMatchResourceAttr(resourceName, "provisioned.0.zookeeper_connect_string", clusterZookeeperConnectStringRegexp),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "provisioned.0.zookeeper_connect_string"),
+					testAccCheckResourceAttrIsSortedCSV(resourceName, "provisioned.0.zookeeper_connect_string_tls"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", clusterZookeeperConnectStringRegexp),
-					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string"),
-					testAccCheckResourceAttrIsSortedCSV(resourceName, "zookeeper_connect_string_tls"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+		},
+	})
+}
+
+func TestAccKafkaCluster_Basic_Serverless(t *testing.T) {
+	var cluster kafka.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basicServerless(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
+					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "cluster_type", "serverless"),
+					resource.TestCheckResourceAttr(resourceName, "serverless.0.client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "serverless.0.vpc_configs.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "serverless.0.vpc_configs.0.security_group_ids.*", "aws_security_group.example_sg", "id"),
+					resource.TestCheckResourceAttr(resourceName, "serverless.0.vpc_configs.0.subnet_ids.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "serverless.0.vpc_configs.0.subnet_ids.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "serverless.0.vpc_configs.0.subnet_ids.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "serverless.0.vpc_configs.0.subnet_ids.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -111,7 +157,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 }
 
 func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -125,8 +171,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 				Config: testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName, 11),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "11"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", "11"),
 				),
 			},
 			{
@@ -143,8 +189,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "112"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", "112"),
 				),
 			},
 		},
@@ -152,7 +198,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 }
 
 func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	original_volume_size := 11
@@ -168,13 +214,13 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 				Config: testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabled(rName, original_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "false"),
 				),
 			},
 			{
@@ -191,14 +237,14 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", strconv.Itoa(updated_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
 				),
 			},
 		},
@@ -206,7 +252,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 }
 
 func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	original_volume_size := 11
@@ -223,8 +269,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t 
 				Config: testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName, original_volume_size),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
 				),
 			},
 			{
@@ -238,13 +284,13 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
 				),
 			},
 		},
@@ -252,7 +298,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t 
 }
 
 func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -266,8 +312,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 				Config: testAccClusterConfig_brokerNodeGroupInfoInstanceType(rName, "kafka.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.instance_type", "kafka.t3.small"),
 				),
 			},
 			{
@@ -285,8 +331,8 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.instance_type", "kafka.m5.large"),
 				),
 			},
 		},
@@ -294,7 +340,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 }
 
 func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -315,13 +361,13 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "true"),
 				),
 			},
 			{
@@ -335,10 +381,10 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
 				),
 			},
 			{
@@ -352,10 +398,10 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
 				),
 			},
 		},
@@ -363,7 +409,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 }
 
 func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -377,12 +423,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				Config: testAccClusterConfig_clientAuthenticationSASLScram(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", clusterBoostrapBrokersSASLScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -402,12 +448,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
@@ -427,7 +473,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 }
 
 func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -441,12 +487,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 				Config: testAccClusterConfig_clientAuthenticationSASLIAM(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -466,12 +512,12 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
@@ -491,7 +537,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 }
 
 func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1 kafka.Cluster
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -516,18 +562,18 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				Config: testAccClusterConfig_clientAuthenticationTLSCertificateAuthorityARNs(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
 			},
 			{
@@ -551,7 +597,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 }
 
 func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -576,11 +622,11 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 				Config: testAccClusterConfig_rootCANoClientAuthentication(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
 			},
 			{
@@ -596,18 +642,18 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.iam", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.sasl.0.scram", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.client_authentication.0.unauthenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
 			},
 			{
@@ -623,7 +669,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 }
 
 func TestAccKafkaCluster_Info_revision(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	configurationResourceName := "aws_msk_configuration.test1"
 	configurationResourceName2 := "aws_msk_configuration.test2"
@@ -639,9 +685,9 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 				Config: testAccClusterConfig_configurationInfoRevision1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName, "latest_revision"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.arn", configurationResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.revision", configurationResourceName, "latest_revision"),
 				),
 			},
 			{
@@ -657,9 +703,9 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName2, "latest_revision"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.arn", configurationResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.revision", configurationResourceName2, "latest_revision"),
 				),
 			},
 		},
@@ -667,7 +713,7 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 }
 
 func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) {
-	var cluster kafka.ClusterInfo
+	var cluster kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -681,7 +727,7 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 				Config: testAccClusterConfig_encryptionInfoEncryptionAtRestKMSKeyARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", "arn"),
 				),
 			},
 			{
@@ -697,7 +743,7 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 }
 
 func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -711,9 +757,9 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 				Config: testAccClusterConfig_encryptionInfoEncryptionInTransitClientBroker(rName, "PLAINTEXT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", clusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
@@ -733,7 +779,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 }
 
 func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -747,9 +793,9 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 				Config: testAccClusterConfig_encryptionInfoEncryptionInTransitIn(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
 				),
 			},
 			{
@@ -765,7 +811,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 }
 
 func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -779,7 +825,7 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 				Config: testAccClusterConfig_enhancedMonitoring(rName, "PER_BROKER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringPerBroker),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.enhanced_monitoring", kafka.EnhancedMonitoringPerBroker),
 				),
 			},
 			{
@@ -795,7 +841,7 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringPerTopicPerBroker),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.enhanced_monitoring", kafka.EnhancedMonitoringPerTopicPerBroker),
 				),
 			},
 		},
@@ -803,7 +849,7 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 }
 
 func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -820,12 +866,12 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.number_of_broker_nodes", "3"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
@@ -845,12 +891,12 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "provisioned.0.broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.number_of_broker_nodes", "6"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
 			},
@@ -859,7 +905,7 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 }
 
 func TestAccKafkaCluster_openMonitoring(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -873,12 +919,12 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 				Config: testAccClusterConfig_openMonitoring(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "false"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
 				),
 			},
 			{
@@ -894,12 +940,12 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "true"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
 				),
 			},
 		},
@@ -907,7 +953,7 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 }
 
 func TestAccKafkaCluster_loggingInfo(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -921,14 +967,14 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 				Config: testAccClusterConfig_loggingInfo(rName, false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.firehose.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.s3.0.enabled", "false"),
 				),
 			},
 			{
@@ -944,14 +990,14 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.firehose.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.logging_info.0.broker_logs.0.s3.0.enabled", "true"),
 				),
 			},
 		},
@@ -959,7 +1005,7 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 }
 
 func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -973,7 +1019,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_version(rName, "2.7.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.7.1"),
 				),
 			},
 			{
@@ -989,7 +1035,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.8.0"),
 				),
 			},
 		},
@@ -997,7 +1043,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 }
 
 func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -1011,7 +1057,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 				Config: testAccClusterConfig_version(rName, "2.8.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.8.0"),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", clusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
@@ -1032,7 +1078,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.7.1"),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", clusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
@@ -1045,7 +1091,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 }
 
 func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
-	var cluster1, cluster2 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	configurationResourceName1 := "aws_msk_configuration.config1"
 	configurationResourceName2 := "aws_msk_configuration.config2"
@@ -1061,10 +1107,10 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 				Config: testAccClusterConfig_versionConfigurationInfo(rName, "2.7.1", "config1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName1, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName1, "latest_revision"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.7.1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.arn", configurationResourceName1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.revision", configurationResourceName1, "latest_revision"),
 				),
 			},
 			{
@@ -1080,10 +1126,10 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName2, "latest_revision"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.kafka_version", "2.8.0"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned.0.configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.arn", configurationResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioned.0.configuration_info.0.revision", configurationResourceName2, "latest_revision"),
 				),
 			},
 		},
@@ -1091,7 +1137,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 }
 
 func TestAccKafkaCluster_tags(t *testing.T) {
-	var cluster kafka.ClusterInfo
+	var cluster kafka.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 
@@ -1183,7 +1229,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckClusterExists(n string, v *kafka.ClusterInfo) resource.TestCheckFunc {
+func testAccCheckClusterExists(n string, v *kafka.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1208,7 +1254,7 @@ func testAccCheckClusterExists(n string, v *kafka.ClusterInfo) resource.TestChec
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *kafka.ClusterInfo) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *kafka.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ClusterArn) != aws.StringValue(j.ClusterArn) {
 			return fmt.Errorf("MSK Cluster (%s) recreated", aws.StringValue(i.ClusterArn))
@@ -1218,7 +1264,7 @@ func testAccCheckClusterNotRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *kafka.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.ClusterArn) == aws.StringValue(j.ClusterArn) {
 			return fmt.Errorf("MSK Cluster (%s) was not recreated", aws.StringValue(i.ClusterArn))
@@ -1248,6 +1294,7 @@ func testAccClusterBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
+  enable_dns_hostnames = true
 
   tags = {
     Name = %[1]q
@@ -1287,6 +1334,14 @@ resource "aws_subnet" "example_subnet_az3" {
 resource "aws_security_group" "example_sg" {
   vpc_id = aws_vpc.example_vpc.id
 
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  
   tags = {
     Name = %[1]q
   }
@@ -1298,6 +1353,7 @@ func testAccClusterBasePublicAccessConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/21"
+  enable_dns_hostnames = true
 
   tags = {
     Name = %[1]q
@@ -1413,18 +1469,43 @@ resource "aws_route_table_association" "route_tbl_assoc_3" {
 `, rName))
 }
 
-func testAccClusterConfig_basic(rName string) string {
+func testAccClusterConfig_basicProvisioned(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+  cluster_type           = "provisioned"
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+  provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+  }
+}
+`, rName))
+}
+
+func testAccClusterConfig_basicServerless(rName string) string {
+	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  cluster_type           = "serverless"
+
+  serverless {
+	client_authentication {
+		sasl {
+			iam = true
+		}
+	}
+	
+	vpc_configs {
+		security_group_ids = [aws_security_group.example_sg.id]
+		subnet_ids         = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+	}
   }
 }
 `, rName))
@@ -1433,16 +1514,19 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName string, ebsVolumeSize int) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = %[2]d
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = %[2]d
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 }
 `, rName, ebsVolumeSize))
 }
@@ -1450,20 +1534,23 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeOnly(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
-    storage_info {
-      ebs_storage_info {
-        volume_size = %[2]d
-      }
-    }
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			instance_type   = %[3]q
+			security_groups = [aws_security_group.example_sg.id]
+			storage_info {
+			  ebs_storage_info {
+				volume_size = %[2]d
+			  }
+			}
+		}
+	}
 }
 `, rName, ebsVolumeSize, instanceType))
 }
@@ -1471,23 +1558,26 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabled(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
-    storage_info {
-      ebs_storage_info {
-        provisioned_throughput {
-          enabled = false
-        }
-        volume_size = %[2]d
-      }
-    }
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			instance_type   = %[3]q
+			security_groups = [aws_security_group.example_sg.id]
+			storage_info {
+			  ebs_storage_info {
+				provisioned_throughput {
+				  enabled = false
+				}
+				volume_size = %[2]d
+			  }
+			}		
+		}
+	}
 }
 `, rName, ebsVolumeSize, instanceType))
 }
@@ -1495,24 +1585,27 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabled(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
-    storage_info {
-      ebs_storage_info {
-        provisioned_throughput {
-          enabled           = true
-          volume_throughput = 250
-        }
-        volume_size = %[2]d
-      }
-    }
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			instance_type   = %[3]q
+			security_groups = [aws_security_group.example_sg.id]
+			storage_info {
+			  ebs_storage_info {
+				provisioned_throughput {
+				  enabled           = true
+				  volume_throughput = 250
+				}
+				volume_size = %[2]d
+			  }
+			}
+		}
+	}
 }
 `, rName, ebsVolumeSize, instanceType))
 }
@@ -1520,16 +1613,19 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_brokerNodeGroupInfoInstanceType(rName string, t string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = %[2]q
-    security_groups = [aws_security_group.example_sg.id]
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = %[2]q
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 }
 `, rName, t))
 }
@@ -1552,27 +1648,30 @@ func testAccClusterConfig_brokerNodeGroupInfoNoPublicAccessSASLIAM(rName string)
 		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    sasl {
-      iam = true
-    }
-  }
+		configuration_info {
+			arn      = aws_msk_configuration.test.arn
+			revision = aws_msk_configuration.test.latest_revision
+		}
+		
+		client_authentication {
+			sasl {
+			  iam = true
+			}
+		}
+	}
 }
 `, rName))
 }
@@ -1583,33 +1682,37 @@ func testAccClusterConfig_brokerNodeGroupInfoPublicAccessSASLIAM(rName string, p
 		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+			connectivity_info {
+				public_access {
+					type = %[2]q
+				}
+			}
+		}
 
-    connectivity_info {
-      public_access {
-        type = %[2]q
-      }
-    }
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
-  }
-
-  client_authentication {
-    sasl {
-      iam = true
-    }
-  }
+		configuration_info {
+			arn      = aws_msk_configuration.test.arn
+			revision = aws_msk_configuration.test.latest_revision
+		}
+		
+		client_authentication {
+			sasl {
+				iam = true
+			}
+		}
+		
+	}
 }
 `, rName, pa))
 }
@@ -1638,33 +1741,36 @@ func testAccClusterConfig_clientAuthenticationTLSCertificateAuthorityARNs(rName,
 		testAccClusterConfig_rootCA(commonName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    sasl {
-      iam = true
-    }
-
-    tls {
-      certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
-    }
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "TLS"
-      in_cluster    = true
-    }
-  }
+		client_authentication {
+			sasl {
+				iam = true
+			}
+		
+			tls {
+				certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
+			}
+		}
+		
+		encryption_info {
+			encryption_in_transit {
+				client_broker = "TLS"
+				in_cluster    = true
+			}
+		}
+	}
 }
 `, rName, commonName))
 }
@@ -1675,23 +1781,26 @@ func testAccClusterConfig_rootCANoClientAuthentication(rName, commonName string)
 		testAccClusterConfig_rootCA(commonName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]		
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "PLAINTEXT"
-      in_cluster    = true
-    }
-  }
+		encryption_info {
+			encryption_in_transit {
+				client_broker = "PLAINTEXT"
+				in_cluster    = true
+			}
+		}
+	}
 }
 `, rName, commonName))
 }
@@ -1699,49 +1808,53 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_clientAuthenticationSASLScram(rName string, scramEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    sasl {
-      scram = %[2]t
-    }
-
-    unauthenticated = %[3]t
-  }
+		client_authentication {
+			sasl {
+			  scram = %[2]t
+			}
+			unauthenticated = %[3]t
+		}
+	}
 }
 `, rName, scramEnabled, !scramEnabled))
 }
 
 func testAccClusterConfig_clientAuthenticationSASLIAM(rName string, saslEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  client_authentication {
-    sasl {
-      iam = %[2]t
-    }
-
-    unauthenticated = %[3]t
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		client_authentication {
+			sasl {
+			  iam = %[2]t
+			}
+			unauthenticated = %[3]t
+		}		
+	}
 }
 `, rName, saslEnabled, !saslEnabled))
 }
@@ -1758,21 +1871,24 @@ PROPERTIES
 }
 
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]		
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test1.arn
-    revision = aws_msk_configuration.test1.latest_revision
-  }
+		configuration_info {
+			arn      = aws_msk_configuration.test1.arn
+			revision = aws_msk_configuration.test1.latest_revision
+		}
+	}
 }
 `, rName))
 }
@@ -1798,21 +1914,24 @@ PROPERTIES
 }
 
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]	
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.test2.arn
-    revision = aws_msk_configuration.test2.latest_revision
-  }
+		configuration_info {
+			arn      = aws_msk_configuration.test2.arn
+			revision = aws_msk_configuration.test2.latest_revision
+		}
+	}
 }
 `, rName))
 }
@@ -1828,20 +1947,23 @@ resource "aws_kms_key" "example_key" {
 }
 
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  encryption_info {
-    encryption_at_rest_kms_key_arn = aws_kms_key.example_key.arn
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		
+		encryption_info {
+			encryption_at_rest_kms_key_arn = aws_kms_key.example_key.arn
+		}
+	}
 }
 `, rName))
 
@@ -1850,22 +1972,25 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_encryptionInfoEncryptionInTransitClientBroker(rName, clientBroker string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = %[2]q
-    }
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		
+		encryption_info {
+			encryption_in_transit {
+			  client_broker = %[2]q
+			}
+		}
+	}
 }
 `, rName, clientBroker))
 }
@@ -1873,22 +1998,25 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_encryptionInfoEncryptionInTransitIn(rName string, inCluster bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      in_cluster = %[2]t
-    }
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		
+		encryption_info {
+			encryption_in_transit {
+				in_cluster = %[2]t
+			}
+		}
+	}
 }
 `, rName, inCluster))
 }
@@ -1896,17 +2024,20 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_enhancedMonitoring(rName, enhancedMonitoring string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  enhanced_monitoring    = %[2]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		enhanced_monitoring    = %[2]q
+	}
 }
 `, rName, enhancedMonitoring))
 
@@ -1915,16 +2046,19 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = %[2]d
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = %[2]d
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 }
 `, rName, brokerCount))
 
@@ -1933,28 +2067,31 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_openMonitoring(rName string, jmxExporterEnabled bool, nodeExporterEnabled bool) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  open_monitoring {
-    prometheus {
-      jmx_exporter {
-        enabled_in_broker = %[2]t
-      }
-
-      node_exporter {
-        enabled_in_broker = %[3]t
-      }
-    }
-  }
+		open_monitoring {
+			prometheus {
+				jmx_exporter {
+					enabled_in_broker = %[2]t
+				}
+		
+				node_exporter {
+					enabled_in_broker = %[3]t
+			  	}
+			}
+		}
+	}
 }
 `, rName, jmxExporterEnabled, nodeExporterEnabled))
 }
@@ -2031,36 +2168,37 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version   = "2.7.1"
+		number_of_broker_nodes = 3
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  logging_info {
-    broker_logs {
-      cloudwatch_logs {
-        enabled   = %[2]t
-        log_group = %[3]s
-      }
-
-      firehose {
-        enabled         = %[4]t
-        delivery_stream = %[5]s
-      }
-
-      s3 {
-        enabled = %[6]t
-        bucket  = %[7]s
-        prefix  = ""
-      }
-    }
-  }
+		logging_info {
+			broker_logs {
+				cloudwatch_logs {
+					enabled   = %[2]t
+					log_group = %[3]s
+				}
+				firehose {
+					enabled         = %[4]t
+					delivery_stream = %[5]s
+				}
+				s3 {
+					enabled = %[6]t
+					bucket  = %[7]s
+					prefix  = ""
+				}
+			}
+		}
+	}
 }
 `, rName, cloudwatchLogsEnabled, cloudwatchLogsLogGroup, firehoseEnabled, firehoseDeliveryStream, s3Enabled, s3Bucket))
 }
@@ -2068,21 +2206,30 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_version(rName string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = %[2]q
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version          = %[2]q
+		number_of_broker_nodes = 3
+		encryption_info {
+			encryption_in_transit {
+				client_broker = "TLS_PLAINTEXT"
+			}
+		}
+		
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "TLS_PLAINTEXT"
-    }
-  }
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+	timeouts {
+    create = "4h" # As of Jul 2022 MSK clusters can take 4h or more to be created 
+    update = "4h" # As of Jul 2022 MSK clusters can take 3h or more to be update
+    delete = "4h" # As of Jul 2022 MSK clusters can take 3h or more to be delete
   }
 }
 `, rName, kafkaVersion))
@@ -2106,28 +2253,32 @@ log.cleaner.delete.retention.ms = 86400001
 PROPERTIES
 }
 
+
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = %[2]q
-  number_of_broker_nodes = 3
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "TLS_PLAINTEXT"
-    }
-  }
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  configuration_info {
-    arn      = aws_msk_configuration.%[3]s.arn
-    revision = aws_msk_configuration.%[3]s.latest_revision
-  }
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version          = %[2]q
+		number_of_broker_nodes = 3
+		encryption_info {
+			encryption_in_transit {
+				client_broker = "TLS_PLAINTEXT"
+			}
+		}
+		
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+		
+		configuration_info {
+			arn      = aws_msk_configuration.%[3]s.arn
+			revision = aws_msk_configuration.%[3]s.latest_revision
+		}
+	}
 }
 `, rName, kafkaVersion, configResourceName))
 }
@@ -2135,20 +2286,24 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version          = "2.7.1"
+		number_of_broker_nodes = 3
+		
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
+	tags = {
+		%[2]q = %[3]q
+	}
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -2156,21 +2311,25 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
+	cluster_name           = %[1]q
+	cluster_type           = "provisioned"
+	
+	provisioned {
+		kafka_version          = "2.7.1"
+		number_of_broker_nodes = 3
 
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
+		broker_node_group_info {
+			client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+			ebs_volume_size = 10
+			instance_type   = "kafka.m5.large"
+			security_groups = [aws_security_group.example_sg.id]
+		}
+	}
 
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
+	tags = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
