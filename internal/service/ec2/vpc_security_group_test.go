@@ -3316,6 +3316,10 @@ resource "aws_vpc" "test" {
 resource "aws_security_group" "test2" {
   name   = "%[1]s-2"
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test1" {
@@ -3365,7 +3369,7 @@ resource "aws_security_group" "test1" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
 `, rName)
