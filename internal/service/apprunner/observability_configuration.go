@@ -82,8 +82,8 @@ func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.Res
 		ObservabilityConfigurationName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("trace_configuration"); ok {
-		input.TraceConfiguration = expandTraceConfigurations(v.(map[string]interface{}))
+	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TraceConfiguration = expandTraceConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -217,18 +217,20 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func expandTraceConfigurations(tfMap map[string]interface{}) *apprunner.TraceConfiguration {
-	if tfMap == nil {
+func expandTraceConfiguration(l []interface{}) *apprunner.TraceConfiguration {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	traceConfiguration := &apprunner.TraceConfiguration{}
+	m := l[0].(map[string]interface{})
 
-	if v, ok := tfMap["vendor"].(string); ok {
-		traceConfiguration.Vendor = aws.String(v)
+	configuration := &apprunner.TraceConfiguration{}
+
+	if v, ok := m["vendor"].(string); ok && v != "" {
+		configuration.Vendor = aws.String(v)
 	}
 
-	return traceConfiguration
+	return configuration
 }
 
 func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration) []interface{} {
@@ -236,11 +238,9 @@ func flattenTraceConfiguration(traceConfiguration *apprunner.TraceConfiguration)
 		return []interface{}{}
 	}
 
-	values := map[string]interface{}{}
-
-	if traceConfiguration.Vendor != nil {
-		values["vendor"] = aws.StringValue(traceConfiguration.Vendor)
+	m := map[string]interface{}{
+		"vendor": aws.StringValue(traceConfiguration.Vendor),
 	}
 
-	return []interface{}{values}
+	return []interface{}{m}
 }
