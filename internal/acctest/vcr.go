@@ -37,17 +37,18 @@ type randomnessSource struct {
 }
 
 var (
-	providerInstanceStatesLock = sync.RWMutex{}
-	providerInstanceStates     = make(map[string]interface{}, 0)
+	providerStatesLock = sync.RWMutex{}
+	providerStates     = make(map[string]interface{}, 0)
 
 	randomnessSourcesLock = sync.RWMutex{}
 	randomnessSources     = make(map[string]*randomnessSource, 0)
 )
 
-func ProviderInstanceState(t *testing.T) *conns.AWSClient {
-	providerInstanceStatesLock.RLock()
-	v, ok := providerInstanceStates[t.Name()]
-	providerInstanceStatesLock.RUnlock()
+// ProviderState returns the current provider's state (AKA "Config" or "conns.AWSClient").
+func ProviderState(t *testing.T) *conns.AWSClient {
+	providerStatesLock.RLock()
+	v, ok := providerStates[t.Name()]
+	providerStatesLock.RUnlock()
 
 	if !ok {
 		v = Provider.Meta()
@@ -99,9 +100,9 @@ func vcrEnabledProviderFactories(t *testing.T, input map[string]func() (*schema.
 // VCR requires a single HTTP client to handle all interactions.
 func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		providerInstanceStatesLock.RLock()
-		v, ok := providerInstanceStates[testName]
-		providerInstanceStatesLock.RUnlock()
+		providerStatesLock.RLock()
+		v, ok := providerStates[testName]
+		providerStatesLock.RUnlock()
 
 		if ok {
 			return v, nil
@@ -188,9 +189,9 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 
 		c.Session.Config.HTTPClient.Transport = recorder
 
-		providerInstanceStatesLock.Lock()
-		providerInstanceStates[testName] = v
-		providerInstanceStatesLock.Unlock()
+		providerStatesLock.Lock()
+		providerStates[testName] = v
+		providerStatesLock.Unlock()
 
 		return v, nil
 	}
@@ -295,9 +296,9 @@ func writeSeedToFile(seed int64, fileName string) error {
 // closeVCRRecorder closes the VCR recorder, saving the cassette.
 func closeVCRRecorder(t *testing.T) {
 	testName := t.Name()
-	providerInstanceStatesLock.RLock()
-	v, ok := providerInstanceStates[testName]
-	providerInstanceStatesLock.RUnlock()
+	providerStatesLock.RLock()
+	v, ok := providerStates[testName]
+	providerStatesLock.RUnlock()
 
 	if ok {
 		if !t.Failed() {
@@ -318,9 +319,9 @@ func closeVCRRecorder(t *testing.T) {
 			}
 		}
 
-		providerInstanceStatesLock.Lock()
-		delete(providerInstanceStates, testName)
-		providerInstanceStatesLock.Unlock()
+		providerStatesLock.Lock()
+		delete(providerStates, testName)
+		providerStatesLock.Unlock()
 
 		randomnessSourcesLock.Lock()
 		delete(randomnessSources, testName)

@@ -3593,7 +3593,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 // TODO: Temporary during go-vcr development.
 func testAccCheckInstanceDestroyX(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderInstanceState(t).RDSConn
+		conn := acctest.ProviderState(t).RDSConn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -3850,7 +3850,7 @@ func testAccCheckInstanceExistsX(t *testing.T, n string, v *rds.DBInstance) reso
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.ProviderInstanceState(t).RDSConn
+		conn := acctest.ProviderState(t).RDSConn
 
 		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
