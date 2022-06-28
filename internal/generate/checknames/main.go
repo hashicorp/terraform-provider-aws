@@ -231,58 +231,65 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 
 		allDocs++
 
-		f, err := os.Open(filepath.Join(dir, fh.Name()))
-		if err != nil {
-			return fmt.Errorf("opening file (%s): %s", fh.Name(), err)
-		}
-		defer f.Close()
-
-		scanner := bufio.NewScanner(f)
-		var line int
-		var rregex string
-		for scanner.Scan() {
-			switch line {
-			case 0:
-				if scanner.Text() != "---" {
-					return fmt.Errorf("file (%s) doesn't start like doc file", fh.Name())
-				}
-			case 1:
-				hf, rr, err := findHumanFriendly(fh.Name(), prefixes)
-				if err != nil {
-					return fmt.Errorf("checking file (%s): %w", fh.Name(), err)
-				}
-
-				rregex = rr
-
-				sc := scanner.Text()
-				sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
-				if hf != sc {
-					return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", fh.Name(), sc, hf)
-				}
-			case 2:
-				continue
-			case 3:
-				rn := scanner.Text()
-				rn = strings.TrimSuffix(strings.TrimPrefix(rn, `page_title: "AWS: `), `"`)
-
-				re, err := regexp.Compile(fmt.Sprintf(`^%s`, rregex))
-				if err != nil {
-					return fmt.Errorf("unable to compile resource regular expression pattern (%s): %s", rregex, err)
-				}
-
-				if !re.MatchString(rn) {
-					return fmt.Errorf("resource regular expression (%s) does not match resource name (%s)", rregex, rn)
-				}
-			default:
-				break
-			}
-			line++
-		}
-		if err := scanner.Err(); err != nil {
-			return fmt.Errorf("reading file (%s): %s", fh.Name(), err)
+		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func checkDocFile(dir, name string, prefixes []DocPrefix) error {
+	f, err := os.Open(filepath.Join(dir, name))
+	if err != nil {
+		return fmt.Errorf("opening file (%s): %s", name, err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	var line int
+	var rregex string
+	for scanner.Scan() {
+		switch line {
+		case 0:
+			if scanner.Text() != "---" {
+				return fmt.Errorf("file (%s) doesn't start like doc file", name)
+			}
+		case 1:
+			hf, rr, err := findHumanFriendly(name, prefixes)
+			if err != nil {
+				return fmt.Errorf("checking file (%s): %w", name, err)
+			}
+
+			rregex = rr
+
+			sc := scanner.Text()
+			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
+			if hf != sc {
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+			}
+		case 2:
+			continue
+		case 3:
+			rn := scanner.Text()
+			rn = strings.TrimSuffix(strings.TrimPrefix(rn, `page_title: "AWS: `), `"`)
+
+			re, err := regexp.Compile(fmt.Sprintf(`^%s`, rregex))
+			if err != nil {
+				return fmt.Errorf("unable to compile resource regular expression pattern (%s): %s", rregex, err)
+			}
+
+			if !re.MatchString(rn) {
+				return fmt.Errorf("resource regular expression (%s) does not match resource name (%s)", rregex, rn)
+			}
+		default:
+			break
+		}
+		line++
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("reading file (%s): %s", name, err)
+	}
 	return nil
 }
 
