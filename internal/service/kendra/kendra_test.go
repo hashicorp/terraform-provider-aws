@@ -18,6 +18,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_ContentSourceConfigurationAndUserIdentityConfiguration":         testAccExperience_Configuration_ContentSourceConfigurationAndUserIdentityConfiguration,
 			"Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved": testAccExperience_Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved,
 			"Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved": testAccExperience_Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved,
+			"DataSource_basic": testAccExperienceDataSource_basic,
 		},
 		"Faq": {
 			"basic":            testAccFaq_basic,
