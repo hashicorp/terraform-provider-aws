@@ -213,7 +213,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 
 resource "aws_lakeformation_lf_tag" "test" {
   key    = %[1]q
-  values = [%s]
+  values = [%[2]s]
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
