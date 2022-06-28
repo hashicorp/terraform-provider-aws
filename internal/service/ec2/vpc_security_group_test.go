@@ -1931,6 +1931,7 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsClassic(t *testing.T) {
 func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1939,10 +1940,9 @@ func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupConfig_prefixListEgress,
+				Config: testAccVPCSecurityGroupConfig_prefixListEgress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					testAccCheckSecurityGroupEgressPrefixListAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 				),
 			},
@@ -3866,25 +3866,34 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupConfig_prefixListEgress = `
+func testAccVPCSecurityGroupConfig_prefixListEgress(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-prefix-list-egress"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "default" {
-  vpc_id = aws_vpc.tf_sg_prefix_list_egress_test.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id          = aws_vpc.tf_sg_prefix_list_egress_test.id
+  vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = [aws_route_table.default.id]
+  route_table_ids = [aws_route_table.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
 
   policy = <<POLICY
 {
@@ -3903,9 +3912,12 @@ POLICY
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_prefix_list_egress"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.tf_sg_prefix_list_egress_test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 
   egress {
     protocol        = "-1"
@@ -3914,7 +3926,8 @@ resource "aws_security_group" "test" {
     prefix_list_ids = [aws_vpc_endpoint.test.prefix_list_id]
   }
 }
-`
+`, rName)
+}
 
 const testAccVPCSecurityGroupConfig_prefixListIngress = `
 data "aws_region" "current" {}
