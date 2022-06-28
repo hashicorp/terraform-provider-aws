@@ -550,7 +550,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 
 				rule := initSecurityGroupRule(ruleMap, perm, desc)
 
-				if *g.GroupId == groupId {
+				if aws.StringValue(g.GroupId) == groupId {
 					rule["self"] = true
 					continue
 				}
@@ -633,7 +633,7 @@ func resourceSecurityGroupUpdateRules(
 						GroupId:       group.GroupId,
 						IpPermissions: remove,
 					}
-					if group.VpcId == nil || *group.VpcId == "" {
+					if aws.StringValue(group.VpcId) == "" {
 						req.GroupId = nil
 						req.GroupName = group.GroupName
 					}
@@ -660,7 +660,7 @@ func resourceSecurityGroupUpdateRules(
 						GroupId:       group.GroupId,
 						IpPermissions: add,
 					}
-					if group.VpcId == nil || *group.VpcId == "" {
+					if aws.StringValue(group.VpcId) == "" {
 						req.GroupId = nil
 						req.GroupName = group.GroupName
 					}
