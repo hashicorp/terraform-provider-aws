@@ -2064,7 +2064,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2075,7 +2075,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2084,7 +2084,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 			},
 			// append a rule to step over the limit
 			{
-				Config:      testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit+1),
+				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
@@ -2096,7 +2096,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2111,7 +2111,7 @@ func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2122,7 +2122,7 @@ func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, 1),
@@ -2130,7 +2130,7 @@ func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 			},
 			// append a rule to step over the limit
 			{
-				Config:      testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(0, ruleLimit+1),
+				Config:      testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName, 0, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
@@ -2158,7 +2158,7 @@ func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, 1),
@@ -2172,7 +2172,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2183,7 +2183,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2191,7 +2191,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 			},
 			// prepend a rule to step over the limit
 			{
-				Config:      testAccVPCSecurityGroupConfig_ruleLimit(1, ruleLimit+1),
+				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 1, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
@@ -2203,7 +2203,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2217,7 +2217,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2228,7 +2228,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create a valid SG just under the limit
 			{
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2236,7 +2236,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 			},
 			// add a rule to step over the limit with entirely new rules
 			{
-				Config:      testAccVPCSecurityGroupConfig_ruleLimit(100, ruleLimit+1),
+				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 100, ruleLimit+1),
 				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
@@ -2248,7 +2248,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 					}
 				},
 				// running the original config again now should restore the rules
-				Config: testAccVPCSecurityGroupConfig_ruleLimit(0, ruleLimit),
+				Config: testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					testAccCheckSecurityGroupRuleCount(&group, 0, ruleLimit),
@@ -2637,7 +2637,7 @@ resource "aws_security_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVPCSecurityGroupConfig_ruleLimit(egressStartIndex, egressRulesCount int) string {
+func testAccVPCSecurityGroupConfig_ruleLimit(rName string, egressStartIndex, egressRulesCount int) string {
 	var egressRules strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
 		fmt.Fprintf(&egressRules, `
@@ -2655,26 +2655,25 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-limit"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_rule_limit"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 
   # egress rules to exhaust the limit
-  %[1]s
+  %[2]s
 }
-`, egressRules.String())
+`, rName, egressRules.String())
 }
 
-func testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
+func testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName string, egressStartIndex, egressRulesCount int) string {
 	var cidrBlocks strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
 		fmt.Fprintf(&cidrBlocks, `
@@ -2687,17 +2686,16 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-limit"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_rule_limit"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 
   egress {
@@ -2706,11 +2704,11 @@ resource "aws_security_group" "test" {
     to_port   = "80"
     # cidr_blocks to exhaust the limit
     cidr_blocks = [
-		%s
+		%[2]s
     ]
   }
 }
-`, cidrBlocks.String())
+`, rName, cidrBlocks.String())
 }
 
 func testAccVPCSecurityGroupConfig_emptyRuleDescription(rName string) string {
