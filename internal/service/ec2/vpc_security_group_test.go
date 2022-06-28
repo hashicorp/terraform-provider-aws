@@ -2260,7 +2260,7 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 
 func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 	var group ec2.SecurityGroup
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2271,19 +2271,19 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create a valid security group with some rules and make sure it exists
 			{
-				Config: testAccVPCSecurityGroupConfig_rulesDropOnErrorInit,
+				Config: testAccVPCSecurityGroupConfig_rulesDropOnErrorInit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 				),
 			},
 			// Add a bad rule to trigger API error
 			{
-				Config:      testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule,
-				ExpectError: regexp.MustCompile("InvalidGroup.NotFound"),
+				Config:      testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule(rName),
+				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
 			},
 			// All originally added rules must survive. This will return non-empty plan if anything changed.
 			{
-				Config:   testAccVPCSecurityGroupConfig_rulesDropOnErrorInit,
+				Config:   testAccVPCSecurityGroupConfig_rulesDropOnErrorInit(rName),
 				PlanOnly: true,
 			},
 		},
@@ -4080,32 +4080,40 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupConfig_rulesDropOnErrorInit = `
+func testAccVPCSecurityGroupConfig_rulesDropOnErrorInit(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-drop-rules-test"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test_ref0" {
-  name   = "terraform_acceptance_test_drop_rules_ref0"
+  name   = "%[1]s-ref0"
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test_ref1" {
-  name   = "terraform_acceptance_test_drop_rules_ref1"
+  name   = "%[1]s-ref1"
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_drop_rules"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 
   ingress {
@@ -4118,34 +4126,43 @@ resource "aws_security_group" "test" {
     ]
   }
 }
-`
+`, rName)
+}
 
-const testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule = `
+func testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-drop-rules-test"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test_ref0" {
-  name   = "terraform_acceptance_test_drop_rules_ref0"
+  name   = "%[1]s-ref0"
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test_ref1" {
-  name   = "terraform_acceptance_test_drop_rules_ref1"
+  name   = "%[1]s-ref1"
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_drop_rules"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 
   ingress {
@@ -4159,7 +4176,8 @@ resource "aws_security_group" "test" {
     ]
   }
 }
-`
+`, rName)
+}
 
 func testAccVPCSecurityGroupConfig_egressModeBlocks(rName string) string {
 	return fmt.Sprintf(`
