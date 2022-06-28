@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDirectoryShare() *schema.Resource {
@@ -30,14 +31,14 @@ func ResourceDirectoryShare() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"share_method": {
+			"method": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      directoryservice.ShareMethodHandshake,
 				ValidateFunc: validation.StringInSlice(directoryservice.ShareMethod_Values(), false),
 			},
-			"share_notes": {
+			"notes": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				ForceNew:  true,
@@ -78,14 +79,11 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 	dirId := d.Get("directory_id").(string)
 	input := directoryservice.ShareDirectoryInput{
 		DirectoryId: aws.String(dirId),
-		ShareMethod: aws.String(d.Get("share_method").(string)),
-		ShareTarget: &directoryservice.ShareTarget{
-			Id:   aws.String(d.Get("target.id").(string)),
-			Type: aws.String(d.Get("target.type").(string)),
-		},
+		ShareMethod: aws.String(d.Get("method").(string)),
+		ShareTarget: expandShareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("share_notes"); ok {
+	if v, ok := d.GetOk("notes"); ok {
 		input.ShareNotes = aws.String(v.(string))
 	}
 
@@ -97,6 +95,7 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
 	d.SetId(fmt.Sprintf("%s/%s", dirId, aws.StringValue(out.SharedDirectoryId)))
+	d.Set("shared_directory_id", out.SharedDirectoryId)
 
 	return nil
 }
@@ -107,7 +106,7 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 	dirId := d.Get("directory_id").(string)
 	sharedId := d.Get("shared_directory_id").(string)
 
-	dir, err := findDirectoryShareByIDs(ctx, conn, dirId, sharedId)
+	output, err := findDirectoryShareByIDs(ctx, conn, dirId, sharedId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Shared Directory (%s) not found, removing from state", d.Id())
@@ -119,11 +118,16 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[DEBUG] Received DS shared directory: %s", dir)
+	log.Printf("[DEBUG] Received DS shared directory: %s", output)
 
-	d.Set("method", aws.StringValue(dir.ShareMethod))
-	d.Set("notes", aws.StringValue(dir.ShareNotes))
-	d.Set("target.id", aws.StringValue(dir.SharedDirectoryId))
+	d.Set("method", aws.StringValue(output.ShareMethod))
+	d.Set("notes", aws.StringValue(output.ShareNotes))
+
+	if output.SharedAccountId != nil {
+		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
+			return names.DiagError(names.DS, names.ErrActionReading, "Directory Share", d.Id(), err)
+		}
+	}
 
 	return nil
 }
@@ -135,11 +139,8 @@ func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, m
 	sharedId := d.Get("shared_directory_id").(string)
 
 	input := directoryservice.UnshareDirectoryInput{
-		DirectoryId: aws.String(dirId),
-		UnshareTarget: &directoryservice.UnshareTarget{
-			Id:   aws.String(d.Get("target.id").(string)),
-			Type: aws.String(d.Get("target.type").(string)),
-		},
+		DirectoryId:   aws.String(dirId),
+		UnshareTarget: expandUnshareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)
@@ -169,4 +170,58 @@ func resourceDirectoryShareImport(ctx context.Context, d *schema.ResourceData, m
 	d.Set("directory_id", ownerDirId)
 	d.Set("shared_directory_id", sharedDirId)
 	return []*schema.ResourceData{d}, nil
+}
+
+func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &directoryservice.ShareTarget{}
+
+	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+		apiObject.Id = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandUnshareTarget(tfMap map[string]interface{}) *directoryservice.UnshareTarget {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &directoryservice.UnshareTarget{}
+
+	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+		apiObject.Id = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+// flattenShareTarget is not a mirror of expandShareTarget because the API data structures are
+// different, with no ShareTarget returned
+func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.SharedAccountId != nil {
+		tfMap["id"] = aws.StringValue(apiObject.SharedAccountId)
+	}
+
+	tfMap["type"] = directoryservice.TargetTypeAccount // only type available
+
+	return tfMap
 }

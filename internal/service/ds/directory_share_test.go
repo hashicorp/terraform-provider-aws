@@ -37,8 +37,8 @@ func TestAccDSDirectoryShare_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
 					testAccCheckDirectoryShareExists(resourceName, &sharedDirectory),
-					resource.TestCheckResourceAttr(resourceName, "share_method", "HANDSHAKE"),
-					resource.TestCheckResourceAttr(resourceName, "share_notes", "test"),
+					resource.TestCheckResourceAttr(resourceName, "method", "HANDSHAKE"),
+					resource.TestCheckResourceAttr(resourceName, "notes", "test"),
 				),
 			},
 			{
@@ -83,9 +83,9 @@ func testAccCheckDirectoryShareExists(name string, share *directoryservice.Share
 				*out.SharedDirectories[0].SharedDirectoryId, sharedId)
 		}
 
-		if *out.SharedDirectories[0].SharedDirectoryId != ownerId {
-			return fmt.Errorf("Directory Share ID mismatch - existing: %q, state: %q",
-				*out.SharedDirectories[0].SharedDirectoryId, ownerId)
+		if *out.SharedDirectories[0].OwnerDirectoryId != ownerId {
+			return fmt.Errorf("Owner Directory ID mismatch - existing: %q, state: %q",
+				*out.SharedDirectories[0].OwnerDirectoryId, ownerId)
 		}
 
 		*share = *out.SharedDirectories[0]
@@ -131,11 +131,12 @@ func testAccCheckDirectoryShareDestroy(s *terraform.State) error {
 func testAccDirectoryShareConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
-		testAccDirectoryConfig_basic(rName, domain),
+		testAccDirectoryConfig_microsoftStandard(rName, domain),
 		`
 resource "aws_directory_service_directory_share" "test" {
   directory_id = aws_directory_service_directory.test.id
-  share_notes  = "test"
+  notes        = "test"
+
   target {
     id = data.aws_caller_identity.receiver.account_id
   }
