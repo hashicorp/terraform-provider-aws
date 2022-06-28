@@ -64,7 +64,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.ObservabilityConfigurationStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
 				),
 			},
