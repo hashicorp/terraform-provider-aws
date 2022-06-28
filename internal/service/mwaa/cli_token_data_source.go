@@ -16,8 +16,7 @@ func DataSourceCliToken() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"environment": {
-				Type: schema.TypeString,
-				//Computed: false,
+				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
@@ -50,7 +49,6 @@ func dataSourceCliTokenRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(environment)
-	//d.SetId(fmt.Sprintf("%d", create.StringHashcode(aws.StringValue(output.CliToken))))
 	d.Set("cli_token", aws.StringValue(output.CliToken))
 
 	return nil
