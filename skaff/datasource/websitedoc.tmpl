@@ -1,0 +1,37 @@
+---
+subcategory: "{{ .Service }}"
+layout: "aws"
+page_title: "AWS: aws_{{ .ServicePackage }}_{{ .DataSourceLower }}"
+description: |-
+  Terraform data source for managing an AWS {{ .Service }} {{ .DataSource }}.
+---
+
+# Data Source: aws_{{ .ServicePackage }}_{{ .DataSourceLower }}
+
+Terraform data source for managing an AWS {{ .Service }} {{ .DataSource }}.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+data "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}" "example" {
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `example_arg` - (Required) Concise argument description.
+
+The following arguments are optional:
+
+* `optional_arg` - (Optional) Concise argument description.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - ARN of the {{ .DataSource }}.
+* `example_attribute` - Concise description.

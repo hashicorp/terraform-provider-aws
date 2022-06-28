@@ -21,10 +21,10 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolProviderPrincipalTagsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPoolProviderPrincipalTagsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolProviderPrincipalTagsConfig_basic(name),
@@ -42,10 +42,10 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolProviderPrincipalTagsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPoolProviderPrincipalTagsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolProviderPrincipalTagsConfig_basic(name),
@@ -78,10 +78,10 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPoolProviderPrincipalTagsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPoolProviderPrincipalTagsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolProviderPrincipalTagsConfig_basic(name),

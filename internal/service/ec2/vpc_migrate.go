@@ -12,13 +12,13 @@ func VPCMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS VPC State v0; migrating to v1")
-		return migrateVpcStateV0toV1(is)
+		return migrateVPCStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateVpcStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateVPCStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty VPC State; nothing to migrate.")
 		return is, nil

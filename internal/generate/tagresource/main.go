@@ -10,8 +10,9 @@ import (
 	"go/format"
 	"log"
 	"os"
-	"strings"
 	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -39,13 +40,13 @@ func main() {
 	flag.Parse()
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsService, err := awsServiceName(servicePackage)
+	awsService, err := names.AWSGoV1Package(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	awsServiceUpper, err := awsServiceNameUpper(servicePackage)
+	u, err := names.ProviderNameUpper(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
@@ -53,7 +54,7 @@ func main() {
 
 	templateData := TemplateData{
 		AWSService:      awsService,
-		AWSServiceUpper: awsServiceUpper,
+		AWSServiceUpper: u,
 		ServicePackage:  servicePackage,
 		IDAttribName:    *idAttribName,
 	}
@@ -308,33 +309,3 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 }
 `
 )
-
-var awsServiceNames map[string]string
-
-func init() {
-	awsServiceNames = make(map[string]string)
-
-	awsServiceNames["dynamodb"] = "DynamoDB"
-	awsServiceNames["ec2"] = "EC2"
-	awsServiceNames["ecs"] = "ECS"
-}
-
-func awsServiceName(s string) (string, error) {
-	s = strings.ToLower(s)
-
-	if _, ok := awsServiceNames[s]; ok {
-		return s, nil
-	}
-
-	return "", fmt.Errorf("unable to find AWS service name for %s", s)
-}
-
-func awsServiceNameUpper(s string) (string, error) {
-	s = strings.ToLower(s)
-
-	if v, ok := awsServiceNames[s]; ok {
-		return v, nil
-	}
-
-	return "", fmt.Errorf("unable to find AWS service name for %s", s)
-}

@@ -1,6 +1,7 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceOrganizationManagedRule() *schema.Resource {
@@ -173,7 +175,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 
 	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -183,10 +185,14 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", d.Id(), err)
 	}
 
-	if rule == nil {
+	if !d.IsNewResource() && rule == nil {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && rule == nil {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Organization Managed Rule", d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {

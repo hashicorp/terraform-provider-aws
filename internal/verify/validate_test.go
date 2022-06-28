@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -642,6 +643,38 @@ func TestValidateTypeStringIsDateOrInt(t *testing.T) {
 		_, errors := ValidStringDateOrPositiveInt(f, "parameter")
 		if len(errors) == 0 {
 			t.Fatalf("expected the value %q to fail validation", f)
+		}
+	}
+}
+
+func TestFloatGreaterThan(t *testing.T) {
+	cases := map[string]struct {
+		Value                  interface{}
+		ValidateFunc           schema.SchemaValidateFunc
+		ExpectValidationErrors bool
+	}{
+		"accept valid value": {
+			Value:        1.5,
+			ValidateFunc: FloatGreaterThan(1.0),
+		},
+		"reject invalid value gt": {
+			Value:                  1.5,
+			ValidateFunc:           FloatGreaterThan(2.0),
+			ExpectValidationErrors: true,
+		},
+		"reject invalid value eq": {
+			Value:                  1.5,
+			ValidateFunc:           FloatGreaterThan(1.5),
+			ExpectValidationErrors: true,
+		},
+	}
+
+	for tn, tc := range cases {
+		_, errors := tc.ValidateFunc(tc.Value, tn)
+		if len(errors) > 0 && !tc.ExpectValidationErrors {
+			t.Errorf("%s: unexpected errors %s", tn, errors)
+		} else if len(errors) == 0 && tc.ExpectValidationErrors {
+			t.Errorf("%s: expected errors but got none", tn)
 		}
 	}
 }

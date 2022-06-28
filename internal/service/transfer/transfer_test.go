@@ -17,7 +17,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"disappears":                    testAccServer_disappears,
 			"APIGateway":                    testAccServer_apiGateway,
 			"APIGatewayForceDestroy":        testAccServer_apiGateway_forceDestroy,
-			"AuthenticationLoginBanners":    testAccTransferServer_AuthenticationLoginBanners,
+			"AuthenticationLoginBanners":    testAccServer_authenticationLoginBanners,
 			"DirectoryService":              testAccServer_directoryService,
 			"Domain":                        testAccServer_domain,
 			"ForceDestroy":                  testAccServer_forceDestroy,
@@ -36,6 +36,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"VPCAddressAllocationIDsSecurityGroupIDs":                testAccServer_vpcAddressAllocationIds_securityGroupIDs,
 			"VPCEndpointID":                                          testAccServer_vpcEndpointID,
 			"VPCSecurityGroupIDs":                                    testAccServer_vpcSecurityGroupIDs,
+			"Workflow":                                               testAccServer_workflowDetails,
 		},
 		"SSHKey": {
 			"basic": testAccSSHKey_basic,

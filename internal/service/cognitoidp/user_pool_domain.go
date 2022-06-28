@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceUserPoolDomain() *schema.Resource {
@@ -104,21 +106,26 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 	domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
 		Domain: aws.String(d.Id()),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito User Pool Domain %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id(), err)
 	}
 
 	desc := domain.DomainDescription
 
-	if desc.Status == nil {
-		log.Printf("[WARN] Cognito User Pool Domain %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && desc.Status == nil {
+		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && desc.Status == nil {
+		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("domain", d.Id())

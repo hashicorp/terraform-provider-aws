@@ -21,15 +21,15 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMOpenIDConnectProviderConfig(rString),
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
@@ -45,9 +45,9 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIAMOpenIDConnectProviderConfig_modified(rString),
+				Config: testAccOpenIDConnectProviderConfig_modified(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
@@ -67,15 +67,15 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstanceProfileDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMOpenIDConnectProviderConfigTags1(rString, "key1", "value1"),
+				Config: testAccOpenIDConnectProviderConfig_tags1(rString, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -87,18 +87,18 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccIAMOpenIDConnectProviderConfigTags2(rString, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOpenIDConnectProviderConfig_tags2(rString, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccIAMOpenIDConnectProviderConfigTags1(rString, "key2", "value2"),
+				Config: testAccOpenIDConnectProviderConfig_tags1(rString, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -112,15 +112,15 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMOpenIDConnectProviderConfig(rString),
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIAMOpenIDConnectProvider(resourceName),
+					testAccCheckOpenIDConnectProvider(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -129,7 +129,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
+func testAccCheckOpenIDConnectProviderDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -157,7 +157,7 @@ func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckIAMOpenIDConnectProvider(id string) resource.TestCheckFunc {
+func testAccCheckOpenIDConnectProvider(id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[id]
 		if !ok {
@@ -177,7 +177,7 @@ func testAccCheckIAMOpenIDConnectProvider(id string) resource.TestCheckFunc {
 	}
 }
 
-func testAccIAMOpenIDConnectProviderConfig(rString string) string {
+func testAccOpenIDConnectProviderConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -191,7 +191,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccIAMOpenIDConnectProviderConfig_modified(rString string) string {
+func testAccOpenIDConnectProviderConfig_modified(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -205,7 +205,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString)
 }
 
-func testAccIAMOpenIDConnectProviderConfigTags1(rString, tagKey1, tagValue1 string) string {
+func testAccOpenIDConnectProviderConfig_tags1(rString, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
@@ -223,7 +223,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rString, tagKey1, tagValue1)
 }
 
-func testAccIAMOpenIDConnectProviderConfigTags2(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOpenIDConnectProviderConfig_tags2(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"

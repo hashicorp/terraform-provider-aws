@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_domain"
 description: |-
-  Provides a Sagemaker Domain resource.
+  Provides a SageMaker Domain resource.
 ---
 
 # Resource: aws_sagemaker_domain
 
-Provides a Sagemaker Domain resource.
+Provides a SageMaker Domain resource.
 
 ## Example Usage
 
@@ -107,7 +107,7 @@ The following arguments are supported:
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing-settings) below.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
-* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernal-gateway-app-settings) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 
 #### Sharing Settings
 
@@ -132,7 +132,7 @@ The following arguments are supported:
 
 ##### Default Resource Spec
 
-* `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [Sagemaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
+* `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [SageMaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
@@ -160,7 +160,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Domains can be imported using the `id`, e.g.,
+SageMaker Code Domains can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8

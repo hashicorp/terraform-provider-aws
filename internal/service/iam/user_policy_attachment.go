@@ -64,7 +64,7 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)

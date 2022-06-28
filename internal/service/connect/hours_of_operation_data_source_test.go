@@ -16,12 +16,12 @@ func TestAccConnectHoursOfOperationDataSource_hoursOfOperationID(t *testing.T) {
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationDataSourceConfig_HoursOfOperationID(rName, resourceName),
+				Config: testAccHoursOfOperationDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
@@ -45,12 +45,12 @@ func TestAccConnectHoursOfOperationDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationDataSourceConfig_Name(rName, rName2),
+				Config: testAccHoursOfOperationDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hours_of_operation_arn", resourceName, "hours_of_operation_arn"), // Deprecated
@@ -117,7 +117,7 @@ resource "aws_connect_hours_of_operation" "test" {
 	`, rName, rName2)
 }
 
-func testAccHoursOfOperationDataSourceConfig_HoursOfOperationID(rName, rName2 string) string {
+func testAccHoursOfOperationDataSourceConfig_id(rName, rName2 string) string {
 	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -126,7 +126,7 @@ data "aws_connect_hours_of_operation" "test" {
 `)
 }
 
-func testAccHoursOfOperationDataSourceConfig_Name(rName, rName2 string) string {
+func testAccHoursOfOperationDataSourceConfig_name(rName, rName2 string) string {
 	return fmt.Sprintf(testAccHoursOfOperationBaseDataSourceConfig(rName, rName2) + `
 data "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id

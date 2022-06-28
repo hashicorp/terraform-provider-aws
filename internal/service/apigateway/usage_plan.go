@@ -158,7 +158,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
-		params.ApiStages = expandApiGatewayUsageApiStages(v.(*schema.Set))
+		params.ApiStages = expandAPIStages(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("quota_settings"); ok {
@@ -173,11 +173,11 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			return errors.New("At least one field is expected inside quota_settings")
 		}
 
-		params.Quota = expandApiGatewayUsageQuotaSettings(v.([]interface{}))
+		params.Quota = expandQuotaSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("throttle_settings"); ok {
-		params.Throttle = expandApiGatewayUsageThrottleSettings(v.([]interface{}))
+		params.Throttle = expandThrottleSettings(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -257,19 +257,19 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("product_code", up.ProductCode)
 
 	if up.ApiStages != nil {
-		if err := d.Set("api_stages", flattenApiGatewayUsageApiStages(up.ApiStages)); err != nil {
+		if err := d.Set("api_stages", flattenAPIStages(up.ApiStages)); err != nil {
 			return fmt.Errorf("error setting api_stages error: %w", err)
 		}
 	}
 
 	if up.Throttle != nil {
-		if err := d.Set("throttle_settings", flattenApiGatewayUsagePlanThrottling(up.Throttle)); err != nil {
+		if err := d.Set("throttle_settings", flattenThrottleSettings(up.Throttle)); err != nil {
 			return fmt.Errorf("error setting throttle_settings error: %w", err)
 		}
 	}
 
 	if up.Quota != nil {
-		if err := d.Set("quota_settings", flattenApiGatewayUsagePlanQuota(up.Quota)); err != nil {
+		if err := d.Set("quota_settings", flattenQuotaSettings(up.Quota)); err != nil {
 			return fmt.Errorf("error setting quota_settings error: %w", err)
 		}
 	}
@@ -532,7 +532,7 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
+func expandAPIStages(s *schema.Set) []*apigateway.ApiStage {
 	stages := []*apigateway.ApiStage{}
 
 	for _, stageRaw := range s.List() {
@@ -548,7 +548,7 @@ func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
 		}
 
 		if v, ok := mStage["throttle"].(*schema.Set); ok && v.Len() > 0 {
-			stage.Throttle = expandUsagePlanApiGatewayApiStagesThrottleSettings(v.List())
+			stage.Throttle = expandThrottleSettingsList(v.List())
 		}
 
 		stages = append(stages, stage)
@@ -557,7 +557,7 @@ func expandApiGatewayUsageApiStages(s *schema.Set) []*apigateway.ApiStage {
 	return stages
 }
 
-func expandApiGatewayUsageQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
+func expandQuotaSettings(l []interface{}) *apigateway.QuotaSettings {
 	if len(l) == 0 {
 		return nil
 	}
@@ -581,7 +581,7 @@ func expandApiGatewayUsageQuotaSettings(l []interface{}) *apigateway.QuotaSettin
 	return qs
 }
 
-func expandApiGatewayUsageThrottleSettings(l []interface{}) *apigateway.ThrottleSettings {
+func expandThrottleSettings(l []interface{}) *apigateway.ThrottleSettings {
 	if len(l) == 0 {
 		return nil
 	}
@@ -601,7 +601,7 @@ func expandApiGatewayUsageThrottleSettings(l []interface{}) *apigateway.Throttle
 	return ts
 }
 
-func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
+func flattenAPIStages(s []*apigateway.ApiStage) []map[string]interface{} {
 	stages := make([]map[string]interface{}, 0)
 
 	for _, bd := range s {
@@ -609,7 +609,7 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 			stage := make(map[string]interface{})
 			stage["api_id"] = aws.StringValue(bd.ApiId)
 			stage["stage"] = aws.StringValue(bd.Stage)
-			stage["throttle"] = flattenUsagePlanApiGatewayApiStagesThrottleSettings(bd.Throttle)
+			stage["throttle"] = flattenThrottleSettingsMap(bd.Throttle)
 
 			stages = append(stages, stage)
 		}
@@ -622,7 +622,7 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 	return nil
 }
 
-func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
+func flattenThrottleSettings(s *apigateway.ThrottleSettings) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if s == nil {
@@ -640,7 +640,7 @@ func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[
 	return []map[string]interface{}{settings}
 }
 
-func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]interface{} {
+func flattenQuotaSettings(s *apigateway.QuotaSettings) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if s == nil {
@@ -662,7 +662,7 @@ func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]i
 	return []map[string]interface{}{settings}
 }
 
-func expandUsagePlanApiGatewayApiStagesThrottleSettings(tfList []interface{}) map[string]*apigateway.ThrottleSettings {
+func expandThrottleSettingsList(tfList []interface{}) map[string]*apigateway.ThrottleSettings {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -694,7 +694,7 @@ func expandUsagePlanApiGatewayApiStagesThrottleSettings(tfList []interface{}) ma
 	return apiObjects
 }
 
-func flattenUsagePlanApiGatewayApiStagesThrottleSettings(apiObjects map[string]*apigateway.ThrottleSettings) []interface{} {
+func flattenThrottleSettingsMap(apiObjects map[string]*apigateway.ThrottleSettings) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

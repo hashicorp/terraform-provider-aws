@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -58,9 +59,10 @@ func ResourceBroker() *schema.Resource {
 				Default:  false,
 			},
 			"broker_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: ValidateBrokerName,
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -235,7 +237,6 @@ func ResourceBroker() *schema.Resource {
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day_of_week": {
@@ -264,6 +265,7 @@ func ResourceBroker() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				MaxItems: 5,
 			},
 			"storage_type": {
 				Type:         schema.TypeString,
@@ -378,7 +380,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Logs = expandLogs(engineType, v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
+		input.LdapServerMetadata = expandLDAPServerMetadata(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
@@ -565,6 +567,19 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) auto minor version upgrade: %w", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("maintenance_window_start_time") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:                   aws.String(d.Id()),
+			MaintenanceWindowStartTime: expandWeeklyStartTime(d.Get("maintenance_window_start_time").([]interface{})),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) maintenance window start time: %w", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -1048,7 +1063,7 @@ func flattenLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password 
 	return []interface{}{tfMap}
 }
 
-func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
+func expandLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1093,3 +1108,8 @@ func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInpu
 
 	return apiObject
 }
+
+var ValidateBrokerName = validation.All(
+	validation.StringLenBetween(1, 50),
+	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+)

@@ -1,6 +1,7 @@
 package athena
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -22,6 +23,9 @@ func ResourceDatabase() *schema.Resource {
 		Read:   resourceDatabaseRead,
 		Update: schema.Noop,
 		Delete: resourceDatabaseDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"acl_configuration": {
@@ -86,6 +90,12 @@ func ResourceDatabase() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
+			"properties": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -94,17 +104,32 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	name := d.Get("name").(string)
-	var queryString string
+	var queryString bytes.Buffer
 
-	if v, ok := d.GetOk("comment"); ok {
-		queryString = fmt.Sprintf("create database `%[1]s` comment '%[2]s';", name, strings.Replace(v.(string), "'", "\\'", -1))
-	} else {
-		queryString = fmt.Sprintf("create database `%[1]s`;", name)
+	createStmt := fmt.Sprintf("create database `%s`", name)
+	queryString.WriteString(createStmt)
+
+	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
+		queryString.WriteString(commentStmt)
 	}
 
+	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+		var props []string
+		for k, v := range v.(map[string]interface{}) {
+			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
+			props = append(props, prop)
+		}
+
+		propStmt := fmt.Sprintf(" WITH DBPROPERTIES(%s)", strings.Join(props, ","))
+		queryString.WriteString(propStmt)
+	}
+
+	queryString.WriteString(";")
+
 	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String(queryString),
-		ResultConfiguration: expandAthenaResultConfiguration(d),
+		QueryString:         aws.String(queryString.String()),
+		ResultConfiguration: expandResultConfiguration(d),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -144,6 +169,8 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	db := res.Database
 
 	d.Set("name", db.Name)
+	d.Set("comment", db.Description)
+	d.Set("properties", db.Parameters)
 
 	return nil
 }
@@ -159,7 +186,7 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 
 	input := &athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
-		ResultConfiguration: expandAthenaResultConfiguration(d),
+		ResultConfiguration: expandResultConfiguration(d),
 	}
 
 	resp, err := conn.StartQueryExecution(input)
@@ -174,11 +201,11 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
+func expandResultConfiguration(d *schema.ResourceData) *athena.ResultConfiguration {
 
 	resultConfig := &athena.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
-		EncryptionConfiguration: expandAthenaResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("expected_bucket_owner"); ok {
@@ -186,13 +213,13 @@ func expandAthenaResultConfiguration(d *schema.ResourceData) *athena.ResultConfi
 	}
 
 	if v, ok := d.GetOk("acl_configuration"); ok && len(v.([]interface{})) > 0 {
-		resultConfig.AclConfiguration = expandAthenaResultConfigurationAclConfig(v.([]interface{}))
+		resultConfig.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
 	}
 
 	return resultConfig
 }
 
-func expandAthenaResultConfigurationEncryptionConfig(config []interface{}) *athena.EncryptionConfiguration {
+func expandResultConfigurationEncryptionConfig(config []interface{}) *athena.EncryptionConfiguration {
 	if len(config) <= 0 {
 		return nil
 	}
@@ -210,7 +237,7 @@ func expandAthenaResultConfigurationEncryptionConfig(config []interface{}) *athe
 	return encryptionConfig
 }
 
-func expandAthenaResultConfigurationAclConfig(config []interface{}) *athena.AclConfiguration {
+func expandResultConfigurationACLConfig(config []interface{}) *athena.AclConfiguration {
 	if len(config) <= 0 {
 		return nil
 	}
@@ -230,7 +257,7 @@ func executeAndExpectNoRows(qeid, action string, conn *athena.Athena) error {
 		return err
 	}
 	if len(rs.Rows) != 0 {
-		return fmt.Errorf("Athena %s database, unexpected query result: %s", action, flattenAthenaResultSet(rs))
+		return fmt.Errorf("Athena %s database, unexpected query result: %s", action, flattenResultSet(rs))
 	}
 	return nil
 }
@@ -283,7 +310,7 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 	}
 }
 
-func flattenAthenaResultSet(rs *athena.ResultSet) string {
+func flattenResultSet(rs *athena.ResultSet) string {
 	ss := make([]string, 0)
 	for _, row := range rs.Rows {
 		for _, datum := range row.Data {

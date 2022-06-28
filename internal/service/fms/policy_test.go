@@ -21,16 +21,16 @@ func testAccPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig(rName, rName),
+				Config: testAccPolicyConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "fms", "policy/.+"),
@@ -57,16 +57,16 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_cloudfrontDistribution(rName),
+				Config: testAccPolicyConfig_cloudFrontDistribution(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -90,16 +90,16 @@ func testAccPolicy_includeMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig_include(rName),
+				Config: testAccPolicyConfig_include(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -124,16 +124,16 @@ func testAccPolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfig(rName1, rName1),
+				Config: testAccPolicyConfig_basic(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -141,7 +141,7 @@ func testAccPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFmsPolicyConfig_updated(rName2, rName1),
+				Config: testAccPolicyConfig_updated(rName2, rName1),
 			},
 		},
 	})
@@ -154,16 +154,16 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfigResourceTags1(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_resourceTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
@@ -171,7 +171,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFmsPolicyConfigResourceTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyConfig_resourceTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1updated"),
@@ -189,23 +189,23 @@ func testAccPolicy_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, fms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPolicyDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsPolicyConfigTags1(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccFmsPolicyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -264,8 +264,8 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccFmsPolicyConfigOrgMgmtAccountBase() string {
-	return acctest.ConfigCompose(testAccFmsAdminRegionProviderConfig(), `
+func testAccPolicyConfigOrgMgmtAccountBase() string {
+	return acctest.ConfigCompose(testAccAdminRegionProviderConfig(), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_fms_admin_account" "test" {
@@ -274,8 +274,8 @@ resource "aws_fms_admin_account" "test" {
 `)
 }
 
-func testAccFmsPolicyConfig(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -301,8 +301,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, policyName, ruleGroupName))
 }
 
-func testAccFmsPolicyConfig_cloudfrontDistribution(rName string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_cloudFrontDistribution(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -377,8 +377,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccFmsPolicyConfig_updated(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_updated(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -408,8 +408,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, policyName, ruleGroupName))
 }
 
-func testAccFmsPolicyConfig_include(rName string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_include(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -435,8 +435,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, rName))
 }
 
-func testAccFmsPolicyConfigResourceTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_resourceTags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -462,8 +462,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccFmsPolicyConfigResourceTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_resourceTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -490,8 +490,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccFmsPolicyConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -517,8 +517,8 @@ resource "aws_wafregional_rule_group" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccFmsPolicyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccFmsPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
+func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigOrgMgmtAccountBase(), fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q

@@ -8,6 +8,10 @@ package logging
 // Refer to the terraform-plugin-go logging keys as well, which should be
 // equivalent to these when possible.
 const (
+	// Attribute path representation, which is typically in flatmap form such
+	// as parent.0.child in this project.
+	KeyAttributePath = "tf_attribute_path"
+
 	// The type of data source being operated on, such as "archive_file"
 	KeyDataSourceType = "tf_data_source_type"
 
@@ -26,6 +30,12 @@ const (
 
 	// The TestStep number of the test being executed. Starts at 1.
 	KeyTestStepNumber = "test_step_number"
+
+	// The path to the Terraform CLI logging file used for an acceptance test.
+	//
+	// This should match where the rest of the acceptance test logs are going
+	// already, but is provided for troubleshooting in case it does not.
+	KeyTestTerraformLogPath = "test_terraform_log_path"
 
 	// The path to the Terraform CLI used for an acceptance test.
 	KeyTestTerraformPath = "test_terraform_path"

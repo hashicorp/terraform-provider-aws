@@ -79,7 +79,7 @@ func (r *Releases) ListProductVersions(ctx context.Context, productName string) 
 	}
 
 	contentType := resp.Header.Get("content-type")
-	if contentType != "application/json" {
+	if contentType != "application/json" && contentType != "application/vnd+hashicorp.releases-api.v0+json" {
 		return nil, fmt.Errorf("unexpected Content-Type: %q", contentType)
 	}
 
@@ -144,7 +144,7 @@ func (r *Releases) GetProductVersion(ctx context.Context, product string, versio
 	}
 
 	contentType := resp.Header.Get("content-type")
-	if contentType != "application/json" {
+	if contentType != "application/json" && contentType != "application/vnd+hashicorp.releases-api.v0+json" {
 		return nil, fmt.Errorf("unexpected Content-Type: %q", contentType)
 	}
 

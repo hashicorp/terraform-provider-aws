@@ -21,10 +21,10 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
@@ -50,10 +50,10 @@ func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerConfig_basic(rName),
@@ -72,10 +72,10 @@ func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test creation of max number (5 according to AWS API docs) of concurrent consumers for a single stream
@@ -97,10 +97,10 @@ func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckStreamConsumerDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test creation of more than the max number (5 according to AWS API docs) of concurrent consumers for a single stream

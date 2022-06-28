@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-version"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // StateFormatVersionConstraints defines the versions of the JSON state format
@@ -175,4 +176,31 @@ type StateOutput struct {
 
 	// The value of the output.
 	Value interface{} `json:"value,omitempty"`
+
+	// The type of the output.
+	Type cty.Type `json:"type,omitempty"`
+}
+
+// jsonStateOutput describes an output value in a middle-step internal
+// representation before marshalled into a more useful StateOutput with cty.Type.
+//
+// This avoid panic on marshalling cty.NilType (from cty upstream)
+// which the default Go marshaller cannot ignore because it's a
+// not nil-able struct.
+type jsonStateOutput struct {
+	Sensitive bool            `json:"sensitive"`
+	Value     interface{}     `json:"value,omitempty"`
+	Type      json.RawMessage `json:"type,omitempty"`
+}
+
+func (so *StateOutput) MarshalJSON() ([]byte, error) {
+	jsonSa := &jsonStateOutput{
+		Sensitive: so.Sensitive,
+		Value:     so.Value,
+	}
+	if so.Type != cty.NilType {
+		outputType, _ := so.Type.MarshalJSON()
+		jsonSa.Type = outputType
+	}
+	return json.Marshal(jsonSa)
 }

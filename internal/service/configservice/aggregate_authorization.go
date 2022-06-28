@@ -1,8 +1,8 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceAggregateAuthorization() *schema.Resource {
@@ -86,8 +88,14 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	d.Set("region", region)
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
+		return names.Error(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -98,10 +106,14 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if aggregationAuthorization == nil {
-		log.Printf("[WARN] Aggregate Authorization not found, removing from state: %s", d.Id())
+	if !d.IsNewResource() && aggregationAuthorization == nil {
+		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && aggregationAuthorization == nil {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)

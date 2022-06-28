@@ -81,7 +81,7 @@ func resourceCodeRepositoryCreate(d *schema.ResourceData, meta interface{}) erro
 
 	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
-		GitConfig:          expandSagemakerCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
+		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -119,13 +119,13 @@ func resourceCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("code_repository_name", codeRepository.CodeRepositoryName)
 	d.Set("arn", arn)
 
-	if err := d.Set("git_config", flattenSagemakerCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
+	if err := d.Set("git_config", flattenCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
 		return fmt.Errorf("error setting git_config for sagemaker code repository (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Code Repository (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Code Repository (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -156,7 +156,7 @@ func resourceCodeRepositoryUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("git_config") {
 		input := &sagemaker.UpdateCodeRepositoryInput{
 			CodeRepositoryName: aws.String(d.Id()),
-			GitConfig:          expandSagemakerCodeRepositoryUpdateGitConfig(d.Get("git_config").([]interface{})),
+			GitConfig:          expandCodeRepositoryUpdateGitConfig(d.Get("git_config").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
@@ -186,7 +186,7 @@ func resourceCodeRepositoryDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandSagemakerCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfig {
+func expandCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -208,7 +208,7 @@ func expandSagemakerCodeRepositoryGitConfig(l []interface{}) *sagemaker.GitConfi
 	return config
 }
 
-func flattenSagemakerCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[string]interface{} {
+func flattenCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -228,7 +228,7 @@ func flattenSagemakerCodeRepositoryGitConfig(config *sagemaker.GitConfig) []map[
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerCodeRepositoryUpdateGitConfig(l []interface{}) *sagemaker.GitConfigForUpdate {
+func expandCodeRepositoryUpdateGitConfig(l []interface{}) *sagemaker.GitConfigForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

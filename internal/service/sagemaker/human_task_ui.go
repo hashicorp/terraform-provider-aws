@@ -79,7 +79,7 @@ func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("human_task_ui_name").(string)
 	input := &sagemaker.CreateHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
-		UiTemplate:      expandSagemakerHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
+		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -119,7 +119,7 @@ func resourceHumanTaskUIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("human_task_ui_name", humanTaskUi.HumanTaskUiName)
 
-	if err := d.Set("ui_template", flattenSagemakerHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
+	if err := d.Set("ui_template", flattenHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
 		return fmt.Errorf("error setting ui_template: %w", err)
 	}
 
@@ -176,7 +176,7 @@ func resourceHumanTaskUIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandSagemakerHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
+func expandHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -190,7 +190,7 @@ func expandSagemakerHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate
 	return config
 }
 
-func flattenSagemakerHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content string) []map[string]interface{} {
+func flattenHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content string) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

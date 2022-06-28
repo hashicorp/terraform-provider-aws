@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_parameters_by_path"
 description: |-
@@ -36,6 +36,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arns` - The ARNs of the parameters.
-* `names` - The names of the parametes.
+* `names` - The names of the parameters.
 * `types` - The types of the parameters.
 * `values` - The value of the parameters.

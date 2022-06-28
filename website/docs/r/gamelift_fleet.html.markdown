@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_fleet"
 description: |-
-  Provides a Gamelift Fleet resource.
+  Provides a GameLift Fleet resource.
 ---
 
 # Resource: aws_gamelift_fleet
 
-Provides a Gamelift Fleet resource.
+Provides a GameLift Fleet resource.
 
 ## Example Usage
 
@@ -32,7 +32,7 @@ resource "aws_gamelift_fleet" "example" {
 
 The following arguments are supported:
 
-* `build_id` - (Optional) ID of the Gamelift Build to be deployed on the fleet.
+* `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2_inbound_permission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.
@@ -44,7 +44,7 @@ The following arguments are supported:
 * `new_game_session_protection_policy` - (Optional) Game session protection policy to apply to all instances in this fleetE.g., `FullProtection`. Defaults to `NoProtection`.
 * `resource_creation_limit_policy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtime_configuration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
-* `script_id` - (Optional) ID of the Gamelift Script to be deployed on the fleet.
+* `script_id` - (Optional) ID of the GameLift Script to be deployed on the fleet.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
@@ -97,7 +97,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Gamelift Fleets can be imported using the ID, e.g.,
+GameLift Fleets can be imported using the ID, e.g.,
 
 ```
 $ terraform import aws_gamelift_fleet.example <fleet-id>

@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -106,7 +107,7 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 			continue
 		}
 
-		arnUrl, err := urlFromOpenIDConnectProviderArn(aws.StringValue(oidcp.Arn))
+		arnUrl, err := urlFromOpenIDConnectProviderARN(aws.StringValue(oidcp.Arn))
 		if err != nil {
 			return nil, err
 		}
@@ -117,4 +118,12 @@ func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM,
 	}
 
 	return result, nil
+}
+
+func urlFromOpenIDConnectProviderARN(arn string) (string, error) {
+	parts := strings.SplitN(arn, "/", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("error reading OpenID Connect Provider expected the arn to be like: arn:PARTITION:iam::ACCOUNT:oidc-provider/URL but got: %s", arn)
+	}
+	return parts[1], nil
 }

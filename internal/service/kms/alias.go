@@ -36,7 +36,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"name_prefix": {
@@ -45,7 +45,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validName,
+				ValidateFunc:  validNameForResource,
 			},
 
 			"target_key_arn": {
@@ -56,7 +56,7 @@ func ResourceAlias() *schema.Resource {
 			"target_key_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				DiffSuppressFunc: suppressEquivalentKmsKeyARNOrID,
+				DiffSuppressFunc: suppressEquivalentKeyARNOrID,
 			},
 		},
 	}
@@ -166,6 +166,6 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func suppressEquivalentKmsKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
+func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
 	return KeyARNOrIDEqual(old, new)
 }

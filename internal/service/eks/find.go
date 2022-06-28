@@ -68,6 +68,56 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.E
 	return output.Update, nil
 }
 
+func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *eks.EKS, addonName, kubernetesVersion string, mostRecent bool) (*eks.AddonVersionInfo, error) {
+	input := &eks.DescribeAddonVersionsInput{
+		AddonName:         aws.String(addonName),
+		KubernetesVersion: aws.String(kubernetesVersion),
+	}
+	var version *eks.AddonVersionInfo
+
+	err := conn.DescribeAddonVersionsPagesWithContext(ctx, input, func(page *eks.DescribeAddonVersionsOutput, lastPage bool) bool {
+		if page == nil || len(page.Addons) == 0 {
+			return !lastPage
+		}
+
+		for _, addon := range page.Addons {
+			for i, addonVersion := range addon.AddonVersions {
+				if mostRecent && i == 0 {
+					version = addonVersion
+					return !lastPage
+				}
+				for _, versionCompatibility := range addonVersion.Compatibilities {
+					if aws.BoolValue(versionCompatibility.DefaultVersion) {
+						version = addonVersion
+						return !lastPage
+					}
+				}
+			}
+		}
+		return lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if version == nil || version.AddonVersion == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return version, nil
+}
+
 func FindClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(name),

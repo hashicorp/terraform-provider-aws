@@ -224,16 +224,16 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("configuration_set_name", output.ConfigurationSet.Name)
 	d.Set("enabled", thisEventDestination.Enabled)
 	d.Set("name", thisEventDestination.Name)
-	if err := d.Set("cloudwatch_destination", flattenSesCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
+	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_destination: %w", err)
 	}
-	if err := d.Set("kinesis_destination", flattenSesKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
+	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
 		return fmt.Errorf("error setting kinesis_destination: %w", err)
 	}
 	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
 		return fmt.Errorf("error setting matching_types: %w", err)
 	}
-	if err := d.Set("sns_destination", flattenSesSnsDestination(thisEventDestination.SNSDestination)); err != nil {
+	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
 		return fmt.Errorf("error setting sns_destination: %w", err)
 	}
 
@@ -293,7 +293,7 @@ func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionCo
 	return b
 }
 
-func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
+func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -313,7 +313,7 @@ func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []i
 	return vDimensionConfigurations
 }
 
-func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
+func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -326,7 +326,7 @@ func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestin
 	return []interface{}{mDestination}
 }
 
-func flattenSesSnsDestination(destination *ses.SNSDestination) []interface{} {
+func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}

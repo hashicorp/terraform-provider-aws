@@ -22,10 +22,10 @@ import (
 
 func ResourceClassificationJob() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2ClassificationJobCreate,
-		ReadWithoutTimeout:   resourceMacie2ClassificationJobRead,
-		UpdateWithoutTimeout: resourceMacie2ClassificationJobUpdate,
-		DeleteWithoutTimeout: resourceMacie2ClassificationJobDelete,
+		CreateWithoutTimeout: resourceClassificationJobCreate,
+		ReadWithoutTimeout:   resourceClassificationJobRead,
+		UpdateWithoutTimeout: resourceClassificationJobUpdate,
+		DeleteWithoutTimeout: resourceClassificationJobDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -367,7 +367,7 @@ func ResourceClassificationJob() *schema.Resource {
 	}
 }
 
-func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -426,10 +426,10 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(aws.StringValue(output.JobId))
 
-	return resourceMacie2ClassificationJobRead(ctx, d, meta)
+	return resourceClassificationJobRead(ctx, d, meta)
 }
 
-func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -491,7 +491,7 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateClassificationJobInput{
@@ -513,10 +513,10 @@ func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error updating Macie ClassificationJob (%s): %w", d.Id(), err))
 	}
 
-	return resourceMacie2ClassificationJobRead(ctx, d, meta)
+	return resourceClassificationJobRead(ctx, d, meta)
 }
 
-func resourceMacie2ClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateClassificationJobInput{

@@ -19,13 +19,13 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediapackage.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaPackageChannelConfig(sdkacctest.RandString(5)),
+				Config: testAccChannelConfig_basic(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediapackage", regexp.MustCompile(`channels/.+`)),
@@ -51,13 +51,13 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediapackage.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaPackageChannelConfigDescription(rName, "description1"),
+				Config: testAccChannelConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -69,7 +69,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaPackageChannelConfigDescription(rName, "description2"),
+				Config: testAccChannelConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -84,13 +84,13 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediapackage.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckChannelDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, mediapackage.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test"),
+				Config: testAccChannelConfig_tags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +104,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test1"),
+				Config: testAccChannelConfig_tags(rName, "Environment", "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -112,7 +112,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMediaPackageChannelConfigWithTags(rName, "Update", "true"),
+				Config: testAccChannelConfig_tags(rName, "Update", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -183,7 +183,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccMediaPackageChannelConfig(rName string) string {
+func testAccChannelConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
   channel_id = "tf_mediachannel_%s"
@@ -191,7 +191,7 @@ resource "aws_media_package_channel" "test" {
 `, rName)
 }
 
-func testAccMediaPackageChannelConfigDescription(rName, description string) string {
+func testAccChannelConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
   channel_id  = %q
@@ -200,7 +200,7 @@ resource "aws_media_package_channel" "test" {
 `, rName, description)
 }
 
-func testAccMediaPackageChannelConfigWithTags(rName, key, value string) string {
+func testAccChannelConfig_tags(rName, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
   channel_id = "%[1]s"

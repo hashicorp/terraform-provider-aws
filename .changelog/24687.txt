@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_rds_cluster_parameter_group: Support import of `name_prefix` argument

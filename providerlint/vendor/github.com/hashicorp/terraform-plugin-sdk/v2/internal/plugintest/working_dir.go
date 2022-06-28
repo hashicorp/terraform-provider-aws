@@ -3,7 +3,7 @@ package plugintest
 import (
 	"bytes"
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	ConfigFileName = "terraform_plugin_test.tf"
-	PlanFileName   = "tfplan"
+	ConfigFileName     = "terraform_plugin_test.tf"
+	ConfigFileNameJSON = ConfigFileName + ".json"
+	PlanFileName       = "tfplan"
 )
 
 // WorkingDir represents a distinct working directory that can be used for
@@ -28,6 +29,10 @@ type WorkingDir struct {
 
 	// baseDir is the root of the working directory tree
 	baseDir string
+
+	// configFilename is the full filename where the latest configuration
+	// was stored; empty until SetConfig is called.
+	configFilename string
 
 	// baseArgs is arguments that should be appended to all commands
 	baseArgs []string
@@ -41,8 +46,6 @@ type WorkingDir struct {
 	// reattachInfo stores the gRPC socket info required for Terraform's
 	// plugin reattach functionality
 	reattachInfo tfexec.ReattachInfo
-
-	env map[string]string
 }
 
 // Close deletes the directories and files created to represent the receiving
@@ -50,19 +53,6 @@ type WorkingDir struct {
 // is invalid and may no longer be used.
 func (wd *WorkingDir) Close() error {
 	return os.RemoveAll(wd.baseDir)
-}
-
-// Setenv sets an environment variable on the WorkingDir.
-func (wd *WorkingDir) Setenv(envVar, val string) {
-	if wd.env == nil {
-		wd.env = map[string]string{}
-	}
-	wd.env[envVar] = val
-}
-
-// Unsetenv removes an environment variable from the WorkingDir.
-func (wd *WorkingDir) Unsetenv(envVar string) {
-	delete(wd.env, envVar)
 }
 
 func (wd *WorkingDir) SetReattachInfo(ctx context.Context, reattachInfo tfexec.ReattachInfo) {
@@ -85,27 +75,20 @@ func (wd *WorkingDir) GetHelper() *Helper {
 // Destroy to establish the configuration. Any previously-set configuration is
 // discarded and any saved plan is cleared.
 func (wd *WorkingDir) SetConfig(ctx context.Context, cfg string) error {
-	configFilename := filepath.Join(wd.baseDir, ConfigFileName)
-	err := ioutil.WriteFile(configFilename, []byte(cfg), 0700)
+	outFilename := filepath.Join(wd.baseDir, ConfigFileName)
+	rmFilename := filepath.Join(wd.baseDir, ConfigFileNameJSON)
+	bCfg := []byte(cfg)
+	if json.Valid(bCfg) {
+		outFilename, rmFilename = rmFilename, outFilename
+	}
+	if err := os.Remove(rmFilename); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("unable to remove %q: %w", rmFilename, err)
+	}
+	err := ioutil.WriteFile(outFilename, bCfg, 0700)
 	if err != nil {
 		return err
 	}
-
-	var mismatch *tfexec.ErrVersionMismatch
-	err = wd.tf.SetDisablePluginTLS(true)
-	if err != nil && !errors.As(err, &mismatch) {
-		return err
-	}
-	err = wd.tf.SetSkipProviderVerify(true)
-	if err != nil && !errors.As(err, &mismatch) {
-		return err
-	}
-
-	if p := os.Getenv(EnvTfAccLogPath); p != "" {
-		if err := wd.tf.SetLogPath(p); err != nil {
-			return fmt.Errorf("unable to set log path: %w", err)
-		}
-	}
+	wd.configFilename = outFilename
 
 	// Changing configuration invalidates any saved plan.
 	err = wd.ClearPlan(ctx)
@@ -158,24 +141,27 @@ func (wd *WorkingDir) ClearPlan(ctx context.Context) error {
 	return nil
 }
 
+var errWorkingDirSetConfigNotCalled = fmt.Errorf("must call SetConfig before Init")
+
 // Init runs "terraform init" for the given working directory, forcing Terraform
 // to use the current version of the plugin under test.
 func (wd *WorkingDir) Init(ctx context.Context) error {
-	if _, err := os.Stat(wd.configFilename()); err != nil {
-		return fmt.Errorf("must call SetConfig before Init")
+	if wd.configFilename == "" {
+		return errWorkingDirSetConfigNotCalled
+	}
+	if _, err := os.Stat(wd.configFilename); err != nil {
+		return errWorkingDirSetConfigNotCalled
 	}
 
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI init command")
 
-	err := wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo))
+	// -upgrade=true is required for per-TestStep provider version changes
+	// e.g. TestTest_TestStep_ExternalProviders_DifferentVersions
+	err := wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Upgrade(true))
 
 	logging.HelperResourceTrace(ctx, "Called Terraform CLI init command")
 
 	return err
-}
-
-func (wd *WorkingDir) configFilename() string {
-	return filepath.Join(wd.baseDir, ConfigFileName)
 }
 
 func (wd *WorkingDir) planFilename() string {

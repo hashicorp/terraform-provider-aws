@@ -21,15 +21,15 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDNSSECConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
+				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
+					testAccCheckDNSSECConfigExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexp.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
@@ -51,15 +51,15 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDNSSECConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
+				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
+					testAccCheckDNSSECConfigExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceDNSSECConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -68,7 +68,7 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
+func testAccCheckDNSSECConfigDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -96,7 +96,7 @@ func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRoute53ResolverDnssecConfigExists(n string) resource.TestCheckFunc {
+func testAccCheckDNSSECConfigExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -128,7 +128,7 @@ func testAccCheckRoute53ResolverDnssecConfigExists(n string) resource.TestCheckF
 	}
 }
 
-func testAccRoute53ResolverDnssecConfigBase(rName string) string {
+func testAccDNSSECConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -142,8 +142,8 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccRoute53ResolverDnssecConfigConfigBasic(rName string) string {
-	return testAccRoute53ResolverDnssecConfigBase(rName) + `
+func testAccDNSSECConfigConfig_basic(rName string) string {
+	return testAccDNSSECConfigBase(rName) + `
 resource "aws_route53_resolver_dnssec_config" "test" {
   resource_id = aws_vpc.test.id
 }

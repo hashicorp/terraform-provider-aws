@@ -40,6 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 * `multi_az_enabled` - Specifies whether Multi-AZ Support is enabled for the replication group.
 * `replicas_per_node_group` - Number of replica nodes in each node group.
 * `replication_group_description` - (**Deprecated** use `description` instead) The description of the replication group.
+* `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
 * `snapshot_retention_limit` - The number of days for which ElastiCache retains automatic cache cluster snapshots before deleting them.
 * `port` – The port number on which the configuration endpoint will accept connections.

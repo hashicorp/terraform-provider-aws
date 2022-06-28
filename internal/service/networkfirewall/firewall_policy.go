@@ -145,7 +145,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
-		FirewallPolicy:     expandNetworkFirewallFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 		FirewallPolicyName: aws.String(d.Get("name").(string)),
 	}
 
@@ -204,7 +204,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", resp.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	if err := d.Set("firewall_policy", flattenNetworkFirewallFirewallPolicy(policy)); err != nil {
+	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting firewall_policy: %w", err))
 	}
 
@@ -230,7 +230,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("description", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			FirewallPolicy:    expandNetworkFirewallFirewallPolicy(d.Get("firewall_policy").([]interface{})),
+			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn: aws.String(arn),
 			UpdateToken:       aws.String(d.Get("update_token").(string)),
 		}
@@ -295,7 +295,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func expandNetworkFirewallStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngineOptions {
+func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngineOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -310,7 +310,7 @@ func expandNetworkFirewallStatefulEngineOptions(l []interface{}) *networkfirewal
 	return options
 }
 
-func expandNetworkFirewallStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
+func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -332,7 +332,7 @@ func expandNetworkFirewallStatefulRuleGroupReferences(l []interface{}) []*networ
 	return references
 }
 
-func expandNetworkFirewallStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.StatelessRuleGroupReference {
+func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.StatelessRuleGroupReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -354,7 +354,7 @@ func expandNetworkFirewallStatelessRuleGroupReferences(l []interface{}) []*netwo
 	return references
 }
 
-func expandNetworkFirewallFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
+func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -369,25 +369,25 @@ func expandNetworkFirewallFirewallPolicy(l []interface{}) *networkfirewall.Firew
 	}
 
 	if v, ok := lRaw["stateful_engine_options"].([]interface{}); ok && len(v) > 0 {
-		policy.StatefulEngineOptions = expandNetworkFirewallStatefulEngineOptions(v)
+		policy.StatefulEngineOptions = expandStatefulEngineOptions(v)
 	}
 
 	if v, ok := lRaw["stateful_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatefulRuleGroupReferences = expandNetworkFirewallStatefulRuleGroupReferences(v.List())
+		policy.StatefulRuleGroupReferences = expandStatefulRuleGroupReferences(v.List())
 	}
 
 	if v, ok := lRaw["stateless_custom_action"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessCustomActions = expandNetworkFirewallCustomActions(v.List())
+		policy.StatelessCustomActions = expandCustomActions(v.List())
 	}
 
 	if v, ok := lRaw["stateless_rule_group_reference"].(*schema.Set); ok && v.Len() > 0 {
-		policy.StatelessRuleGroupReferences = expandNetworkFirewallStatelessRuleGroupReferences(v.List())
+		policy.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
 	}
 
 	return policy
 }
 
-func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{} {
+func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{} {
 	if policy == nil {
 		return []interface{}{}
 	}
@@ -396,13 +396,13 @@ func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy
 		p["stateful_default_actions"] = flex.FlattenStringSet(policy.StatefulDefaultActions)
 	}
 	if policy.StatefulEngineOptions != nil {
-		p["stateful_engine_options"] = flattenNetworkFirewallStatefulEngineOptions(policy.StatefulEngineOptions)
+		p["stateful_engine_options"] = flattenStatefulEngineOptions(policy.StatefulEngineOptions)
 	}
 	if policy.StatefulRuleGroupReferences != nil {
-		p["stateful_rule_group_reference"] = flattenNetworkFirewallPolicyStatefulRuleGroupReference(policy.StatefulRuleGroupReferences)
+		p["stateful_rule_group_reference"] = flattenPolicyStatefulRuleGroupReference(policy.StatefulRuleGroupReferences)
 	}
 	if policy.StatelessCustomActions != nil {
-		p["stateless_custom_action"] = flattenNetworkFirewallCustomActions(policy.StatelessCustomActions)
+		p["stateless_custom_action"] = flattenCustomActions(policy.StatelessCustomActions)
 	}
 	if policy.StatelessDefaultActions != nil {
 		p["stateless_default_actions"] = flex.FlattenStringSet(policy.StatelessDefaultActions)
@@ -411,13 +411,13 @@ func flattenNetworkFirewallFirewallPolicy(policy *networkfirewall.FirewallPolicy
 		p["stateless_fragment_default_actions"] = flex.FlattenStringSet(policy.StatelessFragmentDefaultActions)
 	}
 	if policy.StatelessRuleGroupReferences != nil {
-		p["stateless_rule_group_reference"] = flattenNetworkFirewallPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
+		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
 	}
 
 	return []interface{}{p}
 }
 
-func flattenNetworkFirewallStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {
+func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {
 	if options == nil {
 		return []interface{}{}
 	}
@@ -429,7 +429,7 @@ func flattenNetworkFirewallStatefulEngineOptions(options *networkfirewall.Statef
 	return []interface{}{m}
 }
 
-func flattenNetworkFirewallPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
+func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
@@ -444,7 +444,7 @@ func flattenNetworkFirewallPolicyStatefulRuleGroupReference(l []*networkfirewall
 	return references
 }
 
-func flattenNetworkFirewallPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRuleGroupReference) []interface{} {
+func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRuleGroupReference) []interface{} {
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{

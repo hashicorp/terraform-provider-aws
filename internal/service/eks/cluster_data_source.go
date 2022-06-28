@@ -159,23 +159,23 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 	d.Set("arn", cluster.Arn)
 
-	if err := d.Set("certificate_authority", flattenEksCertificate(cluster.CertificateAuthority)); err != nil {
+	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return fmt.Errorf("error setting certificate_authority: %w", err)
 	}
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 
-	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
+	if err := d.Set("enabled_cluster_log_types", flattenEnabledLogTypes(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %w", err)
 	}
 
 	d.Set("endpoint", cluster.Endpoint)
 
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return fmt.Errorf("error setting identity: %w", err)
 	}
 
-	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
 	}
 
@@ -186,7 +186,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("version", cluster.Version)
 
-	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 

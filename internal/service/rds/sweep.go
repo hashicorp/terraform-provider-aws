@@ -94,6 +94,11 @@ func init() {
 			"aws_db_instance",
 		},
 	})
+
+	resource.AddTestSweepers("aws_rds_cluster_activity_stream", &resource.Sweeper{
+		Name: "aws_rds_cluster_activity_stream",
+		F:    func(region string) error { return nil },
+	})
 }
 
 func sweepClusterParameterGroups(region string) error {

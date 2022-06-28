@@ -12,10 +12,10 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,

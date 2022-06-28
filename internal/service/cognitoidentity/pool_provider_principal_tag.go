@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePoolProviderPrincipalTag() *schema.Resource {
@@ -99,13 +100,14 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 		IdentityPoolId:       aws.String(poolId),
 	})
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPoolProviderPrincipalTag, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ret.IdentityPoolId)

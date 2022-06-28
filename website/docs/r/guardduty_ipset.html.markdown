@@ -36,7 +36,6 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
 }
 
 resource "aws_s3_object" "MyIPSet" {
-  acl     = "public-read"
   content = "10.0.0.0/8\n"
   bucket  = aws_s3_bucket.bucket.id
   key     = "MyIPSet"

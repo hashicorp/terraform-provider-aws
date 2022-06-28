@@ -132,7 +132,7 @@ func StatusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalRep
 // StatusUser fetches the ElastiCache user and its Status
 func StatusUser(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		user, err := FindElastiCacheUserByID(conn, userId)
+		user, err := FindUserByID(conn, userId)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

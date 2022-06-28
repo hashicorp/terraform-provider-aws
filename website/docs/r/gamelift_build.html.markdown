@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_build"
 description: |-
-  Provides a Gamelift Build resource.
+  Provides a GameLift Build resource.
 ---
 
 # Resource: aws_gamelift_build
 
-Provides an Gamelift Build resource.
+Provides an GameLift Build resource.
 
 ## Example Usage
 
@@ -48,13 +48,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Gamelift Build ID.
-* `arn` - Gamelift Build ARN.
+* `id` - GameLift Build ID.
+* `arn` - GameLift Build ARN.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-Gamelift Builds can be imported using the ID, e.g.,
+GameLift Builds can be imported using the ID, e.g.,
 
 ```
 $ terraform import aws_gamelift_build.example <build-id>

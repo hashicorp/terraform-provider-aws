@@ -1,5 +1,5 @@
 ---
-subcategory: "Kafka Connect (MSK Connect)"
+subcategory: "Managed Streaming for Kafka Connect"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_custom_plugin"
 description: |-
@@ -73,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
+* `delete` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
 
 ## Import
 

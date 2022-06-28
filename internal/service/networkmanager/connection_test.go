@@ -17,10 +17,10 @@ import (
 
 func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":               testAccNetworkManagerConnection_basic,
-		"disappears":          testAccNetworkManagerConnection_disappears,
-		"tags":                testAccNetworkManagerConnection_tags,
-		"descriptionAndLinks": testAccNetworkManagerConnection_descriptionAndLinks,
+		"basic":               testAccConnection_basic,
+		"disappears":          testAccConnection_disappears,
+		"tags":                testAccConnection_tags,
+		"descriptionAndLinks": testAccConnection_descriptionAndLinks,
 	}
 
 	for name, tc := range testCases {
@@ -31,18 +31,18 @@ func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	}
 }
 
-func testAccNetworkManagerConnection_basic(t *testing.T) {
+func testAccConnection_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -62,18 +62,18 @@ func testAccNetworkManagerConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_disappears(t *testing.T) {
+func testAccConnection_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceConnection(), resourceName),
@@ -84,18 +84,18 @@ func testAccNetworkManagerConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags(t *testing.T) {
+func testAccConnection_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfigTags1(rName, "key1", "value1"),
+				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -109,7 +109,7 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -118,7 +118,7 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConnectionConfigTags1(rName, "key2", "value2"),
+				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -129,20 +129,20 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_descriptionAndLinks(t *testing.T) {
+func testAccConnection_descriptionAndLinks(t *testing.T) {
 	resourceName := "aws_networkmanager_connection.test"
 	link1ResourceName := "aws_networkmanager_link.test1"
 	link2ResourceName := "aws_networkmanager_link.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDescriptionAndLinksConfig(rName),
+				Config: testAccConnectionConfig_descriptionAndLinks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connected_link_id", ""),
@@ -157,7 +157,7 @@ func testAccNetworkManagerConnection_descriptionAndLinks(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionDescriptionAndLinksUpdatedConfig(rName),
+				Config: testAccConnectionConfig_descriptionAndLinksUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "connected_link_id", link2ResourceName, "id"),
@@ -265,7 +265,7 @@ resource "aws_networkmanager_device" "test2" {
 `, rName)
 }
 
-func testAccConnectionConfig(rName string) string {
+func testAccConnectionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), `
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -275,7 +275,7 @@ resource "aws_networkmanager_connection" "test" {
 `)
 }
 
-func testAccConnectionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccConnectionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -289,7 +289,7 @@ resource "aws_networkmanager_connection" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccConnectionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConnectionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccConnectionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -355,7 +355,7 @@ resource "aws_networkmanager_link_association" "test2" {
 `, rName))
 }
 
-func testAccConnectionDescriptionAndLinksConfig(rName string) string {
+func testAccConnectionConfig_descriptionAndLinks(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionDescriptionAndLinksBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id
@@ -375,7 +375,7 @@ resource "aws_networkmanager_connection" "test" {
 `, rName))
 }
 
-func testAccConnectionDescriptionAndLinksUpdatedConfig(rName string) string {
+func testAccConnectionConfig_descriptionAndLinksUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccConnectionDescriptionAndLinksBaseConfig(rName), fmt.Sprintf(`
 resource "aws_networkmanager_connection" "test" {
   global_network_id   = aws_networkmanager_global_network.test.id

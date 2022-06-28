@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_eips"
 description: |-
@@ -47,4 +47,4 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 
 * `id` - AWS Region.
 * `allocation_ids` - A list of all the allocation IDs for address for use with EC2-VPC.
-* `public_ips` - A list of all the Elastic IP addresses for use with EC2-Classic.
+* `public_ips` - A list of all the Elastic IP addresses.

@@ -23,10 +23,10 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
+		ErrorCheck:        testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieOrganizationAdminAccountBasicConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
@@ -51,10 +51,10 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 		},
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
+		ErrorCheck:        testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieOrganizationAdminAccountBasicConfig(),
+				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
@@ -65,7 +65,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccErrorCheckSkipMacie2OrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkipOrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: The request failed because you must be a user of the management account for your AWS organization to perform this operation",
 	)
@@ -124,7 +124,7 @@ func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 
 }
 
-func testAccMacieOrganizationAdminAccountBasicConfig() string {
+func testAccOrganizationAdminAccountConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 

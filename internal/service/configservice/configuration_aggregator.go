@@ -2,6 +2,7 @@ package configservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationAggregator() *schema.Resource {
@@ -164,19 +166,24 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 	}
 
 	res, err := conn.DescribeConfigurationAggregators(req)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
-			log.Printf("[WARN] No such configuration aggregator (%s), removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
+		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if res == nil || len(res.ConfigurationAggregators) == 0 {
+	if err != nil {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
 		log.Printf("[WARN] No aggregators returned (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
+		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Aggregator", d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]

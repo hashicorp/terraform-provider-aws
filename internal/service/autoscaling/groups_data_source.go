@@ -2,7 +2,6 @@ package autoscaling
 
 import (
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,11 +16,6 @@ func DataSourceGroups() *schema.Resource {
 		Read: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"names": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -43,6 +37,12 @@ func DataSourceGroups() *schema.Resource {
 						},
 					},
 				},
+			},
+			"names": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -78,46 +78,35 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	log.Printf("[DEBUG] Reading Autoscaling Groups.")
+	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
-	var rawName []string
-	var rawArn []string
-	var err error
-
-	params := autoscaling.DescribeAutoScalingGroupsInput{}
+	if v, ok := d.GetOk("names"); ok && len(v.([]interface{})) > 0 {
+		input.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
+	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("names"); ok {
-		params.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	err = conn.DescribeAutoScalingGroupsPages(&params, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-		for _, group := range resp.AutoScalingGroups {
-			rawName = append(rawName, aws.StringValue(group.AutoScalingGroupName))
-			rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-		}
-		return !lastPage
-	})
+	groups, err := findGroups(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("Error fetching Autoscaling Groups: %w", err)
+		return fmt.Errorf("reading Auto Scaling Groups: %w", err)
 	}
+
+	var arns, names []string
+
+	for _, group := range groups {
+		arns = append(arns, aws.StringValue(group.AutoScalingGroupARN))
+		names = append(names, aws.StringValue(group.AutoScalingGroupName))
+	}
+
+	sort.Strings(arns)
+	sort.Strings(names)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-
-	sort.Strings(rawName)
-	sort.Strings(rawArn)
-
-	if err := d.Set("names", rawName); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %w", err)
-	}
-
-	if err := d.Set("arns", rawArn); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group ARNs: %w", err)
-	}
+	d.Set("arns", arns)
+	d.Set("names", names)
 
 	return nil
 }

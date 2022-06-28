@@ -173,7 +173,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing Organizations Organizational Unit (%s) accounts: %w", d.Id(), err)
 	}
 
-	if err := d.Set("accounts", flattenOrganizationsOrganizationalUnitAccounts(accounts)); err != nil {
+	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
 		return fmt.Errorf("error setting accounts: %w", err)
 	}
 
@@ -277,7 +277,7 @@ func resourceOrganizationalUnitGetParentID(conn *organizations.Organizations, ch
 	return aws.StringValue(parent.Id), nil
 }
 
-func flattenOrganizationsOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
+func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
 	if len(accounts) == 0 {
 		return nil
 	}

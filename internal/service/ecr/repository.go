@@ -115,7 +115,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:          aws.String(d.Get("name").(string)),
-		EncryptionConfiguration: expandEcrRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -137,7 +137,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.CreateRepository(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECR Repository (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -159,7 +159,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, aws.StringValue(repository.RepositoryArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECR Repository (%s): %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}
@@ -230,14 +230,14 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
-	if err := d.Set("encryption_configuration", flattenEcrRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
 		return nil
 	}
@@ -273,7 +273,7 @@ func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []ma
 	}
 }
 
-func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
+func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -290,7 +290,7 @@ func expandEcrRepositoryEncryptionConfiguration(data []interface{}) *ecr.Encrypt
 	return config
 }
 
-func flattenEcrRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}
@@ -327,7 +327,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for ECR Repository (%s): %s", d.Id(), err)
 			return resourceRepositoryRead(d, meta)
 		}

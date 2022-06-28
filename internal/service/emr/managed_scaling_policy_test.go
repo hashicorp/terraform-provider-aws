@@ -16,10 +16,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(emr.EndpointsID, testAccErrorCheckSkipEMR)
+	acctest.RegisterServiceErrorCheckFunc(emr.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipEMR(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Managed scaling is not available",
 		"SSO is not enabled",
@@ -31,14 +31,14 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedScalingPolicy_basic(rName),
+				Config: testAccManagedScalingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedScalingPolicyExists(resourceName),
 				),
@@ -56,14 +56,14 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(rName, 2),
+				Config: testAccManagedScalingPolicyConfig_computeLimitsMaximumCoreCapacityUnits(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedScalingPolicyExists(resourceName),
 				),
@@ -81,14 +81,14 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(rName, 2),
+				Config: testAccManagedScalingPolicyConfig_computeLimitsMaximumOndemandCapacityUnits(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedScalingPolicyExists(resourceName),
 				),
@@ -106,13 +106,13 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedScalingPolicyDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckManagedScalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedScalingPolicy_basic(rName),
+				Config: testAccManagedScalingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedScalingPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceManagedScalingPolicy(), resourceName),
@@ -123,7 +123,7 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccManagedScalingPolicy_basic(r string) string {
+func testAccManagedScalingPolicyConfig_basic(r string) string {
 	return fmt.Sprintf(testAccManagedScalingPolicyBase+`
 resource "aws_emr_managed_scaling_policy" "testpolicy" {
   cluster_id = aws_emr_cluster.test.id
@@ -136,7 +136,7 @@ resource "aws_emr_managed_scaling_policy" "testpolicy" {
 `, r)
 }
 
-func testAccManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(r string, maximumCoreCapacityUnits int) string {
+func testAccManagedScalingPolicyConfig_computeLimitsMaximumCoreCapacityUnits(r string, maximumCoreCapacityUnits int) string {
 	return fmt.Sprintf(testAccManagedScalingPolicyBase+`
 resource "aws_emr_managed_scaling_policy" "testpolicy" {
   cluster_id = aws_emr_cluster.test.id
@@ -150,7 +150,7 @@ resource "aws_emr_managed_scaling_policy" "testpolicy" {
 `, r, maximumCoreCapacityUnits)
 }
 
-func testAccManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnits(r string, maximumOndemandCapacityUnits int) string {
+func testAccManagedScalingPolicyConfig_computeLimitsMaximumOndemandCapacityUnits(r string, maximumOndemandCapacityUnits int) string {
 	return fmt.Sprintf(testAccManagedScalingPolicyBase+`
 resource "aws_emr_managed_scaling_policy" "testpolicy" {
   cluster_id = aws_emr_cluster.test.id

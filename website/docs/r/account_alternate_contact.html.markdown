@@ -1,5 +1,5 @@
 ---
-subcategory: "Account"
+subcategory: "Account Management"
 layout: "aws"
 page_title: "AWS: aws_account_alternate_contact"
 description: |-

@@ -15,6 +15,19 @@ type Set struct {
 	_ []struct{}
 }
 
+// ApplyTerraform5AttributePathStep applies an AttributePathStep to a Set,
+// returning the Type found at that AttributePath within the Set. If the
+// AttributePathStep cannot be applied to the Set, an ErrInvalidStep error
+// will be returned.
+func (s Set) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
+	switch step.(type) {
+	case ElementKeyValue:
+		return s.ElementType, nil
+	default:
+		return nil, ErrInvalidStep
+	}
+}
+
 // Equal returns true if the two Sets are exactly equal. Unlike Is, passing in
 // a Set with no ElementType will always return false.
 func (s Set) Equal(o Type) bool {

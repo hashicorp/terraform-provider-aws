@@ -180,16 +180,16 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
-	if err := d.Set("remote_access", flattenEksRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return diag.Errorf("error setting remote_access: %s", err)
 	}
 
-	if err := d.Set("resources", flattenEksNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
 		return diag.Errorf("error setting resources: %s", err)
 	}
 
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
 			return diag.Errorf("error setting scaling_config: %s", err)
 		}
 	} else {
@@ -206,7 +206,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error setting tags: %s", err)
 	}
 
-	if err := d.Set("taints", flattenEksTaints(nodeGroup.Taints)); err != nil {
+	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
 		return diag.Errorf("error setting taint: %s", err)
 	}
 

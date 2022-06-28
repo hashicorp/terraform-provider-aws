@@ -44,6 +44,29 @@ type Object struct {
 	_ []struct{}
 }
 
+// ApplyTerraform5AttributePathStep applies an AttributePathStep to an Object,
+// returning the Type found at that AttributePath within the Object. If the
+// AttributePathStep cannot be applied to the Object, an ErrInvalidStep error
+// will be returned.
+func (o Object) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
+	switch s := step.(type) {
+	case AttributeName:
+		if len(o.AttributeTypes) == 0 {
+			return nil, ErrInvalidStep
+		}
+
+		attrType, ok := o.AttributeTypes[string(s)]
+
+		if !ok {
+			return nil, ErrInvalidStep
+		}
+
+		return attrType, nil
+	default:
+		return nil, ErrInvalidStep
+	}
+}
+
 // Equal returns true if the two Objects are exactly equal. Unlike Is, passing
 // in an Object with no AttributeTypes will always return false.
 func (o Object) Equal(other Type) bool {

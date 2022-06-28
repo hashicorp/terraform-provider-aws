@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,7 +68,7 @@ func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error
 
 	var ul []string
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		err := conn.GetGroupPages(input, func(page *iam.GetGroupOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
@@ -171,10 +170,11 @@ func removeUsersFromGroup(conn *iam.IAM, users []*string, group string) error {
 			GroupName: aws.String(group),
 		})
 
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return nil
+		}
+
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-				return nil
-			}
 			return err
 		}
 	}

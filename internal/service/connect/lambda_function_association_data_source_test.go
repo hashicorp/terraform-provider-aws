@@ -17,12 +17,12 @@ func TestAccConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "function_arn", resourceName, "function_arn"),
@@ -78,7 +78,7 @@ resource "aws_connect_lambda_function_association" "test" {
 `, rName, rName2)
 }
 
-func testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationDataSourceConfig_basic(rName string, rName2 string) string {
 	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSource_BaseConfig(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn

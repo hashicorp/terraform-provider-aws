@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Discovery"
+subcategory: "Cloud Map"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_http_namespace"
 description: |-
@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of a namespace.
 * `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.
+* `http_name` - The name of an HTTP namespace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

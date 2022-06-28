@@ -24,13 +24,13 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfig(rName),
+				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.id", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.name", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.field.0.key", "workerGroup"),
@@ -54,13 +54,13 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfig(rName),
+				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
 				),
 			},
@@ -76,20 +76,20 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataPipelinePipelineDefinitionDestroy,
+		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfigComplete(rName, "myAWSCLICmd"),
+				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd"),
 				),
 			},
 			{
-				Config: testAccDataPipelinePipelineDefinitionConfigComplete(rName, "myAWSCLICmd2"),
+				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataPipelinePipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd2"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckDataPipelinePipelineDefinitionExists(resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
+func testAccCheckPipelineDefinitionExists(resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -125,7 +125,7 @@ func testAccCheckDataPipelinePipelineDefinitionExists(resourceName string, datap
 	}
 }
 
-func testAccCheckDataPipelinePipelineDefinitionDestroy(s *terraform.State) error {
+func testAccCheckPipelineDefinitionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -152,7 +152,7 @@ func testAccCheckDataPipelinePipelineDefinitionDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccDataPipelinePipelineDefinitionConfig(name string) string {
+func testAccPipelineDefinitionConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = %[1]q
@@ -172,7 +172,7 @@ resource "aws_datapipeline_pipeline_definition" "test" {
 `, name)
 }
 
-func testAccDataPipelinePipelineDefinitionConfigComplete(name string, parameterObjectID string) string {
+func testAccPipelineDefinitionConfig_complete(name string, parameterObjectID string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

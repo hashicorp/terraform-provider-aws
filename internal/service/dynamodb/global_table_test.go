@@ -26,26 +26,26 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckGlobalTable(t)
-			testAccDynamoDBGlobalTablePreCheck(t)
+			testAccGlobalTablePreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDynamoDbGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
+				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
 				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
-				Config:      testAccDynamoDbGlobalTableConfig_invalidName(sdkacctest.RandString(256)),
+				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(256)),
 				ExpectError: regexp.MustCompile("name length must be between 3 and 255 characters"),
 			},
 			{
-				Config:      testAccDynamoDbGlobalTableConfig_invalidName("!!!!"),
+				Config:      testAccGlobalTableConfig_invalidName("!!!!"),
 				ExpectError: regexp.MustCompile("name must only include alphanumeric, underscore, period, or hyphen characters"),
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
+				Config: testAccGlobalTableConfig_basic(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
@@ -72,14 +72,14 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckGlobalTable(t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccDynamoDBGlobalTablePreCheck(t)
+			testAccGlobalTablePreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions1(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
@@ -88,20 +88,20 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName),
+				Config:            testAccGlobalTableConfig_multipleRegions1(tableName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions2(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
 			{
-				Config: testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName),
+				Config: testAccGlobalTableConfig_multipleRegions1(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
@@ -164,9 +164,9 @@ func testAccPreCheckGlobalTable(t *testing.T) {
 	}
 }
 
-// testAccDynamoDBGlobalTablePreCheck checks if aws_dynamodb_global_table (version 2017.11.29) can be used and skips test if not.
+// testAccGlobalTablePreCheck checks if aws_dynamodb_global_table (version 2017.11.29) can be used and skips test if not.
 // Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
-func testAccDynamoDBGlobalTablePreCheck(t *testing.T) {
+func testAccGlobalTablePreCheck(t *testing.T) {
 	supportRegionsSort := []string{
 		endpoints.ApNortheast1RegionID,
 		endpoints.ApNortheast2RegionID,
@@ -186,7 +186,7 @@ func testAccDynamoDBGlobalTablePreCheck(t *testing.T) {
 	}
 }
 
-func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
+func testAccGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {
 }
@@ -217,7 +217,7 @@ resource "aws_dynamodb_global_table" "test" {
 `, tableName, tableName)
 }
 
-func testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName string) string {
+func testAccGlobalTableConfig_MultipleRegions_tables(tableName string) string {
 	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
@@ -257,8 +257,8 @@ resource "aws_dynamodb_table" "alternate" {
 `, tableName)
 }
 
-func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
+func testAccGlobalTableConfig_multipleRegions1(tableName string) string {
+	return testAccGlobalTableConfig_MultipleRegions_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
@@ -269,8 +269,8 @@ resource "aws_dynamodb_global_table" "test" {
 `
 }
 
-func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
-	return testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName) + `
+func testAccGlobalTableConfig_multipleRegions2(tableName string) string {
+	return testAccGlobalTableConfig_MultipleRegions_tables(tableName) + `
 resource "aws_dynamodb_global_table" "test" {
   depends_on = [aws_dynamodb_table.alternate]
 
@@ -287,7 +287,7 @@ resource "aws_dynamodb_global_table" "test" {
 `
 }
 
-func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
+func testAccGlobalTableConfig_invalidName(tableName string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 data "aws_region" "current" {}
 

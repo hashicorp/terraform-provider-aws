@@ -141,7 +141,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 	}
 
 	resp, err := conn.DescribeMaintenanceWindowTargets(params)
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -164,10 +164,12 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 			if err := d.Set("targets", flattenTargets(t.Targets)); err != nil {
 				return fmt.Errorf("Error setting targets: %w", err)
 			}
+
+			break
 		}
 	}
 
-	if !found {
+	if !d.IsNewResource() && !found {
 		log.Printf("[INFO] Maintenance Window Target not found. Removing from state")
 		d.SetId("")
 		return nil

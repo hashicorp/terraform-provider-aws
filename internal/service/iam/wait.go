@@ -17,7 +17,7 @@ const (
 	// as this will negatively impact user experience when configurations
 	// have incorrect references or permissions.
 	// Reference: https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency
-	PropagationTimeout = 2 * time.Minute
+	propagationTimeout = 2 * time.Minute
 
 	RoleStatusARNIsUniqueID = "uniqueid"
 	RoleStatusARNIsARN      = "arn"
@@ -29,7 +29,7 @@ func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Ro
 		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
 		Target:                    []string{RoleStatusARNIsARN},
 		Refresh:                   statusRoleCreate(conn, id, role),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   propagationTimeout,
 		NotFoundChecks:            10,
 		ContinuousTargetOccurence: 5,
 	}

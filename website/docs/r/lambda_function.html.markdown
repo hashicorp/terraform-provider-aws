@@ -44,6 +44,8 @@ EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
+  # If the file is not in the current working directory you will need to include a 
+  # path.module in the filename.
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
@@ -76,6 +78,44 @@ resource "aws_lambda_layer_version" "example" {
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
   layers = [aws_lambda_layer_version.example.arn]
+}
+```
+
+### Lambda Ephemeral Storage
+
+Lambda Function Ephemeral Storage(`/tmp`) allows you to configure the storage upto `10` GB. The default value set to `512` MB.
+
+```terraform
+resource "aws_iam_role" "iam_for_lambda" {
+  name = "iam_for_lambda"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "test_lambda" {
+  filename      = "lambda_function_payload.zip"
+  function_name = "lambda_function_name"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "index.test"
+  runtime       = "nodejs14.x"
+
+  ephemeral_storage {
+    size = 10240 # Min 512 MB and the Max 10240 MB
+  }
 }
 ```
 
@@ -223,6 +263,7 @@ The following arguments are optional:
 * `dead_letter_config` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `environment` - (Optional) Configuration block. Detailed below.
+* `ephemeral_storage` - (Optional) The amount of Ephemeral storage(`/tmp`) to allocate for the Lambda Function in MB. This parameter is used to expand the total amount of Ephemeral storage available, beyond the default amount of `512`MB. Detailed below.
 * `file_system_config` - (Optional) Configuration block. Detailed below.
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri`, `s3_bucket`, `s3_key`, and `s3_object_version`.
 * `handler` - (Optional) Function [entrypoint][3] in your code.
@@ -253,6 +294,10 @@ Dead letter queue configuration that specifies the queue or topic where Lambda s
 ### environment
 
 * `variables` - (Optional) Map of environment variables that are accessible from the function code during execution.
+
+### ephemeral_storage
+
+* `size` - (Required) The size of the Lambda function Ephemeral storage(`/tmp`) represented in MB. The minimum supported `ephemeral_storage` value defaults to `512`MB and the maximum supported value is `10240`MB.
 
 ### file_system_config
 

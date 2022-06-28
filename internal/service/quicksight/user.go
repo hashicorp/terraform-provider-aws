@@ -149,7 +149,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeUser(descOpts)
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return nil
@@ -185,11 +185,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err = conn.UpdateUser(updateOpts)
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("Error updating QuickSight User %s: %s", d.Id(), err)
 	}

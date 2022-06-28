@@ -187,7 +187,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	loggingConfiguration := d.Get("logging_configuration").([]interface{})
 	if len(loggingConfiguration) == 1 {
 		input := &waf.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, arn),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
 		}
 
 		if _, err := conn.PutLoggingConfiguration(input); err != nil {
@@ -287,7 +287,7 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if getLoggingConfigurationOutput != nil {
-		loggingConfiguration = flattenWAFLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
 	}
 
 	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
@@ -324,7 +324,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
 			}
 
 			if _, err := conn.PutLoggingConfiguration(input); err != nil {
@@ -394,7 +394,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandWAFLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
+func expandLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -405,14 +405,14 @@ func expandWAFLoggingConfiguration(l []interface{}, resourceARN string) *waf.Log
 		LogDestinationConfigs: []*string{
 			aws.String(m["log_destination"].(string)),
 		},
-		RedactedFields: expandWAFRedactedFields(m["redacted_fields"].([]interface{})),
+		RedactedFields: expandRedactedFields(m["redacted_fields"].([]interface{})),
 		ResourceArn:    aws.String(resourceARN),
 	}
 
 	return loggingConfiguration
 }
 
-func expandWAFRedactedFields(l []interface{}) []*waf.FieldToMatch {
+func expandRedactedFields(l []interface{}) []*waf.FieldToMatch {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -436,14 +436,14 @@ func expandWAFRedactedFields(l []interface{}) []*waf.FieldToMatch {
 	return redactedFields
 }
 
-func flattenWAFLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
 	if loggingConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"log_destination": "",
-		"redacted_fields": flattenWAFRedactedFields(loggingConfiguration.RedactedFields),
+		"redacted_fields": flattenRedactedFields(loggingConfiguration.RedactedFields),
 	}
 
 	if len(loggingConfiguration.LogDestinationConfigs) > 0 {
@@ -453,7 +453,7 @@ func flattenWAFLoggingConfiguration(loggingConfiguration *waf.LoggingConfigurati
 	return []interface{}{m}
 }
 
-func flattenWAFRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
+func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 	if len(fieldToMatches) == 0 {
 		return []interface{}{}
 	}

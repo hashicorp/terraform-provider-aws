@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_document"
 description: |-
@@ -72,6 +72,71 @@ resource "aws_iam_policy" "example" {
   name   = "example_policy"
   path   = "/"
   policy = data.aws_iam_policy_document.example.json
+}
+```
+
+### Example Multiple Condition Keys and Values
+
+You can specify a [condition with multiple keys and values](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html) by supplying multiple `condition` blocks with the same `test` value, but differing `variable` and `values` values.
+
+```terraform
+data "aws_iam_policy_document" "example_multiple_condition_keys_and_values" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:service"
+      values   = ["pi"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:aws:pi:service"
+      values   = ["rds"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContext:aws:rds:db-id"
+      values   = ["db-AAAAABBBBBCCCCCDDDDDEEEEE", "db-EEEEEDDDDDCCCCCBBBBBAAAAA"]
+    }
+
+  }
+}
+```
+
+`data.aws_iam_policy_document.example_multiple_condition_keys_and_values.json` will evaluate to:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "kms:EncryptionContext:aws:pi:service": "rds",
+          "kms:EncryptionContext:aws:rds:db-id": [
+            "db-AAAAABBBBBCCCCCDDDDDEEEEE",
+            "db-EEEEEDDDDDCCCCCBBBBBAAAAA"
+          ],
+          "kms:EncryptionContext:service": "pi"
+        }
+      }
+    }
+  ]
 }
 ```
 

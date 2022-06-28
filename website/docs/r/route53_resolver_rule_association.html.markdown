@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
 description: |-

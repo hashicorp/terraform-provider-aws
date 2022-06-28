@@ -93,7 +93,6 @@ func ResourceDomain() *schema.Resource {
 						"sharing_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -118,7 +117,6 @@ func ResourceDomain() *schema.Resource {
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -157,7 +155,6 @@ func ResourceDomain() *schema.Resource {
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -204,7 +201,6 @@ func ResourceDomain() *schema.Resource {
 						"kernel_gateway_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -319,7 +315,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		VpcId:                aws.String(d.Get("vpc_id").(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		DefaultUserSettings:  expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+		DefaultUserSettings:  expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -381,7 +377,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting subnet_ids for SageMaker domain (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("default_user_settings", flattenSagemakerDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
+	if err := d.Set("default_user_settings", flattenDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
 		return fmt.Errorf("error setting default_user_settings for SageMaker domain (%s): %w", d.Id(), err)
 	}
 
@@ -411,7 +407,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("default_user_settings") {
 		input := &sagemaker.UpdateDomainInput{
 			DomainId:            aws.String(d.Id()),
-			DefaultUserSettings: expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+			DefaultUserSettings: expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
@@ -444,7 +440,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("retention_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetentionPolicy = expandSagemakerRetentionPolicy(v.([]interface{}))
+		input.RetentionPolicy = expandRetentionPolicy(v.([]interface{}))
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {
@@ -461,7 +457,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-func expandSagemakerRetentionPolicy(l []interface{}) *sagemaker.RetentionPolicy {
+func expandRetentionPolicy(l []interface{}) *sagemaker.RetentionPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -477,7 +473,7 @@ func expandSagemakerRetentionPolicy(l []interface{}) *sagemaker.RetentionPolicy 
 	return config
 }
 
-func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
+func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -495,25 +491,25 @@ func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSe
 	}
 
 	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
-		config.TensorBoardAppSettings = expandSagemakerDomainTensorBoardAppSettings(v)
+		config.TensorBoardAppSettings = expandDomainTensorBoardAppSettings(v)
 	}
 
 	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
-		config.KernelGatewayAppSettings = expandSagemakerDomainKernelGatewayAppSettings(v)
+		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
 	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
-		config.JupyterServerAppSettings = expandSagemakerDomainJupyterServerAppSettings(v)
+		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
 	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
-		config.SharingSettings = expandSagemakerDomainShareSettings(v)
+		config.SharingSettings = expandDomainShareSettings(v)
 	}
 
 	return config
 }
 
-func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.JupyterServerAppSettings {
+func expandDomainJupyterServerAppSettings(l []interface{}) *sagemaker.JupyterServerAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -523,7 +519,7 @@ func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.J
 	config := &sagemaker.JupyterServerAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -533,7 +529,7 @@ func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.J
 	return config
 }
 
-func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.KernelGatewayAppSettings {
+func expandDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.KernelGatewayAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -543,7 +539,7 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 	config := &sagemaker.KernelGatewayAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -551,13 +547,13 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 	}
 
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
-		config.CustomImages = expandSagemakerDomainCustomImages(v)
+		config.CustomImages = expandDomainCustomImages(v)
 	}
 
 	return config
 }
 
-func expandSagemakerDomainTensorBoardAppSettings(l []interface{}) *sagemaker.TensorBoardAppSettings {
+func expandDomainTensorBoardAppSettings(l []interface{}) *sagemaker.TensorBoardAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -567,13 +563,13 @@ func expandSagemakerDomainTensorBoardAppSettings(l []interface{}) *sagemaker.Ten
 	config := &sagemaker.TensorBoardAppSettings{}
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
-		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
+		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
 	}
 
 	return config
 }
 
-func expandSagemakerDomainDefaultResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
+func expandDomainDefaultResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -601,7 +597,7 @@ func expandSagemakerDomainDefaultResourceSpec(l []interface{}) *sagemaker.Resour
 	return config
 }
 
-func expandSagemakerDomainShareSettings(l []interface{}) *sagemaker.SharingSettings {
+func expandDomainShareSettings(l []interface{}) *sagemaker.SharingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -623,7 +619,7 @@ func expandSagemakerDomainShareSettings(l []interface{}) *sagemaker.SharingSetti
 	return config
 }
 
-func expandSagemakerDomainCustomImages(l []interface{}) []*sagemaker.CustomImage {
+func expandDomainCustomImages(l []interface{}) []*sagemaker.CustomImage {
 	images := make([]*sagemaker.CustomImage, 0, len(l))
 
 	for _, eRaw := range l {
@@ -644,7 +640,7 @@ func expandSagemakerDomainCustomImages(l []interface{}) []*sagemaker.CustomImage
 	return images
 }
 
-func flattenSagemakerDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[string]interface{} {
+func flattenDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -660,25 +656,25 @@ func flattenSagemakerDomainDefaultUserSettings(config *sagemaker.UserSettings) [
 	}
 
 	if config.JupyterServerAppSettings != nil {
-		m["jupyter_server_app_settings"] = flattenSagemakerDomainJupyterServerAppSettings(config.JupyterServerAppSettings)
+		m["jupyter_server_app_settings"] = flattenDomainJupyterServerAppSettings(config.JupyterServerAppSettings)
 	}
 
 	if config.KernelGatewayAppSettings != nil {
-		m["kernel_gateway_app_settings"] = flattenSagemakerDomainKernelGatewayAppSettings(config.KernelGatewayAppSettings)
+		m["kernel_gateway_app_settings"] = flattenDomainKernelGatewayAppSettings(config.KernelGatewayAppSettings)
 	}
 
 	if config.TensorBoardAppSettings != nil {
-		m["tensor_board_app_settings"] = flattenSagemakerDomainTensorBoardAppSettings(config.TensorBoardAppSettings)
+		m["tensor_board_app_settings"] = flattenDomainTensorBoardAppSettings(config.TensorBoardAppSettings)
 	}
 
 	if config.SharingSettings != nil {
-		m["sharing_settings"] = flattenSagemakerDomainShareSettings(config.SharingSettings)
+		m["sharing_settings"] = flattenDomainShareSettings(config.SharingSettings)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{} {
+func flattenDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -704,7 +700,7 @@ func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) [
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainTensorBoardAppSettings(config *sagemaker.TensorBoardAppSettings) []map[string]interface{} {
+func flattenDomainTensorBoardAppSettings(config *sagemaker.TensorBoardAppSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -712,13 +708,13 @@ func flattenSagemakerDomainTensorBoardAppSettings(config *sagemaker.TensorBoardA
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterServerAppSettings) []map[string]interface{} {
+func flattenDomainJupyterServerAppSettings(config *sagemaker.JupyterServerAppSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -726,7 +722,7 @@ func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterSer
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -736,7 +732,7 @@ func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterSer
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGatewayAppSettings) []map[string]interface{} {
+func flattenDomainKernelGatewayAppSettings(config *sagemaker.KernelGatewayAppSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -744,7 +740,7 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	if config.LifecycleConfigArns != nil {
@@ -752,13 +748,13 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 	}
 
 	if config.CustomImages != nil {
-		m["custom_image"] = flattenSagemakerDomainCustomImages(config.CustomImages)
+		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainShareSettings(config *sagemaker.SharingSettings) []map[string]interface{} {
+func flattenDomainShareSettings(config *sagemaker.SharingSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -778,7 +774,7 @@ func flattenSagemakerDomainShareSettings(config *sagemaker.SharingSettings) []ma
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerDomainCustomImages(config []*sagemaker.CustomImage) []map[string]interface{} {
+func flattenDomainCustomImages(config []*sagemaker.CustomImage) []map[string]interface{} {
 	images := make([]map[string]interface{}, 0, len(config))
 
 	for _, raw := range config {

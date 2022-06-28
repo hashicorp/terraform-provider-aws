@@ -14,19 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccGrafanaLicenseAssociation_freeTrial(t *testing.T) {
+func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_license_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy: testAccCheckLicenseAssociationDestroy,
-		Providers:    acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:      testAccCheckLicenseAssociationDestroy,
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseAssociation(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
+				Config: testAccLicenseAssociationConfig_basic(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "free_trial_expiration"),
@@ -38,8 +38,8 @@ func testAccGrafanaLicenseAssociation_freeTrial(t *testing.T) {
 	})
 }
 
-func testAccLicenseAssociation(rName string, licenseType string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
+func testAccLicenseAssociationConfig_basic(rName string, licenseType string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), fmt.Sprintf(`
 resource "aws_grafana_license_association" "test" {
   workspace_id = aws_grafana_workspace.test.id
   license_type = %[1]q

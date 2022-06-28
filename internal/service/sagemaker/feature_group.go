@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -209,7 +208,7 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 		EventTimeFeatureName:        aws.String(d.Get("event_time_feature_name").(string)),
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
 		RoleArn:                     aws.String(d.Get("role_arn").(string)),
-		FeatureDefinitions:          expandSagemakerFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
+		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -221,15 +220,15 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("offline_store_config"); ok {
-		input.OfflineStoreConfig = expandSagemakerFeatureGroupOfflineStoreConfig(v.([]interface{}))
+		input.OfflineStoreConfig = expandFeatureGroupOfflineStoreConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("online_store_config"); ok {
-		input.OnlineStoreConfig = expandSagemakerFeatureGroupOnlineStoreConfig(v.([]interface{}))
+		input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker Feature Group create config: %#v", *input)
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFeatureGroup(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
@@ -285,21 +284,21 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("role_arn", output.RoleArn)
 	d.Set("arn", arn)
 
-	if err := d.Set("feature_definition", flattenSagemakerFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return fmt.Errorf("error setting feature_definition for Sagemaker Feature Group (%s): %w", d.Id(), err)
+	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
+		return fmt.Errorf("error setting feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("online_store_config", flattenSagemakerFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return fmt.Errorf("error setting online_store_config for Sagemaker Feature Group (%s): %w", d.Id(), err)
+	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
+		return fmt.Errorf("error setting online_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("offline_store_config", flattenSagemakerFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return fmt.Errorf("error setting offline_store_config for Sagemaker Feature Group (%s): %w", d.Id(), err)
+	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
+		return fmt.Errorf("error setting offline_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Feature Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -354,7 +353,7 @@ func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandSagemakerFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.FeatureDefinition {
+func expandFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.FeatureDefinition {
 	featureDefs := make([]*sagemaker.FeatureDefinition, 0, len(l))
 
 	for _, lRaw := range l {
@@ -371,7 +370,7 @@ func expandSagemakerFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.
 	return featureDefs
 }
 
-func flattenSagemakerFeatureGroupFeatureDefinition(config []*sagemaker.FeatureDefinition) []map[string]interface{} {
+func flattenFeatureGroupFeatureDefinition(config []*sagemaker.FeatureDefinition) []map[string]interface{} {
 	features := make([]map[string]interface{}, 0, len(config))
 
 	for _, i := range config {
@@ -385,7 +384,7 @@ func flattenSagemakerFeatureGroupFeatureDefinition(config []*sagemaker.FeatureDe
 	return features
 }
 
-func expandSagemakerFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStoreConfig {
+func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStoreConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -397,13 +396,13 @@ func expandSagemakerFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.On
 	}
 
 	if v, ok := m["security_config"].([]interface{}); ok && len(v) > 0 {
-		config.SecurityConfig = expandSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(v)
+		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
 	return config
 }
 
-func flattenSagemakerFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) []map[string]interface{} {
+func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -413,13 +412,13 @@ func flattenSagemakerFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStore
 	}
 
 	if config.SecurityConfig != nil {
-		m["security_config"] = flattenSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(config.SecurityConfig)
+		m["security_config"] = flattenFeatureGroupOnlineStoreConfigSecurityConfig(config.SecurityConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{}) *sagemaker.OnlineStoreSecurityConfig {
+func expandFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{}) *sagemaker.OnlineStoreSecurityConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -433,7 +432,7 @@ func expandSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{})
 	return config
 }
 
-func flattenSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.OnlineStoreSecurityConfig) []map[string]interface{} {
+func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.OnlineStoreSecurityConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -445,7 +444,7 @@ func flattenSagemakerFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemak
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineStoreConfig {
+func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineStoreConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -455,11 +454,11 @@ func expandSagemakerFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.O
 	config := &sagemaker.OfflineStoreConfig{}
 
 	if v, ok := m["s3_storage_config"].([]interface{}); ok && len(v) > 0 {
-		config.S3StorageConfig = expandSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(v)
+		config.S3StorageConfig = expandFeatureGroupOfflineStoreConfigS3StorageConfig(v)
 	}
 
 	if v, ok := m["data_catalog_config"].([]interface{}); ok && len(v) > 0 {
-		config.DataCatalogConfig = expandSagemakerFeatureGroupOfflineStoreConfigDataCatalogConfig(v)
+		config.DataCatalogConfig = expandFeatureGroupOfflineStoreConfigDataCatalogConfig(v)
 	}
 
 	if v, ok := m["disable_glue_table_creation"].(bool); ok {
@@ -469,7 +468,7 @@ func expandSagemakerFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.O
 	return config
 }
 
-func flattenSagemakerFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -479,17 +478,17 @@ func flattenSagemakerFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineSto
 	}
 
 	if config.DataCatalogConfig != nil {
-		m["data_catalog_config"] = flattenSagemakerFeatureGroupOfflineStoreConfigDataCatalogConfig(config.DataCatalogConfig)
+		m["data_catalog_config"] = flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config.DataCatalogConfig)
 	}
 
 	if config.S3StorageConfig != nil {
-		m["s3_storage_config"] = flattenSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(config.S3StorageConfig)
+		m["s3_storage_config"] = flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config.S3StorageConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagemaker.S3StorageConfig {
+func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagemaker.S3StorageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -507,7 +506,7 @@ func expandSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{
 	return config
 }
 
-func flattenSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3StorageConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3StorageConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -523,7 +522,7 @@ func flattenSagemakerFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagem
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sagemaker.DataCatalogConfig {
+func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sagemaker.DataCatalogConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -539,7 +538,7 @@ func expandSagemakerFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interfac
 	return config
 }
 
-func flattenSagemakerFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.DataCatalogConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.DataCatalogConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

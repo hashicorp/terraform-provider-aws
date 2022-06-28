@@ -21,7 +21,7 @@ func FindCapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider
 	output, err := conn.DescribeCapacityProviders(input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
 
 		input.Include = nil
@@ -60,7 +60,7 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	output, err := conn.DescribeClustersWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed describing ECS Cluster (%s) including tags: %s; retrying without tags", nameOrARN, err)
 
 		input.Include = aws.StringSlice([]string{ecs.ClusterFieldConfigurations, ecs.ClusterFieldSettings})
@@ -68,7 +68,7 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	}
 
 	// Some partitions (i.e., ISO) may not support describe including configuration, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed describing ECS Cluster (%s) including configuration: %s; retrying without configuration", nameOrARN, err)
 
 		input.Include = aws.StringSlice([]string{ecs.ClusterFieldSettings})

@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2VPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 	requesterVpcResourceName := "aws_vpc.requester"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionDataSourceCIDRBlockConfig(rName),
+				Config: testAccVPCPeeringConnectionDataSourceConfig_cidrBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cidr_block", requesterVpcResourceName, "cidr_block"),
@@ -32,7 +32,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_cidrBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
@@ -40,12 +40,12 @@ func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
 	requesterVpcResourceName := "aws_vpc.requester"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionDataSourceIDConfig(rName),
+				Config: testAccVPCPeeringConnectionDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					// resource.TestCheckResourceAttrPair(dataSourceName, "cidr_block", resourceName, "cidr_block"), // not in resource
@@ -72,19 +72,19 @@ func TestAccEC2VPCPeeringConnectionDataSource_id(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 	accepterVpcResourceName := "aws_vpc.accepter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionDataSourcePeerCIDRBlockConfig(rName),
+				Config: testAccVPCPeeringConnectionDataSourceConfig_peerCIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_cidr_block", accepterVpcResourceName, "cidr_block"),
@@ -94,18 +94,18 @@ func TestAccEC2VPCPeeringConnectionDataSource_peerCIDRBlock(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionDataSourcePeerVPCIDConfig(rName),
+				Config: testAccVPCPeeringConnectionDataSourceConfig_peerID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_vpc_id", resourceName, "peer_vpc_id"),
@@ -115,18 +115,18 @@ func TestAccEC2VPCPeeringConnectionDataSource_peerVPCID(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCPeeringConnectionDataSource_vpcID(t *testing.T) {
+func TestAccVPCPeeringConnectionDataSource_vpcID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpc_peering_connection.test"
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionDataSourceVPCIDConfig(rName),
+				Config: testAccVPCPeeringConnectionDataSourceConfig_vpcID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
@@ -136,7 +136,7 @@ func TestAccEC2VPCPeeringConnectionDataSource_vpcID(t *testing.T) {
 	})
 }
 
-func testAccVPCPeeringConnectionDataSourceCIDRBlockConfig(rName string) string {
+func testAccVPCPeeringConnectionDataSourceConfig_cidrBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
   cidr_block = "10.250.0.0/16" # CIDR must be different than other tests
@@ -176,7 +176,7 @@ data "aws_vpc_peering_connection" "test" {
 `, rName)
 }
 
-func testAccVPCPeeringConnectionDataSourceIDConfig(rName string) string {
+func testAccVPCPeeringConnectionDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
   cidr_block = "10.1.0.0/16"
@@ -210,7 +210,7 @@ data "aws_vpc_peering_connection" "test" {
 `, rName)
 }
 
-func testAccVPCPeeringConnectionDataSourcePeerCIDRBlockConfig(rName string) string {
+func testAccVPCPeeringConnectionDataSourceConfig_peerCIDRBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
   cidr_block = "10.252.0.0/16" # CIDR must be different than other tests
@@ -250,7 +250,7 @@ data "aws_vpc_peering_connection" "test" {
 `, rName)
 }
 
-func testAccVPCPeeringConnectionDataSourcePeerVPCIDConfig(rName string) string {
+func testAccVPCPeeringConnectionDataSourceConfig_peerID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
   cidr_block = "10.1.0.0/16"
@@ -284,7 +284,7 @@ data "aws_vpc_peering_connection" "test" {
 `, rName)
 }
 
-func testAccVPCPeeringConnectionDataSourceVPCIDConfig(rName string) string {
+func testAccVPCPeeringConnectionDataSourceConfig_vpcID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
   cidr_block = "10.1.0.0/16"

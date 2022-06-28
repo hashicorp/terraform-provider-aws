@@ -32,10 +32,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_config",
-		F:    sweepFirewallsConfig,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_config_association",
-		},
+		F:    sweepFirewallConfig,
 	})
 
 	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
@@ -198,7 +195,7 @@ func sweepEndpoints(region string) error {
 	return errors
 }
 
-func sweepFirewallsConfig(region string) error {
+func sweepFirewallConfig(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -211,13 +208,14 @@ func sweepFirewallsConfig(region string) error {
 			return !lastPage
 		}
 
-		for _, firewallRuleGroup := range page.FirewallConfigs {
-			id := aws.StringValue(firewallRuleGroup.Id)
+		for _, firewallConfig := range page.FirewallConfigs {
+			id := aws.StringValue(firewallConfig.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall config: %s", id)
 			r := ResourceFirewallConfig()
 			d := r.Data(nil)
 			d.SetId(id)
+			d.Set("resource_id", firewallConfig.ResourceId)
 			err := r.Delete(d, client)
 
 			if err != nil {

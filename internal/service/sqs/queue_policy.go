@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	sqsQueueEmptyPolicyAttributes = map[string]string{
+	queueEmptyPolicyAttributes = map[string]string{
 		sqs.QueueAttributeNamePolicy: "",
 	}
 )
@@ -127,7 +127,7 @@ func resourceQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting SQS Queue Policy: %s", d.Id())
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
-		Attributes: aws.StringMap(sqsQueueEmptyPolicyAttributes),
+		Attributes: aws.StringMap(queueEmptyPolicyAttributes),
 		QueueUrl:   aws.String(d.Id()),
 	})
 
@@ -139,7 +139,7 @@ func resourceQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting SQS Queue Policy (%s): %w", d.Id(), err)
 	}
 
-	err = waitQueueAttributesPropagated(conn, d.Id(), sqsQueueEmptyPolicyAttributes)
+	err = waitQueueAttributesPropagated(conn, d.Id(), queueEmptyPolicyAttributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to delete: %w", d.Id(), err)

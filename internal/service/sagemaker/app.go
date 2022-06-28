@@ -114,17 +114,17 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("resource_spec"); ok {
-		input.ResourceSpec = expandSagemakerDomainDefaultResourceSpec(v.([]interface{}))
+		input.ResourceSpec = expandDomainDefaultResourceSpec(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Sagemaker App create config: %#v", *input)
+	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
 	output, err := conn.CreateApp(input)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker App: %w", err)
 	}
 
 	appArn := aws.StringValue(output.AppArn)
-	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(appArn)
+	domainID, userProfileName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(d.Id())
+	domainID, userProfileName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain_id", app.DomainId)
 	d.Set("user_profile_name", app.UserProfileName)
 
-	if err := d.Set("resource_spec", flattenSagemakerDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
+	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
 		return fmt.Errorf("error setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
 	}
 
@@ -245,7 +245,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeSagemakerAppID(id string) (string, string, string, string, error) {
+func decodeAppID(id string) (string, string, string, string, error) {
 	appArn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", "", err

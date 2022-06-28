@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,15 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	ecsClusterTimeoutDelete = 10 * time.Minute
-	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func ResourceCluster() *schema.Resource {
@@ -210,7 +203,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := retryClusterCreate(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed creating Cluster (%s) with tags: %s. Trying create without tags.", clusterName, err)
 		input.Tags = nil
 
@@ -233,7 +226,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			// If default tags only, log and continue. Otherwise, error.
 			log.Printf("[WARN] ECS tagging failed adding tags after create for Cluster (%s): %s", d.Id(), err)
 			return resourceClusterRead(d, meta)
@@ -373,7 +366,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed updating tags for Cluster (%s): %s", d.Id(), err)
 			return nil
 		}
@@ -393,7 +386,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(clusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -436,7 +429,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 func retryClusterCreate(conn *ecs.ECS, input *ecs.CreateClusterInput) (*ecs.CreateClusterOutput, error) {
 	var output *ecs.CreateClusterOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateCluster(input)
 

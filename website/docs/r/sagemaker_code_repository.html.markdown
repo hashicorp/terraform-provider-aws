@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_code_repository"
 description: |-
-  Provides a Sagemaker Code Repository resource.
+  Provides a SageMaker Code Repository resource.
 ---
 
 # Resource: aws_sagemaker_code_repository
 
-Provides a Sagemaker Code Repository resource.
+Provides a SageMaker Code Repository resource.
 
 ## Example Usage
 
@@ -72,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Repositories can be imported using the `name`, e.g.,
+SageMaker Code Repositories can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo

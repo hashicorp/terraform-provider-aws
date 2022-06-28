@@ -9,13 +9,13 @@ configurations.
 ## Flagged Code
 
 ```go
-func TestAccAWSELB_basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_basic(t *testing.T) {
   ...
 	resource.ParallelTest(t, resource.TestCase{
     ...
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSELBConfig,
+				Config: testELBV2LoadBalancerConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
           ...
 					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
@@ -36,27 +36,26 @@ func TestAccAWSELB_basic(t *testing.T) {
 The flagged code above can be replaced with the following passing code:
 
 ```go
-func TestAccAWSELB_basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_basic(t *testing.T) {
   ...
-	resource.ParallelTest(t, resource.TestCase{
+    resource.ParallelTest(t, resource.TestCase{
     ...
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSELBConfig,
-				Check: resource.ComposeTestCheckFunc(
-          ...
-          resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
- 						"instance_port":     "8000",
-            "instance_protocol": "http",
-            "lb_port":           "80",
-            "lb_protocol":       "http",
- 					}),
-          ...
-				),
-			},
-      ...
-		},
-	})
+        Steps: []resource.TestStep{
+            {
+                Config: testAccELBV2LoadBalancerConfig_basic,
+                Check: resource.ComposeTestCheckFunc(
+                ...
+                    resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+                        "instance_port":     "8000",
+                        "instance_protocol": "http",
+                        "lb_port":           "80",
+                        "lb_protocol":       "http",
+                ),
+                ...
+            },
+        ...
+        },
+    })
 }
 ```
 

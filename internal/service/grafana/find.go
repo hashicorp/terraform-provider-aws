@@ -78,3 +78,42 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 
 	return output.Authentication.Saml, nil
 }
+
+func FindRoleAssociationsByRoleAndWorkspaceID(conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]string, error) {
+	input := &managedgrafana.ListPermissionsInput{
+		WorkspaceId: aws.String(workspaceID),
+	}
+	output := make(map[string][]string, 0)
+
+	err := conn.ListPermissionsPages(input, func(page *managedgrafana.ListPermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Permissions {
+			if aws.StringValue(v.Role) == role {
+				userType := aws.StringValue(v.User.Type)
+				output[userType] = append(output[userType], aws.StringValue(v.User.Id))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

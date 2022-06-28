@@ -1,5 +1,5 @@
 ---
-subcategory: "Grafana"
+subcategory: "Managed Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_workspace"
 description: |-
@@ -47,3 +47,4 @@ In addition to all arguments above, the following attributes are exported:
 * `role_arn` - The IAM role ARN that the workspace assumes.
 * `stack_set_name` - The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
 * `status` - The status of the Grafana workspace.
+* `tags` - The tags assigned to the resource

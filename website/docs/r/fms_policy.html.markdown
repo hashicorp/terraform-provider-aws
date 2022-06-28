@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall Manager (FMS)"
+subcategory: "FMS (Firewall Manager)"
 layout: "aws"
 page_title: "AWS: aws_fms_policy"
 description: |-

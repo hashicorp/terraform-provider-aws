@@ -17,7 +17,7 @@ import (
 func testAccInvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarMacie2PrincipalEmail, EnvVarMacie2PrincipalEmailMessageError)
+	email := conns.SkipIfEnvVarEmpty(t, EnvVarPrincipalEmail, EnvVarPrincipalEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -29,13 +29,13 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMacieInvitationAccepterBasicConfig(email),
+				Config: testAccInvitationAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvitationAccepterExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccMacieInvitationAccepterBasicConfig(email),
+				Config:            testAccInvitationAccepterConfig_basic(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -98,7 +98,7 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 
 }
 
-func testAccMacieInvitationAccepterBasicConfig(email string) string {
+func testAccInvitationAccepterConfig_basic(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "admin" {
   provider = "awsalternate"

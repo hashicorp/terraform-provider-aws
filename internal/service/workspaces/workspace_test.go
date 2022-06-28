@@ -28,17 +28,17 @@ func testAccWorkspace_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
-				Config:  testAccWorkspacesWorkspaceConfig(rName, domain),
+				Config:  testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
@@ -77,16 +77,16 @@ func testAccWorkspace_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsA(rName, domain),
+				Config: testAccWorkspaceConfig_tagsA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -100,7 +100,7 @@ func testAccWorkspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsB(rName, domain),
+				Config: testAccWorkspaceConfig_tagsB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -109,7 +109,7 @@ func testAccWorkspace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsC(rName, domain),
+				Config: testAccWorkspaceConfig_tagsC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -130,17 +130,17 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
-				Config:  testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName, domain),
+				Config:  testAccWorkspaceConfig_propertiesA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
@@ -157,7 +157,7 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName, domain),
+				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
@@ -169,7 +169,7 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName, domain),
+				Config: testAccWorkspaceConfig_propertiesC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
@@ -196,16 +196,16 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName, domain),
+				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
@@ -230,13 +230,13 @@ func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName, domain),
+				Config:      testAccWorkspaceConfig_validateRootVolumeSize(rName, domain),
 				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
 			},
 		},
@@ -248,13 +248,13 @@ func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName, domain),
+				Config:      testAccWorkspaceConfig_validateUserVolumeSize(rName, domain),
 				ExpectError: regexp.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
 			},
 		},
@@ -271,23 +271,23 @@ func testAccWorkspace_recreate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesWorkspaceConfig(rName, domain),
+				Config: testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v),
 				),
 			},
 			{
 				Taint:  []string{resourceName}, // Force workspace re-creation
-				Config: testAccWorkspacesWorkspaceConfig(rName, domain),
+				Config: testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v),
 				),
@@ -306,17 +306,17 @@ func testAccWorkspace_timeout(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckDirectory(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWorkspaceDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
-				Config:  testAccWorkspacesWorkspaceConfig_timeout(rName, domain),
+				Config:  testAccWorkspaceConfig_timeout(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName, &v),
 				),
@@ -396,7 +396,7 @@ resource "aws_workspaces_directory" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig(rName, domain string) string {
+func testAccWorkspaceConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -415,7 +415,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsA(rName, domain string) string {
+func testAccWorkspaceConfig_tagsA(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -435,7 +435,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsB(rName, domain string) string {
+func testAccWorkspaceConfig_tagsB(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -455,7 +455,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsC(rName, domain string) string {
+func testAccWorkspaceConfig_tagsC(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -474,7 +474,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName, domain string) string {
+func testAccWorkspaceConfig_propertiesA(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -499,7 +499,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName, domain string) string {
+func testAccWorkspaceConfig_propertiesB(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -523,7 +523,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName, domain string) string {
+func testAccWorkspaceConfig_propertiesC(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -545,7 +545,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName, domain string) string {
+func testAccWorkspaceConfig_validateRootVolumeSize(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -569,7 +569,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName, domain string) string {
+func testAccWorkspaceConfig_validateUserVolumeSize(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -593,7 +593,7 @@ resource "aws_workspaces_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspacesWorkspaceConfig_timeout(rName, domain string) string {
+func testAccWorkspaceConfig_timeout(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`

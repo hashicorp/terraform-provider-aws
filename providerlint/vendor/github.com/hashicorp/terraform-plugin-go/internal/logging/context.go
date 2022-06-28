@@ -23,6 +23,8 @@ func InitContext(ctx context.Context, sdkOpts tfsdklog.Options, providerOpts tfl
 		tfsdklog.WithLevelFromEnv(EnvTfLogSdk),
 	}, sdkOpts...)...)
 	ctx = tfsdklog.NewSubsystem(ctx, SubsystemProto, append(tfsdklog.Options{
+		// All calls are through the Protocol* helper functions
+		tfsdklog.WithAdditionalLocationOffset(1),
 		tfsdklog.WithLevelFromEnv(EnvTfLogSdkProto),
 	}, sdkOpts...)...)
 	ctx = tfsdklog.NewRootProviderLogger(ctx, providerOpts...)

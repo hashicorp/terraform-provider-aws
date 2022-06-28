@@ -22,10 +22,10 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
@@ -58,7 +58,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCognitoUserPoolCustomDomain(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckUserPoolCustomDomain(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
@@ -92,10 +92,10 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserPoolDomainDestroy,
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserPoolDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolDomainConfig_basic(domainName, poolName),
@@ -168,7 +168,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
 	return acctest.ConfigCompose(
-		testAccCognitoUserPoolCustomDomainRegionProviderConfig(),
+		testAccUserPoolCustomDomainRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q

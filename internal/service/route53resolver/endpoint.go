@@ -73,7 +73,7 @@ func ResourceEndpoint() *schema.Resource {
 						},
 					},
 				},
-				Set: route53ResolverEndpointHashIpAddress,
+				Set: endpointHashIPAddress,
 			},
 
 			"security_group_ids": {
@@ -157,7 +157,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
+	epRaw, state, err := endpointRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
@@ -193,7 +193,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		req.NextToken = resp.NextToken
 	}
-	if err := d.Set("ip_address", schema.NewSet(route53ResolverEndpointHashIpAddress, ipAddresses)); err != nil {
+	if err := d.Set("ip_address", schema.NewSet(endpointHashIPAddress, ipAddresses)); err != nil {
 		return err
 	}
 
@@ -317,7 +317,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {
+func endpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(epId),
@@ -341,7 +341,7 @@ func EndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId st
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverEndpointRefresh(conn, epId),
+		Refresh:    endpointRefresh(conn, epId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -353,7 +353,7 @@ func EndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId st
 	return nil
 }
 
-func route53ResolverEndpointHashIpAddress(v interface{}) int {
+func endpointHashIPAddress(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))

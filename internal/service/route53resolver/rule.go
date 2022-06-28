@@ -100,7 +100,7 @@ func ResourceRule() *schema.Resource {
 						},
 					},
 				},
-				Set: route53ResolverRuleHashTargetIp,
+				Set: ruleHashTargetIP,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -170,7 +170,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleRaw, state, err := route53ResolverRuleRefresh(conn, d.Id())()
+	ruleRaw, state, err := ruleRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule (%s): %s", d.Id(), err)
 	}
@@ -190,7 +190,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)
-	if err := d.Set("target_ip", schema.NewSet(route53ResolverRuleHashTargetIp, flattenRuleTargetIPs(rule.TargetIps))); err != nil {
+	if err := d.Set("target_ip", schema.NewSet(ruleHashTargetIP, flattenRuleTargetIPs(rule.TargetIps))); err != nil {
 		return err
 	}
 
@@ -294,7 +294,7 @@ func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v i
 	return nil
 }
 
-func route53ResolverRuleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.StateRefreshFunc {
+func ruleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(ruleId),
@@ -318,7 +318,7 @@ func RuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId stri
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverRuleRefresh(conn, ruleId),
+		Refresh:    ruleRefresh(conn, ruleId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -330,7 +330,7 @@ func RuleWaitUntilTargetState(conn *route53resolver.Route53Resolver, ruleId stri
 	return nil
 }
 
-func route53ResolverRuleHashTargetIp(v interface{}) int {
+func ruleHashTargetIP(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-%d-", m["ip"].(string), m["port"].(int)))

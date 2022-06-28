@@ -110,13 +110,6 @@ In addition to all arguments above, the following attributes are exported:
 * `contact_flow_id` - The identifier of the Contact Flow.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
-
-* `create` - (Defaults to 5 min) Used when creating the Contact Flow.
-* `update` - (Defaults to 5 min) Used when updating the Contact Flow.
-
 ## Import
 
 Amazon Connect Contact Flows can be imported using the `instance_id` and `contact_flow_id` separated by a colon (`:`), e.g.,

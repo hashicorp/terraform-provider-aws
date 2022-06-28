@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
 description: |-

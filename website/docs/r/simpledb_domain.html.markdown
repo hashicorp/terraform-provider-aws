@@ -1,5 +1,5 @@
 ---
-subcategory: "SimpleDB"
+subcategory: "SDB (SimpleDB)"
 layout: "aws"
 page_title: "AWS: aws_simpledb_domain"
 description: |-

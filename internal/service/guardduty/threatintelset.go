@@ -99,7 +99,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{guardduty.ThreatIntelSetStatusActivating, guardduty.ThreatIntelSetStatusDeactivating},
 		Target:     []string{guardduty.ThreatIntelSetStatusActive, guardduty.ThreatIntelSetStatusInactive},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -234,7 +234,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 			guardduty.ThreatIntelSetStatusDeletePending,
 		},
 		Target:     []string{guardduty.ThreatIntelSetStatusDeleted},
-		Refresh:    guardDutyThreatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -247,7 +247,7 @@ func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func guardDutyThreatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
+func threatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetThreatIntelSetInput{
 			DetectorId:       aws.String(detectorID),

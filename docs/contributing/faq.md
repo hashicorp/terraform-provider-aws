@@ -8,6 +8,7 @@ The HashiCorp Terraform AWS provider team is :
 
 * Mary Cutrali, Product Manager - GitHub [@maryelizbeth](https://github.com/maryelizbeth) Twitter [@marycutrali](https://twitter.com/marycutrali)
 * Simon Davis, Engineering Manager - GitHub [@breathingdust](https://github.com/breathingdust)
+* Justin Retzolk, Technical Community Manager - GitHub [@justinretzolk](https://github.com/justinretzolk)
 * Angie Pinilla, Engineer - GitHub [@angie44](https://github.com/angie44)
 * Dirk Avery, Engineer - GitHub [@YakDriver](https://github.com/yakdriver)
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
@@ -18,7 +19,7 @@ The HashiCorp Terraform AWS provider team is :
 
 ### Why isn’t my PR merged yet?
 
-Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members.
+Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members. For more information on how we prioritize pull requests, see the [prioritization guide](./prioritization.md).
 
 ### How do you decide what gets merged for each release?
 
@@ -26,9 +27,7 @@ We have a large backlog of pull requests to get through and the team are moving 
 
 The number one factor we look at when deciding what issues to look at are your 👍 [reactions](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original issue/PR description as these can be [easily discovered](https://github.com/hashicorp/terraform-provider-aws/issues?q=is%3Aopen+sort%3Areactions-%2B1-desc). Comments that further explain desired use cases or poor user experience are also heavily factored. The items with the most support are always on our radar, and we commit to keep the community updated on their status and potential timelines.
 
-Once we have prioritized your contribution for review, we will let you know when to expect an engineer to get in touch. If changes are required, we will ask in the pull request. If you are unable to find the time, just let us know, and we will make the necessary changes required in order to merge.
-
-We publish a [road map](../../ROADMAP.md) every quarter which describes major themes or specific product areas of focus.
+We publish a [roadmap](../../ROADMAP.md) every quarter which describes major themes or specific product areas of focus. What is excluded from the public roadmap is work performed under NDA with AWS on new services, and any ad-hoc work we pick up during the quarter. This ad-hoc work can be responding to bugs, gardening day activity, customer prioritization, and technical debt items.
 
 We also are investing time to improve the contributing experience by improving documentation, adding more linter coverage to ensure that incoming PR's can be in as good shape as possible. This will allow us to get through them quicker.
 

@@ -50,7 +50,7 @@ func ResourcePullThroughCacheRule() *schema.Resource {
 	}
 }
 
-func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ecr-in-func-name
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)

@@ -5,7 +5,6 @@ import (
 
 	testing "github.com/mitchellh/go-testing-interface"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -13,12 +12,6 @@ import (
 type testCase struct {
 	val         interface{}
 	f           schema.SchemaValidateFunc
-	expectedErr *regexp.Regexp
-}
-
-type diagTestCase struct {
-	val         interface{}
-	f           schema.SchemaValidateDiagFunc
 	expectedErr *regexp.Regexp
 }
 
@@ -50,29 +43,6 @@ func matchAnyError(errs []error, r *regexp.Regexp) bool {
 		}
 	}
 	return false
-}
-
-func runDiagTestCases(t testing.T, cases []diagTestCase) {
-	t.Helper()
-
-	for i, tc := range cases {
-		p := cty.Path{
-			cty.GetAttrStep{Name: "test_property"},
-		}
-		diags := tc.f(tc.val, p)
-
-		if !diags.HasError() && tc.expectedErr == nil {
-			continue
-		}
-
-		if diags.HasError() && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, diags)
-		}
-
-		if !matchAnyDiagSummary(diags, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, diags)
-		}
-	}
 }
 
 func matchAnyDiagSummary(ds diag.Diagnostics, r *regexp.Regexp) bool {

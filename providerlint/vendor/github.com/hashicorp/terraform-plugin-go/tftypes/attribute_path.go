@@ -284,9 +284,9 @@ type AttributePathStepper interface {
 	ApplyTerraform5AttributePathStep(AttributePathStep) (interface{}, error)
 }
 
-// WalkAttributePath will return the value that `path` is pointing to, using
-// `in` as the root. If an error is returned, the AttributePath returned will
-// indicate the steps that remained to be applied when the error was
+// WalkAttributePath will return the Type or Value that `path` is pointing to,
+// using `in` as the root. If an error is returned, the AttributePath returned
+// will indicate the steps that remained to be applied when the error was
 // encountered.
 //
 // map[string]interface{} and []interface{} types have built-in support. Other

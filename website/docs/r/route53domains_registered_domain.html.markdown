@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Domains"
+subcategory: "Route 53 Domains"
 layout: "aws"
 page_title: "AWS: aws_route53domains_registered_domain"
 description: |-

@@ -33,10 +33,10 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_apiKey(
@@ -115,10 +115,10 @@ func TestAccEventsConnection_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(
@@ -234,10 +234,10 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.oauth"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_oauth(
@@ -399,10 +399,10 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.invocation_http_parameters"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_invocationHTTPParameters(
@@ -545,10 +545,10 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_apiKey(

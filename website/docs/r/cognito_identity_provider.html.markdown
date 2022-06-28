@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_provider"
 side_bar_current: "docs-aws-resource-cognito-identity-provider"

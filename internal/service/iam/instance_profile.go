@@ -46,14 +46,14 @@ func ResourceInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(instanceProfileNameMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(instanceProfileNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -104,7 +104,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	response, err := conn.CreateInstanceProfile(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Instance Profile (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -135,7 +135,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Instance Profile (%s): %s", d.Id(), err)
 			return resourceInstanceProfileUpdate(d, meta)
 		}
@@ -154,7 +154,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		RoleName:            aws.String(roleName),
 	}
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.AddRoleToInstanceProfile(request)
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -228,7 +228,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
 			return nil
 		}
@@ -249,8 +249,8 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	result, err := conn.GetInstanceProfile(request)
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

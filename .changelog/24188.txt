@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_ipam_scope: Prevent panic when describing IPAM Scopes by ID
+```
+
+```release-note:enhancement
+resource/aws_vpc_ipam_scope: Add pagination when describing IPAM Scopes
+```

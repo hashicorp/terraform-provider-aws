@@ -94,7 +94,7 @@ func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) err
 func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	assocRaw, state, err := route53ResolverRuleAssociationRefresh(conn, d.Id())()
+	assocRaw, state, err := ruleAssociationRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver rule association (%s): %s", d.Id(), err)
 	}
@@ -138,7 +138,7 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
+func ruleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(assocId),
@@ -162,7 +162,7 @@ func RuleAssociationWaitUntilTargetState(conn *route53resolver.Route53Resolver, 
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverRuleAssociationRefresh(conn, assocId),
+		Refresh:    ruleAssociationRefresh(conn, assocId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

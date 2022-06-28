@@ -53,6 +53,12 @@ func WithLevel(level hclog.Level) logging.Option {
 	}
 }
 
+// WithRootFields enables the copying of root logger fields to a new subsystem
+// logger during creation.
+func WithRootFields() logging.Option {
+	return logging.WithRootFields()
+}
+
 // WithoutLocation returns an option that disables including the location of
 // the log line in the log output, which is on by default. This has no effect
 // when used with NewSubsystem.

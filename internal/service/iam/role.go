@@ -55,7 +55,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validIamResourceName(roleNameMaxLen),
+				ValidateFunc:  validResourceName(roleNameMaxLen),
 			},
 
 			"name_prefix": {
@@ -64,7 +64,7 @@ func ResourceRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(roleNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
 			},
 
 			"path": {
@@ -202,7 +202,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryCreateRole(conn, request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Role (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -236,7 +236,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		err := roleUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Role (%s): %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
@@ -254,7 +254,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, d.Id())
 	}, d.IsNewResource())
 
@@ -343,7 +343,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err := tfresource.RetryWhen(
-			PropagationTimeout,
+			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 			},
@@ -485,7 +485,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := roleUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Role %s: %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
@@ -554,7 +554,7 @@ func DeleteRole(conn *iam.IAM, roleName string, forceDetach, hasInline, hasManag
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRole(deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
@@ -604,7 +604,7 @@ func deleteRoleInstanceProfiles(conn *iam.IAM, roleName string) error {
 
 func retryCreateRole(conn *iam.IAM, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(
-		PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateRole(input)
 		},

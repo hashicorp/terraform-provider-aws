@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_app_image_config"
 description: |-
-  Provides a Sagemaker App Image Config resource.
+  Provides a SageMaker App Image Config resource.
 ---
 
 # Resource: aws_sagemaker_app_image_config
 
-Provides a Sagemaker App Image Config resource.
+Provides a SageMaker App Image Config resource.
 
 ## Example Usage
 
@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker App Image Configs can be imported using the `name`, e.g.,
+SageMaker App Image Configs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_app_image_config.example example

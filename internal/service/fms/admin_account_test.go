@@ -19,15 +19,15 @@ func testAccAdminAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckFmsAdmin(t)
+			testAccPreCheckAdmin(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFmsAdminAccountDestroy,
+		CheckDestroy:      testAccCheckAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsAdminAccountConfig_basic(),
+				Config: testAccAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
@@ -36,8 +36,8 @@ func testAccAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderFmsAdmin.Meta().(*conns.AWSClient).FMSConn
+func testAccCheckAdminAccountDestroy(s *terraform.State) error {
+	conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fms_admin_account" {
@@ -64,9 +64,9 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFmsAdminAccountConfig_basic() string {
+func testAccAdminAccountConfig_basic() string {
 	return acctest.ConfigCompose(
-		testAccFmsAdminRegionProviderConfig(),
+		testAccAdminRegionProviderConfig(),
 		`
 data "aws_partition" "current" {}
 

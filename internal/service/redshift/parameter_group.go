@@ -64,7 +64,6 @@ func ResourceParameterGroup() *schema.Resource {
 			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {

@@ -104,7 +104,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("regex_pattern_strings") {
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
-		err := updateWafRegexPatternSetPatternStrings(d.Id(), oldPatterns, newPatterns, conn)
+		err := updateRegexPatternSetPatternStrings(d.Id(), oldPatterns, newPatterns, conn)
 		if err != nil {
 			return fmt.Errorf("Failed updating WAF Regex Pattern Set: %s", err)
 		}
@@ -119,7 +119,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
-		err := updateWafRegexPatternSetPatternStrings(d.Id(), oldPatterns, noPatterns, conn)
+		err := updateRegexPatternSetPatternStrings(d.Id(), oldPatterns, noPatterns, conn)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Regex Pattern Set: %s", err)
 		}
@@ -141,7 +141,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func updateWafRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
+func updateRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{
