@@ -3626,7 +3626,7 @@ resource "aws_security_group" "test1" {
 
 func testAccVPCSecurityGroupConfig_allowAll(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -3636,14 +3636,14 @@ resource "aws_vpc" "foo" {
 
 resource "aws_security_group" "test" {
   name   = %[1]q
-  vpc_id = aws_vpc.foo.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_security_group_rule" "allow_all" {
+resource "aws_security_group_rule" "allow_all-1" {
   type        = "ingress"
   from_port   = 0
   to_port     = 65535
@@ -3653,7 +3653,7 @@ resource "aws_security_group_rule" "allow_all" {
   security_group_id = aws_security_group.test.id
 }
 
-resource "aws_security_group_rule" "allow_all-1" {
+resource "aws_security_group_rule" "allow_all-2" {
   type      = "ingress"
   from_port = 65534
   to_port   = 65535
