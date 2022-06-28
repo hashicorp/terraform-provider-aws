@@ -1959,6 +1959,7 @@ func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1967,10 +1968,9 @@ func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupConfig_prefixListIngress,
+				Config: testAccVPCSecurityGroupConfig_prefixListIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					testAccCheckSecurityGroupIngressPrefixListAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 				),
 			},
@@ -2505,56 +2505,6 @@ func testAccSecurityGroupRulesPerGroupLimitFromEnv() int {
 		return defaultLimit
 	}
 	return envLimitInt
-}
-
-func testAccCheckSecurityGroupEgressPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *group.GroupName != "terraform_acceptance_test_prefix_list_egress" {
-			return fmt.Errorf("Bad name: %s", *group.GroupName)
-		}
-		if *group.Description != "Used in the terraform acceptance tests" {
-			return fmt.Errorf("Bad description: %s", *group.Description)
-		}
-		if len(group.IpPermissionsEgress) == 0 {
-			return fmt.Errorf("No egress IPPerms")
-		}
-		if len(group.IpPermissionsEgress) != 1 {
-			return fmt.Errorf("Expected 1 egress rule, got %d", len(group.IpPermissions))
-		}
-
-		p := group.IpPermissionsEgress[0]
-
-		if len(p.PrefixListIds) != 1 {
-			return fmt.Errorf("Expected 1 prefix list, got %d", len(p.PrefixListIds))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSecurityGroupIngressPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *group.GroupName != "terraform_acceptance_test_prefix_list_ingress" {
-			return fmt.Errorf("Bad name: %s", *group.GroupName)
-		}
-		if *group.Description != "Used in the terraform acceptance tests" {
-			return fmt.Errorf("Bad description: %s", *group.Description)
-		}
-		if len(group.IpPermissions) == 0 {
-			return fmt.Errorf("No IPPerms")
-		}
-		if len(group.IpPermissions) != 1 {
-			return fmt.Errorf("Expected 1 rule, got %d", len(group.IpPermissions))
-		}
-
-		p := group.IpPermissions[0]
-
-		if len(p.PrefixListIds) != 1 {
-			return fmt.Errorf("Expected 1 prefix list, got %d", len(p.PrefixListIds))
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
@@ -3929,25 +3879,34 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupConfig_prefixListIngress = `
+func testAccVPCSecurityGroupConfig_prefixListIngress(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
-resource "aws_vpc" "tf_sg_prefix_list_ingress_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-prefix-list-ingress"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "default" {
-  vpc_id = aws_vpc.tf_sg_prefix_list_ingress_test.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id          = aws_vpc.tf_sg_prefix_list_ingress_test.id
+  vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = [aws_route_table.default.id]
+  route_table_ids = [aws_route_table.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
 
   policy = <<POLICY
 {
@@ -3966,9 +3925,12 @@ POLICY
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_prefix_list_ingress"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.tf_sg_prefix_list_ingress_test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 
   ingress {
     protocol        = "-1"
@@ -3977,7 +3939,8 @@ resource "aws_security_group" "test" {
     prefix_list_ids = [aws_vpc_endpoint.test.prefix_list_id]
   }
 }
-`
+`, rName)
+}
 
 func testAccVPCSecurityGroupConfig_ruleGathering(rName string) string {
 	return fmt.Sprintf(`
