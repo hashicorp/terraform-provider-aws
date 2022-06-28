@@ -3,7 +3,6 @@ package lakeformation
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -296,7 +295,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 			return append(diags,
 				diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  names.ProblemStandardMessage(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", errors.New(fmt.Sprintf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags)))),
+					Summary:  names.ProblemStandardMessage(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
 				},
 			)
 		}
