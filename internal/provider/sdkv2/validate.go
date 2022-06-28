@@ -1,4 +1,4 @@
-package provider
+package sdkv2
 
 import (
 	"fmt"
