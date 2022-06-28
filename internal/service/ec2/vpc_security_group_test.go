@@ -2484,39 +2484,6 @@ func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) r
 	}
 }
 
-func testAccCheckSecurityGroupAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		p := &ec2.IpPermission{
-			FromPort:   aws.Int64(80),
-			ToPort:     aws.Int64(8000),
-			IpProtocol: aws.String("tcp"),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("10.0.0.0/8")}},
-		}
-
-		if *group.GroupName != "terraform_acceptance_test_example" {
-			return fmt.Errorf("Bad name: %s", *group.GroupName)
-		}
-
-		if *group.Description != "Used in the terraform acceptance tests" {
-			return fmt.Errorf("Bad description: %s", *group.Description)
-		}
-
-		if len(group.IpPermissions) == 0 {
-			return fmt.Errorf("No IPPerms")
-		}
-
-		// Compare our ingress
-		if !reflect.DeepEqual(group.IpPermissions[0], p) {
-			return fmt.Errorf(
-				"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				group.IpPermissions[0],
-				p)
-		}
-
-		return nil
-	}
-}
-
 // testAccSecurityGroupRulesPerGroupLimitFromEnv returns security group rules per group limit
 // Currently this information is not available from any EC2 or Trusted Advisor API
 // Prefers the EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT environment variable or defaults to 50
@@ -2537,43 +2504,6 @@ func testAccSecurityGroupRulesPerGroupLimitFromEnv() int {
 		return defaultLimit
 	}
 	return envLimitInt
-}
-
-func testAccCheckSecurityGroupSGandCIDRAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *group.GroupName != "terraform_acceptance_test_example" {
-			return fmt.Errorf("Bad name: %s", *group.GroupName)
-		}
-
-		if *group.Description != "Used in the terraform acceptance tests" {
-			return fmt.Errorf("Bad description: %s", *group.Description)
-		}
-
-		if len(group.IpPermissions) == 0 {
-			return fmt.Errorf("No IPPerms")
-		}
-
-		if len(group.IpPermissions) != 2 {
-			return fmt.Errorf("Expected 2 ingress rules, got %d", len(group.IpPermissions))
-		}
-
-		for _, p := range group.IpPermissions {
-			if *p.FromPort == int64(22) {
-				if len(p.IpRanges) != 1 || p.UserIdGroupPairs != nil {
-					return fmt.Errorf("Found ip perm of 22, but not the right ipranges / pairs: %s", p)
-				}
-				continue
-			} else if *p.FromPort == int64(80) {
-				if len(p.IpRanges) != 1 || len(p.UserIdGroupPairs) != 1 {
-					return fmt.Errorf("Found ip perm of 80, but not the right ipranges / pairs: %s", p)
-				}
-				continue
-			}
-			return fmt.Errorf("Found a rouge rule")
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckSecurityGroupEgressPrefixListAttributes(group *ec2.SecurityGroup) resource.TestCheckFunc {
