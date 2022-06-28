@@ -1987,6 +1987,7 @@ func TestAccVPCSecurityGroup_ingressWithPrefixList(t *testing.T) {
 func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1995,7 +1996,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupConfig_ipv4andIPv6Egress,
+				Config: testAccVPCSecurityGroupConfig_ipv4andIPv6Egress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
@@ -3829,20 +3830,20 @@ resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupConfig_ipv4andIPv6Egress = `
-resource "aws_vpc" "foo" {
+func testAccVPCSecurityGroupConfig_ipv4andIPv6Egress(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-security-group-ipv4-and-ipv6-egress"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.foo.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   egress {
     from_port   = 0
@@ -3857,8 +3858,13 @@ resource "aws_security_group" "test" {
     protocol         = "-1"
     ipv6_cidr_blocks = ["::/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 const testAccVPCSecurityGroupConfig_prefixListEgress = `
 data "aws_region" "current" {}
