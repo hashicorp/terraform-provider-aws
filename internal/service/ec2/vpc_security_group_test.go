@@ -3534,17 +3534,15 @@ resource "aws_security_group" "test1" {
 func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string { // nosemgrep:ec2-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
-  name        = "%[1]s-2"
-  description = "Used in the terraform acceptance tests"
+  name = "%[1]s-2"
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used in the terraform acceptance tests"
+resource "aws_security_group" "test1" {
+  name = "%[1]s-1"
 
   ingress {
     protocol  = "tcp"
@@ -3565,7 +3563,7 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
 `, rName))
