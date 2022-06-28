@@ -2038,8 +2038,8 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 
 func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	var group ec2.SecurityGroup
-
-	resourceName := "aws_security_group.nat"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -2048,7 +2048,7 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupConfig_failWithDiffMismatch,
+				Config: testAccVPCSecurityGroupConfig_failWithDiffMismatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
@@ -3571,50 +3571,58 @@ resource "aws_security_group" "test1" {
 
 // fails to apply in one pass with the error "diffs didn't match during apply"
 // GH-2027
-const testAccVPCSecurityGroupConfig_failWithDiffMismatch = `
+func testAccVPCSecurityGroupConfig_failWithDiffMismatch(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-fail-w-diff-mismatch"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "ssh_base" {
-  name   = "test-ssh-base"
+resource "aws_security_group" "test3" {
   vpc_id = aws_vpc.main.id
+  name   = "%[1]s-3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group" "jump" {
-  name   = "test-jump"
+resource "aws_security_group" "test2" {
   vpc_id = aws_vpc.main.id
+  name   = "%[1]s-2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group" "provision" {
-  name   = "test-provision"
+resource "aws_security_group" "test1" {
   vpc_id = aws_vpc.main.id
-}
-
-resource "aws_security_group" "nat" {
-  vpc_id      = aws_vpc.main.id
-  name        = "nat"
-  description = "For nat servers "
+  name   = "%[1]s-1"
 
   ingress {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.jump.id]
+    security_groups = [aws_security_group.test2.id]
   }
 
   ingress {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.provision.id]
+    security_groups = [aws_security_group.test3.id]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
 func testAccVPCSecurityGroupConfig_allowAll(rName string) string {
 	return fmt.Sprintf(`
