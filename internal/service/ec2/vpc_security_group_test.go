@@ -2289,11 +2289,11 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 	})
 }
 
-// cycleIpPermForGroup returns an IpPermission struct with a configured
+// cycleIPPermForGroup returns an IpPermission struct with a configured
 // UserIdGroupPair for the groupid given. Used in
 // TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
 // between 2 security groups
-func cycleIpPermForGroup(groupId string) *ec2.IpPermission {
+func cycleIPPermForGroup(groupId string) *ec2.IpPermission {
 	var perm ec2.IpPermission
 	perm.FromPort = aws.Int64(0)
 	perm.ToPort = aws.Int64(0)
@@ -2320,9 +2320,9 @@ func testAddRuleCycle(primary, secondary *ec2.SecurityGroup) resource.TestCheckF
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		// cycle from primary to secondary
-		perm1 := cycleIpPermForGroup(*secondary.GroupId)
+		perm1 := cycleIPPermForGroup(aws.StringValue(secondary.GroupId))
 		// cycle from secondary to primary
-		perm2 := cycleIpPermForGroup(*primary.GroupId)
+		perm2 := cycleIPPermForGroup(aws.StringValue(primary.GroupId))
 
 		req1 := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       primary.GroupId,
@@ -2410,7 +2410,7 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error {
+func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error { // nosemgrep:ec2-in-func-name
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -2459,7 +2459,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 	}
 }
 
-func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc { // nosemgrep:ec2-in-func-name
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2602,7 +2602,7 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupConfig_ec2Classic(rName string) string {
+func testAccVPCSecurityGroupConfig_ec2Classic(rName string) string { // nosemgrep:ec2-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -3531,7 +3531,7 @@ resource "aws_security_group" "test1" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string {
+func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string { // nosemgrep:ec2-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   name        = "%[1]s-2"
