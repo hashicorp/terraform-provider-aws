@@ -90,14 +90,7 @@ func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("spread_level"); ok {
-		if v2, ok := d.GetOk("strategy"); ok {
-			if v2 == "spread" {
-				input.SpreadLevel = aws.String(v.(string))
-			} else {
-				return fmt.Errorf("attribute spread_level can only be set when 'strategy' is set to 'spread'")
-			}
-		}
-
+		input.SpreadLevel = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
@@ -208,6 +201,12 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	if diff.Id() == "" {
 		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
+		}
+	}
+
+	if diff.Id() == "" {
+		if spread_level, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spread_level != "" && strategy != ec2.PlacementGroupStrategySpread {
+			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}
 
