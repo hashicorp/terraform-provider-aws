@@ -960,7 +960,7 @@ func TestAccRoute53Record_setIdentifierRenameLatency(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatencyPre(endpoints.UsEast1RegionID),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -972,7 +972,7 @@ func TestAccRoute53Record_setIdentifierRenameLatency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatencyPost(endpoints.UsEast1RegionID),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -992,7 +992,7 @@ func TestAccRoute53Record_setIdentifierRenameMultiValueAnswer(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswerPre,
+				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswer("before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -1004,7 +1004,7 @@ func TestAccRoute53Record_setIdentifierRenameMultiValueAnswer(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswerPost,
+				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswer("after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -1024,7 +1024,7 @@ func TestAccRoute53Record_setIdentifierRenameWeighted(t *testing.T) {
 		CheckDestroy:      testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameWeightedPre,
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -1036,7 +1036,7 @@ func TestAccRoute53Record_setIdentifierRenameWeighted(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameWeightedPost,
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -2368,7 +2368,7 @@ resource "aws_route53_record" "set_identifier_rename_failover" {
 `, set_identifier)
 }
 
-func testAccRecordConfig_setIdentifierRenameLatencyPre(region string) string {
+func testAccRecordConfig_setIdentifierRenameLatency(region, set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
@@ -2384,69 +2384,33 @@ resource "aws_route53_record" "set_identifier_rename_latency" {
     region = %[1]q
   }
 
-  set_identifier = "before"
+  set_identifier = %[2]q
   records        = ["dev.domain.test"]
 }
 
-`, region)
+`, region, set_identifier)
 }
 
-func testAccRecordConfig_setIdentifierRenameLatencyPost(region string) string {
+func testAccRecordConfig_setIdentifierRenameMultiValueAnswer(set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_route53_record" "set_identifier_rename_latency" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "www"
-  type    = "CNAME"
-  ttl     = "5"
-
-  latency_routing_policy {
-    region = %[1]q
-  }
-
-  set_identifier = "after"
-  records        = ["dev.domain.test"]
-}
-
-`, region)
-}
-
-const testAccRecordConfig_setIdentifierRenameMultiValueAnswerPre = `
-resource "aws_route53_zone" "main" {
-  name = "domain.test"
-}
-
 resource "aws_route53_record" "set_identifier_rename_multivalue_answer" {
   zone_id                          = aws_route53_zone.main.zone_id
   name                             = "www"
   type                             = "A"
   ttl                              = "5"
   multivalue_answer_routing_policy = true
-  set_identifier                   = "before"
+  set_identifier                   = %[1]q
   records                          = ["127.0.0.1"]
 }
-`
-
-const testAccRecordConfig_setIdentifierRenameMultiValueAnswerPost = `
-resource "aws_route53_zone" "main" {
-  name = "domain.test"
+`, set_identifier)
 }
 
-resource "aws_route53_record" "set_identifier_rename_multivalue_answer" {
-  zone_id                          = aws_route53_zone.main.zone_id
-  name                             = "www"
-  type                             = "A"
-  ttl                              = "5"
-  multivalue_answer_routing_policy = true
-  set_identifier                   = "after"
-  records                          = ["127.0.0.1"]
-}
-`
-
-const testAccRecordConfig_setIdentifierRenameWeightedPre = `
+func testAccRecordConfig_setIdentifierRenameWeighted(set_identifier string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2457,32 +2421,14 @@ resource "aws_route53_record" "set_identifier_rename_weighted" {
   type           = "A"
   ttl            = "30"
   records        = ["127.0.0.1", "8.8.8.8"]
-  set_identifier = "before"
+  set_identifier = %[1]q
 
   weighted_routing_policy {
     weight = 100
   }
 }
-`
-
-const testAccRecordConfig_setIdentifierRenameWeightedPost = `
-resource "aws_route53_zone" "main" {
-  name = "domain.test"
+`, set_identifier)
 }
-
-resource "aws_route53_record" "set_identifier_rename_weighted" {
-  zone_id        = aws_route53_zone.main.zone_id
-  name           = "sample"
-  type           = "A"
-  ttl            = "30"
-  records        = ["127.0.0.1", "8.8.8.8"]
-  set_identifier = "after"
-
-  weighted_routing_policy {
-    weight = 100
-  }
-}
-`
 
 const testAccRecordConfig_aliasChangePre = `
 data "aws_availability_zones" "available" {
