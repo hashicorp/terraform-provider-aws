@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/aws/aws-sdk-go/service/xray/xrayiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *xray.XRay, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn xrayiface.XRayAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &xray.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*xray.Tag) tftags.KeyValueTags {
 // UpdateTags updates xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *xray.XRay, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn xrayiface.XRayAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
