@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/costexplorer/costexploreriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *costexplorer.CostExplorer, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn costexploreriface.CostExplorerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &costexplorer.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*costexplorer.ResourceTag) tftags.KeyValueTags {
 // UpdateTags updates ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *costexplorer.CostExplorer, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn costexploreriface.CostExplorerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
