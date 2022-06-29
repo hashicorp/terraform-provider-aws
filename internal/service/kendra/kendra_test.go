@@ -6,7 +6,8 @@ import "testing"
 func TestAccKendra_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			"basic": testAccDataSource_basic,
+			"basic":      testAccDataSource_basic,
+			"disappears": testAccDataSource_disappears,
 		},
 		"Experience": {
 			"basic":       testAccExperience_basic,
