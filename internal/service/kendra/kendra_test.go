@@ -5,6 +5,9 @@ import "testing"
 // Serialize to limit service quota exceeded errors.
 func TestAccKendra_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"DataSource": {
+			"basic": testAccDataSource_basic,
+		},
 		"Experience": {
 			"basic":       testAccExperience_basic,
 			"disappears":  testAccExperience_disappears,
