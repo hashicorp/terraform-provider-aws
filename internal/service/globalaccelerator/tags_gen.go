@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator/globalacceleratoriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *globalaccelerator.GlobalAccelerator, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &globalaccelerator.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*globalaccelerator.Tag) tftags.KeyValueTags {
 // UpdateTags updates globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *globalaccelerator.GlobalAccelerator, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
