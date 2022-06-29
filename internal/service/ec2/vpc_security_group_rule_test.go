@@ -592,6 +592,9 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sgResourceName := "aws_security_group.test"
+	n := 50
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -600,9 +603,10 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_race,
+				Config: testAccVPCSecurityGroupRuleConfig_race(rName, n),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.race", &group),
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupRuleCount(&group, n, n),
 				),
 			},
 		},
@@ -1992,46 +1996,48 @@ resource "aws_security_group_rule" "test2" {
 `, rName)
 }
 
-var testAccVPCSecurityGroupRuleConfig_race = func() string {
-	var b bytes.Buffer
-	iterations := 50
-	b.WriteString(fmt.Sprintf(`
-resource "aws_vpc" "default" {
+func testAccVPCSecurityGroupRuleConfig_race(rName string, n int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-race"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "race" {
-  name   = "tf-sg-rule-race-group-%d"
-  vpc_id = aws_vpc.default.id
-}
-`, sdkacctest.RandInt()))
-	for i := 1; i < iterations; i++ {
-		b.WriteString(fmt.Sprintf(`
-resource "aws_security_group_rule" "ingress%d" {
-  security_group_id = aws_security_group.race.id
-  type              = "ingress"
-  from_port         = %d
-  to_port           = %d
-  protocol          = "tcp"
-  cidr_blocks       = ["10.0.0.%d/32"]
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "egress%d" {
-  security_group_id = aws_security_group.race.id
-  type              = "egress"
-  from_port         = %d
-  to_port           = %d
+resource "aws_security_group_rule" "test_ingress" {
+  count = %[2]d
+
+  security_group_id = aws_security_group.test.id
+  type              = "ingress"
+  from_port         = count.index
+  to_port           = count.index
   protocol          = "tcp"
-  cidr_blocks       = ["10.0.0.%d/32"]
+  cidr_blocks       = ["10.0.0.${count.index}/32"]
 }
-`, i, i, i, i, i, i, i, i))
-	}
-	return b.String()
-}()
+
+resource "aws_security_group_rule" "test_egress" {
+  count = %[2]d
+
+  security_group_id = aws_security_group.test.id
+  type              = "egress"
+  from_port         = count.index
+  to_port           = count.index
+  protocol          = "tcp"
+  cidr_blocks       = ["10.0.0.${count.index}/32"]
+}
+`, rName, n)
+}
 
 func testAccVPCSecurityGroupRuleConfig_selfInSource(rInt int) string {
 	return fmt.Sprintf(`
