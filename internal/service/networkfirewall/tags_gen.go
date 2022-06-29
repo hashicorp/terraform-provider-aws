@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go/service/networkfirewall/networkfirewalliface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists networkfirewall service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *networkfirewall.NetworkFirewall, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn networkfirewalliface.NetworkFirewallAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &networkfirewall.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*networkfirewall.Tag) tftags.KeyValueTags {
 // UpdateTags updates networkfirewall service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *networkfirewall.NetworkFirewall, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn networkfirewalliface.NetworkFirewallAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
