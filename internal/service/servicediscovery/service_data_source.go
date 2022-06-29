@@ -148,7 +148,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTagsWithContext(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery Service (%s): %s", arn, err)
