@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -17,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *dynamodb.DynamoDB, identifier string, key string) (*string, error) {
+func GetTag(conn dynamodbiface.DynamoDBAPI, identifier string, key string) (*string, error) {
 	listTags, err := ListTags(conn, identifier)
 
 	if err != nil {
@@ -34,7 +35,7 @@ func GetTag(conn *dynamodb.DynamoDB, identifier string, key string) (*string, er
 // ListTags lists dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *dynamodb.DynamoDB, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn dynamodbiface.DynamoDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -87,7 +88,7 @@ func KeyValueTags(tags []*dynamodb.Tag) tftags.KeyValueTags {
 // UpdateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn dynamodbiface.DynamoDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
