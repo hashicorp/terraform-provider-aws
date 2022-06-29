@@ -58,7 +58,7 @@ func main() {
 		}
 
 		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,
-		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientName,
+		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientTypeName,
 		// ResourcePrefixActual, ResourcePrefixCorrect, FilePrefix, DocPrefix
 
 		if l[names.ColAWSCLIV2Command] != "" && strings.Replace(l[names.ColAWSCLIV2Command], "-", "", -1) != l[names.ColAWSCLIV2CommandNoDashes] {
@@ -111,8 +111,8 @@ func main() {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion must have a value if Exclude is blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "1" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientName] == "") {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientName can be blank", l[names.ColHumanFriendly])
+		if l[names.ColSDKVersion] == "1" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
+			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", l[names.ColHumanFriendly])
 		}
 
 		if l[names.ColSDKVersion] == "2" && l[names.ColGoV2Package] == "" {
@@ -157,7 +157,7 @@ func main() {
 		checkAllLowercase(l[names.ColHumanFriendly], "DocPrefix", l[names.ColDocPrefix])
 
 		checkNotAllLowercase(l[names.ColHumanFriendly], "ProviderNameUpper", l[names.ColProviderNameUpper])
-		checkNotAllLowercase(l[names.ColHumanFriendly], "GoV1ClientName", l[names.ColGoV1ClientName])
+		checkNotAllLowercase(l[names.ColHumanFriendly], "GoV1ClientTypeName", l[names.ColGoV1ClientTypeName])
 		checkNotAllLowercase(l[names.ColHumanFriendly], "HumanFriendly", l[names.ColHumanFriendly])
 
 		if l[names.ColExclude] == "" && l[names.ColAllowedSubcategory] != "" {
