@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
+	"github.com/aws/aws-sdk-go/service/cloudtrail/cloudtrailiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *cloudtrail.CloudTrail, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn cloudtrailiface.CloudTrailAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudtrail.ListTagsInput{
 		ResourceIdList: aws.StringSlice([]string{identifier}),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*cloudtrail.Tag) tftags.KeyValueTags {
 // UpdateTags updates cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *cloudtrail.CloudTrail, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn cloudtrailiface.CloudTrailAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
