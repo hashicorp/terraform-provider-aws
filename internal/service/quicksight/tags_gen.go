@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go/service/quicksight/quicksightiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists quicksight service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *quicksight.QuickSight, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn quicksightiface.QuickSightAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &quicksight.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*quicksight.Tag) tftags.KeyValueTags {
 // UpdateTags updates quicksight service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *quicksight.QuickSight, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn quicksightiface.QuickSightAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
