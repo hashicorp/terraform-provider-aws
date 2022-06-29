@@ -2,15 +2,19 @@ package kendra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,7 +25,8 @@ import (
 
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceDataSourceRead,
+		CreateContext: resourceDataSourceCreate,
+		ReadContext:   resourceDataSourceRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -115,6 +120,80 @@ func ResourceDataSource() *schema.Resource {
 	}
 }
 
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+
+	input := &kendra.CreateDataSourceInput{
+		ClientToken: aws.String(resource.UniqueId()),
+		IndexId:     aws.String(d.Get("index_id").(string)),
+		Name:        aws.String(name),
+		Type:        types.DataSourceType(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("language_code"); ok {
+		input.LanguageCode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("role_arn"); ok {
+		input.RoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedule"); ok {
+		input.Schedule = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating Kendra Data Source %#v", input)
+
+	outputRaw, err := tfresource.RetryWhen(
+		propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateDataSource(ctx, input)
+		},
+		func(err error) (bool, error) {
+			var validationException *types.ValidationException
+
+			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return diag.Errorf("creating Kendra Data Source (%s): %s", name, err)
+	}
+
+	if outputRaw == nil {
+		return diag.Errorf("creating Kendra Data Source (%s): empty output", name)
+	}
+
+	output := outputRaw.(*kendra.CreateDataSourceOutput)
+
+	id := aws.ToString(output.Id)
+	indexId := d.Get("index_id").(string)
+
+	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
+
+	if _, err := waitDataSourceCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Data Source (%s) creation: %s", d.Id(), err)
+	}
+
+	return resourceDataSourceRead(ctx, d, meta)
+}
+
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -175,6 +254,45 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
+
+	stateConf := &resource.StateChangeConf{
+		Pending:                   dataSourceStatusValues(types.DataSourceStatusCreating),
+		Target:                    dataSourceStatusValues(types.DataSourceStatusActive),
+		Timeout:                   timeout,
+		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
+		if output.Status == types.DataSourceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDataSourceByID(ctx, conn, id, indexId)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 // Helpers added. Could be generated or somehow use go 1.18 generics?
