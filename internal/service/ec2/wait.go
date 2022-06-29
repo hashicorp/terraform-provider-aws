@@ -2373,6 +2373,32 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string, timeout t
 	return nil, err
 }
 
+func WaitEC2ImageImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.ImportImageTask, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			EC2ImageImportStateActive,
+			EC2ImageImportStateUpdating,
+			EC2ImageImportStateValidating,
+			EC2ImageImportStateValidated,
+			EC2ImageImportStateConverting,
+		},
+		Target:  []string{EC2ImageImportStateCompleted},
+		Refresh: StatusEC2ImageImport(conn, importTaskID),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ImportImageTask); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{vpcEndpointStatePendingAcceptance, vpcEndpointStatePending},

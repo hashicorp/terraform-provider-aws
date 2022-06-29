@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -179,4 +180,54 @@ func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*Grou
 		}
 	}
 	return result
+}
+
+// Expands a user bucket map used by image and snapshot import
+func ExpandUserBucket(tfMap map[string]interface{}) *ec2.UserBucket {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.UserBucket{}
+
+	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
+		apiObject.S3Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_key"].(string); ok && v != "" {
+		apiObject.S3Key = aws.String(v)
+	}
+
+	return apiObject
+}
+
+// Expands Client data map used by image and snapshot import
+func ExpandClientData(tfMap map[string]interface{}) *ec2.ClientData {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ClientData{}
+
+	if v, ok := tfMap["comment"].(string); ok && v != "" {
+		apiObject.Comment = aws.String(v)
+	}
+
+	if v, ok := tfMap["upload_end"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		apiObject.UploadEnd = aws.Time(v)
+	}
+
+	if v, ok := tfMap["upload_size"].(float64); ok && v != 0.0 {
+		apiObject.UploadSize = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["upload_start"].(string); ok {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		apiObject.UploadStart = aws.Time(v)
+	}
+
+	return apiObject
 }

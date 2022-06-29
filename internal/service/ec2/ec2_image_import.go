@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceEBSSnapshotImport() *schema.Resource {
+func ResourceEC2ImageImport() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEBSSnapshotImportCreate,
-		Read:   resourceEBSSnapshotImportRead,
-		Update: resourceEBSSnapshotUpdate,
-		Delete: resourceEBSSnapshotDelete,
+		Create: resourceEC2ImageImportCreate,
+		Read:   resourceEC2ImageImportRead,
+		Update: resourceAMIUpdate,
+		Delete: resourceAMIDelete,
 
 		CustomizeDiff: verify.SetTagsDiff,
 
@@ -32,9 +32,18 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			"architecture": {
 				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				Computed: true,
+			},
+			"boot_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ec2.BootModeValues_Values(), false),
 			},
 			"client_data": {
 				Type:     schema.TypeList,
@@ -68,10 +77,6 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
-			"data_encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,7 +87,6 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"description": {
@@ -97,10 +101,9 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(ec2.DiskImageFormat_Values(), false),
 						},
 						"url": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ExactlyOneOf: []string{"disk_container.0.user_bucket", "disk_container.0.url"},
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
 						},
 						"user_bucket": {
 							Type:     schema.TypeList,
@@ -121,7 +124,6 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 									},
 								},
 							},
-							ExactlyOneOf: []string{"disk_container.0.user_bucket", "disk_container.0.url"},
 						},
 					},
 				},
@@ -136,8 +138,10 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"outpost_arn": {
+			"license_type": {
 				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				Computed: true,
 			},
 			"owner_alias": {
@@ -148,9 +152,11 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"permanent_restore": {
-				Type:     schema.TypeBool,
+			"platform": {
+				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 			"role_name": {
 				Type:     schema.TypeString,
@@ -158,38 +164,20 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				ForceNew: true,
 				Default:  DefaultSnapshotImportRoleName,
 			},
-			"storage_tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"temporary_restore_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"volume_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"volume_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 		},
 	}
 }
 
-func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEC2ImageImportCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.ImportSnapshotInput{
+	input := &ec2.ImportImageInput{
 		ClientToken:       aws.String(resource.UniqueId()),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportSnapshotTask),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImportImageTask),
 	}
 
 	if v, ok := d.GetOk("client_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -201,7 +189,11 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("disk_container"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DiskContainer = expandSnapshotDiskContainer(v.([]interface{})[0].(map[string]interface{}))
+		var err error
+		input.DiskContainers, err = expandImageDiskContainers(v.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("creating EC2 Image Import: %w", err)
+		}
 	}
 
 	if v, ok := d.GetOk("encrypted"); ok {
@@ -216,85 +208,74 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 		input.RoleName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("platform"); ok {
+		input.Platform = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("license_type"); ok {
+		input.LicenseType = aws.String(v.(string))
+	}
+
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
 		func() (interface{}, error) {
-			return conn.ImportSnapshot(input)
+			return conn.ImportImage(input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
 
 	if err != nil {
-		return fmt.Errorf("creating EBS Snapshot Import: %w", err)
+		return fmt.Errorf("creating EC2 Image Import: %w", err)
 	}
 
-	taskID := aws.StringValue(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
-	output, err := WaitEBSSnapshotImportComplete(conn, taskID, d.Timeout(schema.TimeoutCreate))
+	taskID := aws.StringValue(outputRaw.(*ec2.ImportImageOutput).ImportTaskId)
+	output, err := WaitEC2ImageImportComplete(conn, taskID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("waiting for EBS Snapshot Import (%s) create: %w", taskID, err)
+		return fmt.Errorf("waiting for EC2 Image Import (%s) create: %w", taskID, err)
 	}
 
-	d.SetId(aws.StringValue(output.SnapshotId))
+	d.SetId(aws.StringValue(output.ImageId))
 
 	if len(tags) > 0 {
 		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("setting EBS Snapshot Import (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("setting EC2 Image Import (%s) tags: %w", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
-		_, err = conn.ModifySnapshotTier(&ec2.ModifySnapshotTierInput{
-			SnapshotId:  aws.String(d.Id()),
-			StorageTier: aws.String(v.(string)),
-		})
-
-		if err != nil {
-			return fmt.Errorf("setting EBS Snapshot Import (%s) Storage Tier: %w", d.Id(), err)
-		}
-
-		_, err = waitEBSSnapshotTierArchive(conn, d.Id(), ebsSnapshotArchivedTimeout)
-
-		if err != nil {
-			return fmt.Errorf("waiting for EBS Snapshot Import (%s) Storage Tier archive: %w", d.Id(), err)
-		}
-	}
-
-	return resourceEBSSnapshotImportRead(d, meta)
+	return resourceEC2ImageImportRead(d, meta)
 }
 
-func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEC2ImageImportRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindSnapshotByID(conn, d.Id())
+	image, err := FindImageByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Image %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Snapshot (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Image (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
+		Resource:  fmt.Sprintf("image/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-	d.Set("description", snapshot.Description)
-	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set("owner_id", snapshot.OwnerId)
-	d.Set("storage_tier", snapshot.StorageTier)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set("description", image.Description)
+	d.Set("encrypted", image.BlockDeviceMappings[0].Ebs.Encrypted)
+	d.Set("kms_key_id", image.BlockDeviceMappings[0].Ebs.KmsKeyId)
+	d.Set("owner_alias", image.ImageOwnerAlias)
+	d.Set("owner_id", image.OwnerId)
+	d.Set("platform", image.Platform)
 
-	tags := KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -308,28 +289,41 @@ func resourceEBSSnapshotImportRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
-	if tfMap == nil {
-		return nil
+func expandImageDiskContainers(containers []interface{}) ([]*ec2.ImageDiskContainer, error) {
+	if containers == nil {
+		return nil, nil
 	}
 
-	apiObject := &ec2.SnapshotDiskContainer{}
+	apiObjects := []*ec2.ImageDiskContainer{}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
-		apiObject.Description = aws.String(v)
+	for _, raw := range containers {
+		apiObject := &ec2.ImageDiskContainer{}
+
+		m := raw.(map[string]interface{})
+
+		if v, ok := m["description"].(string); ok && v != "" {
+			apiObject.Description = aws.String(v)
+		}
+
+		if v, ok := m["format"].(string); ok && v != "" {
+			apiObject.Format = aws.String(v)
+		}
+
+		if v, ok := m["url"].(string); ok && v != "" {
+			apiObject.Url = aws.String(v)
+		}
+
+		// Do a manual one of check here: https://github.com/hashicorp/terraform-plugin-sdk/issues/71
+		if v, ok := m["user_bucket"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if apiObject.Url != nil {
+				return nil, fmt.Errorf(
+					"url and user_bucket cannot be set on the same disk container")
+			}
+			apiObject.UserBucket = ExpandUserBucket(v[0].(map[string]interface{}))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
-		apiObject.Format = aws.String(v)
-	}
-
-	if v, ok := tfMap["url"].(string); ok && v != "" {
-		apiObject.Url = aws.String(v)
-	}
-
-	if v, ok := tfMap["user_bucket"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.UserBucket = ExpandUserBucket(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
+	return apiObjects, nil
 }

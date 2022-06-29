@@ -3,6 +3,7 @@ package ec2
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -432,4 +433,81 @@ func TestFlattenSecurityGroups(t *testing.T) {
 			t.Fatalf("Error matching output and expected: %#v vs %#v", out, c.expected)
 		}
 	}
+}
+
+func TestExpandUserBucket(t *testing.T) {
+	expanded := map[string]interface{}{
+		"s3_bucket": "bucket",
+		"s3_key":    "key",
+	}
+
+	bucket := ExpandUserBucket(expanded)
+
+	expected := &ec2.UserBucket{
+		S3Bucket: aws.String("bucket"),
+		S3Key:    aws.String("key"),
+	}
+
+	if aws.StringValue(expected.S3Bucket) != aws.StringValue(bucket.S3Bucket) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(bucket.S3Bucket),
+			aws.StringValue(expected.S3Bucket))
+	}
+
+	if aws.StringValue(expected.S3Key) != aws.StringValue(bucket.S3Key) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(bucket.S3Key),
+			aws.StringValue(expected.S3Key))
+	}
+}
+
+func TestExpandClientData(t *testing.T) {
+	expanded := map[string]interface{}{
+		"comment":      "bucket",
+		"upload_end":   "2018-05-13T07:44:12Z",
+		"upload_start": "2018-05-13T07:44:12Z",
+		"upload_size":  123,
+	}
+
+	data := ExpandClientData(expanded)
+
+	ti, _ := time.Parse(time.RFC3339, "2018-05-13T07:44:12Z")
+
+	expected := &ec2.ClientData{
+		Comment:     aws.String("bucket"),
+		UploadEnd:   aws.Time(ti),
+		UploadSize:  aws.Float64(123),
+		UploadStart: aws.Time(ti),
+	}
+
+	if aws.StringValue(expected.Comment) != aws.StringValue(data.Comment) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.StringValue(data.Comment),
+			aws.StringValue(expected.Comment))
+	}
+
+	if aws.TimeValue(expected.UploadEnd) != aws.TimeValue(data.UploadEnd) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.TimeValue(data.UploadEnd),
+			aws.TimeValue(expected.UploadEnd))
+	}
+
+	if aws.Float64Value(expected.UploadSize) != aws.Float64Value(data.UploadSize) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.Float64Value(data.UploadSize),
+			aws.Float64Value(expected.UploadSize))
+	}
+
+	if aws.TimeValue(expected.UploadStart) != aws.TimeValue(data.UploadStart) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			aws.TimeValue(data.UploadStart),
+			aws.TimeValue(expected.UploadStart))
+	}
+
 }

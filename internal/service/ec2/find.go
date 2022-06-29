@@ -5065,3 +5065,73 @@ func FindSnapshotTierStatusBySnapshotID(conn *ec2.EC2, id string) (*ec2.Snapshot
 
 	return output, nil
 }
+
+func FindImportImageTask(conn *ec2.EC2, input *ec2.DescribeImportImageTasksInput) (*ec2.ImportImageTask, error) {
+	output, err := FindImportImageTasks(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindImportImageTasks(conn *ec2.EC2, input *ec2.DescribeImportImageTasksInput) ([]*ec2.ImportImageTask, error) {
+	var output []*ec2.ImportImageTask
+
+	err := conn.DescribeImportImageTasksPages(input, func(page *ec2.DescribeImportImageTasksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ImportImageTasks {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidConversionTaskIdMalformed, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindImportImageTaskByID(conn *ec2.EC2, id string) (*ec2.ImportImageTask, error) {
+	input := &ec2.DescribeImportImageTasksInput{
+		ImportTaskIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindImportImageTask(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.ImportTaskId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
