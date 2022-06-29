@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go/service/eventbridge/eventbridgeiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists events service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *eventbridge.EventBridge, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn eventbridgeiface.EventBridgeAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &eventbridge.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*eventbridge.Tag) tftags.KeyValueTags {
 // UpdateTags updates events service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *eventbridge.EventBridge, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn eventbridgeiface.EventBridgeAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
