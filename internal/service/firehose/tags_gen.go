@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/firehose/firehoseiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *firehose.Firehose, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn firehoseiface.FirehoseAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &firehose.ListTagsForDeliveryStreamInput{
 		DeliveryStreamName: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*firehose.Tag) tftags.KeyValueTags {
 // UpdateTags updates firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn firehoseiface.FirehoseAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
