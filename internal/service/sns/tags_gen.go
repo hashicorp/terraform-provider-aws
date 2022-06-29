@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sns/snsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *sns.SNS, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn snsiface.SNSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &sns.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*sns.Tag) tftags.KeyValueTags {
 // UpdateTags updates sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *sns.SNS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn snsiface.SNSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
