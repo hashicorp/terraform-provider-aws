@@ -92,7 +92,7 @@ func main() {
 		SourcePackage:      sourcePackage,
 	})
 
-	awsUpper, err := names.AWSGoV1ClientName(servicePackage)
+	awsUpper, err := names.AWSGoV1ClientTypeName(servicePackage)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
