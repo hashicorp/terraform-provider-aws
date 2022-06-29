@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
+	"github.com/aws/aws-sdk-go/service/keyspaces/keyspacesiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists keyspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *keyspaces.Keyspaces, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn keyspacesiface.KeyspacesAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &keyspaces.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*keyspaces.Tag) tftags.KeyValueTags {
 // UpdateTags updates keyspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *keyspaces.Keyspaces, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn keyspacesiface.KeyspacesAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
