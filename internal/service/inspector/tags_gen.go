@@ -4,13 +4,14 @@ package inspector
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists inspector service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *inspector.Inspector, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &inspector.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
