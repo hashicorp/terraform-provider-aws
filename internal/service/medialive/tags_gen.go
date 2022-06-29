@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/medialive"
+	"github.com/aws/aws-sdk-go/service/medialive/medialiveiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists medialive service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *medialive.MediaLive, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn medialiveiface.MediaLiveAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &medialive.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates medialive service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *medialive.MediaLive, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn medialiveiface.MediaLiveAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
