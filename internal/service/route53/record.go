@@ -281,6 +281,7 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 	// If the old record has any of the following, we need to pass that in
 	// here because otherwise the API will give us an error:
 	// - failover_routing_policy
+	// - geolocation_routing_policy
 	// - latency_routing_policy
 	// - multivalue_answer_routing_policy
 	// - weighted_routing_policy
@@ -290,6 +291,20 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 			if len(o) == 1 {
 				if v, ok := o[0].(map[string]interface{}); ok {
 					oldRec.Failover = aws.String(v["type"].(string))
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("geolocation_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.GeoLocation = &route53.GeoLocation{
+						ContinentCode:   nilString(v["continent"].(string)),
+						CountryCode:     nilString(v["country"].(string)),
+						SubdivisionCode: nilString(v["subdivision"].(string)),
+					}
 				}
 			}
 		}
