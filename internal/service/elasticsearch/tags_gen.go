@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elasticsearchservice/elasticsearchserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elasticsearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *elasticsearchservice.ElasticsearchService, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn elasticsearchserviceiface.ElasticsearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elasticsearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*elasticsearchservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates elasticsearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *elasticsearchservice.ElasticsearchService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elasticsearchserviceiface.ElasticsearchServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
