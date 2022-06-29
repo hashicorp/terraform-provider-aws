@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/fsx/fsxiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists fsx service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *fsx.FSx, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn fsxiface.FSxAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &fsx.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*fsx.Tag) tftags.KeyValueTags {
 // UpdateTags updates fsx service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn fsxiface.FSxAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
