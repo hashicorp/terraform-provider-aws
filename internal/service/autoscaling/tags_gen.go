@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -17,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType string, key string) (*tftags.TagData, error) {
+func GetTag(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -49,7 +50,7 @@ func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType strin
 // ListTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *autoscaling.AutoScaling, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -229,7 +230,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 // UpdateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *autoscaling.AutoScaling, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
+func UpdateTags(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
 	oldTags := KeyValueTags(oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(newTagsSet, identifier, resourceType)
 
