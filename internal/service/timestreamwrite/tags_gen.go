@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite/timestreamwriteiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists timestreamwrite service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn timestreamwriteiface.TimestreamWriteAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &timestreamwrite.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*timestreamwrite.Tag) tftags.KeyValueTags {
 // UpdateTags updates timestreamwrite service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *timestreamwrite.TimestreamWrite, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn timestreamwriteiface.TimestreamWriteAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
