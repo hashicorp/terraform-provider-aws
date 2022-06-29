@@ -93,12 +93,12 @@ func NewTemplateBody(version int) *TemplateBody {
 		}
 	case AwsSdkV2:
 		return &TemplateBody{
-			v2.GetTagBody,
+			"\n" + v2.GetTagBody,
 			v2.HeaderBody,
-			v2.ListTagsBody,
-			v2.ServiceTagsMapBody,
-			v2.ServiceTagsSliceBody,
-			v2.UpdateTagsBody,
+			"\n" + v2.ListTagsBody,
+			"\n" + v2.ServiceTagsMapBody,
+			"\n" + v2.ServiceTagsSliceBody,
+			"\n" + v2.UpdateTagsBody,
 		}
 	default:
 		return nil
