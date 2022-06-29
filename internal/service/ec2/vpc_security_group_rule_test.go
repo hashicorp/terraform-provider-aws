@@ -154,10 +154,9 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 	var group ec2.SecurityGroup
-
-	rInt := sdkacctest.RandInt()
-
-	ruleName := "aws_security_group_rule.allow_self"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -166,21 +165,20 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
-					resource.TestCheckResourceAttrPair(
-						ruleName, "security_group_id", "aws_security_group.web", "id"),
-					resource.TestMatchResourceAttr(
-						ruleName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
-					resource.TestCheckResourceAttr(
-						ruleName, "description", "some description"),
-					resource.TestCheckResourceAttr(
-						ruleName, "from_port", "0"),
-					resource.TestCheckResourceAttr(
-						ruleName, "to_port", "0"),
-					resource.TestCheckResourceAttr(
-						ruleName, "protocol", "-1"),
+				Config: testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", "some description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestMatchResourceAttr(resourceName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 		},
@@ -2092,34 +2090,37 @@ resource "aws_security_group_rule" "allow_self" {
 `, rInt)
 }
 
-func testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-self-ingress"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "web" {
-  name        = "allow_all-%d"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "allow_self" {
+resource "aws_security_group_rule" "test" {
   type                     = "ingress"
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
   description              = "some description"
-  security_group_id        = aws_security_group.web.id
-  source_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.web.id}"
+  security_group_id        = aws_security_group.test.id
+  source_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.test.id}"
 }
-`, rInt)
+`, rName)
 }
 
 func testAccVPCSecurityGroupRuleConfig_expectInvalidType(rInt int) string {
