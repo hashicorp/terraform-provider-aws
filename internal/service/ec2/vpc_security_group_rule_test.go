@@ -464,28 +464,10 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 
 // testing partial match implementation
 func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
-	var group ec2.SecurityGroup
-	rInt := sdkacctest.RandInt()
-
-	p := ec2.IpPermission{
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(80),
-		IpProtocol: aws.String("tcp"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("10.0.2.0/24")},
-			{CidrIp: aws.String("10.0.3.0/24")},
-			{CidrIp: aws.String("10.0.4.0/24")},
-		},
-	}
-
-	o := ec2.IpPermission{
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(80),
-		IpProtocol: aws.String("tcp"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("10.0.5.0/24")},
-		},
-	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_security_group_rule.test1"
+	resource2Name := "aws_security_group_rule.test2"
+	resource3Name := "aws_security_group_rule.test3"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -494,30 +476,36 @@ func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_partialMatching(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
-					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress", &group, &p, "ingress"),
-					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.other", &group, &o, "ingress"),
-					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.nat_ingress", &group, &o, "ingress"),
+				Config: testAccVPCSecurityGroupRuleConfig_partialMatching(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "10.0.2.0/24"),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.1", "10.0.3.0/24"),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.2", "10.0.4.0/24"),
+					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.0", "10.0.5.0/24"),
+					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.0", "10.0.2.0/24"),
+					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.1", "10.0.3.0/24"),
+					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.2", "10.0.4.0/24"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.ingress",
+				ResourceName:      resource1Name,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.other",
+				ResourceName:      resource2Name,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.other"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.nat_ingress",
+				ResourceName:      resource3Name,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.nat_ingress"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource3Name),
 				ImportStateVerify: true,
 			},
 		},
@@ -1680,65 +1668,58 @@ resource "aws_security_group_rule" "test" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupRuleConfig_partialMatching(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_partialMatching(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "default" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-partial-match"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "web" {
-  name   = "tf-other-%d"
-  vpc_id = aws_vpc.default.id
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-other-sg"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "nat" {
-  name   = "tf-nat-%d"
-  vpc_id = aws_vpc.default.id
-
-  tags = {
-    Name = "tf-nat-sg"
-  }
-}
-
-resource "aws_security_group_rule" "ingress" {
+resource "aws_security_group_rule" "test1" {
   type        = "ingress"
   from_port   = 80
   to_port     = 80
   protocol    = "tcp"
   cidr_blocks = ["10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24"]
 
-  security_group_id = aws_security_group.web.id
+  security_group_id = aws_security_group.test[0].id
 }
 
-resource "aws_security_group_rule" "other" {
+resource "aws_security_group_rule" "test2" {
   type        = "ingress"
   from_port   = 80
   to_port     = 80
   protocol    = "tcp"
   cidr_blocks = ["10.0.5.0/24"]
 
-  security_group_id = aws_security_group.web.id
+  security_group_id = aws_security_group.test[0].id
 }
 
 # same a above, but different group, to guard against bad hashing
-resource "aws_security_group_rule" "nat_ingress" {
+resource "aws_security_group_rule" "test3" {
   type        = "ingress"
   from_port   = 80
   to_port     = 80
   protocol    = "tcp"
   cidr_blocks = ["10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24"]
 
-  security_group_id = aws_security_group.nat.id
+  security_group_id = aws_security_group.test[1].id
 }
-`, rInt, rInt)
+`, rName)
 }
 
 func testAccVPCSecurityGroupRuleConfig_partialMatchingSource(rInt int) string {
