@@ -278,8 +278,26 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 		Type: aws.String(typeo.(string)),
 	}
 
-	// If the old record had a weighted_routing_policy we need to pass that in
-	// here because otherwise the API will give us an error.
+	// If the old record has any of the following, we need to pass that in
+	// here because otherwise the API will give us an error:
+	// - latency_routing_policy
+	// - multivalue_answer_routing_policy
+	// - weighted_routing_policy
+
+	if v, _ := d.GetChange("latency_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Region = aws.String(v["region"].(string))
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("multivalue_answer_routing_policy"); v != nil {
+		oldRec.MultiValueAnswer = aws.Bool(v.(bool))
+	}
+
 	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
 		if o, ok := v.([]interface{}); ok {
 			if len(o) == 1 {
