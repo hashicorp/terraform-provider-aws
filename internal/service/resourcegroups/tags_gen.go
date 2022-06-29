@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/resourcegroups/resourcegroupsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *resourcegroups.ResourceGroups, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn resourcegroupsiface.ResourceGroupsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &resourcegroups.GetTagsInput{
 		Arn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *resourcegroups.ResourceGroups, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn resourcegroupsiface.ResourceGroupsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
