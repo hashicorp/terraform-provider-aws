@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/aws/aws-sdk-go/service/codeartifact/codeartifactiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists codeartifact service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *codeartifact.CodeArtifact, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn codeartifactiface.CodeArtifactAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codeartifact.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*codeartifact.Tag) tftags.KeyValueTags {
 // UpdateTags updates codeartifact service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *codeartifact.CodeArtifact, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn codeartifactiface.CodeArtifactAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
