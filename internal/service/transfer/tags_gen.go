@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/aws/aws-sdk-go/service/transfer/transferiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *transfer.Transfer, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &transfer.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*transfer.Tag) tftags.KeyValueTags {
 // UpdateTags updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *transfer.Transfer, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn transferiface.TransferAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
