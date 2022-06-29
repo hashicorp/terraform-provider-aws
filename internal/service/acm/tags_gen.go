@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acm/acmiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *acm.ACM, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn acmiface.ACMAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &acm.ListTagsForCertificateInput{
 		CertificateArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*acm.Tag) tftags.KeyValueTags {
 // UpdateTags updates acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn acmiface.ACMAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
