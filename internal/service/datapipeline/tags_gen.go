@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
+	"github.com/aws/aws-sdk-go/service/datapipeline/datapipelineiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -41,7 +42,7 @@ func KeyValueTags(tags []*datapipeline.Tag) tftags.KeyValueTags {
 // UpdateTags updates datapipeline service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *datapipeline.DataPipeline, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn datapipelineiface.DataPipelineAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
