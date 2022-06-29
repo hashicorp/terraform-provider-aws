@@ -166,13 +166,13 @@ func main() {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	clientName, err := names.AWSGoClientName(servicePackage, *awsSdkVersion)
+	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *awsSdkVersion)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	clientType := fmt.Sprintf("*%s.%s", awsPkg, clientName)
+	clientType := fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
 
 	tagPackage := awsPkg
 
