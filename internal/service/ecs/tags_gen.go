@@ -2,6 +2,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,7 +20,10 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func GetTag(conn ecsiface.ECSAPI, identifier string, key string) (*string, error) {
-	listTags, err := ListTags(conn, identifier)
+	return GetTagWithContext(context.Background(), conn, identifier, key)
+}
+func GetTagWithContext(ctx context.Context, conn ecsiface.ECSAPI, identifier string, key string) (*string, error) {
+	listTags, err := ListTagsWithContext(ctx, conn, identifier)
 
 	if err != nil {
 		return nil, err
@@ -36,11 +40,15 @@ func GetTag(conn ecsiface.ECSAPI, identifier string, key string) (*string, error
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func ListTags(conn ecsiface.ECSAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn ecsiface.ECSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
 		return nil, &resource.NotFoundError{
@@ -88,7 +96,10 @@ func KeyValueTags(tags []*ecs.Tag) tftags.KeyValueTags {
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn ecsiface.ECSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ecsiface.ECSAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn ecsiface.ECSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -98,7 +109,7 @@ func UpdateTags(conn ecsiface.ECSAPI, identifier string, oldTagsMap interface{},
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -111,7 +122,7 @@ func UpdateTags(conn ecsiface.ECSAPI, identifier string, oldTagsMap interface{},
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
