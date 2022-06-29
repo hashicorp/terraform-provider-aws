@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/databasemigrationservice/databasemigrationserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists dms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *databasemigrationservice.DatabaseMigrationService, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &databasemigrationservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*databasemigrationservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates dms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *databasemigrationservice.DatabaseMigrationService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
