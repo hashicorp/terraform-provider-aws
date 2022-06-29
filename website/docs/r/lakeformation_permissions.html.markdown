@@ -128,7 +128,7 @@ resource "aws_lakeformation_permissions" "example" {
 
 ```terraform
 resource "aws_lakeformation_permissions" "test" {
-  principal        = aws_iam_role.sales_role.arn
+  principal.  = aws_iam_role.sales_role.arn
   permissions = ["CREATE_TABLE", "ALTER", "DROP"]
   lf_tag_policy {
     resource_type = "DATABASE"
