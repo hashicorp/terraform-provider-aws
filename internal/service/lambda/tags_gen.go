@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/lambda/lambdaiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists lambda service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *lambda.Lambda, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn lambdaiface.LambdaAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &lambda.ListTagsInput{
 		Resource: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates lambda service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *lambda.Lambda, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn lambdaiface.LambdaAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
