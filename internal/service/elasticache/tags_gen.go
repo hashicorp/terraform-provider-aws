@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go/service/elasticache/elasticacheiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elasticache service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *elasticache.ElastiCache, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn elasticacheiface.ElastiCacheAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elasticache.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*elasticache.Tag) tftags.KeyValueTags {
 // UpdateTags updates elasticache service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *elasticache.ElastiCache, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elasticacheiface.ElastiCacheAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
