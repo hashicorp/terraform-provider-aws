@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/sagemaker/sagemakeriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *sagemaker.SageMaker, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn sagemakeriface.SageMakerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*sagemaker.Tag) tftags.KeyValueTags {
 // UpdateTags updates sagemaker service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn sagemakeriface.SageMakerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
