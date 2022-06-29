@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -15,7 +16,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *ec2.EC2, identifier string, key string) (*string, error) {
+func GetTag(conn ec2iface.EC2API, identifier string, key string) (*string, error) {
 	input := &ec2.DescribeTagsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -47,7 +48,7 @@ func GetTag(conn *ec2.EC2, identifier string, key string) (*string, error) {
 // ListTags lists ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *ec2.EC2, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn ec2iface.EC2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &ec2.DescribeTagsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -115,7 +116,7 @@ func KeyValueTags(tags interface{}) tftags.KeyValueTags {
 // UpdateTags updates ec2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *ec2.EC2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ec2iface.EC2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
