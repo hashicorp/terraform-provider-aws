@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/aws/aws-sdk-go/service/signer/signeriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists signer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *signer.Signer, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn signeriface.SignerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &signer.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates signer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *signer.Signer, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn signeriface.SignerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
