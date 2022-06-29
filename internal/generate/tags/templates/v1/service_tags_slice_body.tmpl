@@ -53,11 +53,11 @@ func ListOfStringMap(tags tftags.KeyValueTags) []interface{} {
 
 {{- if .TagKeyType }}
 // TagKeys returns {{ .ServicePackage }} service tag keys.
-func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
-	result := make([]*{{ .AWSService }}.{{ .TagKeyType }}, 0, len(tags))
+func TagKeys(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagKeyType }} {
+	result := make([]*{{ .TagPackage }}.{{ .TagKeyType }}, 0, len(tags))
 
 	for k := range tags.Map() {
-		tagKey := &{{ .AWSService }}.{{ .TagKeyType }}{
+		tagKey := &{{ .TagPackage }}.{{ .TagKeyType }}{
 			{{ .TagTypeKeyElem }}: aws.String(k),
 		}
 
@@ -71,10 +71,10 @@ func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
 // Tags returns {{ .ServicePackage }} service tags.
 func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
-	var result []*{{ .AWSService }}.{{ .TagType }}
+	var result []*{{ .TagPackage }}.{{ .TagType }}
 
 	for _, key := range tags.Keys() {
-		tag := &{{ .AWSService }}.{{ .TagType }}{
+		tag := &{{ .TagPackage }}.{{ .TagType }}{
 			{{ .TagTypeKeyElem }}:        aws.String(key),
 			{{ .TagTypeValElem }}:      tags.KeyValue(key),
 			{{- if ( .TagTypeIDElem ) }}
@@ -110,9 +110,9 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
 //
 // Accepts the following types:
-//   - []*{{ .AWSService }}.{{ .TagType }}
+//   - []*{{ .TagPackage }}.{{ .TagType }}
 {{- if .TagType2 }}
-//   - []*{{ .AWSService }}.{{ .TagType2 }}
+//   - []*{{ .TagPackage }}.{{ .TagType2 }}
 {{- end }}
 {{- if .TagTypeAddBoolElem }}
 //   - []interface{} (Terraform TypeList configuration block compatible)
@@ -120,7 +120,7 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 {{- end }}
 func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
-	case []*{{ .AWSService }}.{{ .TagType }}:
+	case []*{{ .TagPackage }}.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -153,7 +153,7 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 		{{- end }}
 
 		return tftags.New(m)
-	case []*{{ .AWSService }}.{{ .TagType2 }}:
+	case []*{{ .TagPackage }}.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 

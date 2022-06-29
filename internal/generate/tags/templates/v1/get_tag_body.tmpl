@@ -9,8 +9,8 @@ func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, r
 func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
-	input := &{{ .AWSService  }}.{{ .ListTagsOp }}Input{
-		Filters: []*{{ .AWSService  }}.Filter{
+	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
+		Filters: []*{{ .TagPackage  }}.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
 				Values: []*string{aws.String(identifier)},

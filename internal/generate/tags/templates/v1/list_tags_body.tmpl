@@ -4,7 +4,7 @@
 func ListTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
-		Filters: []*{{ .AWSService  }}.Filter{
+		Filters: []*{{ .TagPackage  }}.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
 				Values: []*string{aws.String(identifier)},

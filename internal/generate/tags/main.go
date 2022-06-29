@@ -106,9 +106,10 @@ func NewTemplateBody(version int) *TemplateBody {
 }
 
 type TemplateData struct {
-	AWSService     string
-	ClientType     string
-	ServicePackage string
+	AWSService             string
+	AWSServiceIfacePackage string
+	ClientType             string
+	ServicePackage         string
 
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
@@ -166,6 +167,11 @@ func main() {
 		log.Fatalf("encountered: %s", err)
 	}
 
+	var awsIntfPkg string
+	if *awsSdkVersion == AwsSdkV1 && (*getTag || *listTags || *updateTags) {
+		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
+	}
+
 	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *awsSdkVersion)
 
 	if err != nil {
@@ -183,12 +189,16 @@ func main() {
 
 	if tagPackage == "wafregional" {
 		tagPackage = "waf"
+		if *awsSdkVersion == AwsSdkV1 {
+			awsPkg = ""
+		}
 	}
 
 	templateData := TemplateData{
-		AWSService:     awsPkg,
-		ClientType:     clientType,
-		ServicePackage: servicePackage,
+		AWSService:             awsPkg,
+		AWSServiceIfacePackage: awsIntfPkg,
+		ClientType:             clientType,
+		ServicePackage:         servicePackage,
 
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
@@ -229,9 +239,10 @@ func main() {
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-sdk-go	 service package does not need to be imported
+		// the corresponding aws-sdk-go	service package does not need to be imported
 		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
 			templateData.AWSService = ""
+			templateData.TagPackage = ""
 		}
 		writeTemplate(templateBody.header, "header", templateData)
 	}

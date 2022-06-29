@@ -19,7 +19,7 @@ func UpdateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }
 		return nil
 	}
 
-	input := &{{ .AWSService }}.{{ .TagOp }}Input{
+	input := &{{ .TagPackage }}.{{ .TagOp }}Input{
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedSlice }}
 		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),

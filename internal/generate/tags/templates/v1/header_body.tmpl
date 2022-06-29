@@ -13,10 +13,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
-	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}/{{ .AWSService }}iface"
+	{{- end }}
+	{{- if .AWSServiceIfacePackage }}
+	"github.com/aws/aws-sdk-go/service/{{ .AWSServiceIfacePackage }}"
+	{{- end }}
 	{{- if ne .AWSService .TagPackage }}
 	"github.com/aws/aws-sdk-go/service/{{ .TagPackage }}"
-	{{- end }}
 	{{- end }}
 	{{- if .HelperSchemaPkg }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
