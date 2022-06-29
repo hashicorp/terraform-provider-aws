@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
+	"github.com/aws/aws-sdk-go/service/memorydb/memorydbiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *memorydb.MemoryDB, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &memorydb.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*memorydb.Tag) tftags.KeyValueTags {
 // UpdateTags updates memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *memorydb.MemoryDB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn memorydbiface.MemoryDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
