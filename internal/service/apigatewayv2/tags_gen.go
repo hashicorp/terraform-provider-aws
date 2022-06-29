@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2/apigatewayv2iface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists apigatewayv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn apigatewayv2iface.ApiGatewayV2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &apigatewayv2.GetTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates apigatewayv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *apigatewayv2.ApiGatewayV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn apigatewayv2iface.ApiGatewayV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
