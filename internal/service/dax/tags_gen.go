@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/dax/daxiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists dax service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *dax.DAX, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn daxiface.DAXAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &dax.ListTagsInput{
 		ResourceName: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*dax.Tag) tftags.KeyValueTags {
 // UpdateTags updates dax service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn daxiface.DAXAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
