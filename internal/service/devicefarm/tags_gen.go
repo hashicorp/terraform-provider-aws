@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/devicefarm/devicefarmiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists devicefarm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *devicefarm.DeviceFarm, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn devicefarmiface.DeviceFarmAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &devicefarm.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*devicefarm.Tag) tftags.KeyValueTags {
 // UpdateTags updates devicefarm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *devicefarm.DeviceFarm, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn devicefarmiface.DeviceFarmAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
