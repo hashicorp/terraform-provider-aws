@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
+	"github.com/aws/aws-sdk-go/service/appintegrationsservice/appintegrationsserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -24,7 +25,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates appintegrations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *appintegrationsservice.AppIntegrationsService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn appintegrationsserviceiface.AppIntegrationsServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
