@@ -553,6 +553,9 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -561,15 +564,26 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_issue5310,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.issue_5310", &group),
+				Config: testAccVPCSecurityGroupRuleConfig_issue5310(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.issue_5310",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.issue_5310"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1483,21 +1497,26 @@ resource "aws_security_group_rule" "test" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupRuleConfig_issue5310 = `
-resource "aws_security_group" "issue_5310" {
-  name        = "terraform-test-issue_5310"
-  description = "SG for test of issue 5310"
+func testAccVPCSecurityGroupRuleConfig_issue5310(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "issue_5310" {
+resource "aws_security_group_rule" "test" {
   type              = "ingress"
   from_port         = 0
   to_port           = 65535
   protocol          = "tcp"
-  security_group_id = aws_security_group.issue_5310.id
+  security_group_id = aws_security_group.test.id
   self              = true
 }
-`
+`, rName)
+}
 
 func testAccVPCSecurityGroupRuleConfig_ingressClassic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
