@@ -2405,7 +2405,7 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Security Group (%s) still exists.", rs.Primary.ID)
+		return fmt.Errorf("VPC Security Group (%s) still exists.", rs.Primary.ID)
 	}
 
 	return nil
@@ -2443,7 +2443,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group ID is set")
+			return fmt.Errorf("No VPC Security Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn

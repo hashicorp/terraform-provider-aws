@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestIPPermissionIDHash(t *testing.T) {
@@ -136,12 +135,12 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingress(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr(
 						"aws_security_group_rule.ingress_1", "from_port", "80"),
@@ -169,12 +168,12 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					resource.TestCheckResourceAttrPair(
 						ruleName, "security_group_id", "aws_security_group.web", "id"),
 					resource.TestMatchResourceAttr(
@@ -215,12 +214,12 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressProtocol,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr(
 						"aws_security_group_rule.ingress_1", "from_port", "80"),
@@ -246,12 +245,12 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressIcmpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "icmpv6"),
@@ -298,12 +297,12 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressIPv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testRuleCount,
 				),
 			},
@@ -340,12 +339,12 @@ func TestAccVPCSecurityGroupRule_Ingress_classic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressClassic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr(
 						"aws_security_group_rule.ingress_1", "from_port", "80"),
@@ -390,12 +389,12 @@ func TestAccVPCSecurityGroupRule_multiIngress(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multiIngress,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testMultiRuleCount,
 				),
 			},
@@ -417,12 +416,12 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egress(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, nil, "egress"),
 				),
 			},
@@ -443,12 +442,12 @@ func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_selfReference,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 				),
 			},
 			{
@@ -467,7 +466,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rInt),
@@ -483,7 +482,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rInt),
@@ -526,12 +525,12 @@ func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_partialMatching(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress", &group, &p, "ingress"),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.other", &group, &o, "ingress"),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.nat_ingress", &group, &o, "ingress"),
@@ -589,13 +588,13 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_partialMatchingSource(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
-					testAccCheckSecurityGroupRuleExists("aws_security_group.nat", &nat),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.nat", &nat),
 					setupSG,
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.source_ingress", &group, &p, "ingress"),
 				),
@@ -617,12 +616,12 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_issue5310,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.issue_5310", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.issue_5310", &group),
 				),
 			},
 			{
@@ -642,12 +641,12 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_race,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.race", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.race", &group),
 				),
 			},
 		},
@@ -662,12 +661,12 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_selfInSource(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 				),
 			},
 			{
@@ -720,12 +719,12 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_prefixListEgress,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.egress", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.egress", &group),
 					// lookup info on the VPC Endpoint created, to populate the expected
 					// IP Perm
 					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
@@ -751,12 +750,12 @@ func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_1", "description", "TF acceptance test ingress rule"),
 				),
@@ -779,12 +778,12 @@ func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, nil, "egress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.egress_1", "description", "TF acceptance test egress rule"),
 				),
@@ -807,12 +806,12 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_1", "description", "TF acceptance test ingress rule"),
 				),
@@ -821,7 +820,7 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressUpdateDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_1", "description", "TF acceptance test ingress rule updated"),
 				),
@@ -844,12 +843,12 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, nil, "egress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.egress_1", "description", "TF acceptance test egress rule"),
 				),
@@ -858,7 +857,7 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressUpdateDescription(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.web", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, nil, "egress"),
 					resource.TestCheckResourceAttr("aws_security_group_rule.egress_1", "description", "TF acceptance test egress rule updated"),
 				),
@@ -897,12 +896,12 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
 					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -919,7 +918,7 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
 					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -955,12 +954,12 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
 					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
@@ -977,7 +976,7 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
 					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -1017,12 +1016,12 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multipleSearchingAllProtocolCrash(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists(securityGroupResourceName, &group),
+					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
 					testAccCheckSecurityGroupRuleAttributes(resourceName1, &group, &rule1, "ingress"),
 					testAccCheckSecurityGroupRuleAttributes(resourceName2, &group, &rule2, "ingress"),
 					resource.TestCheckResourceAttr(resourceName1, "from_port", "0"),
@@ -1122,13 +1121,13 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupRuleDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multidescription(rInt, "ingress"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.worker", &group),
-					testAccCheckSecurityGroupRuleExists("aws_security_group.nat", &nat),
+					testAccCheckSecurityGroupExists("aws_security_group.worker", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.nat", &nat),
 					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
 
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "ingress"),
@@ -1163,8 +1162,8 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multidescription(rInt, "egress"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupRuleExists("aws_security_group.worker", &group),
-					testAccCheckSecurityGroupRuleExists("aws_security_group.nat", &nat),
+					testAccCheckSecurityGroupExists("aws_security_group.worker", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.nat", &nat),
 					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
 
 					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "egress"),
@@ -1208,52 +1207,6 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckSecurityGroupRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_security_group" {
-			continue
-		}
-
-		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Security Group (%s) still exists.", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckSecurityGroupRuleExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Security Group is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		sg, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		*group = *sg
-
-		return nil
-	}
 }
 
 func testAccCheckSecurityGroupRuleAttributes(n string, group *ec2.SecurityGroup, p *ec2.IpPermission, ruleType string) resource.TestCheckFunc {
