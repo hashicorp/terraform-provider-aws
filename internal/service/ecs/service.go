@@ -532,14 +532,14 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ECS tagging failed creating Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
 		output, err = retryServiceCreate(conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating ECS service (%s): %w", d.Get("name").(string), err)
+		return fmt.Errorf("error creating ECS service (%s): %w", d.Get("name").(string), err)
 	}
 
 	if output == nil || output.Service == nil {
@@ -567,7 +567,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] ECS tagging failed adding tags after create for Service (%s): %s", d.Id(), err)
+			log.Printf("[WARN] failed adding tags after create for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
@@ -595,14 +595,14 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ECS tagging failed describing Service (%s) with tags: %s; retrying without tags", d.Id(), err)
+		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
 		output, err = conn.DescribeServices(&input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-		log.Printf("[WARN] ECS service (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -626,7 +626,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		if d.IsNewResource() {
 			return fmt.Errorf("ECS service not created: %q", d.Id())
 		}
-		log.Printf("[WARN] Removing ECS service %s (%s) because it's gone", d.Get("name").(string), d.Id())
+		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -1130,12 +1130,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] ECS tagging failed updating tags for Service (%s): %s", d.Id(), err)
+			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("ECS tagging failed updating tags for Service (%s): %w", d.Id(), err)
+			return fmt.Errorf("failed updating tags for ECS Service (%s): %w", d.Id(), err)
 		}
 	}
 
