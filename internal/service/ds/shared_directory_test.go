@@ -33,7 +33,7 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSharedDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSharedDirectoryConfig(rName, domainName),
+				Config: testAccSharedDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
 					testAccCheckSharedDirectoryExists(resourceName, &sharedDirectory),
@@ -128,7 +128,7 @@ func testAccCheckSharedDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSharedDirectoryConfig(rName, domain string) string {
+func testAccSharedDirectoryConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		testAccDirectoryConfig_microsoftStandard(rName, domain),

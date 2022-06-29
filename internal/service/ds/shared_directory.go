@@ -125,8 +125,8 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
 
-	d.Set("method", aws.StringValue(output.ShareMethod))
-	d.Set("notes", aws.StringValue(output.ShareNotes))
+	d.Set("method", output.ShareMethod)
+	d.Set("notes", output.ShareNotes)
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
@@ -183,7 +183,7 @@ func resourceSharedDirectoryImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget {
+func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}
