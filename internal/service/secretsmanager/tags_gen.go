@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -41,7 +42,7 @@ func KeyValueTags(tags []*secretsmanager.Tag) tftags.KeyValueTags {
 // UpdateTags updates secretsmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *secretsmanager.SecretsManager, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
