@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elb/elbiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *elb.ELB, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elb.DescribeTagsInput{
 		LoadBalancerNames: aws.StringSlice([]string{identifier}),
 	}
@@ -73,7 +74,7 @@ func KeyValueTags(tags []*elb.Tag) tftags.KeyValueTags {
 // UpdateTags updates elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elbiface.ELBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
