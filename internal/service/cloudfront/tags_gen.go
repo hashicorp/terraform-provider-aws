@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *cloudfront.CloudFront, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn cloudfrontiface.CloudFrontAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudfront.ListTagsForResourceInput{
 		Resource: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*cloudfront.Tag) tftags.KeyValueTags {
 // UpdateTags updates cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *cloudfront.CloudFront, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn cloudfrontiface.CloudFrontAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
