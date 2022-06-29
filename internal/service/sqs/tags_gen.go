@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists sqs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *sqs.SQS, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn sqsiface.SQSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &sqs.ListQueueTagsInput{
 		QueueUrl: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates sqs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *sqs.SQS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn sqsiface.SQSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
