@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/aws/aws-sdk-go/service/networkmanager/networkmanageriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *networkmanager.NetworkManager, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn networkmanageriface.NetworkManagerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &networkmanager.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*networkmanager.Tag) tftags.KeyValueTags {
 // UpdateTags updates networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *networkmanager.NetworkManager, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn networkmanageriface.NetworkManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
