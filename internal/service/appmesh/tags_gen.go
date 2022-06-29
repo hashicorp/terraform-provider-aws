@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appmesh/appmeshiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *appmesh.AppMesh, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn appmeshiface.AppMeshAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &appmesh.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*appmesh.TagRef) tftags.KeyValueTags {
 // UpdateTags updates appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *appmesh.AppMesh, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn appmeshiface.AppMeshAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
