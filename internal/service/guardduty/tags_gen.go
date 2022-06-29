@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/guardduty/guarddutyiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists guardduty service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *guardduty.GuardDuty, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn guarddutyiface.GuardDutyAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &guardduty.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates guardduty service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *guardduty.GuardDuty, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn guarddutyiface.GuardDutyAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
