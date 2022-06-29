@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go/service/route53resolver/route53resolveriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -15,7 +16,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *route53resolver.Route53Resolver, identifier string, key string) (*string, error) {
+func GetTag(conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
 	listTags, err := ListTags(conn, identifier)
 
 	if err != nil {
@@ -32,7 +33,7 @@ func GetTag(conn *route53resolver.Route53Resolver, identifier string, key string
 // ListTags lists route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *route53resolver.Route53Resolver, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn route53resolveriface.Route53ResolverAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &route53resolver.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -78,7 +79,7 @@ func KeyValueTags(tags []*route53resolver.Tag) tftags.KeyValueTags {
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *route53resolver.Route53Resolver, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
