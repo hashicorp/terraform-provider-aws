@@ -425,7 +425,8 @@ func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -433,7 +434,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rInt),
+				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName),
 				ExpectError: regexp.MustCompile(`expected type to be one of \[ingress egress\]`),
 			},
 		},
@@ -2110,31 +2111,34 @@ resource "aws_security_group_rule" "test" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupRuleConfig_expectInvalidType(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-invalid-type"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "web" {
-  name        = "allow_all-%d"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "allow_self" {
-  type                     = "foobar"
+resource "aws_security_group_rule" "test" {
+  type                     = "invalid"
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = aws_security_group.web.id
-  source_security_group_id = aws_security_group.web.id
+  security_group_id        = aws_security_group.test.id
+  source_security_group_id = aws_security_group.test.id
 }
-`, rInt)
+`, rName)
 }
 
 func testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rInt int) string {
