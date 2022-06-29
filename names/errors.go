@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	ErrActionReading           = "reading"
-	ErrActionDeleting          = "deleting"
-	ErrActionUpdating          = "updating"
-	ErrActionCreating          = "creating"
-	ErrActionSetting           = "setting"
-	ErrActionCheckingExistence = "checking existence"
-	ErrActionCheckingDestroyed = "checking destroyed"
+	ErrActionReading            = "reading"
+	ErrActionDeleting           = "deleting"
+	ErrActionUpdating           = "updating"
+	ErrActionCreating           = "creating"
+	ErrActionSetting            = "setting"
+	ErrActionCheckingExistence  = "checking existence"
+	ErrActionCheckingDestroyed  = "checking destroyed"
+	ErrActionWaitingForDeletion = "waiting for delete"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings

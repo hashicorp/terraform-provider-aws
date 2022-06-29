@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	ResourceNameDirectoryShare = "Directory Share"
+)
+
 func ResourceDirectoryShare() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDirectoryShareCreate,
@@ -89,8 +93,9 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Creating Shared Directory: %s", input)
 	out, err := conn.ShareDirectoryWithContext(ctx, &input)
+
 	if err != nil {
-		return diag.FromErr(err)
+		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameDirectoryShare, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
@@ -109,13 +114,13 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 	output, err := findDirectoryShareByIDs(ctx, conn, dirId, sharedId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Directory Service Shared Directory (%s) not found, removing from state", d.Id())
+		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameDirectoryShare, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(err)
+		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameDirectoryShare, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
@@ -125,7 +130,7 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return names.DiagError(names.DS, names.ErrActionSetting, "Directory Share", d.Id(), err)
+			return names.DiagError(names.DS, names.ErrActionSetting, ResourceNameDirectoryShare, d.Id(), err)
 		}
 	} else {
 		d.Set("target", nil)
@@ -148,14 +153,17 @@ func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, m
 	// TODO: this takes forever and is not correctly waiting for unshare
 	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
+
 	if err != nil {
-		return diag.FromErr(err)
+		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameDirectoryShare, d.Id(), err)
 	}
+
 	_, err = waitDirectoryShareDeleted(ctx, conn, dirId, sharedId)
 
 	if err != nil {
-		return diag.Errorf("error waiting for Directory Service Share (%s) to delete: %s", d.Id(), err.Error())
+		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameDirectoryShare, d.Id(), err)
 	}
+
 	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)
 
 	return nil
