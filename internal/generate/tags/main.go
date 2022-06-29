@@ -22,8 +22,8 @@ import (
 const (
 	filename = `tags_gen.go`
 
-	AwsSdkV1 = 1
-	AwsSdkV2 = 2
+	sdkV1 = 1
+	sdkV2 = 2
 )
 
 var (
@@ -61,7 +61,7 @@ var (
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	awsSdkVersion = flag.Int("AwsSdkVersion", AwsSdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	sdkVersion = flag.Int("AwsSdkVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 )
 
 func usage() {
@@ -82,7 +82,7 @@ type TemplateBody struct {
 
 func NewTemplateBody(version int) *TemplateBody {
 	switch version {
-	case AwsSdkV1:
+	case sdkV1:
 		return &TemplateBody{
 			"\n" + v1.GetTagBody,
 			v1.HeaderBody,
@@ -91,7 +91,7 @@ func NewTemplateBody(version int) *TemplateBody {
 			"\n" + v1.ServiceTagsSliceBody,
 			"\n" + v1.UpdateTagsBody,
 		}
-	case AwsSdkV2:
+	case sdkV2:
 		return &TemplateBody{
 			"\n" + v2.GetTagBody,
 			v2.HeaderBody,
@@ -157,30 +157,30 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	if *awsSdkVersion != AwsSdkV1 && *awsSdkVersion != AwsSdkV2 {
-		log.Fatalf("AWS SDK Go Version %d not supported", *awsSdkVersion)
+	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
+		log.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsPkg, err := names.AWSGoPackage(servicePackage, *awsSdkVersion)
+	awsPkg, err := names.AWSGoPackage(servicePackage, *sdkVersion)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
 	var awsIntfPkg string
-	if *awsSdkVersion == AwsSdkV1 && (*getTag || *listTags || *updateTags) {
+	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
 		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
 	}
 
-	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *awsSdkVersion)
+	clientTypeName, err := names.AWSGoClientTypeName(servicePackage, *sdkVersion)
 
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
 	var clientType string
-	if *awsSdkVersion == AwsSdkV1 {
+	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
 	} else {
 		clientType = fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
@@ -190,7 +190,7 @@ func main() {
 
 	if tagPackage == "wafregional" {
 		tagPackage = "waf"
-		if *awsSdkVersion == AwsSdkV1 {
+		if *sdkVersion == sdkV1 {
 			awsPkg = ""
 		}
 	}
@@ -201,7 +201,7 @@ func main() {
 		ClientType:             clientType,
 		ServicePackage:         servicePackage,
 
-		ContextPkg:      *awsSdkVersion == AwsSdkV2 || (*getTag || *listTags || *updateTags),
+		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
 		StrConvPkg:      awsPkg == "autoscaling",
@@ -237,7 +237,7 @@ func main() {
 		UntagOp:                 *untagOp,
 	}
 
-	templateBody := NewTemplateBody(*awsSdkVersion)
+	templateBody := NewTemplateBody(*sdkVersion)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
