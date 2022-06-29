@@ -55,7 +55,7 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*
 	return nil, err
 }
 
-func waitDirectoryShareDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
+func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			directoryservice.ShareStatusDeleting,

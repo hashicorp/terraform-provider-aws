@@ -17,16 +17,16 @@ import (
 )
 
 const (
-	ResourceNameDirectoryShare = "Directory Share"
+	ResourceNameSharedDirectory = "Shared Directory"
 )
 
-func ResourceDirectoryShare() *schema.Resource {
+func ResourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDirectoryShareCreate,
-		ReadContext:   resourceDirectoryShareRead,
-		DeleteContext: resourceDirectoryShareDelete,
+		CreateContext: resourceSharedDirectoryCreate,
+		ReadContext:   resourceSharedDirectoryRead,
+		DeleteContext: resourceSharedDirectoryDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceDirectoryShareImport,
+			StateContext: resourceSharedDirectoryImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -77,7 +77,7 @@ func ResourceDirectoryShare() *schema.Resource {
 	}
 }
 
-func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	dirId := d.Get("directory_id").(string)
@@ -95,7 +95,7 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.ShareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameDirectoryShare, d.Id(), err)
+		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
@@ -105,22 +105,22 @@ func resourceDirectoryShareCreate(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	dirId := d.Get("directory_id").(string)
 	sharedId := d.Get("shared_directory_id").(string)
 
-	output, err := findDirectoryShareByIDs(ctx, conn, dirId, sharedId)
+	output, err := findSharedDirectoryByIDs(ctx, conn, dirId, sharedId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameDirectoryShare, d.Id())
+		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameDirectoryShare, d.Id(), err)
+		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
@@ -130,7 +130,7 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return names.DiagError(names.DS, names.ErrActionSetting, ResourceNameDirectoryShare, d.Id(), err)
+			return names.DiagError(names.DS, names.ErrActionSetting, ResourceNameSharedDirectory, d.Id(), err)
 		}
 	} else {
 		d.Set("target", nil)
@@ -139,7 +139,7 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	dirId := d.Get("directory_id").(string)
@@ -155,13 +155,13 @@ func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameDirectoryShare, d.Id(), err)
+		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
-	_, err = waitDirectoryShareDeleted(ctx, conn, dirId, sharedId)
+	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameDirectoryShare, d.Id(), err)
+		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)
@@ -169,7 +169,7 @@ func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceDirectoryShareImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSharedDirectoryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <owner-directory-id>/<shared-directory-id>", d.Id())

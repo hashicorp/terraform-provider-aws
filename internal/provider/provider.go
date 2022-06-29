@@ -1269,7 +1269,7 @@ func Provider() *schema.Provider {
 			"aws_directory_service_conditional_forwarder":    ds.ResourceConditionalForwarder(),
 			"aws_directory_service_directory":                ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":         ds.ResourceLogSubscription(),
-			"aws_directory_service_directory_share":          ds.ResourceDirectoryShare(),
+			"aws_directory_service_directory_share":          ds.ResourceSharedDirectory(),
 
 			"aws_dynamodb_contributor_insights":          dynamodb.ResourceContributorInsights(),
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
