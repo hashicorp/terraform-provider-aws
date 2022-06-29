@@ -266,9 +266,9 @@ resource "aws_placement_group" "test" {
 func testAccPlacementGroupConfig_hostSpreadLevel(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name            = %[1]q
-  spread_level    = "host"
-  strategy        = "spread"
+  name         = %[1]q
+  spread_level = "host"
+  strategy     = "spread"
 }
 `, rName)
 }
