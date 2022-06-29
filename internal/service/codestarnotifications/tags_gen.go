@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarnotifications"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications/codestarnotificationsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists codestarnotifications service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *codestarnotifications.CodeStarNotifications, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn codestarnotificationsiface.CodeStarNotificationsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codestarnotifications.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates codestarnotifications service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *codestarnotifications.CodeStarNotifications, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn codestarnotificationsiface.CodeStarNotificationsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
