@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/efs/efsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists efs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *efs.EFS, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn efsiface.EFSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*efs.Tag) tftags.KeyValueTags {
 // UpdateTags updates efs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn efsiface.EFSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
