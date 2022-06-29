@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go/service/emr/emriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -41,7 +42,7 @@ func KeyValueTags(tags []*emr.Tag) tftags.KeyValueTags {
 // UpdateTags updates emr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *emr.EMR, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn emriface.EMRAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
