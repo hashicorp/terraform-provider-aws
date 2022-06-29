@@ -28,6 +28,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 		Read:   resourceSecurityGroupRuleRead,
 		Update: resourceSecurityGroupRuleUpdate,
 		Delete: resourceSecurityGroupRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				importParts, err := validateSecurityGroupRuleImportString(d.Id())
@@ -45,17 +46,21 @@ func ResourceSecurityGroupRule() *schema.Resource {
 		MigrateState:  SecurityGroupRuleMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Type of rule, ingress (inbound) or egress (outbound).",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ingress",
-					"egress",
-				}, false),
+			"cidr_blocks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				ConflictsWith: []string{"source_security_group_id", "self"},
 			},
-
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validSecurityGroupRuleDescription,
+			},
 			"from_port": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -69,7 +74,47 @@ func ResourceSecurityGroupRule() *schema.Resource {
 					return false
 				},
 			},
-
+			"ipv6_cidr_blocks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				ConflictsWith: []string{"source_security_group_id", "self"},
+			},
+			"prefix_list_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"protocol": {
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				StateFunc: ProtocolStateFunc,
+			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"self": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ForceNew:      true,
+				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
+			},
+			"source_security_group_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
+			},
 			"to_port": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -83,69 +128,15 @@ func ResourceSecurityGroupRule() *schema.Resource {
 					return false
 				},
 			},
-
-			"protocol": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: ProtocolStateFunc,
-			},
-
-			"cidr_blocks": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
-				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-			},
-
-			"ipv6_cidr_blocks": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
-				},
-				ConflictsWith: []string{"source_security_group_id", "self"},
-			},
-
-			"prefix_list_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"source_security_group_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
-			},
-
-			"self": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ForceNew:      true,
-				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
-			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validSecurityGroupRuleDescription,
+			"type": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Type of rule, ingress (inbound) or egress (outbound).",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ingress",
+					"egress",
+				}, false),
 			},
 		},
 	}
