@@ -442,7 +442,8 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -450,11 +451,11 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rInt),
+				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rName),
 				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
-				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rInt),
+				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rName),
 				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
@@ -2141,36 +2142,44 @@ resource "aws_security_group_rule" "test" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "foo" {
-  name = "testing-failure-%d"
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "ing" {
+resource "aws_security_group_rule" "test" {
   type              = "ingress"
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["1.2.3.4/33"]
-  security_group_id = aws_security_group.foo.id
+  security_group_id = aws_security_group.test.id
 }
-`, rInt)
+`, rName)
 }
 
-func testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_invalidIPv6CIDR(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "foo" {
-  name = "testing-failure-%d"
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "ing" {
+resource "aws_security_group_rule" "test" {
   type              = "egress"
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
   ipv6_cidr_blocks  = ["::/244"]
-  security_group_id = aws_security_group.foo.id
+  security_group_id = aws_security_group.test.id
 }
-`, rInt)
+`, rName)
 }
