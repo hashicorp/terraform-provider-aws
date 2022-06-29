@@ -2512,8 +2512,8 @@ resource "aws_route53_record" "set_identifier_rename_geolocation" {
     continent = %[1]q
   }
 
-  set_identifier  = %[2]q
-  records         = ["primary.domain.test"]
+  set_identifier = %[2]q
+  records        = ["primary.domain.test"]
 }
 `, continent, set_identifier)
 }
@@ -2534,8 +2534,8 @@ resource "aws_route53_record" "set_identifier_rename_geolocation" {
     country = %[1]q
   }
 
-  set_identifier  = %[2]q
-  records         = ["primary.domain.test"]
+  set_identifier = %[2]q
+  records        = ["primary.domain.test"]
 }
 `, country, set_identifier)
 }
@@ -2553,12 +2553,12 @@ resource "aws_route53_record" "set_identifier_rename_geolocation" {
   ttl     = "5"
 
   geolocation_routing_policy {
-    country = %[1]q
+    country     = %[1]q
     subdivision = %[2]q
   }
 
-  set_identifier  = %[3]q
-  records         = ["primary.domain.test"]
+  set_identifier = %[3]q
+  records        = ["primary.domain.test"]
 }
 `, country, subdivision, set_identifier)
 }
@@ -2611,7 +2611,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_route53_record" "set_identifier_rename_weighted" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id        = aws_route53_zone.main.zone_id
   name           = "sample"
   type           = "A"
   ttl            = "30"
