@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/aws/aws-sdk-go/service/greengrass/greengrassiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists greengrass service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *greengrass.Greengrass, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn greengrassiface.GreengrassAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &greengrass.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates greengrass service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *greengrass.Greengrass, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn greengrassiface.GreengrassAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
