@@ -489,7 +489,7 @@ func TestExpandClientData(t *testing.T) {
 			aws.StringValue(expected.Comment))
 	}
 
-	if aws.TimeValue(expected.UploadEnd) != aws.TimeValue(data.UploadEnd) {
+	if !aws.TimeValue(expected.UploadEnd).Equal(aws.TimeValue(data.UploadEnd)) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 			aws.TimeValue(data.UploadEnd),
@@ -503,7 +503,7 @@ func TestExpandClientData(t *testing.T) {
 			aws.Float64Value(expected.UploadSize))
 	}
 
-	if aws.TimeValue(expected.UploadStart) != aws.TimeValue(data.UploadStart) {
+	if !aws.TimeValue(expected.UploadStart).Equal(aws.TimeValue(data.UploadStart)) {
 		t.Fatalf(
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 			aws.TimeValue(data.UploadStart),
