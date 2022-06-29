@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/batch/batchiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -15,7 +16,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *batch.Batch, identifier string, key string) (*string, error) {
+func GetTag(conn batchiface.BatchAPI, identifier string, key string) (*string, error) {
 	listTags, err := ListTags(conn, identifier)
 
 	if err != nil {
@@ -32,7 +33,7 @@ func GetTag(conn *batch.Batch, identifier string, key string) (*string, error) {
 // ListTags lists batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *batch.Batch, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn batchiface.BatchAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &batch.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -61,7 +62,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *batch.Batch, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn batchiface.BatchAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
