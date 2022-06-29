@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
+	"github.com/aws/aws-sdk-go/service/mediaconvert/mediaconvertiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists mediaconvert service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *mediaconvert.MediaConvert, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn mediaconvertiface.MediaConvertAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &mediaconvert.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates mediaconvert service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *mediaconvert.MediaConvert, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn mediaconvertiface.MediaConvertAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
