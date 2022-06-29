@@ -27,6 +27,7 @@ func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDataSourceCreate,
 		ReadContext:   resourceDataSourceRead,
+		UpdateContext: resourceDataSourceUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -256,10 +257,101 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	if d.HasChanges("description", "language_code", "role_arn", "schedule") {
+		id, indexId, err := DataSourceParseResourceID(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		input := &kendra.UpdateDataSourceInput{
+			Id:      aws.String(id),
+			IndexId: aws.String(indexId),
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("language_code") {
+			input.LanguageCode = aws.String(d.Get("language_code").(string))
+		}
+
+		if d.HasChange("role_arn") {
+			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		}
+
+		if d.HasChange("schedule") {
+			input.Schedule = aws.String(d.Get("schedule").(string))
+		}
+
+		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
+
+		_, err = tfresource.RetryWhen(
+			propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateDataSource(ctx, input)
+			},
+			func(err error) (bool, error) {
+				var validationException *types.ValidationException
+
+				if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			return diag.Errorf("updating Kendra Data Source(%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitDataSourceUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Kendra Data Source (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("updating Kendra Data Source (%s) tags: %s", d.Id(), err))
+		}
+	}
+
+	return resourceDataSourceRead(ctx, d, meta)
+}
+
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
 		Pending:                   dataSourceStatusValues(types.DataSourceStatusCreating),
+		Target:                    dataSourceStatusValues(types.DataSourceStatusActive),
+		Timeout:                   timeout,
+		Refresh:                   statusDataSource(ctx, conn, id, indexId),
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
+		if output.Status == types.DataSourceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
+
+	stateConf := &resource.StateChangeConf{
+		Pending:                   dataSourceStatusValues(types.DataSourceStatusUpdating),
 		Target:                    dataSourceStatusValues(types.DataSourceStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusDataSource(ctx, conn, id, indexId),
