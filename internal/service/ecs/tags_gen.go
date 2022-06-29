@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/ecs/ecsiface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -17,7 +18,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *ecs.ECS, identifier string, key string) (*string, error) {
+func GetTag(conn ecsiface.ECSAPI, identifier string, key string) (*string, error) {
 	listTags, err := ListTags(conn, identifier)
 
 	if err != nil {
@@ -34,7 +35,7 @@ func GetTag(conn *ecs.ECS, identifier string, key string) (*string, error) {
 // ListTags lists ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *ecs.ECS, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn ecsiface.ECSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -87,7 +88,7 @@ func KeyValueTags(tags []*ecs.Tag) tftags.KeyValueTags {
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *ecs.ECS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ecsiface.ECSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
