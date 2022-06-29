@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/swf/swfiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists swf service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *swf.SWF, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn swfiface.SWFAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &swf.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*swf.ResourceTag) tftags.KeyValueTags {
 // UpdateTags updates swf service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *swf.SWF, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn swfiface.SWFAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
