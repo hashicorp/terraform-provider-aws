@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/aws/aws-sdk-go/service/codestarconnections/codestarconnectionsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists codestarconnections service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *codestarconnections.CodeStarConnections, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codestarconnections.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*codestarconnections.Tag) tftags.KeyValueTags {
 // UpdateTags updates codestarconnections service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *codestarconnections.CodeStarConnections, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn codestarconnectionsiface.CodeStarConnectionsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
