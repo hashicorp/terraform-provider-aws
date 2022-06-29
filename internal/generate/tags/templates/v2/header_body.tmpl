@@ -2,10 +2,10 @@
 package {{ .ServicePackage }}
 
 import (
+	"context"
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
-	"context"
 	{{- if .StrConvPkg }}
 	"strconv"
 	{{- end }}

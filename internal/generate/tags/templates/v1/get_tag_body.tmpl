@@ -8,6 +8,14 @@ func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, r
 {{- else }}
 func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
 {{- end }}
+	return GetTagWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
+}
+
+{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
+func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
+{{- else }}
+func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
+{{- end }}
 	{{- if .ListTagsInFiltIDName }}
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		Filters: []*{{ .TagPackage  }}.Filter{
@@ -22,7 +30,7 @@ func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, r
 		},
 	}
 
-	output, err := conn.{{ .ListTagsOp }}(input)
+	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -30,7 +38,7 @@ func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, r
 
 	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
-	listTags, err := ListTags(conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	listTags, err := ListTagsWithContext(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return nil, err

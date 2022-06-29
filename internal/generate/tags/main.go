@@ -143,6 +143,7 @@ type TemplateData struct {
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
+	ContextPkg      bool
 	FmtPkg          bool
 	HelperSchemaPkg bool
 	StrConvPkg      bool
@@ -200,6 +201,7 @@ func main() {
 		ClientType:             clientType,
 		ServicePackage:         servicePackage,
 
+		ContextPkg:      *awsSdkVersion == AwsSdkV2 || (*getTag || *listTags || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
 		StrConvPkg:      awsPkg == "autoscaling",

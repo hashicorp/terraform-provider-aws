@@ -2,6 +2,9 @@
 package {{ .ServicePackage }}
 
 import (
+	{{- if .ContextPkg }}
+	"context"
+	{{- end }}
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}

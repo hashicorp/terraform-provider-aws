@@ -2,6 +2,10 @@
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func ListTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+}
+
+func ListTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []*{{ .TagPackage  }}.Filter{
@@ -22,7 +26,7 @@ func ListTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }},
 		{{- end }}
 	}
 
-	output, err := conn.{{ .ListTagsOp }}(input)
+	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
