@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDSDirectoryShare_basic(t *testing.T) {
+func TestAccDSSharedDirectory_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var sharedDirectory directoryservice.SharedDirectory
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_directory_service_directory_share.test"
+	resourceName := "aws_directory_service_shared_directory.test"
 
 	domainName := acctest.RandomDomainName()
 
@@ -30,13 +30,13 @@ func TestAccDSDirectoryShare_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDirectoryShareDestroy,
+		CheckDestroy:      testAccCheckSharedDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryShareConfig(rName, domainName),
+				Config: testAccSharedDirectoryConfig(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
-					testAccCheckDirectoryShareExists(resourceName, &sharedDirectory),
+					testAccCheckSharedDirectoryExists(resourceName, &sharedDirectory),
 					resource.TestCheckResourceAttr(resourceName, "method", "HANDSHAKE"),
 					resource.TestCheckResourceAttr(resourceName, "notes", "test"),
 				),
@@ -51,7 +51,7 @@ func TestAccDSDirectoryShare_basic(t *testing.T) {
 
 }
 
-func testAccCheckDirectoryShareExists(name string, share *directoryservice.SharedDirectory) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryExists(name string, share *directoryservice.SharedDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -75,11 +75,11 @@ func testAccCheckDirectoryShareExists(name string, share *directoryservice.Share
 		}
 
 		if len(out.SharedDirectories) < 1 {
-			return fmt.Errorf("No Directory Share found")
+			return fmt.Errorf("No Shared Directory found")
 		}
 
 		if *out.SharedDirectories[0].SharedDirectoryId != sharedId {
-			return fmt.Errorf("Directory Share ID mismatch - existing: %q, state: %q",
+			return fmt.Errorf("Shared Directory mismatch - existing: %q, state: %q",
 				*out.SharedDirectories[0].SharedDirectoryId, sharedId)
 		}
 
@@ -95,11 +95,11 @@ func testAccCheckDirectoryShareExists(name string, share *directoryservice.Share
 
 }
 
-func testAccCheckDirectoryShareDestroy(s *terraform.State) error {
+func testAccCheckSharedDirectoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_directory_share" {
+		if rs.Type != "aws_directory_service_shared_directory" {
 			continue
 		}
 
@@ -121,19 +121,19 @@ func testAccCheckDirectoryShareDestroy(s *terraform.State) error {
 		}
 
 		if out != nil && len(out.SharedDirectories) > 0 {
-			return fmt.Errorf("Expected AWS Directory Service Directory Share to be gone, but was still found")
+			return fmt.Errorf("Expected AWS Directory Service Shared Directory to be gone, but was still found")
 		}
 	}
 
 	return nil
 }
 
-func testAccDirectoryShareConfig(rName, domain string) string {
+func testAccSharedDirectoryConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		testAccDirectoryConfig_microsoftStandard(rName, domain),
 		`
-resource "aws_directory_service_directory_share" "test" {
+resource "aws_directory_service_shared_directory" "test" {
   directory_id = aws_directory_service_directory.test.id
   notes        = "test"
 

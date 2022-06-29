@@ -27,7 +27,7 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 
 func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDirectoryShareByIDs(ctx, conn, ownerId, sharedId)
+		output, err := findSharedDirectoryByIDs(ctx, conn, ownerId, sharedId)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
