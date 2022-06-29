@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
+	"github.com/aws/aws-sdk-go/service/emrserverless/emrserverlessiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists emrserverless service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *emrserverless.EMRServerless, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn emrserverlessiface.EMRServerlessAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &emrserverless.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates emrserverless service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *emrserverless.EMRServerless, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn emrserverlessiface.EMRServerlessAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
