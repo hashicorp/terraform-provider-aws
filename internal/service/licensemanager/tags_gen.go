@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/aws/aws-sdk-go/service/licensemanager/licensemanageriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists licensemanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *licensemanager.LicenseManager, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn licensemanageriface.LicenseManagerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &licensemanager.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*licensemanager.Tag) tftags.KeyValueTags {
 // UpdateTags updates licensemanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *licensemanager.LicenseManager, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn licensemanageriface.LicenseManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
