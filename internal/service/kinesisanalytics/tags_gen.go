@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/aws/aws-sdk-go/service/kinesisanalytics/kinesisanalyticsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *kinesisanalytics.KinesisAnalytics, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesisanalytics.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*kinesisanalytics.Tag) tftags.KeyValueTags {
 // UpdateTags updates kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *kinesisanalytics.KinesisAnalytics, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
