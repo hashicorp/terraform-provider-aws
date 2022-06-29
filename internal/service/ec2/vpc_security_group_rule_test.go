@@ -114,22 +114,9 @@ func TestIPPermissionIDHash(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 	var group ec2.SecurityGroup
-	rInt := sdkacctest.RandInt()
-
-	testRuleCount := func(*terraform.State) error {
-		if len(group.IpPermissions) != 1 {
-			return fmt.Errorf("Wrong Security Group rule count, expected %d, got %d",
-				1, len(group.IpPermissions))
-		}
-
-		rule := group.IpPermissions[0]
-		if aws.Int64Value(rule.FromPort) != int64(80) {
-			return fmt.Errorf("Wrong Security Group port setting, expected %d, got %d",
-				80, aws.Int64Value(rule.FromPort))
-		}
-
-		return nil
-	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -138,19 +125,27 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_ingress(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
-					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.ingress_1", &group, nil, "ingress"),
-					resource.TestCheckResourceAttr(
-						"aws_security_group_rule.ingress_1", "from_port", "80"),
-					testRuleCount,
+				Config: testAccVPCSecurityGroupRuleConfig_ingress(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.ingress_1",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress_1"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1394,27 +1389,26 @@ func testAccSecurityGroupRuleImportGetAttrs(attrs map[string]string, key string)
 	return &values, nil
 }
 
-func testAccVPCSecurityGroupRuleConfig_ingress(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_ingress(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "web" {
-  name        = "terraform_test_%d"
-  description = "Used in the terraform acceptance tests"
+resource "aws_security_group" "test" {
+  name = %[1]q
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group_rule" "ingress_1" {
+resource "aws_security_group_rule" "test" {
   type        = "ingress"
   protocol    = "tcp"
   from_port   = 80
   to_port     = 8000
   cidr_blocks = ["10.0.0.0/8"]
 
-  security_group_id = aws_security_group.web.id
+  security_group_id = aws_security_group.test.id
 }
-`, rInt)
+`, rName)
 }
 
 const testAccVPCSecurityGroupRuleConfig_ingressIcmpv6 = `
