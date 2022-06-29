@@ -172,7 +172,12 @@ func main() {
 		log.Fatalf("encountered: %s", err)
 	}
 
-	clientType := fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
+	var clientType string
+	if *awsSdkVersion == AwsSdkV1 {
+		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
+	} else {
+		clientType = fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
+	}
 
 	tagPackage := awsPkg
 

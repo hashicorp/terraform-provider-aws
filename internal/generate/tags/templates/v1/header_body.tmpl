@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
+	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}/{{ .AWSService }}iface"
 	{{- if ne .AWSService .TagPackage }}
 	"github.com/aws/aws-sdk-go/service/{{ .TagPackage }}"
 	{{- end }}
