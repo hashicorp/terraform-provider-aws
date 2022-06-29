@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go/service/appconfig/appconfigiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists appconfig service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *appconfig.AppConfig, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn appconfigiface.AppConfigAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &appconfig.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -41,7 +42,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates appconfig service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *appconfig.AppConfig, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn appconfigiface.AppConfigAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
