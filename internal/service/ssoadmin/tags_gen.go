@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/ssoadmin/ssoadminiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssoadmin.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
@@ -59,7 +60,7 @@ func KeyValueTags(tags []*ssoadmin.Tag) tftags.KeyValueTags {
 // UpdateTags updates ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
