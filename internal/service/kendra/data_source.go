@@ -28,6 +28,7 @@ func ResourceDataSource() *schema.Resource {
 		CreateContext: resourceDataSourceCreate,
 		ReadContext:   resourceDataSourceRead,
 		UpdateContext: resourceDataSourceUpdate,
+		DeleteContext: resourceDataSourceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -325,6 +326,37 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return resourceDataSourceRead(ctx, d, meta)
 }
 
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KendraConn
+
+	log.Printf("[INFO] Deleting Kendra Data Source %s", d.Id())
+
+	id, indexId, err := DataSourceParseResourceID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteDataSource(ctx, &kendra.DeleteDataSourceInput{
+		Id:      aws.String(id),
+		IndexId: aws.String(indexId),
+	})
+
+	var resourceNotFoundException *types.ResourceNotFoundException
+	if errors.As(err, &resourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting Kendra Data Source (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDataSourceDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for Kendra Data Source (%s) delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
@@ -365,6 +397,25 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 		if output.Status == types.DataSourceStatusFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: dataSourceStatusValues(types.DataSourceStatusDeleting),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusDataSource(ctx, conn, id, indexId),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+
 		return output, err
 	}
 
