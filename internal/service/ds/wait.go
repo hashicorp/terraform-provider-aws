@@ -65,9 +65,11 @@ func waitDirectoryShareDeleted(ctx context.Context, conn *directoryservice.Direc
 			directoryservice.ShareStatusRejected,
 			directoryservice.ShareStatusRejecting,
 		},
-		Target:  []string{},
-		Refresh: statusSharedDirectory(ctx, conn, ownerId, sharedId),
-		Timeout: directoryShareDeletedTimeout,
+		Target:                    []string{},
+		Refresh:                   statusSharedDirectory(ctx, conn, ownerId, sharedId),
+		Timeout:                   directoryShareDeletedTimeout,
+		MinTimeout:                30 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

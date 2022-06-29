@@ -125,8 +125,10 @@ func resourceDirectoryShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return names.DiagError(names.DS, names.ErrActionReading, "Directory Share", d.Id(), err)
+			return names.DiagError(names.DS, names.ErrActionSetting, "Directory Share", d.Id(), err)
 		}
+	} else {
+		d.Set("target", nil)
 	}
 
 	return nil
@@ -143,6 +145,7 @@ func resourceDirectoryShareDelete(ctx context.Context, d *schema.ResourceData, m
 		UnshareTarget: expandUnshareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
+	// TODO: this takes forever and is not correctly waiting for unshare
 	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 	if err != nil {

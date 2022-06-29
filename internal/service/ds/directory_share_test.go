@@ -104,7 +104,7 @@ func testAccCheckDirectoryShareDestroy(s *terraform.State) error {
 		}
 
 		ownerId := rs.Primary.Attributes["directory_id"]
-		sharedId := rs.Primary.Attributes["share_directory_id"]
+		sharedId := rs.Primary.Attributes["shared_directory_id"]
 
 		input := directoryservice.DescribeSharedDirectoriesInput{
 			OwnerDirectoryId:   aws.String(ownerId),
