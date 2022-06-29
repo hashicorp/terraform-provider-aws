@@ -139,6 +139,35 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 	})
 }
 
+func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
+	var pg ec2.PlacementGroup
+	resourceName := "aws_placement_group.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-partition")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlacementGroupConfig_hostSpreadLevel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlacementGroupExists(resourceName, &pg),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spread_level", "host"),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPlacementGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -230,6 +259,16 @@ resource "aws_placement_group" "test" {
   name            = %[1]q
   strategy        = "partition"
   partition_count = 7
+}
+`, rName)
+}
+
+func testAccPlacementGroupConfig_hostSpreadLevel(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %[1]q
+  spread_level    = "host"
+  strategy        = "spread"
 }
 `, rName)
 }
