@@ -17,7 +17,7 @@ import (
 
 // Cannot run acceptance tests without a "real" image. Smallest image I could find was 385Mb
 // Instead run tests and catch the failed state
-func TestAccImageImport_badFileFormat(t *testing.T) {
+func TestAccEC2ImageImport_badFileFormat(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_image_import.test"
 
@@ -39,7 +39,7 @@ func TestAccImageImport_badFileFormat(t *testing.T) {
 	})
 }
 
-func TestAccImageImport_disk_container_conflict(t *testing.T) {
+func TestAccEC2ImageImport_disk_container_conflict(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_image_import.test"
 
@@ -61,7 +61,7 @@ func TestAccImageImport_disk_container_conflict(t *testing.T) {
 	})
 }
 
-func TestAccImageImport_boot_mode_bad_string(t *testing.T) {
+func TestAccEC2ImageImport_boot_mode_bad_string(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_image_import.test"
 
@@ -83,7 +83,7 @@ func TestAccImageImport_boot_mode_bad_string(t *testing.T) {
 	})
 }
 
-func TestAccImageImport_no_os(t *testing.T) {
+func TestAccEC2ImageImport_no_os(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_image_import.test"
 
@@ -105,7 +105,7 @@ func TestAccImageImport_no_os(t *testing.T) {
 	})
 }
 
-func TestAccImageImport_tags(t *testing.T) {
+func TestAccEC2ImageImport_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_image_import.test"
 
@@ -281,10 +281,10 @@ resource "aws_ec2_image_import" "test" {
       s3_bucket = aws_s3_bucket.test.id
       s3_key    = aws_s3_object.test.key
     }
-	url = "url"
+    url = "url"
   }
 
-  role_name    = aws_iam_role.test.name
+  role_name = aws_iam_role.test.name
 
   tags = {
     Name = %[1]q
@@ -307,7 +307,7 @@ resource "aws_ec2_image_import" "test" {
 
   boot_mode = "not-uefi"
 
-  role_name    = aws_iam_role.test.name
+  role_name = aws_iam_role.test.name
 
   tags = {
     Name = %[1]q
