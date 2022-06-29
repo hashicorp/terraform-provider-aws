@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
+	"github.com/aws/aws-sdk-go/service/mwaa/mwaaiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -24,7 +25,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates mwaa service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *mwaa.MWAA, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn mwaaiface.MWAAAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
