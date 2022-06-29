@@ -1206,7 +1206,7 @@ func StatusSnapshotStorageTier(conn *ec2.EC2, id string) resource.StateRefreshFu
 	}
 }
 
-func StatusEC2ImageImport(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusImageImport(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImportImageTaskByID(conn, id)
 

@@ -2373,17 +2373,17 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string, timeout t
 	return nil, err
 }
 
-func WaitEC2ImageImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.ImportImageTask, error) {
+func WaitImageImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.ImportImageTask, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			EC2ImageImportStateActive,
-			EC2ImageImportStateUpdating,
-			EC2ImageImportStateValidating,
-			EC2ImageImportStateValidated,
-			EC2ImageImportStateConverting,
+			ImageImportStateActive,
+			ImageImportStateUpdating,
+			ImageImportStateValidating,
+			ImageImportStateValidated,
+			ImageImportStateConverting,
 		},
-		Target:  []string{EC2ImageImportStateCompleted},
-		Refresh: StatusEC2ImageImport(conn, importTaskID),
+		Target:  []string{ImageImportStateCompleted},
+		Refresh: StatusImageImport(conn, importTaskID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

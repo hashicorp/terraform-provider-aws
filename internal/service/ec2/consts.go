@@ -70,14 +70,14 @@ const (
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
-	EC2ImageImportStateActive     = "active"
-	EC2ImageImportStateDeleting   = "deleting"
-	EC2ImageImportStateDeleted    = "deleted"
-	EC2ImageImportStateUpdating   = "updating"
-	EC2ImageImportStateValidating = "validating"
-	EC2ImageImportStateValidated  = "validated"
-	EC2ImageImportStateConverting = "converting"
-	EC2ImageImportStateCompleted  = "completed"
+	ImageImportStateActive     = "active"
+	ImageImportStateDeleting   = "deleting"
+	ImageImportStateDeleted    = "deleted"
+	ImageImportStateUpdating   = "updating"
+	ImageImportStateValidating = "validating"
+	ImageImportStateValidated  = "validated"
+	ImageImportStateConverting = "converting"
+	ImageImportStateCompleted  = "completed"
 )
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html#API_CreateNetworkInterface_Example_2_Response.

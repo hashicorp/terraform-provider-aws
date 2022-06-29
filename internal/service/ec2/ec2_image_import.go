@@ -17,10 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceEC2ImageImport() *schema.Resource {
+func ResourceImageImport() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEC2ImageImportCreate,
-		Read:   resourceEC2ImageImportRead,
+		Create: resourceImageImportCreate,
+		Read:   resourceImageImportRead,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
 
@@ -170,7 +170,7 @@ func ResourceEC2ImageImport() *schema.Resource {
 	}
 }
 
-func resourceEC2ImageImportCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageImportCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -227,7 +227,7 @@ func resourceEC2ImageImportCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	taskID := aws.StringValue(outputRaw.(*ec2.ImportImageOutput).ImportTaskId)
-	output, err := WaitEC2ImageImportComplete(conn, taskID, d.Timeout(schema.TimeoutCreate))
+	output, err := WaitImageImportComplete(conn, taskID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("waiting for EC2 Image Import (%s) create: %w", taskID, err)
@@ -241,10 +241,10 @@ func resourceEC2ImageImportCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceEC2ImageImportRead(d, meta)
+	return resourceImageImportRead(d, meta)
 }
 
-func resourceEC2ImageImportRead(d *schema.ResourceData, meta interface{}) error {
+func resourceImageImportRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
