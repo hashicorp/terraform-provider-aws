@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go/service/opensearchservice/opensearchserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *opensearchservice.OpenSearchService, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn opensearchserviceiface.OpenSearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &opensearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*opensearchservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *opensearchservice.OpenSearchService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn opensearchserviceiface.OpenSearchServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
