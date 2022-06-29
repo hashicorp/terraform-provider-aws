@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/aws/aws-sdk-go/service/apprunner/apprunneriface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists apprunner service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *apprunner.AppRunner, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn apprunneriface.AppRunnerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &apprunner.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*apprunner.Tag) tftags.KeyValueTags {
 // UpdateTags updates apprunner service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *apprunner.AppRunner, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn apprunneriface.AppRunnerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
