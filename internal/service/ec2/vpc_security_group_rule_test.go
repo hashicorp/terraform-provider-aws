@@ -199,7 +199,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressProtocol(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
@@ -227,6 +227,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
 
@@ -237,15 +238,21 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_ingressIcmpv6,
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccVPCSecurityGroupRuleConfig_ingressIcmpv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "icmpv6"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.0", "::/0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "icmpv6"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 			{
@@ -1405,13 +1412,23 @@ resource "aws_security_group_rule" "test" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupRuleConfig_ingressIcmpv6 = `
+func testAccVPCSecurityGroupRuleConfig_ingressIcmpv6(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -1422,7 +1439,8 @@ resource "aws_security_group_rule" "test" {
   protocol          = "icmpv6"
   ipv6_cidr_blocks  = ["::/0"]
 }
-`
+`, rName)
+}
 
 const testAccVPCSecurityGroupRuleConfig_ingressIPv6 = `
 resource "aws_vpc" "tftest" {
