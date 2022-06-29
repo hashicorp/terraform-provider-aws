@@ -2,6 +2,7 @@
 package elbv2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,11 +15,15 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func ListTags(conn elbv2iface.ELBV2API, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn elbv2iface.ELBV2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &elbv2.DescribeTagsInput{
 		ResourceArns: aws.StringSlice([]string{identifier}),
 	}
 
-	output, err := conn.DescribeTags(input)
+	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -59,7 +64,10 @@ func KeyValueTags(tags []*elbv2.Tag) tftags.KeyValueTags {
 // UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn elbv2iface.ELBV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elbv2iface.ELBV2API, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn elbv2iface.ELBV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -69,7 +77,7 @@ func UpdateTags(conn elbv2iface.ELBV2API, identifier string, oldTagsMap interfac
 			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTags(input)
+		_, err := conn.RemoveTagsWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -82,7 +90,7 @@ func UpdateTags(conn elbv2iface.ELBV2API, identifier string, oldTagsMap interfac
 			Tags:         Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTags(input)
+		_, err := conn.AddTagsWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
