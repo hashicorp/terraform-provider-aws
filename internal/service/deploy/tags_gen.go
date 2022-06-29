@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/aws/aws-sdk-go/service/codedeploy/codedeployiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *codedeploy.CodeDeploy, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codedeploy.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*codedeploy.Tag) tftags.KeyValueTags {
 // UpdateTags updates deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *codedeploy.CodeDeploy, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn codedeployiface.CodeDeployAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
