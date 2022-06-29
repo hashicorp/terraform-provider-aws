@@ -6,14 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafregional/wafregionaliface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists wafregional service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *wafregional.WAFRegional, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn wafregionaliface.WAFRegionalAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &waf.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -45,7 +45,7 @@ func Tags(tags tftags.KeyValueTags) []*waf.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from wafregional service tags.
+// KeyValueTags creates tftags.KeyValueTags from  service tags.
 func KeyValueTags(tags []*waf.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
@@ -59,7 +59,7 @@ func KeyValueTags(tags []*waf.Tag) tftags.KeyValueTags {
 // UpdateTags updates wafregional service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *wafregional.WAFRegional, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn wafregionaliface.WAFRegionalAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
