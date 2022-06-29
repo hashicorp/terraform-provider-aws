@@ -6,13 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *kinesis.Kinesis, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesis.ListTagsForStreamInput{
 		StreamName: aws.String(identifier),
 	}
@@ -58,7 +59,7 @@ func KeyValueTags(tags []*kinesis.Tag) tftags.KeyValueTags {
 // UpdateTags updates kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn kinesisiface.KinesisAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
