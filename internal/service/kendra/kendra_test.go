@@ -6,13 +6,14 @@ import "testing"
 func TestAccKendra_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			"basic":                   testAccDataSource_basic,
-			"disappears":              testAccDataSource_disappears,
-			"tags":                    testAccDataSource_tags,
-			"Configuration_S3_Bucket": testAccDataSource_Configuration_S3_Bucket,
-			"Description":             testAccDataSource_description,
-			"LanguageCode":            testAccDataSource_languageCode,
-			"TypeCustomCustomizeDiff": testAccDataSource_typeCustomCustomizeDiff,
+			"basic":                              testAccDataSource_basic,
+			"disappears":                         testAccDataSource_disappears,
+			"tags":                               testAccDataSource_tags,
+			"Configuration_S3_AccessControlList": testAccDataSource_Configuration_S3_AccessControlList,
+			"Configuration_S3_Bucket":            testAccDataSource_Configuration_S3_Bucket,
+			"Description":                        testAccDataSource_description,
+			"LanguageCode":                       testAccDataSource_languageCode,
+			"TypeCustomCustomizeDiff":            testAccDataSource_typeCustomCustomizeDiff,
 		},
 		"Experience": {
 			"basic":       testAccExperience_basic,
