@@ -386,6 +386,26 @@ func StatusRoute(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destinati
 	}
 }
 
+const (
+	RouteTableStatusReady = "ready"
+)
+
+func StatusRouteTable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindRouteTableByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, RouteTableStatusReady, nil
+	}
+}
+
 func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRouteTableAssociationByID(conn, id)

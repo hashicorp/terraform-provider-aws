@@ -185,12 +185,8 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.RouteTable.RouteTableId))
 
-	_, err = tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindRouteTableByID(conn, d.Id())
-	})
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Route Table (%s) create: %w", d.Id(), err)
+	if _, err := WaitRouteTableReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Route Table (%s) to become available: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("propagating_vgws"); ok && v.(*schema.Set).Len() > 0 {
@@ -402,12 +398,10 @@ func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route Table (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return FindRouteTableByID(conn, d.Id())
-	})
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Route Table (%s) delete: %w", d.Id(), err)
+	// Wait for the route table to really destroy
+	log.Printf("[DEBUG] Waiting for route table (%s) deletion", d.Id())
+	if _, err := WaitRouteTableDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Route Table (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
