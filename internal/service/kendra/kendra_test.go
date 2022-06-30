@@ -13,6 +13,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_S3_Bucket":            testAccDataSource_Configuration_S3_Bucket,
 			"Description":                        testAccDataSource_description,
 			"LanguageCode":                       testAccDataSource_languageCode,
+			"RoleARN":                            testAccDataSource_roleARN,
 			"TypeCustomCustomizeDiff":            testAccDataSource_typeCustomCustomizeDiff,
 		},
 		"Experience": {
