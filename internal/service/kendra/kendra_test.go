@@ -14,6 +14,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Description":                        testAccDataSource_description,
 			"LanguageCode":                       testAccDataSource_languageCode,
 			"RoleARN":                            testAccDataSource_roleARN,
+			"Schedule":                           testAccDataSource_schedule,
 			"TypeCustomCustomizeDiff":            testAccDataSource_typeCustomCustomizeDiff,
 		},
 		"Experience": {

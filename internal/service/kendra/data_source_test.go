@@ -231,6 +231,52 @@ func testAccDataSource_roleARN(t *testing.T) {
 	})
 }
 
+func testAccDataSource_schedule(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalSchedule := "cron(9 10 1 * ? *)"
+	updatedSchedule := "cron(9 10 2 * ? *)"
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, originalSchedule),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", originalSchedule),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, updatedSchedule),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", updatedSchedule),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSource_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -696,6 +742,64 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName4, rName5, rName6, rName7, selectARN))
+}
+
+func testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, schedule string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+  schedule = %[4]q
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+}
+`, rName4, rName5, rName6, schedule))
 }
 
 func testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, tag, value string) string {
