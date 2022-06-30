@@ -86,6 +86,64 @@ func testAccDataSource_disappears(t *testing.T) {
 	})
 }
 
+func testAccDataSource_description(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalDescription := "Original Description"
+	updatedDescription := "Updated Description"
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.DataSourceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeCustom)),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.DataSourceStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeCustom)),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -242,4 +300,17 @@ resource "aws_kendra_data_source" "test" {
   type     = "CUSTOM"
 }
 `, rName4))
+}
+
+func testAccDataSourceConfig_description(rName, rName2, rName3, rName4, description string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id    = aws_kendra_index.test.id
+  name        = %[1]q
+  description = %[2]q
+  type        = "CUSTOM"
+}
+`, rName4, description))
 }
