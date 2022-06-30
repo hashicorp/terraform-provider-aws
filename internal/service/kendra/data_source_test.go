@@ -237,7 +237,7 @@ func testAccDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccDataSource_typeCustomConflictRoleArn(t *testing.T) {
+func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -257,6 +257,10 @@ func testAccDataSource_typeCustomConflictRoleArn(t *testing.T) {
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictRoleArn(rName, rName2, rName3, rName4, rName5),
 				ExpectError: regexp.MustCompile(`role_arn must not be set when type is CUSTOM`),
+			},
+			{
+				Config:      testAccDataSourceConfig_typeCustomConflictConfiguration(rName, rName2, rName3, rName4, rName5),
+				ExpectError: regexp.MustCompile(`configuration must not be set when type is CUSTOM`),
 			},
 		},
 	})
@@ -493,6 +497,29 @@ resource "aws_kendra_data_source" "test" {
   name     = %[1]q
   type     = "CUSTOM"
   role_arn = aws_iam_role.test_data_source.arn
+}
+`, rName4, rName5))
+}
+
+func testAccDataSourceConfig_typeCustomConflictConfiguration(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "CUSTOM"
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
 }
 `, rName4, rName5))
 }

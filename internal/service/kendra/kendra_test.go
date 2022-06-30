@@ -6,12 +6,12 @@ import "testing"
 func TestAccKendra_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			"basic":                     testAccDataSource_basic,
-			"disappears":                testAccDataSource_disappears,
-			"tags":                      testAccDataSource_tags,
-			"Description":               testAccDataSource_description,
-			"LanguageCode":              testAccDataSource_languageCode,
-			"TypeCustomConflictRoleArn": testAccDataSource_typeCustomConflictRoleArn,
+			"basic":                   testAccDataSource_basic,
+			"disappears":              testAccDataSource_disappears,
+			"tags":                    testAccDataSource_tags,
+			"Description":             testAccDataSource_description,
+			"LanguageCode":            testAccDataSource_languageCode,
+			"TypeCustomCustomizeDiff": testAccDataSource_typeCustomCustomizeDiff,
 		},
 		"Experience": {
 			"basic":       testAccExperience_basic,
