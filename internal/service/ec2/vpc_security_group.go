@@ -384,6 +384,14 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting Security Group (%s): %w", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
+		return FindSecurityGroupByID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Security Group (%s) delete: %w", d.Id(), err)
+	}
+
 	return nil
 }
 

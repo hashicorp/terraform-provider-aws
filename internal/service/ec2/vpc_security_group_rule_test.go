@@ -892,22 +892,8 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_security_group_rule.test"
-
-	rule1 := ec2.IpPermission{
-		IpProtocol: aws.String("-1"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description1")},
-		},
-	}
-
-	rule2 := ec2.IpPermission{
-		IpProtocol: aws.String("-1"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("0.0.0.0/0"), Description: aws.String("description2")},
-		},
-	}
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -917,13 +903,20 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
-					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule1, "ingress"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 			{
@@ -934,13 +927,20 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 			},
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
-					testAccCheckSecurityGroupRuleAttributes(resourceName, &group, &rule2, "ingress"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 		},
@@ -1960,16 +1960,16 @@ resource "aws_security_group_rule" "test" {
 func testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = %q
+  name = %[1]q
 
   tags = {
-    Name = "tf-acc-test-ec2-security-group-rule"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group_rule" "test" {
   cidr_blocks       = ["0.0.0.0/0"]
-  description       = %q
+  description       = %[2]q
   from_port         = 0
   protocol          = -1
   security_group_id = aws_security_group.test.id
