@@ -49,6 +49,10 @@ func ResourceDataSource() *schema.Resource {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
+				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get("type").(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
+				}
+
 				return nil
 			},
 			verify.SetTagsDiff,

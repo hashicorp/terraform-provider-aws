@@ -307,6 +307,10 @@ func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 				Config:      testAccDataSourceConfig_typeCustomConflictConfiguration(rName, rName2, rName3, rName4, rName5),
 				ExpectError: regexp.MustCompile(`configuration must not be set when type is CUSTOM`),
 			},
+			{
+				Config:      testAccDataSourceConfig_typeCustomConflictSchedule(rName, rName2, rName3, rName4, rName5),
+				ExpectError: regexp.MustCompile(`schedule must not be set when type is CUSTOM`),
+			},
 		},
 	})
 }
@@ -741,6 +745,19 @@ resource "aws_kendra_data_source" "test" {
   name     = %[1]q
   type     = "CUSTOM"
   role_arn = aws_iam_role.test_data_source.arn
+}
+`, rName4, rName5))
+}
+
+func testAccDataSourceConfig_typeCustomConflictSchedule(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "CUSTOM"
+  schedule = "cron(9 10 1 * ? *)"
 }
 `, rName4, rName5))
 }
