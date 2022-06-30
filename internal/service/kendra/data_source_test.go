@@ -522,6 +522,71 @@ func testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testin
 	})
 }
 
+func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes1(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "example"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.*", "hello"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "world"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes2(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "example2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.exclusion_patterns.*", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.*", "hello2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_patterns.*", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "world2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.s3_configuration.0.inclusion_prefixes.*", "baz"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -1144,4 +1209,126 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName4, rName5, rName6, s3Prefix))
+}
+
+func testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+
+      exclusion_patterns = ["example"]
+      inclusion_patterns = ["hello"]
+      inclusion_prefixes = ["world"]
+    }
+  }
+}
+`, rName4, rName5, rName6))
+}
+
+func testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes2(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+
+      exclusion_patterns = ["example2", "foo"]
+      inclusion_patterns = ["hello2", "bar"]
+      inclusion_prefixes = ["world2", "baz"]
+    }
+  }
+}
+`, rName4, rName5, rName6))
 }
