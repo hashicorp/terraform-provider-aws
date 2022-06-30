@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -97,4 +98,104 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	}
 
 	return output.Clusters[0], nil
+}
+
+func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+	input := &ecs.DescribeServicesInput{
+		Cluster:  aws.String(cluster),
+		Include:  aws.StringSlice([]string{ecs.ServiceFieldTags}),
+		Services: aws.StringSlice([]string{id}),
+	}
+
+	return FindService(ctx, conn, input)
+}
+
+func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+	input := &ecs.DescribeServicesInput{
+		Cluster:  aws.String(cluster),
+		Services: aws.StringSlice([]string{id}),
+	}
+
+	return FindService(ctx, conn, input)
+}
+
+type expectActiveError struct {
+	status string
+}
+
+func newExpectActiveError(status string) *expectActiveError {
+	return &expectActiveError{
+		status: status,
+	}
+}
+
+func (e *expectActiveError) Error() string {
+	return fmt.Sprintf("expected status %[1]q, was %[2]q", serviceStatusActive, e.status)
+}
+
+func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+	var service *ecs.Service
+	err := resource.Retry(serviceDescribeTimeout, func() *resource.RetryError {
+		var err error
+		service, err = FindServiceByID(ctx, conn, id, cluster)
+		if tfresource.NotFound(err) {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if status := aws.StringValue(service.Status); status != serviceStatusActive {
+			return resource.RetryableError(newExpectActiveError(status))
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		service, err = FindServiceByID(ctx, conn, id, cluster)
+	}
+
+	return service, err
+}
+
+func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
+	output, err := conn.DescribeServices(input)
+
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) && input.Include != nil {
+		id := aws.StringValueSlice(input.Services)[0]
+		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", id, err)
+
+		input.Include = nil
+		output, err = conn.DescribeServices(input)
+	}
+
+	// As of AWS SDK for Go v1.44.42, DescribeServices does not return the error code ecs.ErrCodeServiceNotFoundException
+	// Keep this here in case it ever does
+	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
+	for _, v := range output.Failures {
+		if aws.StringValue(v.Reason) == "MISSING" {
+			return nil, &resource.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	}
+
+	if len(output.Services) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+	if n := len(output.Services); n > 1 {
+		return nil, tfresource.NewTooManyResultsError(n, input)
+	}
+
+	return output.Services[0], nil
 }

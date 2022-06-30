@@ -112,8 +112,8 @@ func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
-		Target:     []string{serviceStatusInactive, serviceStatusNone},
-		Refresh:    statusService(conn, id, cluster),
+		Target:     []string{serviceStatusInactive},
+		Refresh:    statusServiceNoTags(conn, id, cluster),
 		Timeout:    serviceInactiveTimeout,
 		MinTimeout: serviceInactiveTimeoutMin,
 	}
@@ -127,17 +127,17 @@ func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
 	return nil
 }
 
-func waitServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServicesOutput, error) {
+func waitServiceActive(conn *ecs.ECS, id, cluster string) (*ecs.Service, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusNone},
+		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
-		Refresh: statusService(conn, id, cluster),
+		Refresh: statusServiceNoTags(conn, id, cluster),
 		Timeout: serviceDescribeTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*ecs.DescribeServicesOutput); ok {
+	if v, ok := outputRaw.(*ecs.Service); ok {
 		return v, err
 	}
 

@@ -3,6 +3,7 @@ package ecs
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -556,7 +557,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after creation: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+		if _, err := waitServiceActive(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become active after creation: %w", d.Id(), err)
 		}
 	}
@@ -584,36 +585,25 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading ECS service %s", d.Id())
-	input := ecs.DescribeServicesInput{
-		Cluster:  aws.String(d.Get("cluster").(string)),
-		Include:  aws.StringSlice([]string{ecs.ServiceFieldTags}),
-		Services: aws.StringSlice([]string{d.Id()}),
-	}
+	cluster := d.Get("cluster").(string)
 
-	output, err := conn.DescribeServices(&input)
+	service, err := FindServiceByIDWaitForActive(context.TODO(), conn, d.Id(), cluster)
 
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", d.Id(), err)
-
-		input.Include = nil
-		output, err = conn.DescribeServices(&input)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err != nil {
-		log.Printf("[DEBUG] Waiting for ECS Service (%s) to become active", d.Id())
-		output, err = waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
+	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+		log.Printf("[WARN] ECS Service (%s) parent cluster (%s) not found, removing from state.", d.Id(), cluster)
+		d.SetId("")
+		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-		log.Printf("[WARN] ECS Service %s parent cluster %s not found, removing from state.", d.Id(), d.Get("cluster").(string))
+	var ea *expectActiveError
+	if errors.As(err, &ea) {
+		log.Printf("[WARN] ECS Service (%s) in status %q, removing from state.", d.Id(), ea.status)
 		d.SetId("")
 		return nil
 	}
@@ -621,26 +611,6 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading ECS service (%s): %w", d.Id(), err)
 	}
-
-	if len(output.Services) < 1 {
-		if d.IsNewResource() {
-			return fmt.Errorf("ECS service not created: %q", d.Id())
-		}
-		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	service := output.Services[0]
-
-	// Status==INACTIVE means deleted service
-	if aws.StringValue(service.Status) == serviceStatusInactive {
-		log.Printf("[WARN] Removing ECS service %q because it's INACTIVE", aws.StringValue(service.ServiceArn))
-		d.SetId("")
-		return nil
-	}
-
-	log.Printf("[DEBUG] Received ECS service %s", service)
 
 	d.SetId(aws.StringValue(service.ServiceArn))
 	d.Set("name", service.ServiceName)
@@ -1117,7 +1087,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
 			}
 		} else {
-			if _, err := waitServiceDescribeReady(conn, d.Id(), cluster); err != nil {
+			if _, err := waitServiceActive(conn, d.Id(), cluster); err != nil {
 				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
 			}
 		}
