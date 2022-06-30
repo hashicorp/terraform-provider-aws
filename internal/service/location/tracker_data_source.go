@@ -14,6 +14,7 @@ import (
 
 func DataSourceTracker() *schema.Resource {
 	return &schema.Resource{
+		Read: dataSourceTrackerRead,
 		Schema: map[string]*schema.Schema{
 			"create_time": {
 				Type:     schema.TypeString,
