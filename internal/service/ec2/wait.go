@@ -696,41 +696,6 @@ const (
 	RouteTableAssociationDeletedTimeout = 5 * time.Minute
 )
 
-func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:        []string{},
-		Target:         []string{RouteTableStatusReady},
-		Refresh:        StatusRouteTable(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: RouteTableNotFoundChecks,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.RouteTable); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitRouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{RouteTableStatusReady},
-		Target:  []string{},
-		Refresh: StatusRouteTable(conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.RouteTable); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitRouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{ec2.RouteTableAssociationStateCodeAssociating},
