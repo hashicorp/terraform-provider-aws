@@ -15,7 +15,6 @@ const (
 	capacityProviderUpdateTimeout = 10 * time.Minute
 
 	serviceCreateTimeout      = 2 * time.Minute
-	serviceInactiveTimeout    = 10 * time.Minute
 	serviceInactiveTimeoutMin = 1 * time.Second
 	serviceDescribeTimeout    = 2 * time.Minute
 	serviceUpdateTimeout      = 2 * time.Minute
@@ -97,7 +96,7 @@ func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
 	return err
 }
 
-func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
+func waitServiceInactive(conn *ecs.ECS, id, cluster string, timeout time.Duration) error {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -106,15 +105,11 @@ func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
 		input.Cluster = aws.String(cluster)
 	}
 
-	if err := conn.WaitUntilServicesInactive(input); err != nil {
-		return err
-	}
-
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
 		Refresh:    statusServiceNoTags(conn, id, cluster),
-		Timeout:    serviceInactiveTimeout,
+		Timeout:    timeout,
 		MinTimeout: serviceInactiveTimeoutMin,
 	}
 

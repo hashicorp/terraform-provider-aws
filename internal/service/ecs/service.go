@@ -529,14 +529,14 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating ECS Service: %s", input)
 
-	output, err := retryServiceCreate(conn, input)
+	output, err := serviceCreateWithRetry(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
-		output, err = retryServiceCreate(conn, input)
+		output, err = serviceCreateWithRetry(conn, input)
 	}
 
 	if err != nil {
@@ -1115,34 +1115,21 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
-	// Check if it's not already gone
-	output, err := conn.DescribeServices(&ecs.DescribeServicesInput{
-		Services: aws.StringSlice([]string{d.Id()}),
-		Cluster:  aws.String(d.Get("cluster").(string)),
-	})
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-			log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
-			return nil
-		}
-		return err
-	}
-
-	if len(output.Services) == 0 {
-		log.Printf("[DEBUG] Removing ECS Service from state, %q is already gone", d.Id())
+	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
+	if tfresource.NotFound(err) {
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("error retrieving ECS Service (%s) for deletion: %w", d.Id(), err)
+	}
 
-	log.Printf("[DEBUG] ECS service %s is currently %s", d.Id(), aws.StringValue(output.Services[0].Status))
-
-	if aws.StringValue(output.Services[0].Status) == "INACTIVE" {
+	if aws.StringValue(service.Status) == serviceStatusInactive {
 		return nil
 	}
 
 	// Drain the ECS service
-	if aws.StringValue(output.Services[0].Status) != "DRAINING" && aws.StringValue(output.Services[0].SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
-		log.Printf("[DEBUG] Draining ECS service %s", d.Id())
+	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
+		log.Printf("[DEBUG] Draining ECS Service (%s)", d.Id())
 		_, err = conn.UpdateService(&ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),
@@ -1181,14 +1168,13 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting ECS Service (%s): %w", d.Id(), err)
 	}
 
-	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string)); err != nil {
-		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
+	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for ECS Service (%s) to be deleted: %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] ECS service %s deleted.", d.Id())
 	return nil
 }
 
@@ -1207,7 +1193,7 @@ func resourceLoadBalancerHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func retryServiceCreate(conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
+func serviceCreateWithRetry(conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
 	var output *ecs.CreateServiceOutput
 	err := resource.Retry(propagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
 		var err error
