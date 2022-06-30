@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -37,7 +38,16 @@ func ResourceDataSource() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if roleArn, dataSourcetype := diff.Get("role_arn").(string), diff.Get("type").(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
+				}
+
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

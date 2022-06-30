@@ -237,6 +237,31 @@ func testAccDataSource_tags(t *testing.T) {
 	})
 }
 
+func testAccDataSource_typeCustomConflictRoleArn(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceConfig_typeCustomConflictRoleArn(rName, rName2, rName3, rName4, rName5),
+				ExpectError: regexp.MustCompile(`role_arn must not be set when type is CUSTOM`),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -452,4 +477,22 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName4, tag1, value1, tag2, value2))
+}
+
+func testAccDataSourceConfig_typeCustomConflictRoleArn(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test_data_source" {
+  name               = %[2]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "CUSTOM"
+  role_arn = aws_iam_role.test_data_source.arn
+}
+`, rName4, rName5))
 }
