@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,6 +41,10 @@ func ResourceDataSource() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get("type").(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
+				}
+
 				if roleArn, dataSourcetype := diff.Get("role_arn").(string), diff.Get("type").(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
@@ -52,6 +57,93 @@ func ResourceDataSource() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_control_list_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key_path": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"bucket_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(3, 63),
+											validation.StringMatch(
+												regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+												"Must be a valid bucket name",
+											),
+										),
+									},
+									"documents_metadata_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_prefix": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"exclusion_patterns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 100,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+									"inclusion_patterns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 100,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+									"inclusion_prefixes": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 100,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -144,6 +236,10 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Type:        types.DataSourceType(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("configuration"); ok {
+		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -250,6 +346,10 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("type", resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
+	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
@@ -271,7 +371,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 
-	if d.HasChanges("description", "language_code", "role_arn", "schedule") {
+	if d.HasChanges("configuration", "description", "language_code", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -280,6 +380,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input := &kendra.UpdateDataSourceInput{
 			Id:      aws.String(id),
 			IndexId: aws.String(indexId),
+		}
+
+		if d.HasChange("configuration") {
+			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
 		}
 
 		if d.HasChange("description") {
@@ -446,6 +550,174 @@ func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId stri
 
 		return output, string(output.Status), nil
 	}
+}
+
+func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.DataSourceConfiguration{}
+
+	if v, ok := tfMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.S3Configuration = expandS3Configuration(v)
+	}
+
+	return result
+}
+
+func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.S3DataSourceConfiguration{
+		BucketName: aws.String(tfMap["bucket_name"].(string)),
+	}
+
+	if v, ok := tfMap["access_control_list_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.AccessControlListConfiguration = expandAccessControlListConfiguration(v)
+	}
+
+	if v, ok := tfMap["documents_metadata_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.DocumentsMetadataConfiguration = expandDocumentsMetadataConfiguration(v)
+	}
+
+	if v, ok := tfMap["exclusion_patterns"]; ok && v.(*schema.Set).Len() > 0 {
+		result.ExclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["inclusion_patterns"]; ok && v.(*schema.Set).Len() > 0 {
+		result.InclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["inclusion_prefixes"]; ok && v.(*schema.Set).Len() > 0 {
+		result.InclusionPrefixes = flex.ExpandStringSetV2(v.(*schema.Set))
+	}
+
+	return result
+}
+
+func expandAccessControlListConfiguration(tfList []interface{}) *types.AccessControlListConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.AccessControlListConfiguration{}
+
+	if v, ok := tfMap["key_path"].(string); ok && v != "" {
+		result.KeyPath = aws.String(v)
+	}
+
+	return result
+}
+
+func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.DocumentsMetadataConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.DocumentsMetadataConfiguration{}
+
+	if v, ok := tfMap["s3_prefix"].(string); ok && v != "" {
+		result.S3Prefix = aws.String(v)
+	}
+
+	return result
+}
+
+func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.S3Configuration; v != nil {
+		m["s3_configuration"] = flattenS3Configuration(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"bucket_name": apiObject.BucketName,
+	}
+
+	if v := apiObject.AccessControlListConfiguration; v != nil {
+		m["access_control_list_configuration"] = flattenAccessControlListConfiguration(v)
+	}
+
+	if v := apiObject.DocumentsMetadataConfiguration; v != nil {
+		m["documents_metadata_configuration"] = flattenDocumentsMetadataConfiguration(v)
+	}
+
+	if v := apiObject.ExclusionPatterns; v != nil {
+		m["exclusion_patterns"] = flex.FlattenStringListV2(v)
+	}
+
+	if v := apiObject.InclusionPatterns; v != nil {
+		m["inclusion_patterns"] = flex.FlattenStringListV2(v)
+	}
+
+	if v := apiObject.InclusionPrefixes; v != nil {
+		m["inclusion_prefixes"] = flex.FlattenStringListV2(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAccessControlListConfiguration(apiObject *types.AccessControlListConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.KeyPath; v != nil {
+		m["key_path"] = v
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.S3Prefix; v != nil {
+		m["s3_prefix"] = v
+	}
+
+	return []interface{}{m}
 }
 
 // Helpers added. Could be generated or somehow use go 1.18 generics?
