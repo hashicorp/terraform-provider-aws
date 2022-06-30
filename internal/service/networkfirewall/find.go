@@ -50,8 +50,7 @@ func FindFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewa
 }
 
 // FindFirewallPolicyByNameAndArn returns the FirewallPolicyOutput from a call to DescribeFirewallPolicyWithContext
-// given the context and at least one of FindFirewallPolicy ARN and
-// FindFirewallPolicy name.
+// given the context and at least one of FirewallPolicyArn and FirewallPolicyName.
 func FindFirewallPolicyByNameAndArn(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, name string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
 	input := &networkfirewall.DescribeFirewallPolicyInput{}
 	if arn != "" {

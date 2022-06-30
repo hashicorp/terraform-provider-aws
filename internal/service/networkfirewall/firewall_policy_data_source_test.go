@@ -17,7 +17,6 @@ func TestAccFirewallPolicy_arn(t *testing.T) {
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		// Test setup
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -26,7 +25,7 @@ func TestAccFirewallPolicy_arn(t *testing.T) {
 				Config: testAccFirewallPolicyDataSource_arn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
@@ -56,7 +55,7 @@ func TestAccFirewallPolicy_name(t *testing.T) {
 				Config: testAccFirewallPolicyDataSource_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
@@ -86,7 +85,7 @@ func TestAccFirewallPolicy_nameAndArn(t *testing.T) {
 				Config: testAccFirewallPolicyDataSource_nameAndArn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
@@ -128,16 +127,6 @@ func testAccFirewallPolicyDataSource_name(rName string) string {
 		testAccFirewallPolicyDataSource_basic(rName),
 		`
 data "aws_networkfirewall_firewall_policy" "test" {
-  name = aws_networkfirewall_firewall_policy.test.name
-}`)
-}
-
-func testAccFirewallPolicyDataSource_nameAndArn(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallPolicyDataSource_basic(rName),
-		`
-data "aws_networkfirewall_firewall_policy" "test" {
-  arn  = aws_networkfirewall_firewall_policy.test.arn
   name = aws_networkfirewall_firewall_policy.test.name
 }`)
 }

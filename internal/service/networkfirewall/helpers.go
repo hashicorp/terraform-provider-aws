@@ -191,21 +191,18 @@ func forceNewIfNotRuleOrderDefault(key string, d *schema.ResourceDiff) error {
 
 func customActionSchemaDataSource() *schema.Schema {
 	return &schema.Schema{
-		Type: schema.TypeSet,
-		//Optional: true,
+		Type:     schema.TypeSet,
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"action_definition": {
 					Type:     schema.TypeList,
 					Computed: true,
-					//MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"publish_metric_action": {
 								Type:     schema.TypeList,
 								Computed: true,
-								// MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"dimension": {
@@ -229,8 +226,6 @@ func customActionSchemaDataSource() *schema.Schema {
 				"action_name": {
 					Type:     schema.TypeString,
 					Computed: true,
-					// ForceNew:     true,
-					// ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
 				},
 			},
 		},
