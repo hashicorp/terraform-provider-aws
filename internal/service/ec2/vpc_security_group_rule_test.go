@@ -654,39 +654,10 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 	var group ec2.SecurityGroup
-	var endpoint ec2.VpcEndpoint
-	var p ec2.IpPermission
-
-	// This function creates the expected IPPermission with the prefix list ID from
-	// the VPC Endpoint created in the test
-	setupSG := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		prefixListInput := &ec2.DescribePrefixListsInput{
-			Filters: []*ec2.Filter{
-				{Name: aws.String("prefix-list-name"), Values: []*string{endpoint.ServiceName}},
-			},
-		}
-
-		log.Printf("[DEBUG] Reading VPC Endpoint prefix list: %s", prefixListInput)
-		prefixListsOutput, err := conn.DescribePrefixLists(prefixListInput)
-
-		if err != nil {
-			return fmt.Errorf("error reading VPC Endpoint prefix list: %w", err)
-		}
-
-		if len(prefixListsOutput.PrefixLists) != 1 {
-			return fmt.Errorf("unexpected multiple prefix lists associated with the service: %s", prefixListsOutput)
-		}
-
-		p = ec2.IpPermission{
-			IpProtocol: aws.String("-1"),
-			PrefixListIds: []*ec2.PrefixListId{
-				{PrefixListId: prefixListsOutput.PrefixLists[0].PrefixListId},
-			},
-		}
-
-		return nil
-	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+	vpceResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -695,20 +666,27 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_prefixListEgress,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.egress", &group),
-					// lookup info on the VPC Endpoint created, to populate the expected
-					// IP Perm
-					testAccCheckVPCEndpointExists("aws_vpc_endpoint.s3_endpoint", &endpoint),
-					setupSG,
-					testAccCheckSecurityGroupRuleAttributes("aws_security_group_rule.egress_1", &group, &p, "egress"),
+				Config: testAccVPCSecurityGroupRuleConfig_prefixListEgress(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_ids.0", vpceResourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "egress"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.egress_1",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.egress_1"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1789,25 +1767,34 @@ resource "aws_security_group_rule" "test2" {
 `, rName)
 }
 
-const testAccVPCSecurityGroupRuleConfig_prefixListEgress = `
-resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
+func testAccVPCSecurityGroupRuleConfig_prefixListEgress(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-prefix-list-egress"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "default" {
-  vpc_id = aws_vpc.tf_sg_prefix_list_egress_test.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_region" "current" {}
 
-resource "aws_vpc_endpoint" "s3_endpoint" {
-  vpc_id          = aws_vpc.tf_sg_prefix_list_egress_test.id
+resource "aws_vpc_endpoint" "test" {
+  vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = [aws_route_table.default.id]
+  route_table_ids = [aws_route_table.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
 
   policy = <<POLICY
 {
@@ -1825,21 +1812,25 @@ resource "aws_vpc_endpoint" "s3_endpoint" {
 POLICY
 }
 
-resource "aws_security_group" "egress" {
-  name        = "terraform_acceptance_test_prefix_list_egress"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.tf_sg_prefix_list_egress_test.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "egress_1" {
+resource "aws_security_group_rule" "test" {
   type              = "egress"
   protocol          = "-1"
   from_port         = 0
   to_port           = 0
-  prefix_list_ids   = [aws_vpc_endpoint.s3_endpoint.prefix_list_id]
-  security_group_id = aws_security_group.egress.id
+  prefix_list_ids   = [aws_vpc_endpoint.test.prefix_list_id]
+  security_group_id = aws_security_group.test.id
 }
-`
+`, rName)
+}
 
 func testAccVPCSecurityGroupRuleConfig_ingressDescription(rInt int) string {
 	return fmt.Sprintf(`
