@@ -17,6 +17,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/dnaeon/go-vcr/v2/cassette"
 	"github.com/dnaeon/go-vcr/v2/recorder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -122,6 +124,15 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 
 		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
 		c := v.(*conns.AWSClient)
+
+		// Don't retry requests if a recorded interaction isn't found.
+		// TODO: Need to loop through all API clients to do this:
+		c.LogsConn.Handlers.AfterRetry.PushFront(func(r *request.Request) {
+			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
+			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
+				r.Retryable = aws.Bool(false)
+			}
+		})
 
 		recorder, err := recorder.NewAsMode(path, vcrMode, c.Session.Config.HTTPClient.Transport)
 
