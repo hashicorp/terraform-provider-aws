@@ -615,7 +615,9 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 	var group ec2.SecurityGroup
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -624,15 +626,26 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupRuleConfig_selfInSource(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists("aws_security_group.web", &group),
+				Config: testAccVPCSecurityGroupRuleConfig_selfInSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.allow_self",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.allow_self"),
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -2039,31 +2052,34 @@ resource "aws_security_group_rule" "test_egress" {
 `, rName, n)
 }
 
-func testAccVPCSecurityGroupRuleConfig_selfInSource(rInt int) string {
+func testAccVPCSecurityGroupRuleConfig_selfInSource(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-rule-self-ingress"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "web" {
-  name        = "allow_all-%d"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.foo.id
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group_rule" "allow_self" {
+resource "aws_security_group_rule" "test" {
   type                     = "ingress"
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
-  security_group_id        = aws_security_group.web.id
-  source_security_group_id = aws_security_group.web.id
+  security_group_id        = aws_security_group.test.id
+  source_security_group_id = aws_security_group.test.id
 }
-`, rInt)
+`, rName)
 }
 
 func testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rName string) string {
