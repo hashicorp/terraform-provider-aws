@@ -144,6 +144,48 @@ func testAccDataSource_description(t *testing.T) {
 	})
 }
 
+func testAccDataSource_languageCode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	originalLanguageCode := "en"
+	updatedLanguageCode := "zh"
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, originalLanguageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "language_code", originalLanguageCode),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, updatedLanguageCode),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "language_code", updatedLanguageCode),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -313,4 +355,17 @@ resource "aws_kendra_data_source" "test" {
   type        = "CUSTOM"
 }
 `, rName4, description))
+}
+
+func testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, languageCode string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id      = aws_kendra_index.test.id
+  name          = %[1]q
+  language_code = %[2]q
+  type          = "CUSTOM"
+}
+`, rName4, languageCode))
 }
