@@ -8,6 +8,7 @@ func TestAccKendra_serial(t *testing.T) {
 		"DataSource": {
 			"basic":        testAccDataSource_basic,
 			"disappears":   testAccDataSource_disappears,
+			"tags":         testAccDataSource_tags,
 			"Description":  testAccDataSource_description,
 			"LanguageCode": testAccDataSource_languageCode,
 		},
