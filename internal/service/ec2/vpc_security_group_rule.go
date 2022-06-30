@@ -920,7 +920,7 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 		return nil, fmt.Errorf(errStr, importStr, "expecting 'ingress' or 'egress'")
 	}
 
-	if _, ok := sgProtocolIntegers()[protocol]; !ok {
+	if _, ok := securityGroupProtocolIntegers[protocol]; !ok {
 		if _, err := strconv.Atoi(protocol); err != nil {
 			return nil, fmt.Errorf(errStr, importStr, "protocol must be tcp/udp/icmp/icmpv6/all or a number")
 		}

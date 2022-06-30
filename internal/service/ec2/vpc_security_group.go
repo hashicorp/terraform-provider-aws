@@ -1213,7 +1213,7 @@ func ProtocolForValue(v string) string {
 		return "-1"
 	}
 	// if it's a name like tcp, return that
-	if _, ok := sgProtocolIntegers()[protocol]; ok {
+	if _, ok := securityGroupProtocolIntegers[protocol]; ok {
 		return protocol
 	}
 	// convert to int, look for that value
@@ -1225,7 +1225,7 @@ func ProtocolForValue(v string) string {
 		return protocol
 	}
 
-	for k, v := range sgProtocolIntegers() {
+	for k, v := range securityGroupProtocolIntegers {
 		if p == v {
 			// guard against protocolIntegers sometime in the future not having lower
 			// case ids in the map
@@ -1244,14 +1244,12 @@ func ProtocolForValue(v string) string {
 // http://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", "icmpv6", and "all"
-func sgProtocolIntegers() map[string]int {
-	return map[string]int{
-		"icmpv6": 58,
-		"udp":    17,
-		"tcp":    6,
-		"icmp":   1,
-		"all":    -1,
-	}
+var securityGroupProtocolIntegers = map[string]int{
+	"icmpv6": 58,
+	"udp":    17,
+	"tcp":    6,
+	"icmp":   1,
+	"all":    -1,
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
