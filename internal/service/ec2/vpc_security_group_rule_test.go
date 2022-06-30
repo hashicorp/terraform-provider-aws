@@ -1009,25 +1009,9 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	securityGroupResourceName := "aws_security_group.test"
-	resourceName1 := "aws_security_group_rule.test1"
-	resourceName2 := "aws_security_group_rule.test2"
-
-	rule1 := ec2.IpPermission{
-		IpProtocol: aws.String("-1"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("10.0.0.0/8")},
-		},
-	}
-
-	rule2 := ec2.IpPermission{
-		FromPort:   aws.Int64(443),
-		ToPort:     aws.Int64(443),
-		IpProtocol: aws.String("tcp"),
-		IpRanges: []*ec2.IpRange{
-			{CidrIp: aws.String("172.168.0.0/16")},
-		},
-	}
+	resource1Name := "aws_security_group_rule.test1"
+	resource2Name := "aws_security_group_rule.test2"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -1038,16 +1022,44 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multipleSearchingAllProtocolCrash(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(securityGroupResourceName, &group),
-					testAccCheckSecurityGroupRuleAttributes(resourceName1, &group, &rule1, "ingress"),
-					testAccCheckSecurityGroupRuleAttributes(resourceName2, &group, &rule2, "ingress"),
-					resource.TestCheckResourceAttr(resourceName1, "from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName1, "protocol", "-1"),
-					resource.TestCheckResourceAttr(resourceName1, "to_port", "65535"),
-					resource.TestCheckResourceAttr(resourceName2, "from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName2, "protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName2, "to_port", "443"),
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "10.0.0.0/8"),
+					resource.TestCheckNoResourceAttr(resource1Name, "description"),
+					resource.TestCheckResourceAttr(resource1Name, "from_port", "0"),
+					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resource1Name, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resource1Name, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resource1Name, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resource1Name, "self", "false"),
+					resource.TestCheckNoResourceAttr(resource1Name, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resource1Name, "to_port", "65535"),
+					resource.TestCheckResourceAttr(resource1Name, "type", "ingress"),
+					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.0", "172.168.0.0/16"),
+					resource.TestCheckNoResourceAttr(resource2Name, "description"),
+					resource.TestCheckResourceAttr(resource2Name, "from_port", "443"),
+					resource.TestCheckResourceAttr(resource2Name, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resource2Name, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resource2Name, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resource2Name, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resource2Name, "self", "false"),
+					resource.TestCheckNoResourceAttr(resource2Name, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resource2Name, "to_port", "443"),
+					resource.TestCheckResourceAttr(resource2Name, "type", "ingress"),
 				),
+			},
+			{
+				ResourceName:      resource1Name,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resource2Name,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -2004,10 +2016,10 @@ resource "aws_security_group_rule" "test" {
 func testAccVPCSecurityGroupRuleConfig_multipleSearchingAllProtocolCrash(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = %q
+  name = %[1]q
 
   tags = {
-    Name = "tf-acc-test-ec2-security-group-rule"
+    Name = %[1]q
   }
 }
 
