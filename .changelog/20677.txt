@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ami_launch_permission: Add `group` argument
+```

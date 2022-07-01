@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_resource_data_sync"
-sidebar_current: "docs-aws-resource-ssm-resource-data-sync"
 description: |-
   Provides a SSM resource data sync.
 ---
@@ -12,14 +12,13 @@ Provides a SSM resource data sync.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "hoge" {
   bucket = "tf-test-bucket-1234"
-  region = "us-east-1"
 }
 
 resource "aws_s3_bucket_policy" "hoge" {
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+  bucket = aws_s3_bucket.hoge.bucket
 
   policy = <<EOF
 {
@@ -56,9 +55,9 @@ EOF
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
 
-  s3_destination = {
-    bucket_name = "${aws_s3_bucket.hoge.bucket}"
-    region      = "${aws_s3_bucket.hoge.region}"
+  s3_destination {
+    bucket_name = aws_s3_bucket.hoge.bucket
+    region      = aws_s3_bucket.hoge.region
   }
 }
 ```
@@ -80,9 +79,13 @@ The following arguments are supported:
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-SSM resource data sync can be imported using the `name`, e.g.
+SSM resource data sync can be imported using the `name`, e.g.,
 
 ```sh
 $ terraform import aws_ssm_resource_data_sync.example example-name

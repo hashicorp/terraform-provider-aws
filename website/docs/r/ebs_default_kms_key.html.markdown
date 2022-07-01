@@ -1,7 +1,7 @@
 ---
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
-sidebar_current: "docs-aws-ebs-default-kms-key"
 description: |-
   Manages the default customer master key (CMK) that your AWS account uses to encrypt EBS volumes.
 ---
@@ -19,9 +19,9 @@ By using the `aws_ebs_default_kms_key` resource, you can specify a customer-mana
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ebs_default_kms_key" "example" {
-  key_arn = "${aws_kms_key.example.arn}"
+  key_arn = aws_kms_key.example.arn
 }
 ```
 
@@ -31,9 +31,13 @@ The following arguments are supported:
 
 * `key_arn` - (Required, ForceNew) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use to encrypt the EBS volume.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-The EBS default KMS CMK can be imported with the KMS key ARN, e.g.
+The EBS default KMS CMK can be imported with the KMS key ARN, e.g.,
 
 ```console
 $ terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234

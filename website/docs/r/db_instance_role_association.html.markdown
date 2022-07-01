@@ -1,14 +1,14 @@
 ---
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_instance_role_association"
-sidebar_current: "docs-aws-resource-db-instance-role-association"
 description: |-
-  Manages a RDS DB Instance association with an IAM Role.
+  Manages an RDS DB Instance association with an IAM Role.
 ---
 
 # Resource: aws_db_instance_role_association
 
-Manages a RDS DB Instance association with an IAM Role. Example use cases:
+Manages an RDS DB Instance association with an IAM Role. Example use cases:
 
 * [Amazon RDS Oracle integration with Amazon S3](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-s3-integration.html)
 * [Importing Amazon S3 Data into an RDS PostgreSQL DB Instance](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PostgreSQL.S3Import.html)
@@ -17,11 +17,11 @@ Manages a RDS DB Instance association with an IAM Role. Example use cases:
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance_role_association" "example" {
-  db_instance_identifier = "${aws_db_instance.example.id}"
+  db_instance_identifier = aws_db_instance.example.id
   feature_name           = "S3_INTEGRATION"
-  role_arn               = "${aws_iam_role.example.id}"
+  role_arn               = aws_iam_role.example.arn
 }
 ```
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_db_instance_role_association` can be imported using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`), e.g.
+`aws_db_instance_role_association` can be imported using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`), e.g.,
 
 ```
 $ terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role

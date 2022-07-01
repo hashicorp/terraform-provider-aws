@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lex_bot: Added waiter support to account for `BUILDING` status
+```

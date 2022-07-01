@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
-sidebar_current: "docs-aws-resource-redshift-security-group"
 description: |-
   Provides a Redshift security group resource.
 ---
@@ -12,7 +12,7 @@ Creates a new Amazon Redshift security group. You use security groups to control
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_security_group" "default" {
   name = "redshift-sg"
 
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift security groups can be imported using the `name`, e.g.
+Redshift security groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_security_group.testgroup1 redshift_test_group

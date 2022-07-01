@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_subnet_group"
-sidebar_current: "docs-aws-resource-dax-subnet-group"
 description: |-
   Provides an DAX Subnet Group resource.
 ---
@@ -12,10 +12,10 @@ Provides a DAX Subnet Group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dax_subnet_group" "example" {
   name       = "example"
-  subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
+  subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id]
 }
 ```
 
@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DAX Subnet Group can be imported using the `name`, e.g.
+DAX Subnet Group can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dax_subnet_group.example my_dax_sg

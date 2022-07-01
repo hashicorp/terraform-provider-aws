@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_source_credential"
-sidebar_current: "docs-aws-resource-codebuild-source-credential"
 description: |-
   Provides a CodeBuild Source Credential resource.
 ---
@@ -10,19 +10,22 @@ description: |-
 
 Provides a CodeBuild Source Credentials Resource.
 
+~> **NOTE:**
+[Codebuild only allows a single credential per given server type in a given region](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_codebuild.GitHubSourceCredentials.html). Therefore, when you define `aws_codebuild_source_credential`, [`aws_codebuild_project` resource](/docs/providers/aws/r/codebuild_project.html) defined in the same module will use it.
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codebuild_source_credential" "example" {
-  auth_type = "PERSONAL_ACCESS_TOKEN"
+  auth_type   = "PERSONAL_ACCESS_TOKEN"
   server_type = "GITHUB"
-  token = "example"
+  token       = "example"
 }
 ```
 
 ### Bitbucket Server Usage
 
-```hcl
+```terraform
 resource "aws_codebuild_source_credential" "example" {
   auth_type   = "BASIC_AUTH"
   server_type = "BITBUCKET"
@@ -49,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Source Credential can be imported using the CodeBuild Source Credential arn, e.g.
+CodeBuild Source Credential can be imported using the CodeBuild Source Credential arn, e.g.,
 
 ```
 $ terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
