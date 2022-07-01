@@ -432,7 +432,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName),
-				ExpectError: regexp.MustCompile(`expected type to be one of \[ingress egress\]`),
+				ExpectError: regexp.MustCompile(`expected type to be one of \[egress ingress\]`),
 			},
 		},
 	})
