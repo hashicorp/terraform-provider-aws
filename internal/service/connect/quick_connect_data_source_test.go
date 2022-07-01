@@ -12,6 +12,7 @@ import (
 
 func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
 	datasourceName := "data.aws_connect_quick_connect.test"
 	phoneNumber := "+12345678912"
@@ -22,7 +23,7 @@ func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectDataSourceConfig_id(rName, resourceName, phoneNumber),
+				Config: testAccQuickConnectDataSourceConfig_id(rName, rName2, phoneNumber),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),

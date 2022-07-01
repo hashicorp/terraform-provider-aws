@@ -12,6 +12,7 @@ import (
 
 func TestAccConnectQueueDataSource_queueID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 	datasourceName := "data.aws_connect_queue.test"
 	outboundCallerConfigName := "exampleOutboundCallerConfigName"
@@ -22,7 +23,7 @@ func TestAccConnectQueueDataSource_queueID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueDataSourceConfig_id(rName, resourceName, outboundCallerConfigName),
+				Config: testAccQueueDataSourceConfig_id(rName, rName2, outboundCallerConfigName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),

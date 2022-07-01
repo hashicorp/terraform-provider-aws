@@ -1,4 +1,4 @@
-AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientName,SkipClientGenerate,SDKVersion,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,AllowedSubcategory,DeprecatedEnvVar,EnvVar,Note
+AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientTypeName,SkipClientGenerate,SDKVersion,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,AllowedSubcategory,DeprecatedEnvVar,EnvVar,Note
 account,account,account,account,,account,,,Account,Account,,1,,aws_account_,,account_,Account Management,AWS,,,,,
 acm,acm,acm,acm,,acm,,,ACM,ACM,,1,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,
 acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,
@@ -78,7 +78,7 @@ codestar,codestar,codestar,codestar,,codestar,,,CodeStar,CodeStar,,1,,aws_codest
 codestar-connections,codestarconnections,codestarconnections,codestarconnections,,codestarconnections,,,CodeStarConnections,CodeStarConnections,,1,,aws_codestarconnections_,,codestarconnections_,CodeStar Connections,AWS,,,,,
 codestar-notifications,codestarnotifications,codestarnotifications,codestarnotifications,,codestarnotifications,,,CodeStarNotifications,CodeStarNotifications,,1,,aws_codestarnotifications_,,codestarnotifications_,CodeStar Notifications,AWS,,,,,
 cognito-identity,cognitoidentity,cognitoidentity,cognitoidentity,,cognitoidentity,,,CognitoIdentity,CognitoIdentity,,1,aws_cognito_identity_(?!provider),aws_cognitoidentity_,,cognito_identity_pool,Cognito Identity,Amazon,,,,,
-cognito-idp,cognitoidp,cognitoidentityprovider,cognitoidentityprovider,,cognitoidp,,cognitoidentityprovider,CognitoIDP,CognitoIdentityProvider,,1,aws_cognito_(identity_provider|resource|user),aws_cognitoidp_,,cognito_identity_provider;cognito_resource_;cognito_user,Cognito IDP (Identity Provider),Amazon,,,,,
+cognito-idp,cognitoidp,cognitoidentityprovider,cognitoidentityprovider,,cognitoidp,,cognitoidentityprovider,CognitoIDP,CognitoIdentityProvider,,1,aws_cognito_(identity_provider|resource|user|risk),aws_cognitoidp_,,cognito_identity_provider;cognito_resource_;cognito_user;cognito_risk,Cognito IDP (Identity Provider),Amazon,,,,,
 cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,CognitoSync,,1,,aws_cognitosync_,,cognitosync_,Cognito Sync,Amazon,,,,,
 comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,1,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,
 comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,comprehendmedical,,,ComprehendMedical,ComprehendMedical,,1,,aws_comprehendmedical_,,comprehendmedical_,Comprehend Medical,Amazon,,,,,
