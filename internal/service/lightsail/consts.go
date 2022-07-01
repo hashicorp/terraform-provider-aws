@@ -1,6 +1,5 @@
 package lightsail
 
 const (
-	ResDatabase = "Database"
-	ResTags     = "Tags"
+	ResTags = "Tags"
 )

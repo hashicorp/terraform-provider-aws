@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	ResDatabase = "Database"
+)
+
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		Create: ResourceDatabaseCreate,
