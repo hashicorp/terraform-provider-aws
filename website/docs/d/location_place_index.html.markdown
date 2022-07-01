@@ -29,5 +29,5 @@ data "aws_location_place_index" "example" {
 * `data_source_configuration` - List of configurations that specify data storage option for requesting Places.
 * `description` - The optional description for the place index resource.
 * `index_arn` - The Amazon Resource Name (ARN) for the place index resource.
-* `tags` - Key-value map of resource tags for the map.
-* `update_time` - The timestamp for when the place index resource was last update in ISO 8601.
+* `tags` - Key-value map of resource tags for the place index.
+* `update_time` - The timestamp for when the place index resource was last updated in ISO 8601 format.

@@ -745,6 +745,7 @@ func Provider() *schema.Provider {
 
 			"aws_location_map":         location.DataSourceMap(),
 			"aws_location_place_index": location.DataSourcePlaceIndex(),
+			"aws_location_tracker":     location.DataSourceTracker(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),

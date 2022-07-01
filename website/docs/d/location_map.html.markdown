@@ -30,4 +30,4 @@ data "aws_location_map" "example" {
 * `description` - The optional description for the map resource.
 * `map_arn` - The Amazon Resource Name (ARN) for the map resource.
 * `tags` - Key-value map of resource tags for the map.
-* `update_time` - The timestamp for when the map resource was last updated in ISO 8601.
+* `update_time` - The timestamp for when the map resource was last updated in ISO 8601 format.
