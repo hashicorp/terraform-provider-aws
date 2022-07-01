@@ -55,6 +55,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 					ValidateFunc: verify.ValidCIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
+				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -83,12 +84,14 @@ func ResourceSecurityGroupRule() *schema.Resource {
 					ValidateFunc: verify.ValidCIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
+				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"prefix_list_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"protocol": {
 				Type:      schema.TypeString,
@@ -107,6 +110,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				Default:       false,
 				ForceNew:      true,
 				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "source_security_group_id"},
+				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"source_security_group_id": {
 				Type:          schema.TypeString,
@@ -114,6 +118,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"cidr_blocks", "ipv6_cidr_blocks", "self"},
+				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"to_port": {
 				Type:     schema.TypeInt,
@@ -154,14 +159,6 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	perm, err := expandIPPerm(d, sg)
 
 	if err != nil {
-		return err
-	}
-
-	// Verify that either 'cidr_blocks', 'self', or 'source_security_group_id' is set
-	// If they are not set the AWS API will silently fail. This causes TF to hit a timeout
-	// at 5-minutes waiting for the security group rule to appear, when it was never actually
-	// created.
-	if err := validSecurityGroupRule(d); err != nil {
 		return err
 	}
 
@@ -822,24 +819,6 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 	}
 
 	return ""
-}
-
-// Validates that either 'cidr_blocks', 'ipv6_cidr_blocks', 'self', or 'source_security_group_id' is set
-func validSecurityGroupRule(d *schema.ResourceData) error {
-	blocks, blocksOk := d.GetOk("cidr_blocks")
-	self, selfOk := d.GetOk("self")
-	if blocksOk && self.(bool) {
-		return fmt.Errorf("'self': conflicts with 'cidr_blocks' (%#v)", blocks)
-	}
-
-	_, ipv6Ok := d.GetOk("ipv6_cidr_blocks")
-	_, sourceOk := d.GetOk("source_security_group_id")
-	_, prefixOk := d.GetOk("prefix_list_ids")
-	if !blocksOk && !sourceOk && !selfOk && !prefixOk && !ipv6Ok {
-		return fmt.Errorf(
-			"One of ['cidr_blocks', 'ipv6_cidr_blocks', 'self', 'source_security_group_id', 'prefix_list_ids'] must be set to create an AWS Security Group Rule")
-	}
-	return nil
 }
 
 func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.ResourceData) error {
