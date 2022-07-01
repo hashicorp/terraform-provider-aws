@@ -121,7 +121,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"html_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 												"subject": {
 													Type:         schema.TypeString,
@@ -131,7 +131,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"text_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 											},
 										},
@@ -149,7 +149,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"html_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 												"subject": {
 													Type:         schema.TypeString,
@@ -159,7 +159,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"text_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 											},
 										},
@@ -173,7 +173,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"html_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 												"subject": {
 													Type:         schema.TypeString,
@@ -183,7 +183,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 												"text_body": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringLenBetween(6, 2000),
+													ValidateFunc: validation.StringLenBetween(6, 20000),
 												},
 											},
 										},
