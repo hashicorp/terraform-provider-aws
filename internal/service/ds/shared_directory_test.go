@@ -24,10 +24,7 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			//acctest.PreCheckOrganizationsAccount(t)
-		},
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckSharedDirectoryDestroy,
