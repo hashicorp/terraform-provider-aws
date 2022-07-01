@@ -153,7 +153,6 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 		UnshareTarget: expandUnshareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
-	// TODO: this takes forever and is not correctly waiting for unshare
 	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 
