@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -193,6 +194,23 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 				}
 
 				return reflect.DeepEqual(requestJson, cassetteJson)
+			}
+
+			// XML might be the same, but reordered. Try parsing and comparing.
+			if strings.Contains(contentType, "application/xml") {
+				var requestXml, cassetteXml interface{}
+
+				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
+					log.Printf("[DEBUG] Failed to unmarshal request XML: %v", err)
+					return false
+				}
+
+				if err := xml.Unmarshal([]byte(i.Body), &cassetteXml); err != nil {
+					log.Printf("[DEBUG] Failed to unmarshal cassette XML: %v", err)
+					return false
+				}
+
+				return reflect.DeepEqual(requestXml, cassetteXml)
 			}
 
 			return false
