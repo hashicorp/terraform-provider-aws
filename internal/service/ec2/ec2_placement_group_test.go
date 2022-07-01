@@ -113,7 +113,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-partition")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -142,7 +142,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-partition")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },

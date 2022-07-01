@@ -205,7 +205,7 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	}
 
 	if diff.Id() == "" {
-		if spread_level, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spread_level != "" && strategy != ec2.PlacementGroupStrategySpread {
+		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != ec2.PlacementGroupStrategySpread {
 			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}
