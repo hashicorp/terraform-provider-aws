@@ -36,7 +36,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_Basic(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
@@ -93,27 +93,27 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_Basic(rNameTooShort),
+				Config:      testAccDatabaseConfig_basic(rNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfig_Basic(rNameTooLong),
+				Config:      testAccDatabaseConfig_basic(rNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of relational_database_name to be in the range \(2 - 255\), got %s`, rNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfig_Basic(rNameContainsUnderscore),
+				Config:      testAccDatabaseConfig_basic(rNameContainsUnderscore),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfig_Basic(rNameStartingDash),
+				Config:      testAccDatabaseConfig_basic(rNameStartingDash),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfig_Basic(rNameEndingDash),
+				Config:      testAccDatabaseConfig_basic(rNameEndingDash),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config: testAccDatabaseConfig_Basic(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
@@ -156,23 +156,23 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameTooShort),
+				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameTooLong),
+				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_database_name to be in the range \(1 - 64\), got %s`, dbNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsSpaces),
+				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsSpaces),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsStartingDigit),
+				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsStartingDigit),
 				ExpectError: regexp.MustCompile(`Must begin with a letter`),
 			},
 			{
-				Config: testAccDatabaseConfig_MasterDatabaseName(rName, dbName),
+				Config: testAccDatabaseConfig_masterDatabaseName(rName, dbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbName),
@@ -190,7 +190,7 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_MasterDatabaseName(rName, dbNameContainsUnderscore),
+				Config: testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbNameContainsUnderscore),
@@ -223,27 +223,27 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameTooShort),
+				Config:      testAccDatabaseConfig_masterUsername(rName, usernameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameTooLong),
+				Config:      testAccDatabaseConfig_masterUsername(rName, usernameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_username to be in the range \(1 - 63\), got %s`, usernameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameStartingDigit),
+				Config:      testAccDatabaseConfig_masterUsername(rName, usernameStartingDigit),
 				ExpectError: regexp.MustCompile(`Must begin with a letter`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameContainsDash),
+				Config:      testAccDatabaseConfig_masterUsername(rName, usernameContainsDash),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterUsername(rName, usernameContainsSpecial),
+				Config:      testAccDatabaseConfig_masterUsername(rName, usernameContainsSpecial),
 				ExpectError: regexp.MustCompile(`Subsequent characters can be letters, underscores, or digits \(0- 9\)`),
 			},
 			{
-				Config: testAccDatabaseConfig_MasterUsername(rName, username),
+				Config: testAccDatabaseConfig_masterUsername(rName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", username),
@@ -261,7 +261,7 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_MasterUsername(rName, usernameContainsUndercore),
+				Config: testAccDatabaseConfig_masterUsername(rName, usernameContainsUndercore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", usernameContainsUndercore),
@@ -292,27 +292,27 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordTooShort),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordTooLong),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of master_password to be in the range \(8 - 128\), got %s`, passwordTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsSlash),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsSlash),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsQuotes),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsQuotes),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsAtSymbol),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsAtSymbol),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 			{
-				Config:      testAccDatabaseConfig_MasterPassword(rName, passwordContainsSpaces),
+				Config:      testAccDatabaseConfig_masterPassword(rName, passwordContainsSpaces),
 				ExpectError: regexp.MustCompile(`The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces.`),
 			},
 		},
@@ -337,15 +337,15 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_PreferredBackupWindow(rName, backupWindowInvalidHour),
+				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidHour),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfig_PreferredBackupWindow(rName, backupWindowInvalidMinute),
+				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidMinute),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
 			},
 			{
-				Config: testAccDatabaseConfig_PreferredBackupWindow(rName, "09:30-10:00"),
+				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:30-10:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:30-10:00"),
@@ -363,7 +363,7 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_PreferredBackupWindow(rName, "09:45-10:15"),
+				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:45-10:15"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:45-10:15"),
@@ -392,19 +392,19 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
+				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
+				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config:      testAccDatabaseConfig_PreferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
+				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
 				ExpectError: regexp.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
 			},
 			{
-				Config: testAccDatabaseConfig_PreferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
+				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:30-tue:05:00"),
@@ -422,7 +422,7 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_PreferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
+				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:06:00-wed:07:30"),
@@ -448,7 +448,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_PubliclyAccessible(rName, "true"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
@@ -466,7 +466,7 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_PubliclyAccessible(rName, "false"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
@@ -492,7 +492,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_BackupRetentionEnabled(rName, "true"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
@@ -510,7 +510,7 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_BackupRetentionEnabled(rName, "false"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
@@ -541,23 +541,23 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameTooShort),
+				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameTooShort),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooShort)),
 			},
 			{
-				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameTooLong),
+				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameTooLong),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`expected length of final_snapshot_name to be in the range \(2 - 255\), got %s`, sNameTooLong)),
 			},
 			{
-				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameContainsSpaces),
+				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameContainsSpaces),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config:      testAccDatabaseConfig_FinalSnapshotName(rName, sNameContainsUnderscore),
+				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameContainsUnderscore),
 				ExpectError: regexp.MustCompile(`Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number`),
 			},
 			{
-				Config: testAccDatabaseConfig_FinalSnapshotName(rName, sName),
+				Config: testAccDatabaseConfig_finalSnapshotName(rName, sName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 				),
@@ -593,7 +593,7 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -612,7 +612,7 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -621,7 +621,7 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -667,7 +667,7 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_Basic(rName),
+				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName, &db),
 					testDestroy),
@@ -794,7 +794,7 @@ data "aws_availability_zones" "available" {
 `
 }
 
-func testAccDatabaseConfig_Basic(rName string) string {
+func testAccDatabaseConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -811,7 +811,7 @@ resource "aws_lightsail_database" "test" {
 `, rName))
 }
 
-func testAccDatabaseConfig_MasterDatabaseName(rName string, masterDatabaseName string) string {
+func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -828,7 +828,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterDatabaseName))
 }
 
-func testAccDatabaseConfig_MasterUsername(rName string, masterUsername string) string {
+func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -845,7 +845,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterUsername))
 }
 
-func testAccDatabaseConfig_MasterPassword(rName string, masterPassword string) string {
+func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -862,7 +862,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, masterPassword))
 }
 
-func testAccDatabaseConfig_PreferredBackupWindow(rName string, preferredBackupWindow string) string {
+func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -881,7 +881,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredBackupWindow))
 }
 
-func testAccDatabaseConfig_PreferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
+func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -900,7 +900,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredMaintenanceWindow))
 }
 
-func testAccDatabaseConfig_PubliclyAccessible(rName string, publiclyAccessible string) string {
+func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -919,7 +919,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, publiclyAccessible))
 }
 
-func testAccDatabaseConfig_BackupRetentionEnabled(rName string, backupRetentionEnabled string) string {
+func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -938,7 +938,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, backupRetentionEnabled))
 }
 
-func testAccDatabaseConfig_FinalSnapshotName(rName string, sName string) string {
+func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -955,7 +955,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, sName))
 }
 
-func testAccDatabaseConfig_Tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
@@ -975,7 +975,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccDatabaseConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfigBase(),
 		fmt.Sprintf(`	
