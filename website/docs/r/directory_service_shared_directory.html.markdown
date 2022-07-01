@@ -14,7 +14,7 @@ Manages a directory in your account (directory owner) shared with another accoun
 
 ```terraform
 resource "aws_directory_service_directory" "example" {
-  name     = "example"
+  name     = "tf-example"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
   edition  = "Standard"
