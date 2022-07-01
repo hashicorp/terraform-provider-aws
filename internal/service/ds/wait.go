@@ -18,7 +18,7 @@ const (
 	sharedDirectoryAcceptedTimeout = 60 * time.Minute
 )
 
-func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
 		Target:  []string{directoryservice.DirectoryStageActive},
@@ -26,15 +26,9 @@ func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*
 		Timeout: directoryCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
-
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
