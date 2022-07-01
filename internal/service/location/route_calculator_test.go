@@ -210,8 +210,8 @@ func testAccRouteCalculatorConfig_description(rName, description string) string 
 	return fmt.Sprintf(`
 resource "aws_location_route_calculator" "test" {
   calculator_name = %[1]q
-  data_source	  = "Here"
-  description  	  = %[2]q
+  data_source     = "Here"
+  description     = %[2]q
 }
 `, rName, description)
 }
