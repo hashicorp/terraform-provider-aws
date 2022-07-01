@@ -861,7 +861,7 @@ resource "aws_security_group" "test" {
   tags = {
     Name = %[1]q
   }
-})
+}
 `, rName, directInternetAccess))
 }
 
@@ -980,7 +980,7 @@ resource "aws_sagemaker_notebook_instance" "test" {
   name              = %[1]q
   role_arn          = aws_iam_role.test.arn
   instance_type     = "ml.t2.xlarge"
-  accelerator_types = ["ml.eia2.medium"]
+  accelerator_types = [%[2]q]
 }
   `, rName, acceleratorType))
 }
