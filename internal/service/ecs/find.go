@@ -135,6 +135,7 @@ func (e *expectActiveError) Error() string {
 
 func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	var service *ecs.Service
+	// Use the resource.Retry function instead of WaitForState() because we don't want the timeout error, if any
 	err := resource.Retry(serviceDescribeTimeout, func() *resource.RetryError {
 		var err error
 		service, err = FindServiceByID(ctx, conn, id, cluster)

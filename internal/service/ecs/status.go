@@ -10,10 +10,12 @@ import (
 )
 
 const (
-	// AWS will likely add consts for these at some point
 	serviceStatusInactive = "INACTIVE"
 	serviceStatusActive   = "ACTIVE"
 	serviceStatusDraining = "DRAINING"
+	// Non-standard statuses for statusServiceWaitForStable()
+	serviceStatusPending = "tfPENDING"
+	serviceStatusStable  = "tfSTABLE"
 
 	clusterStatusError = "ERROR"
 	clusterStatusNone  = "NONE"
@@ -57,13 +59,40 @@ func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefre
 
 func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		service, err := FindServiceNoTagsByID(context.TODO(), conn, id, cluster)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
+		if err != nil {
+			return nil, "", err
+		}
 
 		return service, aws.StringValue(service.Status), err
+	}
+}
+
+func statusServiceWaitForStable(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		serviceRaw, status, err := statusServiceNoTags(conn, id, cluster)()
+		if err != nil {
+			return nil, "", err
+		}
+
+		if status != serviceStatusActive {
+			return serviceRaw, status, nil
+		}
+
+		service := serviceRaw.(*ecs.Service)
+
+		if d, dc, rc := len(service.Deployments),
+			aws.Int64Value(service.DesiredCount),
+			aws.Int64Value(service.RunningCount); d == 1 && dc == rc {
+			status = serviceStatusStable
+		} else {
+			status = serviceStatusPending
+		}
+
+		return service, status, nil
 	}
 }
 

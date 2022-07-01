@@ -37,6 +37,8 @@ func ResourceService() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -553,11 +555,11 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	cluster := d.Get("cluster").(string)
 
 	if d.Get("wait_for_steady_state").(bool) {
-		if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
+		if _, err := waitServiceStable(conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after creation: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waitServiceActive(conn, d.Id(), cluster); err != nil {
+		if _, err := waitServiceActive(conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become active after creation: %w", d.Id(), err)
 		}
 	}
@@ -1083,11 +1085,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		cluster := d.Get("cluster").(string)
 		if d.Get("wait_for_steady_state").(bool) {
-			if err := waitServiceStable(conn, d.Id(), cluster); err != nil {
+			if _, err := waitServiceStable(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("error waiting for ECS service (%s) to reach steady state after update: %w", d.Id(), err)
 			}
 		} else {
-			if _, err := waitServiceActive(conn, d.Id(), cluster); err != nil {
+			if _, err := waitServiceActive(conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("error waiting for ECS service (%s) to become active after update: %w", d.Id(), err)
 			}
 		}
