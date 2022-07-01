@@ -30,8 +30,8 @@ const (
 	AppDeletedTimeout                 = 10 * time.Minute
 	FlowDefinitionActiveTimeout       = 2 * time.Minute
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
-	ProjectCreatedTimeout             = 2 * time.Minute
-	ProjectDeletedTimeout             = 5 * time.Minute
+	ProjectCreatedTimeout             = 15 * time.Minute
+	ProjectDeletedTimeout             = 15 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
