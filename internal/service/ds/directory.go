@@ -395,8 +395,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryId)
 
-	_, err = waitDirectoryCreated(conn, d.Id())
-
+	err = waitDirectoryCreated(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
 	}
