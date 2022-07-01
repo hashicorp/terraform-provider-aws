@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIPAMPool_cidrIPv4Basic(t *testing.T) {
+func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidr_range := "10.0.0.0/24"
