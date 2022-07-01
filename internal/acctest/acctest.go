@@ -115,7 +115,15 @@ func init() {
 	}
 
 	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		ProviderName: provider.ProtoV5ProviderFactory(context.Background()),
+		ProviderName: func() (tfprotov5.ProviderServer, error) {
+			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+
+			if err != nil {
+				return nil, err
+			}
+
+			return providerServerFactory(), nil
+		},
 	}
 }
 
