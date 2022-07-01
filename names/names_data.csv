@@ -1,4 +1,4 @@
-AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientName,SkipClientGenerate,SDKVersion,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,AllowedSubcategory,DeprecatedEnvVar,EnvVar,Note
+AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientTypeName,SkipClientGenerate,SDKVersion,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,AllowedSubcategory,DeprecatedEnvVar,EnvVar,Note
 account,account,account,account,,account,,,Account,Account,,1,,aws_account_,,account_,Account Management,AWS,,,,,
 acm,acm,acm,acm,,acm,,,ACM,ACM,,1,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,
 acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,
