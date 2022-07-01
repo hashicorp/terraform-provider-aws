@@ -29,9 +29,10 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("placement-group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spread_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 				),
 			},
 			{
@@ -126,8 +127,8 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 				),
 			},
 			{
