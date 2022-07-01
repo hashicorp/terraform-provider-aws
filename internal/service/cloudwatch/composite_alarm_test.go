@@ -121,7 +121,7 @@ func TestAccCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
 		CheckDestroy:      testAccCheckCompositeAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCompositeAlarmConfig_alarmActions(suffix),
+				Config: testAccCompositeAlarmConfig_actions(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "2"),
@@ -133,7 +133,7 @@ func TestAccCloudWatchCompositeAlarm_alarmActions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCompositeAlarmConfig_updateAlarmActions(suffix),
+				Config: testAccCompositeAlarmConfig_updateActions(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -362,7 +362,7 @@ func TestAccCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCompositeAlarmConfig_updateAlarmRule(suffix),
+				Config: testAccCompositeAlarmConfig_updateRule(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alarm_rule", fmt.Sprintf("ALARM(tf-test-metric-0-%[1]s)", suffix)),
@@ -485,7 +485,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 `, description, suffix))
 }
 
-func testAccCompositeAlarmConfig_alarmActions(suffix string) string {
+func testAccCompositeAlarmConfig_actions(suffix string) string {
 	return acctest.ConfigCompose(
 		testAccCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
@@ -502,7 +502,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 `, suffix))
 }
 
-func testAccCompositeAlarmConfig_updateAlarmActions(suffix string) string {
+func testAccCompositeAlarmConfig_updateActions(suffix string) string {
 	return acctest.ConfigCompose(
 		testAccCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`
@@ -519,7 +519,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 `, suffix))
 }
 
-func testAccCompositeAlarmConfig_updateAlarmRule(suffix string) string {
+func testAccCompositeAlarmConfig_updateRule(suffix string) string {
 	return acctest.ConfigCompose(
 		testAccCompositeAlarmBaseConfig(suffix),
 		fmt.Sprintf(`

@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -99,83 +98,77 @@ func DataSourceEBSSnapshot() *schema.Resource {
 
 func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")
-	filters, filtersOk := d.GetOk("filter")
-	snapshotIds, snapshotIdsOk := d.GetOk("snapshot_ids")
-	owners, ownersOk := d.GetOk("owners")
+	input := &ec2.DescribeSnapshotsInput{}
 
-	if !restorableUsersOk && !filtersOk && !snapshotIdsOk && !ownersOk {
-		return fmt.Errorf("One of snapshot_ids, filters, restorable_by_user_ids, or owners must be assigned")
+	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
+		input.OwnerIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	params := &ec2.DescribeSnapshotsInput{}
-	if restorableUsersOk {
-		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
-	}
-	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
-	}
-	if ownersOk {
-		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))
-	}
-	if snapshotIdsOk {
-		params.SnapshotIds = flex.ExpandStringList(snapshotIds.([]interface{}))
+	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
+		input.RestorableByUserIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Reading EBS Snapshot: %s", params)
-	resp, err := conn.DescribeSnapshots(params)
+	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
+		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	input.Filters = append(input.Filters, BuildFiltersDataSource(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
+	}
+
+	snapshots, err := FindSnapshots(conn, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EBS Snapshots: %w", err)
 	}
 
-	if len(resp.Snapshots) < 1 {
+	if len(snapshots) < 1 {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(resp.Snapshots) > 1 {
+	if len(snapshots) > 1 {
 		if !d.Get("most_recent").(bool) {
 			return fmt.Errorf("Your query returned more than one result. Please try a more " +
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
-		sort.Slice(resp.Snapshots, func(i, j int) bool {
-			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() > aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
+
+		sort.Slice(snapshots, func(i, j int) bool {
+			return aws.TimeValue(snapshots[i].StartTime).Unix() > aws.TimeValue(snapshots[j].StartTime).Unix()
 		})
 	}
 
-	//Single Snapshot found so set to state
-	return snapshotDescriptionAttributes(d, resp.Snapshots[0], meta)
-}
-
-func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapshot, meta interface{}) error {
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	snapshot := snapshots[0]
 
 	d.SetId(aws.StringValue(snapshot.SnapshotId))
-	d.Set("snapshot_id", snapshot.SnapshotId)
-	d.Set("volume_id", snapshot.VolumeId)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set("description", snapshot.Description)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("kms_key_id", snapshot.KmsKeyId)
-	d.Set("volume_size", snapshot.VolumeSize)
-	d.Set("state", snapshot.State)
-	d.Set("owner_id", snapshot.OwnerId)
-	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("outpost_arn", snapshot.OutpostArn)
+	d.Set("owner_alias", snapshot.OwnerAlias)
+	d.Set("owner_id", snapshot.OwnerId)
+	d.Set("snapshot_id", snapshot.SnapshotId)
+	d.Set("state", snapshot.State)
+	d.Set("storage_tier", snapshot.StorageTier)
+	d.Set("volume_id", snapshot.VolumeId)
+	d.Set("volume_size", snapshot.VolumeSize)
 
 	if err := d.Set("tags", KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
-
-	snapshotArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-		Service:   ec2.ServiceName,
-	}.String()
-
-	d.Set("arn", snapshotArn)
 
 	return nil
 }

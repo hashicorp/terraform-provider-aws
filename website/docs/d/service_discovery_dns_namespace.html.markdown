@@ -30,3 +30,4 @@ data "aws_service_discovery_dns_namespace" "test" {
 * `description` - A description of the namespace.
 * `id` - The namespace ID.
 * `hosted_zone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+* `tags` - A map of tags for the resource.

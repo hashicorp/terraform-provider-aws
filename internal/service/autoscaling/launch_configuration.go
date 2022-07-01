@@ -41,8 +41,8 @@ func ResourceLaunchConfiguration() *schema.Resource {
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				Default:  false,
 			},
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
@@ -326,11 +326,15 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
-		AssociatePublicIpAddress: aws.Bool(d.Get("associate_public_ip_address").(bool)),
-		EbsOptimized:             aws.Bool(d.Get("ebs_optimized").(bool)),
-		ImageId:                  aws.String(d.Get("image_id").(string)),
-		InstanceType:             aws.String(d.Get("instance_type").(string)),
-		LaunchConfigurationName:  aws.String(lcName),
+		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
+		ImageId:                 aws.String(d.Get("image_id").(string)),
+		InstanceType:            aws.String(d.Get("instance_type").(string)),
+		LaunchConfigurationName: aws.String(lcName),
+	}
+
+	associatePublicIPAddress := d.GetRawConfig().GetAttr("associate_public_ip_address")
+	if associatePublicIPAddress.IsKnown() && !associatePublicIPAddress.IsNull() {
+		input.AssociatePublicIpAddress = aws.Bool(associatePublicIPAddress.True())
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_id"); ok {

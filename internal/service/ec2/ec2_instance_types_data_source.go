@@ -33,26 +33,16 @@ func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
-	var instanceTypes []string
-
-	err := conn.DescribeInstanceTypesPages(input, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceType := range page.InstanceTypes {
-			if instanceType == nil {
-				continue
-			}
-
-			instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
-		}
-
-		return !lastPage
-	})
+	output, err := FindInstanceTypes(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error listing EC2 Instance Types: %w", err)
+		return fmt.Errorf("reading EC2 Instance Types: %w", err)
+	}
+
+	var instanceTypes []string
+
+	for _, instanceType := range output {
+		instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

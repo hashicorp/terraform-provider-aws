@@ -61,8 +61,8 @@ The following arguments are optional:
 * `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
 * `ipv6_prefix_count` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes assigned to the network interface.
-* `private_ip_list` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `private_ip_list_enable` to `true`.
-* `private_ip_list_enable` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default false.
+* `private_ip_list` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `private_ip_list_enabled` to `true`.
+* `private_ip_list_enabled` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default false.
 * `private_ips` - (Optional) List of private IPs to assign to the ENI without regard to order.
 * `private_ips_count` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `private_ips_count`, as a primary private IP will be assiged to an ENI by default.
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.

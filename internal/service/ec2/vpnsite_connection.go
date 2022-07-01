@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,6 +76,12 @@ func ResourceVPNConnection() *schema.Resource {
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
+			"outside_ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
+			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -123,6 +131,10 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+			},
+			"transport_transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"tunnel_inside_ip_version": {
 				Type:         schema.TypeString,
@@ -536,7 +548,10 @@ func ResourceVPNConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customizeDiffValidateOutsideIPAddressType,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -692,9 +707,11 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_acceleration", v.EnableAcceleration)
 		d.Set("local_ipv4_network_cidr", v.LocalIpv4NetworkCidr)
 		d.Set("local_ipv6_network_cidr", v.LocalIpv6NetworkCidr)
+		d.Set("outside_ip_address_type", v.OutsideIpAddressType)
 		d.Set("remote_ipv4_network_cidr", v.RemoteIpv4NetworkCidr)
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
+		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
@@ -706,9 +723,11 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_acceleration", nil)
 		d.Set("local_ipv4_network_cidr", nil)
 		d.Set("local_ipv6_network_cidr", nil)
+		d.Set("outside_ip_address_type", nil)
 		d.Set("remote_ipv4_network_cidr", nil)
 		d.Set("remote_ipv6_network_cidr", nil)
 		d.Set("static_routes_only", nil)
+		d.Set("transport_transit_gateway_attachment_id", nil)
 		d.Set("tunnel_inside_ip_version", nil)
 	}
 
@@ -882,6 +901,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.EnableAcceleration = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("outside_ip_address_type"); ok {
+		apiObject.OutsideIpAddressType = aws.String(v.(string))
+	}
+
 	if v := d.Get("tunnel_inside_ip_version").(string); v == ec2.TunnelInsideIpVersionIpv6 {
 		if v, ok := d.GetOk("local_ipv6_network_cidr"); ok {
 			apiObject.LocalIpv6NetworkCidr = aws.String(v.(string))
@@ -906,6 +929,10 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {
+		apiObject.TransportTransitGatewayAttachmentId = aws.String(v.(string))
 	}
 
 	apiObject.TunnelOptions = []*ec2.VpnTunnelOptionsSpecification{
@@ -1491,4 +1518,16 @@ func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 		validation.IsCIDRNetwork(126, 126),
 		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
+}
+
+// customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
+func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == OutsideIPAddressTypePublicIPv4 {
+		return nil
+	}
+
+	if v, ok := diff.GetOk("transport_transit_gateway_attachment_id"); !ok || v.(string) != "" {
+		return nil
+	}
+	return fmt.Errorf("`transport_transit_gateway_attachment_id` must be provided if `outside_ip_address_type` is `PrivateIpv4`")
 }

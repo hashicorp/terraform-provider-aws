@@ -99,7 +99,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName),
+				Config: testAccLaunchConfigurationDataSourceConfig_metaOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
@@ -182,7 +182,7 @@ data "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) string {
+func testAccLaunchConfigurationDataSourceConfig_metaOptions(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

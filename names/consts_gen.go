@@ -101,6 +101,7 @@ const (
 	ELBV2                        = "elbv2"
 	EMR                          = "emr"
 	EMRContainers                = "emrcontainers"
+	EMRServerless                = "emrserverless"
 	ElastiCache                  = "elasticache"
 	ElasticBeanstalk             = "elasticbeanstalk"
 	ElasticInference             = "elasticinference"

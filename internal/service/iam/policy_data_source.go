@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -22,27 +23,30 @@ func DataSourcePolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"name", "path_prefix"},
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"arn"},
 			},
 			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"path_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"arn"},
 			},
 			"policy": {
 				Type:     schema.TypeString,
@@ -65,46 +69,37 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
-	var results []*iam.Policy
+	if arn == "" {
+		raw, err := tfresource.RetryWhenNotFound(propagationTimeout,
+			func() (interface{}, error) {
+				return FindPolicyByName(conn, name, pathPrefix)
+			},
+		)
 
-	// Handle IAM eventual consistency
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-		results, err = FindPolicies(conn, arn, name, pathPrefix)
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+		if errors.Is(err, tfresource.ErrEmptyResult) {
+			return fmt.Errorf("no IAM policy found matching criteria (%s); try different search", PolicySearchDetails(name, pathPrefix))
 		}
-
+		if errors.Is(err, tfresource.ErrTooManyResults) {
+			return fmt.Errorf("multiple IAM policies found matching criteria (%s); try different search. %w", PolicySearchDetails(name, pathPrefix), err)
+		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return fmt.Errorf("error reading IAM policy (%s): %w", PolicySearchDetails(name, pathPrefix), err)
 		}
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		results, err = FindPolicies(conn, arn, name, pathPrefix)
+		arn = aws.StringValue((raw.(*iam.Policy)).Arn)
 	}
 
+	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
+	policy, err := FindPolicyByARN(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error reading IAM policy (%s): %w", PolicySearchDetails(arn, name, pathPrefix), err)
+		return fmt.Errorf("error reading IAM policy (%s): %w", arn, err)
 	}
 
-	if len(results) == 0 {
-		return fmt.Errorf("no IAM policy found matching criteria (%s); try different search", PolicySearchDetails(arn, name, pathPrefix))
-	}
-
-	if len(results) > 1 {
-		return fmt.Errorf("multiple IAM policies found matching criteria (%s); try different search", PolicySearchDetails(arn, name, pathPrefix))
-	}
-
-	policy := results[0]
 	policyArn := aws.StringValue(policy.Arn)
 
 	d.SetId(policyArn)
-
 	d.Set("arn", policyArn)
+	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
@@ -112,23 +107,6 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags", KeyValueTags(policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
-
-	// Retrieve policy description
-	policyInput := &iam.GetPolicyInput{
-		PolicyArn: policy.Arn,
-	}
-
-	policyOutput, err := conn.GetPolicy(policyInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading IAM policy (%s): %w", policyArn, err)
-	}
-
-	if policyOutput == nil || policyOutput.Policy == nil {
-		return fmt.Errorf("error reading IAM policy (%s): empty output", policyArn)
-	}
-
-	d.Set("description", policyOutput.Policy.Description)
 
 	// Retrieve policy
 	policyVersionInput := &iam.GetPolicyVersionInput{
@@ -181,11 +159,8 @@ func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 // PolicySearchDetails returns the configured search criteria as a printable string
-func PolicySearchDetails(arn, name, pathPrefix string) string {
+func PolicySearchDetails(name, pathPrefix string) string {
 	var policyDetails []string
-	if arn != "" {
-		policyDetails = append(policyDetails, fmt.Sprintf("ARN: %s", arn))
-	}
 	if name != "" {
 		policyDetails = append(policyDetails, fmt.Sprintf("Name: %s", name))
 	}

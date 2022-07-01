@@ -435,7 +435,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, arn, nil, tags)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed adding tags after create for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
 			}
@@ -506,7 +506,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(c.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(err) {
+	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("error listing tags for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
 	}
 
@@ -706,7 +706,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		// ISO partitions may not support tagging, giving error
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache Cache Cluster (%s) tags: %w", d.Get("arn").(string), err)
 			}
@@ -784,7 +784,7 @@ func createCacheCluster(conn *elasticache.ElastiCache, input *elasticache.Create
 	output, err := conn.CreateCacheCluster(input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Cache Cluster with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil

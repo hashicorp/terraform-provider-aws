@@ -28,7 +28,7 @@ func TestAccECRRepository_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig(rName),
+				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
@@ -122,7 +122,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_image_scanning_configuration(rName, true),
+				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -137,13 +137,13 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 			},
 			{
 				// Test that the removal of the non-default image_scanning_configuration causes plan changes
-				Config:             testAccRepositoryConfig(rName),
+				Config:             testAccRepositoryConfig_basic(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				// Test attribute update
-				Config: testAccRepositoryConfig_image_scanning_configuration(rName, false),
+				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
@@ -152,7 +152,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 			},
 			{
 				// Test that the removal of the default image_scanning_configuration doesn't cause any plan changes
-				Config:             testAccRepositoryConfig(rName),
+				Config:             testAccRepositoryConfig_basic(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -173,7 +173,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 		CheckDestroy:      testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_encryption_kms_defaultkey(rName),
+				Config: testAccRepositoryConfig_encryptionKMSDefaultkey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -188,7 +188,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_encryption_kms_customkey(rName),
+				Config: testAccRepositoryConfig_encryptionKMSCustomkey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v2),
 					testAccCheckRepositoryRecreated(&v1, &v2),
@@ -219,13 +219,13 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Test that the addition of the default encryption_configuration doesn't recreation in the next step
-				Config: testAccRepositoryConfig(rName),
+				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v1),
 				),
 			},
 			{
-				Config: testAccRepositoryConfig_encryption_aes256(rName),
+				Config: testAccRepositoryConfig_encryptionAES256(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
@@ -241,7 +241,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 			},
 			{
 				// Test that the removal of the default encryption_configuration doesn't cause any plan changes
-				Config:   testAccRepositoryConfig(rName),
+				Config:   testAccRepositoryConfig_basic(rName),
 				PlanOnly: true,
 			},
 		},
@@ -343,7 +343,7 @@ func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheck
 	}
 }
 
-func testAccRepositoryConfig(rName string) string {
+func testAccRepositoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -385,7 +385,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryConfig_image_scanning_configuration(rName string, scanOnPush bool) string {
+func testAccRepositoryConfig_imageScanningConfiguration(rName string, scanOnPush bool) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -397,7 +397,7 @@ resource "aws_ecr_repository" "test" {
 `, rName, scanOnPush)
 }
 
-func testAccRepositoryConfig_encryption_kms_defaultkey(rName string) string {
+func testAccRepositoryConfig_encryptionKMSDefaultkey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -409,7 +409,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryConfig_encryption_kms_customkey(rName string) string {
+func testAccRepositoryConfig_encryptionKMSCustomkey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -424,7 +424,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccRepositoryConfig_encryption_aes256(rName string) string {
+func testAccRepositoryConfig_encryptionAES256(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q

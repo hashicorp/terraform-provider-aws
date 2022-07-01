@@ -22,7 +22,7 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryDataSourceConfig(rName),
+				Config: testAccRepositoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -48,7 +48,7 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryDataSourceConfig_encryption(rName),
+				Config: testAccRepositoryDataSourceConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -86,7 +86,7 @@ data "aws_ecr_repository" "test" {
 }
 `
 
-func testAccCheckRepositoryDataSourceConfig(rName string) string {
+func testAccRepositoryDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -103,7 +103,7 @@ data "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccCheckRepositoryDataSourceConfig_encryption(rName string) string {
+func testAccRepositoryDataSourceConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 

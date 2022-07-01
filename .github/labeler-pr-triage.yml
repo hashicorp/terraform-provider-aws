@@ -249,6 +249,7 @@ service/cognitoidp:
   - 'website/**/cognito_identity_provider*'
   - 'website/**/cognito_resource_*'
   - 'website/**/cognito_user*'
+  - 'website/**/cognito_risk*'
 service/cognitosync:
   - 'internal/service/cognitosync/**/*'
   - 'website/**/cognitosync_*'
@@ -416,6 +417,9 @@ service/emr:
 service/emrcontainers:
   - 'internal/service/emrcontainers/**/*'
   - 'website/**/emrcontainers_*'
+service/emrserverless:
+  - 'internal/service/emrserverless/**/*'
+  - 'website/**/emrserverless_*'
 service/events:
   - 'internal/service/events/**/*'
   - 'website/**/cloudwatch_event_*'

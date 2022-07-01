@@ -93,7 +93,6 @@ func ResourceDomain() *schema.Resource {
 						"sharing_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -118,7 +117,6 @@ func ResourceDomain() *schema.Resource {
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -157,7 +155,6 @@ func ResourceDomain() *schema.Resource {
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -204,7 +201,6 @@ func ResourceDomain() *schema.Resource {
 						"kernel_gateway_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

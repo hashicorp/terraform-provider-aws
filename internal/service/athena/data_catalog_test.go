@@ -26,7 +26,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig(rName),
+				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("datacatalog/%s", rName)),
@@ -59,7 +59,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfig(rName),
+				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
@@ -81,7 +81,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogConfigTags1(rName, "key1", "value1"),
+				Config: testAccDataCatalogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -95,7 +95,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 			{
-				Config: testAccDataCatalogConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataCatalogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +104,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataCatalogConfigTags1(rName, "key2", "value2"),
+				Config: testAccDataCatalogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -126,7 +126,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogTypeLambdaConfig(rName),
+				Config: testAccDataCatalogConfig_typeLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Lambda"),
@@ -157,7 +157,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogTypeHiveConfig(rName),
+				Config: testAccDataCatalogConfig_typeHive(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Hive"),
@@ -187,7 +187,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogTypeGlueConfig(rName),
+				Config: testAccDataCatalogConfig_typeGlue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "A test data catalog using Glue"),
@@ -217,7 +217,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 		CheckDestroy:      testAccCheckDataCatalogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCatalogParametersConfig(rName),
+				Config: testAccDataCatalogConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
@@ -231,7 +231,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 			{
-				Config: testAccDataCatalogParametersUpdatedConfig(rName),
+				Config: testAccDataCatalogConfig_parametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
@@ -300,7 +300,7 @@ func testAccCheckDataCatalogDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDataCatalogConfig(rName string) string {
+func testAccDataCatalogConfig_basic(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -315,7 +315,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
-func testAccDataCatalogConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDataCatalogConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -335,7 +335,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDataCatalogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDataCatalogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -356,7 +356,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDataCatalogTypeLambdaConfig(rName string) string {
+func testAccDataCatalogConfig_typeLambda(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -372,7 +372,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
-func testAccDataCatalogTypeHiveConfig(rName string) string {
+func testAccDataCatalogConfig_typeHive(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -387,7 +387,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
-func testAccDataCatalogTypeGlueConfig(rName string) string {
+func testAccDataCatalogConfig_typeGlue(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
   name        = %[1]q
@@ -401,7 +401,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
-func testAccDataCatalogParametersConfig(rName string) string {
+func testAccDataCatalogConfig_parameters(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {
@@ -416,7 +416,7 @@ resource "aws_athena_data_catalog" "test" {
 `, rName)
 }
 
-func testAccDataCatalogParametersUpdatedConfig(rName string) string {
+func testAccDataCatalogConfig_parametersUpdated(rName string) string {
 	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 resource "aws_athena_data_catalog" "test" {

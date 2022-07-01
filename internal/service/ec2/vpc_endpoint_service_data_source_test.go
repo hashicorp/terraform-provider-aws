@@ -23,17 +23,18 @@ func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_gateway,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
-					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", "data.aws_availability_zones.available", "names.#"),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", ""),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 				),
 			},
 		},
@@ -51,16 +52,18 @@ func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_interface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
 					acctest.CheckResourceAttrRegionalHostnameService(datasourceName, "private_dns_name", "ec2"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 				),
 			},
 		},
@@ -68,8 +71,9 @@ func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
+	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -78,16 +82,18 @@ func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_custom(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
-					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
 					acctest.CheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -95,8 +101,9 @@ func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
+	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -105,16 +112,18 @@ func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_customFilter(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
-					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
 					acctest.CheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -122,8 +131,9 @@ func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 }
 
 func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
+	resourceName := "aws_vpc_endpoint_service.test"
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -132,16 +142,18 @@ func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_customFilterTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
-					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
 					acctest.CheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -198,8 +210,6 @@ func testAccCheckResourceAttrRegionalReverseDNSService(resourceName, attributeNa
 }
 
 const testAccVPCEndpointServiceDataSourceConfig_gateway = `
-data "aws_availability_zones" "available" {}
-
 data "aws_vpc_endpoint_service" "test" {
   service = "dynamodb"
 }
@@ -220,102 +230,44 @@ data "aws_vpc_endpoint_service" "test" {
 `, service, serviceType)
 }
 
-func testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb" "test" {
-  name = %[1]q
-
-  subnets = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
-
-  load_balancer_type         = "network"
-  internal                   = true
-  idle_timeout               = 60
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccVPCEndpointServiceDataSourceConfig_customBase(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
-  acceptance_required = true
-
-  network_load_balancer_arns = [
-    aws_lb.test.id,
-  ]
+  acceptance_required        = false
+  network_load_balancer_arns = aws_lb.test[*].arn
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCEndpointServiceDataSourceConfig_custom(rName string) string {
-	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
+	return acctest.ConfigCompose(testAccVPCEndpointServiceDataSourceConfig_customBase(rName), `
 data "aws_vpc_endpoint_service" "test" {
   service_name = aws_vpc_endpoint_service.test.service_name
 }
-`
+`)
 }
 
 func testAccVPCEndpointServiceDataSourceConfig_customFilter(rName string) string {
-	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
+	return acctest.ConfigCompose(testAccVPCEndpointServiceDataSourceConfig_customBase(rName), `
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
     values = [aws_vpc_endpoint_service.test.service_name]
   }
 }
-`
+`)
 }
 
 func testAccVPCEndpointServiceDataSourceConfig_customFilterTags(rName string) string {
-	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
+	return acctest.ConfigCompose(testAccVPCEndpointServiceDataSourceConfig_customBase(rName), `
 data "aws_vpc_endpoint_service" "test" {
   tags = {
     Name = aws_vpc_endpoint_service.test.tags["Name"]
   }
 }
-`
+`)
 }

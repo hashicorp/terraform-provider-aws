@@ -142,7 +142,7 @@ service/codestarnotifications:
 service/cognitoidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_identity_(?!provider)'
 service/cognitoidp:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk)'
 service/cognitosync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognitosync_'
 service/comprehend:
@@ -237,6 +237,8 @@ service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrcontainers_'
+service/emrserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emrserverless_'
 service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:

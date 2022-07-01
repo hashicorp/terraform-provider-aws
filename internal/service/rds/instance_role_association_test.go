@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
@@ -33,7 +33,7 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
 					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, "id"),
@@ -68,7 +68,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceRoleAssociationConfig(rName),
+				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(dbInstanceResourceName, &dbInstance1),
 					testAccCheckInstanceRoleAssociationExists(resourceName, &dbInstanceRole1),
@@ -96,14 +96,12 @@ func testAccCheckInstanceRoleAssociationExists(resourceName string, dbInstanceRo
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
+		role, err := tfrds.DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("RDS DB Instance IAM Role Association not found")
+		}
 		if err != nil {
 			return err
-		}
-
-		if role == nil {
-			return fmt.Errorf("RDS DB Instance IAM Role Association not found")
 		}
 
 		if aws.StringValue(role.Status) != "ACTIVE" {
@@ -130,18 +128,12 @@ func testAccCheckInstanceRoleAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
 
-		dbInstanceRole, err := tfrds.DescribeInstanceRole(conn, dbInstanceIdentifier, roleArn)
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		dbInstanceRole, err := tfrds.DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		if tfresource.NotFound(err) {
 			continue
 		}
-
 		if err != nil {
 			return err
-		}
-
-		if dbInstanceRole == nil {
-			continue
 		}
 
 		return fmt.Errorf("RDS DB Instance (%s) IAM Role (%s) association still exists in non-deleted (%s) state", dbInstanceIdentifier, roleArn, aws.StringValue(dbInstanceRole.Status))
@@ -166,13 +158,28 @@ func testAccCheckInstanceRoleAssociationDisappears(dbInstance *rds.DBInstance, d
 			return err
 		}
 
-		return tfrds.WaitForInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
+		return tfrds.WaitForDBInstanceRoleDisassociation(conn, aws.StringValue(dbInstance.DBInstanceIdentifier), aws.StringValue(dbInstanceRole.RoleArn))
 	}
 }
 
-func testAccInstanceRoleAssociationConfig(rName string) string {
+func testAccInstanceRoleAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+resource "aws_db_instance_role_association" "test" {
+  db_instance_identifier = aws_db_instance.test.id
+  feature_name           = "S3_INTEGRATION"
+  role_arn               = aws_iam_role.test.arn
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = 10
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  license_model       = data.aws_rds_orderable_db_instance.test.license_model
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
 
 data "aws_rds_orderable_db_instance" "test" {
   engine        = "oracle-se2"
@@ -180,6 +187,14 @@ data "aws_rds_orderable_db_instance" "test" {
   storage_type  = "standard"
 
   preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
+  name               = %[1]q
+
+  # ensure IAM role is created just before association to exercise IAM eventual consistency
+  depends_on = [aws_db_instance.test]
 }
 
 data "aws_iam_policy_document" "rds_assume_role_policy" {
@@ -194,26 +209,6 @@ data "aws_iam_policy_document" "rds_assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  assume_role_policy = data.aws_iam_policy_document.rds_assume_role_policy.json
-  name               = %[1]q
-}
-
-resource "aws_db_instance" "test" {
-  allocated_storage   = 10
-  engine              = data.aws_rds_orderable_db_instance.test.engine
-  identifier          = %[1]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  license_model       = data.aws_rds_orderable_db_instance.test.license_model
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-}
-
-resource "aws_db_instance_role_association" "test" {
-  db_instance_identifier = aws_db_instance.test.id
-  feature_name           = "S3_INTEGRATION"
-  role_arn               = aws_iam_role.test.arn
-}
+data "aws_partition" "current" {}
 `, rName)
 }

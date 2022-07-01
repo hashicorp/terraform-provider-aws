@@ -23,7 +23,7 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("first", "value"),
-					testAccDefaultTagsDataSource(),
+					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
@@ -48,7 +48,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags0(),
-					testAccDefaultTagsDataSource(),
+					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
@@ -72,7 +72,7 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("nuera", "hijo", "escalofrios", "calambres"),
-					testAccDefaultTagsDataSource(),
+					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
@@ -98,7 +98,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("Tabac", "Louis Chiron"),
-					testAccDefaultTagsDataSource(),
+					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
@@ -108,7 +108,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("Tabac", "Louis Chiron"),
-					testAccDefaultTagsDataSource(),
+					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
@@ -118,6 +118,6 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 	})
 }
 
-func testAccDefaultTagsDataSource() string {
+func testAccDefaultTagsDataSourceConfig_basic() string {
 	return `data "aws_default_tags" "test" {}`
 }

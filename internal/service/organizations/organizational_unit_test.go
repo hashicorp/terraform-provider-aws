@@ -29,7 +29,7 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
@@ -61,7 +61,7 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceOrganizationalUnit(), resourceName),
@@ -87,7 +87,7 @@ func testAccOrganizationalUnit_Name(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitConfig(name1),
+				Config: testAccOrganizationalUnitConfig_basic(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
@@ -99,7 +99,7 @@ func testAccOrganizationalUnit_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationalUnitConfig(name2),
+				Config: testAccOrganizationalUnitConfig_basic(name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
@@ -123,7 +123,7 @@ func testAccOrganizationalUnit_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitTags1Config(name, "key1", "value1"),
+				Config: testAccOrganizationalUnitConfig_tags1(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -136,7 +136,7 @@ func testAccOrganizationalUnit_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationalUnitTags2Config(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOrganizationalUnitConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -145,7 +145,7 @@ func testAccOrganizationalUnit_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -219,7 +219,7 @@ func testAccCheckOrganizationalUnitExists(n string, ou *organizations.Organizati
 	}
 }
 
-func testAccOrganizationalUnitConfig(name string) string {
+func testAccOrganizationalUnitConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -230,7 +230,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, name)
 }
 
-func testAccOrganizationalUnitTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccOrganizationalUnitConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -245,7 +245,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccOrganizationalUnitTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOrganizationalUnitConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 

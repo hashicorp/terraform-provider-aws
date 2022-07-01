@@ -25,7 +25,7 @@ func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCapacityProvidersConfig(rName),
+				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "1"),
@@ -60,7 +60,7 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCapacityProvidersConfig(rName),
+				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCluster(), resourceName),
@@ -117,7 +117,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCapacityProvidersConfig_destroy_before(rName),
+				Config: testAccClusterCapacityProvidersConfig_destroyBefore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					func(s *terraform.State) error {
@@ -130,7 +130,7 @@ func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_destroy_after(rName),
+				Config: testAccClusterCapacityProvidersConfig_destroyAfter(rName),
 			},
 		},
 	})
@@ -148,7 +148,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCapacityProvidersConfig_withCapacityProviders1(rName, "FARGATE"),
+				Config: testAccClusterCapacityProvidersConfig_1(rName, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "1"),
@@ -161,7 +161,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withCapacityProviders2(rName, "FARGATE", "FARGATE_SPOT"),
+				Config: testAccClusterCapacityProvidersConfig_2(rName, "FARGATE", "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "2"),
@@ -175,7 +175,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withCapacityProviders0(rName),
+				Config: testAccClusterCapacityProvidersConfig_0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "0"),
@@ -187,7 +187,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withCapacityProviders1(rName, "FARGATE"),
+				Config: testAccClusterCapacityProvidersConfig_1(rName, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "1"),
@@ -215,7 +215,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy1(rName),
+				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "1"),
@@ -232,7 +232,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy2(rName),
+				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
@@ -254,7 +254,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy3(rName),
+				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
@@ -276,7 +276,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy4(rName),
+				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_ecs_cluster.test", &cluster),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
@@ -291,7 +291,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 	})
 }
 
-func testAccClusterCapacityProvidersConfig(rName string) string {
+func testAccClusterCapacityProvidersConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -323,7 +323,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_withCapacityProviders0(rName string) string {
+func testAccClusterCapacityProvidersConfig_0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -337,7 +337,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_withCapacityProviders1(rName, provider1 string) string {
+func testAccClusterCapacityProvidersConfig_1(rName, provider1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -351,7 +351,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName, provider1)
 }
 
-func testAccClusterCapacityProvidersConfig_withCapacityProviders2(rName, provider1, provider2 string) string {
+func testAccClusterCapacityProvidersConfig_2(rName, provider1, provider2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -365,7 +365,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName, provider1, provider2)
 }
 
-func testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy1(rName string) string {
+func testAccClusterCapacityProvidersConfig_defaultProviderStrategy1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -385,7 +385,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy2(rName string) string {
+func testAccClusterCapacityProvidersConfig_defaultProviderStrategy2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -410,7 +410,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy3(rName string) string {
+func testAccClusterCapacityProvidersConfig_defaultProviderStrategy3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -435,7 +435,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_withDefaultCapacityProviderStrategy4(rName string) string {
+func testAccClusterCapacityProvidersConfig_defaultProviderStrategy4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -449,7 +449,7 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_destroy_before(rName string) string {
+func testAccClusterCapacityProvidersConfig_destroyBefore(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "test" {
   most_recent = true
@@ -609,7 +609,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName)
 }
 
-func testAccClusterCapacityProvidersConfig_destroy_after(rName string) string {
+func testAccClusterCapacityProvidersConfig_destroyAfter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
