@@ -181,9 +181,6 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		_, err = conn.AuthorizeSecurityGroupEgress(input)
-
-	default:
-		return fmt.Errorf("invalid Security Group Rule type: %s", ruleType)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionDuplicate) {
@@ -309,48 +306,46 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	sg_id := d.Get("security_group_id").(string)
+	securityGroupID := d.Get("security_group_id").(string)
 
-	conns.GlobalMutexKV.Lock(sg_id)
-	defer conns.GlobalMutexKV.Unlock(sg_id)
+	conns.GlobalMutexKV.Lock(securityGroupID)
+	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, sg_id)
+	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
-	perm, err := expandIPPerm(d, sg)
-	if err != nil {
-		return err
-	}
+	ipPermission := expandIpPermission(d, sg)
 	ruleType := d.Get("type").(string)
+	isVPC := aws.StringValue(sg.VpcId) != ""
+
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
-		log.Printf("[DEBUG] Revoking rule (%s) from security group %s:\n%s",
-			"ingress", sg_id, perm)
-		req := &ec2.RevokeSecurityGroupIngressInput{
-			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm},
+		input := &ec2.RevokeSecurityGroupIngressInput{
+			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
 
-		_, err = conn.RevokeSecurityGroupIngress(req)
-
-		if err != nil {
-			return fmt.Errorf("Error revoking security group %s rules: %w", sg_id, err)
+		if isVPC {
+			input.GroupId = sg.GroupId
+		} else {
+			input.GroupName = sg.GroupName
 		}
+
+		_, err = conn.RevokeSecurityGroupIngress(input)
+
 	case securityGroupRuleTypeEgress:
-
-		log.Printf("[DEBUG] Revoking security group %#v %s rule: %#v", sg_id, "egress", perm)
-		req := &ec2.RevokeSecurityGroupEgressInput{
+		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm},
+			IpPermissions: []*ec2.IpPermission{ipPermission},
 		}
 
-		_, err = conn.RevokeSecurityGroupEgress(req)
+		_, err = conn.RevokeSecurityGroupEgress(input)
+	}
 
-		if err != nil {
-			return fmt.Errorf("Error revoking security group %s rules: %w", sg_id, err)
-		}
+	if err != nil {
+		return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", securityGroupID, ruleType, err)
 	}
 
 	return nil
