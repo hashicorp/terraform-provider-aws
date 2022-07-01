@@ -9,13 +9,14 @@ import (
 )
 
 const (
-	ErrActionReading            = "reading"
-	ErrActionDeleting           = "deleting"
-	ErrActionUpdating           = "updating"
-	ErrActionCreating           = "creating"
-	ErrActionSetting            = "setting"
-	ErrActionCheckingExistence  = "checking existence"
 	ErrActionCheckingDestroyed  = "checking destroyed"
+	ErrActionCheckingExistence  = "checking existence"
+	ErrActionCreating           = "creating"
+	ErrActionDeleting           = "deleting"
+	ErrActionReading            = "reading"
+	ErrActionSetting            = "setting"
+	ErrActionUpdating           = "updating"
+	ErrActionWaitingForCreation = "waiting for creation"
 	ErrActionWaitingForDeletion = "waiting for delete"
 )
 
@@ -57,6 +58,17 @@ func AddWarning(diags diag.Diagnostics, service, action, resource, id string, go
 		diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
+		},
+	)
+}
+
+// AddWarningNotFoundRemoveState returns diag.Diagnostics with an additional diag.Diagnostic containing
+// a warning using a standardized problem message
+func AddWarningNotFoundRemoveState(service, action, resource, id string) diag.Diagnostics {
+	return append(diag.Diagnostics{},
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  ProblemStandardMessage(service, action, resource, id, errors.New("not found, removing from state")),
 		},
 	)
 }
