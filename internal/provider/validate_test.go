@@ -1,4 +1,4 @@
-package sdkv2
+package provider
 
 import (
 	"regexp"
