@@ -45,7 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `method` - (Optional) Method used when sharing a directory. Valid values are `ORGANIZATIONS` and `HANDSHAKE`. Default is `HANDSHAKE`.
-* `notes` - (Optional, Sensitive) Message sent by directory owner to the directory consumer to help the directory consumer administrator determine whether to approve or reject the share invitation.
+* `notes` - (Optional, Sensitive) Message sent by the directory owner to the directory consumer to help the directory consumer administrator determine whether to approve or reject the share invitation.
 
 ### `target`
 
