@@ -160,12 +160,6 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 				return true
 			}
 
-			contentType := r.Header.Get("Content-Type")
-			// If body contains media, don't try to compare.
-			if strings.Contains(contentType, "multipart/related") {
-				return true
-			}
-
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(r.Body); err != nil {
 				log.Printf("[DEBUG] Failed to read request body from cassette: %v", err)
@@ -179,8 +173,10 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 				return true
 			}
 
-			// JSON might be the same, but reordered. Try parsing and comparing.
-			if strings.Contains(contentType, "application/json") {
+			// https://awslabs.github.io/smithy/1.0/spec/aws/index.html#aws-protocols.
+			switch contentType := r.Header.Get("Content-Type"); contentType {
+			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
+				// JSON might be the same, but reordered. Try parsing and comparing.
 				var requestJson, cassetteJson interface{}
 
 				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
@@ -194,10 +190,9 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 				}
 
 				return reflect.DeepEqual(requestJson, cassetteJson)
-			}
 
-			// XML might be the same, but reordered. Try parsing and comparing.
-			if strings.Contains(contentType, "application/xml") {
+			case "application/xml":
+				// XML might be the same, but reordered. Try parsing and comparing.
 				var requestXml, cassetteXml interface{}
 
 				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
