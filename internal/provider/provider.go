@@ -711,8 +711,11 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
-			"aws_kendra_faq":   kendra.DataSourceFaq(),
-			"aws_kendra_index": kendra.DataSourceIndex(),
+			"aws_kendra_experience":                   kendra.DataSourceExperience(),
+			"aws_kendra_faq":                          kendra.DataSourceFaq(),
+			"aws_kendra_index":                        kendra.DataSourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.DataSourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.DataSourceThesaurus(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -998,6 +1001,7 @@ func Provider() *schema.Provider {
 
 			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
+			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
@@ -1633,6 +1637,7 @@ func Provider() *schema.Provider {
 			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),
+			"aws_lakeformation_resource_lf_tags":   lakeformation.ResourceResourceLFTags(),
 
 			"aws_lambda_alias":                          lambda.ResourceAlias(),
 			"aws_lambda_code_signing_config":            lambda.ResourceCodeSigningConfig(),

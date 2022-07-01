@@ -23,6 +23,9 @@ const (
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
+
+	ObservabilityConfigurationCreateTimeout = 2 * time.Minute
+	ObservabilityConfigurationDeleteTimeout = 2 * time.Minute
 )
 
 func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -83,6 +86,32 @@ func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.App
 		Target:  []string{},
 		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{ObservabilityConfigurationStatusActive},
+		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
+		Timeout: ObservabilityConfigurationCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ObservabilityConfigurationStatusActive},
+		Target:  []string{ObservabilityConfigurationStatusInactive},
+		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
+		Timeout: ObservabilityConfigurationDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
