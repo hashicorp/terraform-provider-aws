@@ -26,7 +26,7 @@ func ResourceSharedDirectory() *schema.Resource {
 		ReadContext:   resourceSharedDirectoryRead,
 		DeleteContext: resourceSharedDirectoryDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceSharedDirectoryImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -99,7 +99,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
-	d.SetId(fmt.Sprintf("%s/%s", dirId, aws.StringValue(out.SharedDirectoryId)))
+	d.SetId(sharedDirectoryID(dirId, aws.StringValue(out.SharedDirectoryId)))
 	d.Set("shared_directory_id", out.SharedDirectoryId)
 
 	return nil
@@ -108,10 +108,13 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	dirId := d.Get("directory_id").(string)
-	sharedId := d.Get("shared_directory_id").(string)
+	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
-	output, err := findSharedDirectoryByIDs(ctx, conn, dirId, sharedId)
+	if err != nil {
+		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
+	}
+
+	output, err := findSharedDirectoryByIDs(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())
@@ -169,20 +172,6 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceSharedDirectoryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <owner-directory-id>/<shared-directory-id>", d.Id())
-	}
-
-	ownerDirId := idParts[0]
-	sharedDirId := idParts[1]
-
-	d.Set("directory_id", ownerDirId)
-	d.Set("shared_directory_id", sharedDirId)
-	return []*schema.ResourceData{d}, nil
-}
-
 func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ds-in-func-name
 	if tfMap == nil {
 		return nil
@@ -235,4 +224,17 @@ func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]
 	tfMap["type"] = directoryservice.TargetTypeAccount // only type available
 
 	return tfMap
+}
+
+func sharedDirectoryID(ownerDirectoryID, sharedDirectoryID string) string {
+	return fmt.Sprintf("%s/%s", ownerDirectoryID, sharedDirectoryID)
+}
+
+func parseSharedDirectoryID(id string) (string, string, error) {
+	idParts := strings.SplitN(id, "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%q), expected <owner-directory-id>/<shared-directory-id>", id)
+	}
+
+	return idParts[0], idParts[1], nil
 }
