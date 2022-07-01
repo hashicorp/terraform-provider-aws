@@ -52,7 +52,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
@@ -81,7 +81,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
