@@ -129,14 +129,10 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				},
 			},
 			"type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Type of rule, ingress (inbound) or egress (outbound).",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ingress",
-					"egress",
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(securityGroupRuleType_Values(), false),
 			},
 		},
 	}
@@ -144,17 +140,19 @@ func ResourceSecurityGroupRule() *schema.Resource {
 
 func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	sg_id := d.Get("security_group_id").(string)
+	securityGroupID := d.Get("security_group_id").(string)
 
-	conns.GlobalMutexKV.Lock(sg_id)
-	defer conns.GlobalMutexKV.Unlock(sg_id)
+	conns.GlobalMutexKV.Lock(securityGroupID)
+	defer conns.GlobalMutexKV.Unlock(securityGroupID)
 
-	sg, err := FindSecurityGroupByID(conn, sg_id)
+	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
 	perm, err := expandIPPerm(d, sg)
+
 	if err != nil {
 		return err
 	}
@@ -172,9 +170,9 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 	var autherr error
 	switch ruleType {
-	case "ingress":
+	case securityGroupRuleTypeIngress:
 		log.Printf("[DEBUG] Authorizing security group %s %s rule: %s",
-			sg_id, "Ingress", perm)
+			securityGroupID, "Ingress", perm)
 
 		req := &ec2.AuthorizeSecurityGroupIngressInput{
 			GroupId:       sg.GroupId,
@@ -188,9 +186,9 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 		_, autherr = conn.AuthorizeSecurityGroupIngress(req)
 
-	case "egress":
+	case securityGroupRuleTypeEgress:
 		log.Printf("[DEBUG] Authorizing security group %s %s rule: %#v",
-			sg_id, "Egress", perm)
+			securityGroupID, "Egress", perm)
 
 		req := &ec2.AuthorizeSecurityGroupEgressInput{
 			GroupId:       sg.GroupId,
@@ -208,26 +206,26 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 a side effect of a now-fixed Terraform issue causing two security groups with
 identical attributes but different source_security_group_ids to overwrite each
 other in the state. See https://github.com/hashicorp/terraform/pull/2376 for more
-information and instructions for recovery. Error: %w`, sg_id, autherr)
+information and instructions for recovery. Error: %w`, securityGroupID, autherr)
 	}
 	if autherr != nil {
 		return fmt.Errorf("Error authorizing security group rule type %s: %w", ruleType, autherr)
 	}
 
 	var rules []*ec2.IpPermission
-	id := IPPermissionIDHash(sg_id, ruleType, perm)
+	id := IPPermissionIDHash(securityGroupID, ruleType, perm)
 	log.Printf("[DEBUG] Computed group rule ID %s", id)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		sg, err := FindSecurityGroupByID(conn, sg_id)
+		sg, err := FindSecurityGroupByID(conn, securityGroupID)
 
 		if err != nil {
-			log.Printf("[DEBUG] Error finding Security Group (%s) for Rule (%s): %s", sg_id, id, err)
+			log.Printf("[DEBUG] Error finding Security Group (%s) for Rule (%s): %s", securityGroupID, id, err)
 			return resource.NonRetryableError(err)
 		}
 
 		switch ruleType {
-		case "ingress":
+		case securityGroupRuleTypeIngress:
 			rules = sg.IpPermissions
 		default:
 			rules = sg.IpPermissionsEgress
@@ -236,7 +234,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 		rule := findRuleMatch(perm, rules, isVPC)
 		if rule == nil {
 			log.Printf("[DEBUG] Unable to find matching %s Security Group Rule (%s) for Group %s",
-				ruleType, id, sg_id)
+				ruleType, id, securityGroupID)
 			return resource.RetryableError(fmt.Errorf("No match found"))
 		}
 
@@ -244,13 +242,13 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		sg, err := FindSecurityGroupByID(conn, sg_id)
+		sg, err := FindSecurityGroupByID(conn, securityGroupID)
 		if err != nil {
 			return fmt.Errorf("Error finding security group: %w", err)
 		}
 
 		switch ruleType {
-		case "ingress":
+		case securityGroupRuleTypeIngress:
 			rules = sg.IpPermissions
 		default:
 			rules = sg.IpPermissionsEgress
@@ -262,7 +260,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("Error finding matching %s Security Group Rule (%s) for Group %s", ruleType, id, sg_id)
+		return fmt.Errorf("Error finding matching %s Security Group Rule (%s) for Group %s", ruleType, id, securityGroupID)
 	}
 
 	d.SetId(id)
@@ -288,7 +286,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 	var rules []*ec2.IpPermission
 	ruleType := d.Get("type").(string)
 	switch ruleType {
-	case "ingress":
+	case securityGroupRuleTypeIngress:
 		rules = sg.IpPermissions
 	default:
 		rules = sg.IpPermissionsEgress
@@ -361,7 +359,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	ruleType := d.Get("type").(string)
 	switch ruleType {
-	case "ingress":
+	case securityGroupRuleTypeIngress:
 		log.Printf("[DEBUG] Revoking rule (%s) from security group %s:\n%s",
 			"ingress", sg_id, perm)
 		req := &ec2.RevokeSecurityGroupIngressInput{
@@ -374,7 +372,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("Error revoking security group %s rules: %w", sg_id, err)
 		}
-	case "egress":
+	case securityGroupRuleTypeEgress:
 
 		log.Printf("[DEBUG] Revoking security group %#v %s rule: %#v", sg_id, "egress", perm)
 		req := &ec2.RevokeSecurityGroupEgressInput{
@@ -861,7 +859,7 @@ func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.Resourc
 	}
 	ruleType := d.Get("type").(string)
 	switch ruleType {
-	case "ingress":
+	case securityGroupRuleTypeIngress:
 		req := &ec2.UpdateSecurityGroupRuleDescriptionsIngressInput{
 			GroupId:       sg.GroupId,
 			IpPermissions: []*ec2.IpPermission{perm},
@@ -872,7 +870,7 @@ func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.Resourc
 		if err != nil {
 			return fmt.Errorf("Error updating security group %s rule description: %w", sg_id, err)
 		}
-	case "egress":
+	case securityGroupRuleTypeEgress:
 		req := &ec2.UpdateSecurityGroupRuleDescriptionsEgressInput{
 			GroupId:       sg.GroupId,
 			IpPermissions: []*ec2.IpPermission{perm},
@@ -916,7 +914,7 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 		return nil, fmt.Errorf(errStr, importStr, "invalid security group ID")
 	}
 
-	if ruleType != "ingress" && ruleType != "egress" {
+	if ruleType != securityGroupRuleTypeIngress && ruleType != securityGroupRuleTypeEgress {
 		return nil, fmt.Errorf(errStr, importStr, "expecting 'ingress' or 'egress'")
 	}
 
@@ -972,7 +970,7 @@ func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []s
 
 	d.Set("security_group_id", sgID)
 
-	if ruleType == "ingress" {
+	if ruleType == securityGroupRuleTypeIngress {
 		d.Set("type", ruleType)
 	} else {
 		d.Set("type", "egress")
