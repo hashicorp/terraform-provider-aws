@@ -890,6 +890,12 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("ttl") {
+		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{}), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
@@ -897,21 +903,15 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("replica") {
-		if err := updateReplica(d, conn, meta.(*conns.AWSClient).TerraformVersion); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("ttl") {
-		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{}), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %w", d.Id(), err)
-		}
-	}
-
 	if d.HasChange("point_in_time_recovery") {
 		if err := updatePITR(conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("replica") {
+		if err := updateReplica(d, conn, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %w", d.Id(), err)
 		}
 	}
 
