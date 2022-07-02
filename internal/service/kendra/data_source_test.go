@@ -587,6 +587,105 @@ func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *te
 	})
 }
 
+func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "false",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key":  "_document_title",
+						"condition.0.operator":                          "Equals",
+						"condition.0.condition_on_value.#":              "1",
+						"condition.0.condition_on_value.0.string_value": "foo",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_category",
+						"target.0.target_document_attribute_value_deletion":       "false",
+						"target.0.target_document_attribute_value.#":              "1",
+						"target.0.target_document_attribute_value.0.string_value": "bar",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations2(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "false",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key":  "_document_title",
+						"condition.0.operator":                          "Equals",
+						"condition.0.condition_on_value.#":              "1",
+						"condition.0.condition_on_value.0.string_value": "foo2",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_category",
+						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value.#":              "1",
+						"target.0.target_document_attribute_value.0.string_value": "bar2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "false",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key": "_created_at",
+						"condition.0.operator":                         "Equals",
+						"condition.0.condition_on_value.#":             "1",
+						"condition.0.condition_on_value.0.date_value":  "2006-01-02T15:04:05+02:00",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_authors",
+						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value.#":                     "1",
+						"target.0.target_document_attribute_value.0.string_list_value.#": "2",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -1327,6 +1426,190 @@ resource "aws_kendra_data_source" "test" {
       exclusion_patterns = ["example2", "foo"]
       inclusion_patterns = ["hello2", "bar"]
       inclusion_prefixes = ["world2", "baz"]
+    }
+  }
+}
+`, rName4, rName5, rName6))
+}
+
+func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  custom_document_enrichment_configuration {
+    inline_configurations {
+      document_content_deletion = false
+
+      condition {
+        condition_document_attribute_key = "_document_title"
+        operator                         = "Equals"
+
+        condition_on_value {
+          string_value = "foo"
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_category"
+        target_document_attribute_value_deletion = false
+
+        target_document_attribute_value {
+          string_value = "bar"
+        }
+      }
+    }
+  }
+}
+`, rName4, rName5, rName6))
+}
+
+func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations2(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  custom_document_enrichment_configuration {
+    inline_configurations {
+      document_content_deletion = false
+
+      condition {
+        condition_document_attribute_key = "_document_title"
+        operator                         = "Equals"
+
+        condition_on_value {
+          string_value = "foo2"
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_category"
+        target_document_attribute_value_deletion = true
+
+        target_document_attribute_value {
+          string_value = "bar2"
+        }
+      }
+    }
+
+    inline_configurations {
+      document_content_deletion = false
+
+      condition {
+        condition_document_attribute_key = "_created_at"
+        operator                         = "Equals"
+
+        condition_on_value {
+          date_value = "2006-01-02T15:04:05+02:00"
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_authors"
+        target_document_attribute_value_deletion = false
+
+        target_document_attribute_value {
+          string_list_value = ["foo", "baz"]
+        }
+      }
     }
   }
 }
