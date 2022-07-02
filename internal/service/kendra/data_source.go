@@ -149,6 +149,74 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
+			"custom_document_enrichment_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"inline_configurations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MinItems: 0,
+							MaxItems: 100,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition": func() *schema.Schema {
+										schema := documentAttributeConditionSchema()
+										return schema
+									}(),
+									"document_content_deletion": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"target": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_document_attribute_key": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 200),
+														validation.StringMatch(
+															regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
+														),
+													),
+												},
+												"target_document_attribute_value": func() *schema.Schema {
+													schema := documentAttributeValueSchema()
+													return schema
+												}(),
+												"target_document_attribute_value_deletion": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"post_extraction_hook_configuration": func() *schema.Schema {
+							schema := hookConfigurationSchema()
+							return schema
+						}(),
+						"pre_extraction_hook_configuration": func() *schema.Schema {
+							schema := hookConfigurationSchema()
+							return schema
+						}(),
+						"role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -228,6 +296,104 @@ func ResourceDataSource() *schema.Resource {
 	}
 }
 
+// post_extraction_hook_configuration and pre_extraction_hook_configuration share the same schema
+func hookConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"invocation_condition": func() *schema.Schema {
+					schema := documentAttributeConditionSchema()
+					return schema
+				}(),
+				"lambda_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"s3_bucket": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 63),
+						validation.StringMatch(
+							regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+							"Must be a valid bucket name",
+						),
+					),
+				},
+			},
+		},
+	}
+}
+
+func documentAttributeConditionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"condition_document_attribute_key": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 200),
+						validation.StringMatch(
+							regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
+						),
+					),
+				},
+				"condition_on_value": func() *schema.Schema {
+					schema := documentAttributeValueSchema()
+					return schema
+				}(),
+				"operator": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(dataSourceOperatorValues(types.ConditionOperator("").Values()...), false),
+				},
+			},
+		},
+	}
+}
+
+func documentAttributeValueSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"date_value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"long_value": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"string_list_value": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringLenBetween(1, 2048),
+					},
+				},
+				"string_value": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+			},
+		},
+	}
+}
+
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -244,6 +410,10 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("configuration"); ok {
 		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_document_enrichment_configuration"); ok {
+		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -354,6 +524,10 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
@@ -375,7 +549,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 
-	if d.HasChanges("configuration", "description", "language_code", "role_arn", "schedule") {
+	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -388,6 +562,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange("configuration") {
 			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
+		}
+
+		if d.HasChange("custom_document_enrichment_configuration") {
+			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]interface{}))
 		}
 
 		if d.HasChange("description") {
@@ -650,6 +828,169 @@ func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.Documents
 	return result
 }
 
+func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.CustomDocumentEnrichmentConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.CustomDocumentEnrichmentConfiguration{}
+
+	if v, ok := tfMap["inline_configurations"]; ok && v.(*schema.Set).Len() > 0 {
+		result.InlineConfigurations = expandInlineCustomDocumentEnrichmentConfiguration(v.(*schema.Set).List())
+	}
+
+	if v, ok := tfMap["post_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.PostExtractionHookConfiguration = expandHookConfiguration(v)
+	}
+
+	if v, ok := tfMap["pre_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.PreExtractionHookConfiguration = expandHookConfiguration(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		result.RoleArn = aws.String(v)
+	}
+
+	return result
+}
+
+func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []types.InlineCustomDocumentEnrichmentConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	result := []types.InlineCustomDocumentEnrichmentConfiguration{}
+
+	for _, inlineConfig := range tfList {
+		data := inlineConfig.(map[string]interface{})
+		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
+
+		if v, ok := data["condition"].([]interface{}); ok && len(v) > 0 {
+			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
+		}
+
+		if v, ok := data["document_content_deletion"].(bool); ok {
+			inlineConfigExpanded.DocumentContentDeletion = v
+		}
+
+		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
+		}
+
+		result = append(result, inlineConfigExpanded)
+	}
+
+	return result
+}
+
+func expandDocumentAttributeTarget(tfList []interface{}) *types.DocumentAttributeTarget {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.DocumentAttributeTarget{}
+
+	if v, ok := tfMap["target_document_attribute_key"].(string); ok && v != "" {
+		result.TargetDocumentAttributeKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["target_document_attribute_value"].([]interface{}); ok && len(v) > 0 {
+		result.TargetDocumentAttributeValue = expandDocumentAttributeValue(v)
+	}
+
+	if v, ok := tfMap["target_document_attribute_value_deletion"].(bool); ok {
+		result.TargetDocumentAttributeValueDeletion = v
+	}
+
+	return result
+}
+
+func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.HookConfiguration{
+		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
+		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+	}
+
+	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
+		result.InvocationCondition = expandDocumentAttributeCondition(v)
+	}
+
+	return result
+}
+
+func expandDocumentAttributeCondition(tfList []interface{}) *types.DocumentAttributeCondition {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.DocumentAttributeCondition{
+		ConditionDocumentAttributeKey: aws.String(tfMap["condition_document_attribute_key"].(string)),
+		Operator:                      types.ConditionOperator(tfMap["operator"].(string)),
+	}
+
+	if v, ok := tfMap["condition_on_value"].([]interface{}); ok && len(v) > 0 {
+		result.ConditionOnValue = expandDocumentAttributeValue(v)
+	}
+
+	return result
+}
+
+func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttributeValue {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.DocumentAttributeValue{}
+
+	// Only one of these values can be set at a time
+	if v, ok := tfMap["date_value"].(string); ok && v != "" {
+		// A date expressed as an ISO 8601 string.
+		const ISO8601UTC = "2006-01-02T15:04:05+01:00"
+		timeValue, _ := time.Parse(ISO8601UTC, v)
+		result.DateValue = aws.Time(timeValue)
+	} else if v, ok := tfMap["string_value"].(string); ok && v != "" {
+		result.StringValue = aws.String(v)
+	} else if v, ok := tfMap["string_list_value"]; ok && v.(*schema.Set).Len() > 0 {
+		result.StringListValue = flex.ExpandStringSetV2(v.(*schema.Set))
+	} else if v, ok := tfMap["long_value"]; ok {
+		// When no value was passed it was interpreted as a 0 leading to errors if other values like DateValue, StringValue, StringListValue were defined
+		// ValidationException: DocumentAttributeValue can only have 1 non-null field, but given value for key <> has too many non-null fields.
+		// hence check this as the last else if
+		result.LongValue = aws.Int64(int64(v.(int)))
+	}
+
+	return result
+}
+
 func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -724,7 +1065,141 @@ func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataCon
 	return []interface{}{m}
 }
 
+func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.InlineConfigurations; v != nil {
+		m["inline_configurations"] = flattenInlineConfigurations(v)
+	}
+
+	if v := apiObject.PostExtractionHookConfiguration; v != nil {
+		m["post_extraction_hook_configuration"] = flattenHookConfiguration(v)
+	}
+
+	if v := apiObject.PreExtractionHookConfiguration; v != nil {
+		m["pre_extraction_hook_configuration"] = flattenHookConfiguration(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		m["role_arn"] = v
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocumentEnrichmentConfiguration) []interface{} {
+	inlineConfigurationList := []interface{}{}
+
+	for _, inlineConfiguration := range inlineConfigurations {
+		m := map[string]interface{}{
+			"document_content_deletion": inlineConfiguration.DocumentContentDeletion,
+		}
+
+		if v := inlineConfiguration.Condition; v != nil {
+			m["condition"] = flattenDocumentAttributeCondition(v)
+		}
+
+		if v := inlineConfiguration.Target; v != nil {
+			m["target"] = flattenDocumentAttributeTarget(v)
+		}
+
+		inlineConfigurationList = append(inlineConfigurationList, m)
+	}
+
+	return inlineConfigurationList
+}
+
+func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"target_document_attribute_value_deletion": apiObject.TargetDocumentAttributeValueDeletion,
+	}
+
+	if v := apiObject.TargetDocumentAttributeKey; v != nil {
+		m["target_document_attribute_key"] = v
+	}
+
+	if v := apiObject.TargetDocumentAttributeValue; v != nil {
+		m["target_document_attribute_value"] = flattenDocumentAttributeValue(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"lambda_arn": apiObject.LambdaArn,
+		"s3_bucket":  apiObject.S3Bucket,
+	}
+
+	if v := apiObject.InvocationCondition; v != nil {
+		m["invocation_condition"] = flattenDocumentAttributeCondition(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeCondition) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"condition_document_attribute_key": apiObject.ConditionDocumentAttributeKey,
+		"operator":                         apiObject.Operator,
+	}
+
+	if v := apiObject.ConditionOnValue; v != nil {
+		m["condition_on_value"] = flattenDocumentAttributeValue(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	// only one of these values should be set at a time
+	if v := apiObject.DateValue; v != nil {
+		// A date expressed as an ISO 8601 string.
+		m["date_value"] = aws.ToTime(v).Format("2006-01-02T15:04:05+01:00")
+	} else if v := apiObject.StringValue; v != nil {
+		m["string_value"] = v
+	} else if v := apiObject.StringListValue; v != nil {
+		m["string_list_value"] = flex.FlattenStringListV2(v)
+	} else if v := apiObject.LongValue; v != nil {
+		m["long_value"] = aws.ToInt64(v)
+	}
+
+	return []interface{}{m}
+}
+
 // Helpers added. Could be generated or somehow use go 1.18 generics?
+func dataSourceOperatorValues(input ...types.ConditionOperator) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
 func dataSourceTypeValues(input ...types.DataSourceType) []string {
 	var output []string
 
