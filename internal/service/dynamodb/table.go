@@ -104,6 +104,7 @@ func ResourceTable() *schema.Resource {
 			"attribute": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -567,12 +568,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
-	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createReplicas(conn, d.Id(), v.List(), meta.(*conns.AWSClient).TerraformVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error initially creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
-		}
-	}
-
 	if d.Get("ttl.0.enabled").(bool) {
 		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{}), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
@@ -582,6 +577,12 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
 		if err := updatePITR(conn, d.Id(), true, aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
+		}
+	}
+
+	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
+		if err := createReplicas(conn, d.Id(), v.List(), meta.(*conns.AWSClient).TerraformVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("error initially creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
 
