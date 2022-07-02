@@ -12,10 +12,9 @@ import (
 )
 
 const (
-	directoryCreatedTimeout        = 60 * time.Minute
-	directoryDeletedTimeout        = 60 * time.Minute
-	sharedDirectoryDeletedTimeout  = 60 * time.Minute
-	sharedDirectoryAcceptedTimeout = 60 * time.Minute
+	directoryCreatedTimeout       = 60 * time.Minute
+	directoryDeletedTimeout       = 60 * time.Minute
+	sharedDirectoryDeletedTimeout = 60 * time.Minute
 )
 
 func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) error {
@@ -31,7 +30,7 @@ func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) er
 	return err
 }
 
-func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
 		Target:  []string{},
@@ -39,15 +38,9 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*
 		Timeout: directoryDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
-
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
