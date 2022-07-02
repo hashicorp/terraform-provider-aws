@@ -85,6 +85,11 @@ func ResourceTable() *schema.Resource {
 				}
 				return errs.ErrorOrNil()
 			},
+			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta interface{}) bool {
+				// If they differ force new unless new is cleared
+				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -99,7 +104,6 @@ func ResourceTable() *schema.Resource {
 			"attribute": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -346,7 +350,6 @@ func ResourceTable() *schema.Resource {
 			"restore_source_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -560,24 +563,24 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("name").(string))
 
-	if _, err := waitTableActive(conn, d.Id()); err != nil {
+	if _, err := waitTableActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createReplicas(conn, d.Id(), v.List(), meta.(*conns.AWSClient).TerraformVersion, true); err != nil {
+		if err := createReplicas(conn, d.Id(), v.List(), meta.(*conns.AWSClient).TerraformVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error initially creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
-		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{})); err != nil {
+		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{}), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
 		}
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(conn, d.Id(), true, aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updatePITR(conn, d.Id(), true, aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
 		}
 	}
@@ -770,7 +773,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if _, err := waitGSIDeleted(conn, d.Id(), idxName); err != nil {
+		if _, err := waitGSIDeleted(conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %w", d.Id(), idxName, err)
 		}
 	}
@@ -831,7 +834,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating DynamoDB Table (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitTableActive(conn, d.Id()); err != nil {
+		if _, err := waitTableActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %w", d.Id(), err)
 		}
 
@@ -842,7 +845,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			idxName := aws.StringValue(gsiUpdate.Update.IndexName)
 
-			if _, err := waitGSIActive(conn, d.Id(), idxName); err != nil {
+			if _, err := waitGSIActive(conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %w", d.Id(), idxName, err)
 			}
 		}
@@ -866,7 +869,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if _, err := waitGSIActive(conn, d.Id(), idxName); err != nil {
+		if _, err := waitGSIActive(conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %w", d.Id(), idxName, err)
 		}
 	}
@@ -881,7 +884,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 		}
 
-		if _, err := waitSSEUpdated(conn, d.Id()); err != nil {
+		if _, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 		}
 	}
@@ -900,13 +903,13 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("ttl") {
-		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{})); err != nil {
+		if err := updateTimeToLive(conn, d.Id(), d.Get("ttl").([]interface{}), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updatePITR(conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
 		}
 	}
@@ -920,7 +923,7 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
-		if err := deleteReplicas(conn, d.Id(), replicas); err != nil {
+		if err := deleteReplicas(conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
@@ -933,7 +936,7 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waitTableDeleted(conn, d.Id()); err != nil {
+	if _, err := waitTableDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -953,7 +956,7 @@ func isTableOptionDisabled(v interface{}) bool {
 
 // CRUD helpers
 
-func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool) error {
+func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool, timeout time.Duration) error {
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -1001,7 +1004,7 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 			}
 		}
 
-		err := resource.Retry(replicaUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(maxDuration(replicaUpdateTimeout, timeout), func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
@@ -1024,19 +1027,19 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 		}
 
 		if create && tfawserr.ErrMessageContains(err, "ValidationException", "already exist") {
-			return createReplicas(conn, tableName, tfList, tfVersion, false)
+			return createReplicas(conn, tableName, tfList, tfVersion, false, timeout)
 		}
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "ValidationException", "no actions specified") {
 			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %w", tableName, tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(conn, tableName, tfMap["region_name"].(string)); err != nil {
+		if _, err := waitReplicaActive(conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %w", tableName, tfMap["region_name"].(string), err)
 		}
 
 		// pitr
-		if err = updatePITR(conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), tfVersion); err != nil {
+		if err = updatePITR(conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), tfVersion, timeout); err != nil {
 			return names.Error(names.DynamoDB, names.ErrActionUpdating, "Table", tableName, err)
 		}
 
@@ -1045,7 +1048,7 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 	return nil
 }
 
-func updateTimeToLive(conn *dynamodb.DynamoDB, tableName string, ttlList []interface{}) error {
+func updateTimeToLive(conn *dynamodb.DynamoDB, tableName string, ttlList []interface{}, timeout time.Duration) error {
 	ttlMap := ttlList[0].(map[string]interface{})
 
 	input := &dynamodb.UpdateTimeToLiveInput{
@@ -1063,14 +1066,14 @@ func updateTimeToLive(conn *dynamodb.DynamoDB, tableName string, ttlList []inter
 
 	log.Printf("[DEBUG] Waiting for DynamoDB Table (%s) Time to Live update to complete", tableName)
 
-	if _, err := waitTTLUpdated(conn, tableName, ttlMap["enabled"].(bool)); err != nil {
+	if _, err := waitTTLUpdated(conn, tableName, ttlMap["enabled"].(bool), timeout); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) Time To Live update: %w", tableName, err)
 	}
 
 	return nil
 }
 
-func updatePITR(conn *dynamodb.DynamoDB, tableName string, enabled bool, region string, tfVersion string) error {
+func updatePITR(conn *dynamodb.DynamoDB, tableName string, enabled bool, region string, tfVersion string, timeout time.Duration) error {
 	// pitr must be modified from region where the main/replica resides
 	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v (%s)", enabled, region)
 	input := &dynamodb.UpdateContinuousBackupsInput{
@@ -1109,7 +1112,7 @@ func updatePITR(conn *dynamodb.DynamoDB, tableName string, enabled bool, region 
 		return names.Error(names.DynamoDB, "updating PITR", "Table", tableName, err)
 	}
 
-	if _, err := waitPITRUpdated(conn, tableName, enabled); err != nil {
+	if _, err := waitPITRUpdated(conn, tableName, enabled, timeout); err != nil {
 		return names.Error(names.DynamoDB, "waiting for PITR update", "Table", tableName, err)
 	}
 
@@ -1138,13 +1141,13 @@ func updateReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB, tfVersion st
 	}
 
 	if len(added) > 0 {
-		if err := createReplicas(conn, d.Id(), added, tfVersion, true); err != nil {
+		if err := createReplicas(conn, d.Id(), added, tfVersion, true, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB replicas for table (%s), while creating: %w", d.Id(), err)
 		}
 	}
 
 	if len(removed) > 0 {
-		if err := deleteReplicas(conn, d.Id(), removed); err != nil {
+		if err := deleteReplicas(conn, d.Id(), removed, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB replicas for table (%s), while deleting: %w", d.Id(), err)
 		}
 	}
@@ -1295,7 +1298,7 @@ func deleteTable(conn *dynamodb.DynamoDB, tableName string) error {
 	return err
 }
 
-func deleteReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}) error {
+func deleteReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, tfMapRaw := range tfList {
@@ -1353,7 +1356,7 @@ func deleteReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 				return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
 			}
 
-			if _, err := waitReplicaDeleted(conn, tableName, regionName); err != nil {
+			if _, err := waitReplicaDeleted(conn, tableName, regionName, timeout); err != nil {
 				return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
 			}
 
