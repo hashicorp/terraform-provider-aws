@@ -12,6 +12,9 @@ on:
       - completed
 jobs:
   on-success-or-workflow-dispatch:
+    permissions:
+      actions: read  # for dawidd6/action-download-artifact to query and download artifacts
+      pull-requests: read  # for dawidd6/action-download-artifact to query commit hash
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     outputs:
@@ -57,6 +60,8 @@ jobs:
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   on-failure:
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:

@@ -12,6 +12,9 @@ on:
       - .github/workflows/semgrep-ci.yml
       - .github/scripts/semgrep.sh
 
+permissions:
+  contents: read
+
 jobs:
   semgrep:
     name: Semgrep Code Quality Scan

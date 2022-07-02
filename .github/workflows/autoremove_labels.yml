@@ -6,8 +6,13 @@ on:
   pull_request_target:
     types: [closed]
 
+permissions:
+  contents: read
+
 jobs:
   RemoveTriagingLabelsFromClosedIssueOrPR:
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     steps:
       - name: Remove triaging labels from closed issues and PRs

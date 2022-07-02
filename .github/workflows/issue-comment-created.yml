@@ -7,8 +7,13 @@ on:
 env:
   IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
 
+permissions:
+  contents: read
+
 jobs:
   issue_comment_triage:
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     steps:
       - uses: actions-ecosystem/action-remove-labels@v1

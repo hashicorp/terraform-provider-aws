@@ -3,8 +3,14 @@ on:
   pull_request_target:
     types:
       - opened
+permissions:
+  contents: read
+
 jobs:
   PermissionsCheck:
+    permissions:
+      issues: write  # for peter-evans/create-or-update-comment to create or update comment
+      pull-requests: write  # for peter-evans/create-or-update-comment to create or update comment
     env:
       MAINTAINER_CAN_MODIFY: ${{ github.event.pull_request.maintainer_can_modify }}
       IN_MAINTAINER_LIST: ${{ contains( secrets.MAINTAINER_LIST, github.actor) }}

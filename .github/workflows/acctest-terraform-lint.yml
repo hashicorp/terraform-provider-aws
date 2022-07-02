@@ -13,6 +13,9 @@ on:
       - scripts/validate-terraform.sh
       - tools/go.mod
 
+permissions:
+  contents: read
+
 jobs:
   terrafmt:
     runs-on: ubuntu-latest

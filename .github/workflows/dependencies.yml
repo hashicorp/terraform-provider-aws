@@ -10,8 +10,14 @@ on:
 env:
   IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
 
+permissions:
+  contents: read
+
 jobs:
   changes:
+    permissions:
+      contents: read  # for dorny/paths-filter to fetch a list of changed files
+      pull-requests: read  # for dorny/paths-filter to read pull requests
     name: Filter Changes
     runs-on: ubuntu-latest
     outputs:
@@ -27,6 +33,9 @@ jobs:
               - go.mod
               - go.sum
   comment:
+    permissions:
+      issues: write  # for peter-evans/create-or-update-comment to create or update comment
+      pull-requests: write  # for peter-evans/create-or-update-comment to create or update comment
     needs: changes
     if: ${{ needs.changes.outputs.changed == 'true' }}
     name: Comment

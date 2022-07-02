@@ -7,6 +7,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/*
+permissions:
+  contents: read
+
 jobs:
   actionlint:
     runs-on: ubuntu-latest

@@ -10,6 +10,9 @@ on:
       - names/**
       - skaff/**
 
+permissions:
+  contents: read
+
 jobs:
   compile_skaff:
     name: Compile skaff

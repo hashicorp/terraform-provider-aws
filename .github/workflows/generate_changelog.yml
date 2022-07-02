@@ -3,8 +3,13 @@ on:
   pull_request:
     types: [closed]
   workflow_dispatch:
+permissions:
+  contents: read
+
 jobs:
   GenerateChangelog:
+    permissions:
+      contents: write  # for Git to git push
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
