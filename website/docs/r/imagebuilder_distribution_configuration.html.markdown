@@ -61,6 +61,7 @@ The following arguments are optional:
 
 * `ami_distribution_configuration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
 * `container_distribution_configuration` - (Optional) Configuration block with container distribution settings. Detailed below.
+* `fast_launch_configuration` - (Optional) Set of Windows faster-launching configurations to use for AMI distribution. Detailed below.
 * `launch_template_configuration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 
@@ -94,6 +95,24 @@ The following arguments are optional:
 
 * `repository_name` - (Required) The name of the container repository where the output container image is stored. This name is prefixed by the repository location.
 * `service` - (Required) The service in which this image is registered. Valid values: `ECR`.
+
+### fast_launch_configuration
+
+* `account_id` - (Required) The owner account ID for the fast-launch enabled Windows AMI.
+* `enabled` - (Required) A Boolean that represents the current state of faster launching for the Windows AMI. Set to `true` to start using Windows faster launching, or `false` to stop using it.
+* `launch_template` - (Optional) Configuration block for the launch template that the fast-launch enabled Windows AMI uses when it launches Windows instances to create pre-provisioned snapshots. Detailed below.
+* `max_parallel_launches` - (Optional) The maximum number of parallel instances that are launched for creating resources.
+* `snapshot_configuration` - (Optional) Configuration block for managing the number of snapshots that are created from pre-provisioned instances for the Windows AMI when faster launching is enabled. Detailed below.
+
+### launch_template
+
+* `launch_template_id` - (Optional) The ID of the launch template to use for faster launching for a Windows AMI.
+* `launch_template_name` - (Optional) The name of the launch template to use for faster launching for a Windows AMI.
+* `launch_template_version` - (Optional) The version of the launch template to use for faster launching for a Windows AMI.
+
+### snapshot_configuration
+
+* `target_resource_count` - (Optional) The number of pre-provisioned snapshots to keep on hand for a fast-launch enabled Windows AMI.
 
 ### launch_template_configuration
 
