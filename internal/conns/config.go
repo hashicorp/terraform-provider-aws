@@ -86,6 +86,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
+		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
 		HTTPProxy:                     c.HTTPProxy,
@@ -127,9 +128,10 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
+	// A zica esta aqui
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
+		return nil, diag.Errorf("Victor Aqui: error configuring Terraform AWS Provider: %s", err)
 	}
 
 	if !c.SkipRegionValidation {
