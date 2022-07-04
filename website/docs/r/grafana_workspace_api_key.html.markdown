@@ -44,3 +44,4 @@ Grafana Workspace API Key can be imported using the `id`, e.g.,
 
 ```sh
 $ terraform import aws_grafana_workspace_api_key.example workspace-id/keyname
+```

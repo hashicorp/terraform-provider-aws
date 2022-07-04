@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func ResourceWorkspaceApiKey() *schema.Resource {
+func ResourceWorkspaceAPIKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceApiKeyCreate,
+		Create: resourceWorkspaceAPIKeyCreate,
 		Read:   schema.Noop,
 		Update: schema.Noop,
-		Delete: resourceWorkspaceApiKeyDelete,
+		Delete: resourceWorkspaceAPIKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -62,7 +62,7 @@ func ResourceWorkspaceApiKey() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	d.SetId(d.Get("workspace_id").(string))
@@ -86,12 +86,12 @@ func resourceWorkspaceApiKeyCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error creating Grafana API Key : %w", err)
 	}
 
-	d.Set("key", aws.StringValue(output.Key))
+	d.Set("key", output.Key)
 	return nil
 
 }
 
-func resourceWorkspaceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())

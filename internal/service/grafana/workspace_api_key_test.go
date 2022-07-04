@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccWorkspaceApiKey_basic(t *testing.T) {
+func testAccWorkspaceAPIKey_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_api_key.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
@@ -22,7 +22,7 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceApiKeyProvider_basic(rName, "test-api-1"),
+				Config: testAccWorkspaceAPIKeyConfig_basic(rName, "test-api-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_role"),
@@ -35,7 +35,7 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceApiKeyProvider_basic(rName string, apiKey string) string {
+func testAccWorkspaceAPIKeyConfig_basic(rName string, apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "test_iam"
