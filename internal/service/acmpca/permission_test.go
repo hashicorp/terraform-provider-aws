@@ -22,12 +22,12 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaPermissionConfig_Valid(),
+				Config: testAccPermissionConfig_valid(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAcmpcaPermissionExists(resourceName, &permission),
+					testAccCheckPermissionExists(resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
 				),
@@ -41,10 +41,10 @@ func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsAcmpcaPermissionConfig_InvalidPrincipal(),
+				Config:      testAccPermissionConfig_invalidPrincipal(),
 				ExpectError: regexp.MustCompile("Error: expected principal to be one of .*, got .*"),
 			},
 		},
@@ -56,17 +56,17 @@ func TestAccACMPCAPermission_InvalidActionsEntry(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
+		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsAcmpcaPermissionConfig_InvalidActionsEntry(),
+				Config:      testAccPermissionConfig_invalidActionsEntry(),
 				ExpectError: regexp.MustCompile("Error: expected actions.1 to be one of .*, got .*"),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsAcmpcaPermissionDestroy(s *terraform.State) error {
+func testAccCheckPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -97,7 +97,7 @@ func testAccCheckAwsAcmpcaPermissionDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsAcmpcaPermissionExists(resourceName string, permission *acmpca.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(resourceName string, permission *acmpca.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -125,7 +125,7 @@ func testAccCheckAwsAcmpcaPermissionExists(resourceName string, permission *acmp
 	}
 }
 
-func testAccAwsAcmpcaCertificateAuthority() string {
+func testAccCertificateAuthority() string {
 	return `
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -142,9 +142,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 `
 }
 
-func testAccAwsAcmpcaPermissionConfig_Valid() string {
+func testAccPermissionConfig_valid() string {
 	return acctest.ConfigCompose(
-		testAccAwsAcmpcaCertificateAuthority(),
+		testAccCertificateAuthority(),
 		`
 resource "aws_acmpca_permission" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -154,9 +154,9 @@ resource "aws_acmpca_permission" "test" {
 `)
 }
 
-func testAccAwsAcmpcaPermissionConfig_InvalidPrincipal() string {
+func testAccPermissionConfig_invalidPrincipal() string {
 	return acctest.ConfigCompose(
-		testAccAwsAcmpcaCertificateAuthority(),
+		testAccCertificateAuthority(),
 		`
 resource "aws_acmpca_permission" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -166,9 +166,9 @@ resource "aws_acmpca_permission" "test" {
 `)
 }
 
-func testAccAwsAcmpcaPermissionConfig_InvalidActionsEntry() string {
+func testAccPermissionConfig_invalidActionsEntry() string {
 	return acctest.ConfigCompose(
-		testAccAwsAcmpcaCertificateAuthority(),
+		testAccCertificateAuthority(),
 		`
 resource "aws_acmpca_permission" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
