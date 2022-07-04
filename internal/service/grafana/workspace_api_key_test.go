@@ -38,33 +38,33 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 func testAccWorkspaceApiKeyProvider_basic(rName string, apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test_iam"
+  name = "test_iam"
 
-	assume_role_policy = jsonencode({
-		Version = "2012-10-17"
-		Statement = [
-		  {
-			Action = "sts:AssumeRole"
-			Effect = "Allow"
-			Sid    = ""
-			Principal = {
-			  Service = "grafana.amazonaws.com"
-			}
-		  },
-		]
-	})
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "grafana.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 resource "aws_grafana_workspace" "test" {
-	account_access_type      = "CURRENT_ACCOUNT"
-	authentication_providers = ["SAML"]
-	permission_type          = "SERVICE_MANAGED"
-	role_arn                 = aws_iam_role.test.arn
-}	
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+}
 resource "aws_grafana_workspace_api_key" "test" {
-  key_name			 = %[1]q
-  key_role			 = "EDITOR"
-  seconds_to_live 	 = 3600
-  workspace_id       = aws_grafana_workspace.test.id
+  key_name        = %[1]q
+  key_role        = "EDITOR"
+  seconds_to_live = 3600
+  workspace_id    = aws_grafana_workspace.test.id
 }
 `, apiKey)
 }
