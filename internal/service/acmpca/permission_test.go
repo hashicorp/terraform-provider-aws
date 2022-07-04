@@ -19,10 +19,10 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 	resourceName := "aws_acmpca_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAcmpcaPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAcmpcaPermissionConfig_Valid(),
@@ -38,10 +38,10 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 
 func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAcmpcaPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsAcmpcaPermissionConfig_InvalidPrincipal(),
@@ -53,10 +53,10 @@ func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
 
 func TestAccACMPCAPermission_InvalidActionsEntry(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsAcmpcaPermissionDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckAwsAcmpcaPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsAcmpcaPermissionConfig_InvalidActionsEntry(),
