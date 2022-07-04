@@ -40,4 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Grafana Workspace API Key cannot be imported.
+Grafana Workspace API Key can be imported using the `id`, e.g.,
+
+```sh
+$ terraform import aws_grafana_workspace_api_key.example workspace-id/keyname

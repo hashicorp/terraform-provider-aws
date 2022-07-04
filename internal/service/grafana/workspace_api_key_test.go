@@ -22,19 +22,20 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceApiKeyProvider_basic(rName),
+				Config: testAccWorkspaceApiKeyProvider_basic(rName, "test-api-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_role"),
 					resource.TestCheckResourceAttrSet(resourceName, "seconds_to_live"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key"),
 				),
 			},
 		},
 	})
 }
 
-func testAccWorkspaceApiKeyProvider_basic(rName string) string {
+func testAccWorkspaceApiKeyProvider_basic(rName string, apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
 	name = "test_iam"
@@ -60,10 +61,10 @@ resource "aws_grafana_workspace" "test" {
 	role_arn                 = aws_iam_role.test.arn
 }	
 resource "aws_grafana_workspace_api_key" "test" {
-  key_name			 = "test-key-1"
+  key_name			 = %[1]q
   key_role			 = "EDITOR"
   seconds_to_live 	 = 3600
   workspace_id       = aws_grafana_workspace.test.id
 }
-`)
+`, apiKey)
 }

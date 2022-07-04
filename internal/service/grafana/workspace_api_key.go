@@ -3,10 +3,12 @@ package grafana
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,7 +16,7 @@ import (
 
 func ResourceWorkspaceApiKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceApiKeyInsert,
+		Create: resourceWorkspaceApiKeyCreate,
 		Read:   schema.Noop,
 		Update: schema.Noop,
 		Delete: resourceWorkspaceApiKeyDelete,
@@ -29,16 +31,19 @@ func ResourceWorkspaceApiKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"key_name": {
+			"key": {
 				Type:     schema.TypeString,
-				Required: true,
-				//Computed: true,
-				ForceNew: true,
+				Computed: true,
+			},
+			"key_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"key_role": {
-				Type:     schema.TypeString,
-				Required: true,
-				//Computed:     true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.Role_Values(), false),
 			},
@@ -48,19 +53,19 @@ func ResourceWorkspaceApiKey() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 2592000),
 			},
 			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^g-[0-9a-f]{10}$`), "must be a valid workspace id"),
 			},
 		},
 	}
 }
 
-func resourceWorkspaceApiKeyInsert(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	d.SetId(d.Get("workspace_id").(string))
-
 	_, err := FindWorkspaceByID(conn, d.Id())
 
 	if err != nil {
@@ -74,12 +79,14 @@ func resourceWorkspaceApiKeyInsert(d *schema.ResourceData, meta interface{}) err
 		WorkspaceId:   aws.String(d.Id()),
 	}
 
-	_, err = conn.CreateWorkspaceApiKey(input)
+	log.Printf("[DEBUG] Creating Grafana API Key: %s", input)
+	output, err := conn.CreateWorkspaceApiKey(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Workspace API Configuration: %w", err)
+		return fmt.Errorf("error creating Grafana API Key : %w", err)
 	}
 
+	d.Set("key", aws.StringValue(output.Key))
 	return nil
 
 }
@@ -95,8 +102,13 @@ func resourceWorkspaceApiKeyDelete(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.DeleteWorkspaceApiKey(input)
 
 	if err != nil {
-		return fmt.Errorf("error Deleting Grafana Workspace API Configuration: %w", err)
+		return fmt.Errorf("error deleting Workspace API Key %s: %w", d.Id(), err)
+	}
+
+	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
 	return nil
+
 }
