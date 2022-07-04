@@ -128,10 +128,9 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		awsbaseConfig.StsRegion = c.STSRegion
 	}
 
-	// A zica esta aqui
 	cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
 	if err != nil {
-		return nil, diag.Errorf("Victor Aqui: error configuring Terraform AWS Provider: %s", err)
+		return nil, diag.Errorf("error configuring Terraform AWS Provider: %s", err)
 	}
 
 	if !c.SkipRegionValidation {
