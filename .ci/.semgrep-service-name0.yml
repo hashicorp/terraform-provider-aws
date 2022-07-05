@@ -2940,6 +2940,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConfigService"
     severity: WARNING
+<<<<<<< HEAD:.ci/.semgrep-service-name0.yml
   - id: configservice-in-var-name
     languages:
       - go
@@ -2985,3 +2986,5 @@ rules:
             - pattern-not-regex: "^TestAccConnect"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+=======
+>>>>>>> b1d89910e6 (add Transcribe language model):.semgrep-service-name0.yml

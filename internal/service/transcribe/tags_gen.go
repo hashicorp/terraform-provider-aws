@@ -73,7 +73,11 @@ func UpdateTags(ctx context.Context, conn *transcribe.Client, identifier string,
 		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
+<<<<<<< HEAD
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+=======
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+>>>>>>> b1d89910e6 (add Transcribe language model)
 		}
 	}
 
@@ -86,7 +90,11 @@ func UpdateTags(ctx context.Context, conn *transcribe.Client, identifier string,
 		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
+<<<<<<< HEAD
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+=======
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+>>>>>>> b1d89910e6 (add Transcribe language model)
 		}
 	}
 

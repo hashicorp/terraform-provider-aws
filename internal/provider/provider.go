@@ -2052,6 +2052,7 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
 			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),
