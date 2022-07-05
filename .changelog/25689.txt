@@ -1,3 +1,3 @@
 ```release-note:new-data-source
-aws_location_tracker
+aws_location_route_calculator
 ```
