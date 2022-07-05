@@ -188,7 +188,7 @@ func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[INFO] Deleting Location Service Route Calculator %s", d.Id())
 
 	_, err := conn.DeleteRouteCalculatorWithContext(ctx, &locationservice.DeleteRouteCalculatorInput{
-		CalculatorName: aws.String(d.Get("calculator_name").(string)),
+		CalculatorName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
