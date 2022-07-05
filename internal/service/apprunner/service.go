@@ -190,7 +190,7 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"observability_configuration_arn": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"observability_enabled": {
