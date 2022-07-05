@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -82,6 +83,8 @@ var Providers map[string]*schema.Provider
 // for tests requiring special provider configurations.
 var ProviderFactories map[string]func() (*schema.Provider, error)
 
+var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
 // Provider is the "main" provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
@@ -109,6 +112,18 @@ func init() {
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
 		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
+	}
+
+	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+		ProviderName: func() (tfprotov5.ProviderServer, error) {
+			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+
+			if err != nil {
+				return nil, err
+			}
+
+			return providerServerFactory(), nil
+		},
 	}
 }
 
