@@ -113,15 +113,15 @@ func ResourceTransitGateway() *schema.Resource {
 			"transit_gateway_cidr_blocks": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 2,
+				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
 						validation.All(
-							validation.IsCIDRNetwork(16, 24),
+							validation.IsCIDRNetwork(0, 24),
 							validation.StringDoesNotMatch(regexp.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
 						),
-						validation.IsCIDRNetwork(40, 64),
+						validation.IsCIDRNetwork(0, 64),
 					),
 				},
 			},
