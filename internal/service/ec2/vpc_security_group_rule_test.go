@@ -1422,6 +1422,46 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sg1ResourceName := "aws_security_group.test.0"
+	sg2ResourceName := "aws_security_group.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_prefixListAndSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sg1ResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_security_group_id", sg2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccSecurityGroupRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2497,9 +2537,50 @@ resource "aws_security_group_rule" "test" {
   from_port        = 80
   to_port          = 8000
   prefix_list_ids  = [aws_ec2_managed_prefix_list.test.id]
-  self             = true
+
 
   security_group_id = aws_security_group.test.id
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_prefixListAndSource(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_security_group_rule" "test" {
+  type             = "ingress"
+  protocol         = "6"
+  from_port        = 80
+  to_port          = 8000
+  prefix_list_ids  = [aws_ec2_managed_prefix_list.test.id]
+
+  source_security_group_id = aws_security_group.test[1].id
+
+  security_group_id = aws_security_group.test[0].id
 }
 `, rName)
 }
