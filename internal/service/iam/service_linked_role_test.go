@@ -107,7 +107,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
 					}
 				},
-				Config: testAccServiceLinkedRoleConfig(awsServiceName),
+				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", arnResource),
@@ -143,7 +143,7 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLinkedRoleConfig_CustomSuffix(awsServiceName, customSuffix),
+				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
@@ -172,7 +172,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLinkedRoleConfig(awsServiceName),
+				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
@@ -201,14 +201,14 @@ func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLinkedRoleConfig_Description(awsServiceName, customSuffix, "description1"),
+				Config: testAccServiceLinkedRoleConfig_description(awsServiceName, customSuffix, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
-				Config: testAccServiceLinkedRoleConfig_Description(awsServiceName, customSuffix, "description2"),
+				Config: testAccServiceLinkedRoleConfig_description(awsServiceName, customSuffix, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -235,7 +235,7 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, "key1", "value1"),
+				Config: testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -248,7 +248,7 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceLinkedRoleTags2Config(awsServiceName, customSuffix, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceLinkedRoleConfig_tags2(awsServiceName, customSuffix, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -257,7 +257,7 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, "key2", "value2"),
+				Config: testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -280,7 +280,7 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceLinkedRoleConfig_CustomSuffix(awsServiceName, customSuffix),
+				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
@@ -345,7 +345,7 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceLinkedRoleConfig(awsServiceName string) string {
+func testAccServiceLinkedRoleConfig_basic(awsServiceName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = "%s"
@@ -353,7 +353,7 @@ resource "aws_iam_service_linked_role" "test" {
 `, awsServiceName)
 }
 
-func testAccServiceLinkedRoleConfig_CustomSuffix(awsServiceName, customSuffix string) string {
+func testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = "%s"
@@ -362,7 +362,7 @@ resource "aws_iam_service_linked_role" "test" {
 `, awsServiceName, customSuffix)
 }
 
-func testAccServiceLinkedRoleConfig_Description(awsServiceName, customSuffix, description string) string {
+func testAccServiceLinkedRoleConfig_description(awsServiceName, customSuffix, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = "%s"
@@ -372,7 +372,7 @@ resource "aws_iam_service_linked_role" "test" {
 `, awsServiceName, customSuffix, description)
 }
 
-func testAccServiceLinkedRoleTags1Config(awsServiceName, customSuffix, tagKey1, tagValue1 string) string {
+func testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
@@ -385,7 +385,7 @@ resource "aws_iam_service_linked_role" "test" {
 `, awsServiceName, customSuffix, tagKey1, tagValue1)
 }
 
-func testAccServiceLinkedRoleTags2Config(awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccServiceLinkedRoleConfig_tags2(awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q

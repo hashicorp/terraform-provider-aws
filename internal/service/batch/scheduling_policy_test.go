@@ -24,12 +24,12 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchSchedulingPolicyDestroy,
+		CheckDestroy:      testAccCheckSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchSchedulingPolicyConfigBasic(rName),
+				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
@@ -46,9 +46,9 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 			},
 			{
 				// add one more share_distribution block
-				Config: testAccBatchSchedulingPolicyConfigBasic2(rName),
+				Config: testAccSchedulingPolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
@@ -71,12 +71,12 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBatchSchedulingPolicyDestroy,
+		CheckDestroy:      testAccCheckSchedulingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBatchSchedulingPolicyConfigBasic(rName),
+				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBatchSchedulingPolicyExists(resourceName, &schedulingPolicy1),
+					testAccCheckSchedulingPolicyExists(resourceName, &schedulingPolicy1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceSchedulingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,7 +85,7 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBatchSchedulingPolicyExists(n string, sp *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSchedulingPolicyExists(n string, sp *batch.SchedulingPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		log.Printf("State: %#v", s.RootModule().Resources)
@@ -111,7 +111,7 @@ func testAccCheckBatchSchedulingPolicyExists(n string, sp *batch.SchedulingPolic
 	}
 }
 
-func testAccCheckBatchSchedulingPolicyDestroy(s *terraform.State) error {
+func testAccCheckSchedulingPolicyDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_scheduling_policy" {
 			continue
@@ -149,7 +149,7 @@ func GetSchedulingPolicyNoContext(conn *batch.Batch, arn string) (*batch.Schedul
 	return nil, nil
 }
 
-func testAccBatchSchedulingPolicyConfigBasic(rName string) string {
+func testAccSchedulingPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {
@@ -172,7 +172,7 @@ resource "aws_batch_scheduling_policy" "test" {
 `, rName))
 }
 
-func testAccBatchSchedulingPolicyConfigBasic2(rName string) string {
+func testAccSchedulingPolicyConfig_basic2(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test" {

@@ -19,7 +19,7 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolsDataSourceConfig(rName),
+				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", "2"),
@@ -31,7 +31,7 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolsDataSourceConfig(rName string) string {
+func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   count = 2

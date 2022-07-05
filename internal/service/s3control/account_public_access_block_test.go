@@ -55,7 +55,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockConfig(),
+				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -85,7 +85,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockConfig(),
+				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					testAccCheckAccountPublicAccessBlockDisappears(),
@@ -107,7 +107,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockAccountIDConfig(),
+				Config: testAccAccountPublicAccessBlockConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -133,7 +133,7 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_acls(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
@@ -145,14 +145,14 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(false),
+				Config: testAccAccountPublicAccessBlockConfig_acls(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicACLsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_acls(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
@@ -173,7 +173,7 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_policy(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -185,14 +185,14 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(false),
+				Config: testAccAccountPublicAccessBlockConfig_policy(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccAccountPublicAccessBlockBlockPublicPolicyConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_policy(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -213,7 +213,7 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
@@ -225,14 +225,14 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(false),
+				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccAccountPublicAccessBlockIgnorePublicACLsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
@@ -253,7 +253,7 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration1),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
@@ -265,14 +265,14 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(false),
+				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
 				),
 			},
 			{
-				Config: testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(true),
+				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(resourceName, &configuration3),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
@@ -401,11 +401,11 @@ func testAccCheckAccountPublicAccessBlockDisappears() resource.TestCheckFunc {
 	}
 }
 
-func testAccAccountPublicAccessBlockConfig() string {
+func testAccAccountPublicAccessBlockConfig_basic() string {
 	return `resource "aws_s3_account_public_access_block" "test" {}`
 }
 
-func testAccAccountPublicAccessBlockAccountIDConfig() string {
+func testAccAccountPublicAccessBlockConfig_id() string {
 	return `
 data "aws_caller_identity" "test" {}
 
@@ -415,7 +415,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `
 }
 
-func testAccAccountPublicAccessBlockBlockPublicACLsConfig(blockPublicAcls bool) string {
+func testAccAccountPublicAccessBlockConfig_acls(blockPublicAcls bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   block_public_acls = %t
@@ -423,7 +423,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, blockPublicAcls)
 }
 
-func testAccAccountPublicAccessBlockBlockPublicPolicyConfig(blockPublicPolicy bool) string {
+func testAccAccountPublicAccessBlockConfig_policy(blockPublicPolicy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   block_public_policy = %t
@@ -431,7 +431,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, blockPublicPolicy)
 }
 
-func testAccAccountPublicAccessBlockIgnorePublicACLsConfig(ignorePublicAcls bool) string {
+func testAccAccountPublicAccessBlockConfig_ignoreACLs(ignorePublicAcls bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   ignore_public_acls = %t
@@ -439,7 +439,7 @@ resource "aws_s3_account_public_access_block" "test" {
 `, ignorePublicAcls)
 }
 
-func testAccAccountPublicAccessBlockRestrictPublicBucketsConfig(restrictPublicBuckets bool) string {
+func testAccAccountPublicAccessBlockConfig_restrictBuckets(restrictPublicBuckets bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   restrict_public_buckets = %t

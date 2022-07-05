@@ -185,6 +185,34 @@ func FindHSMClientCertificateByID(conn *redshift.Redshift, id string) (*redshift
 	return out.HsmClientCertificates[0], nil
 }
 
+func FindHSMConfigurationByID(conn *redshift.Redshift, id string) (*redshift.HsmConfiguration, error) {
+	input := redshift.DescribeHsmConfigurationsInput{
+		HsmConfigurationIdentifier: aws.String(id),
+	}
+
+	out, err := conn.DescribeHsmConfigurations(&input)
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmConfigurationNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || len(out.HsmConfigurations) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(out.HsmConfigurations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return out.HsmConfigurations[0], nil
+}
+
 func FindUsageLimitByID(conn *redshift.Redshift, id string) (*redshift.UsageLimit, error) {
 	input := &redshift.DescribeUsageLimitsInput{
 		UsageLimitId: aws.String(id),

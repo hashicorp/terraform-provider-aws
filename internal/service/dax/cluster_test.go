@@ -28,7 +28,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(rString),
+				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
@@ -84,7 +84,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterResizeConfig_singleNode(rString),
+				Config: testAccClusterConfig_resizeSingleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
@@ -97,7 +97,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterResizeConfig_multiNode(rString),
+				Config: testAccClusterConfig_resizeMultiNode(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
@@ -105,7 +105,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterResizeConfig_singleNode(rString),
+				Config: testAccClusterConfig_resizeSingleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
@@ -128,7 +128,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithEncryptionConfig(rString, false),
+				Config: testAccClusterConfig_encryption(rString, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
@@ -142,7 +142,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 			},
 			// Ensure it shows no difference when removing server_side_encryption configuration
 			{
-				Config:             testAccClusterConfig(rString),
+				Config:             testAccClusterConfig_basic(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -162,7 +162,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithEncryptionConfig(rString, true),
+				Config: testAccClusterConfig_encryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
@@ -176,7 +176,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 			},
 			// Ensure it shows a difference when removing server_side_encryption configuration
 			{
-				Config:             testAccClusterConfig(rString),
+				Config:             testAccClusterConfig_basic(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,7 +197,7 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Config: testAccClusterConfig_endpointEncryption(rString, clusterEndpointEncryptionType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
@@ -210,7 +210,7 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 			},
 			// Ensure it shows no difference when removing cluster_endpoint_encryption_type configuration
 			{
-				Config:             testAccClusterConfig(rString),
+				Config:             testAccClusterConfig_basic(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -231,7 +231,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterWithEndpointEncryptionConfig(rString, clusterEndpointEncryptionType),
+				Config: testAccClusterConfig_endpointEncryption(rString, clusterEndpointEncryptionType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
@@ -244,7 +244,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 			},
 			// Ensure it shows a difference when removing cluster_endpoint_encryption_type configuration
 			{
-				Config:             testAccClusterConfig(rString),
+				Config:             testAccClusterConfig_basic(rString),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -357,7 +357,7 @@ EOF
 }
 `
 
-func testAccClusterConfig(rString string) string {
+func testAccClusterConfig_basic(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -373,7 +373,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString)
 }
 
-func testAccClusterWithEncryptionConfig(rString string, enabled bool) string {
+func testAccClusterConfig_encryption(rString string, enabled bool) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -393,7 +393,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString, enabled)
 }
 
-func testAccClusterWithEndpointEncryptionConfig(rString string, encryptionType string) string {
+func testAccClusterConfig_endpointEncryption(rString string, encryptionType string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name                     = "tf-%s"
@@ -410,7 +410,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString, encryptionType)
 }
 
-func testAccClusterResizeConfig_singleNode(rString string) string {
+func testAccClusterConfig_resizeSingleNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
@@ -421,7 +421,7 @@ resource "aws_dax_cluster" "test" {
 `, baseConfig, rString)
 }
 
-func testAccClusterResizeConfig_multiNode(rString string) string {
+func testAccClusterConfig_resizeMultiNode(rString string) string {
 	return fmt.Sprintf(`%s
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"

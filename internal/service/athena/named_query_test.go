@@ -24,7 +24,7 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -48,7 +48,7 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_workGroup(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -105,7 +105,7 @@ func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNamedQueryConfig(rInt int, rName string) string {
+func testAccNamedQueryConfig_basic(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"
@@ -126,7 +126,7 @@ resource "aws_athena_named_query" "test" {
 `, rName, rInt, rName, rName)
 }
 
-func testAccNamedWorkGroupQueryConfig(rInt int, rName string) string {
+func testAccNamedQueryConfig_workGroup(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"

@@ -331,7 +331,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -604,7 +604,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting

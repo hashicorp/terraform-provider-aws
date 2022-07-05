@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.

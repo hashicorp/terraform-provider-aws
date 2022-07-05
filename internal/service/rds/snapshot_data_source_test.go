@@ -23,7 +23,7 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckSnapshotDataSourceConfig(rInt),
+				Config: testAccSnapshotDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
 				),
@@ -46,7 +46,7 @@ func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotDataSourceConfig(rInt int) string {
+func testAccSnapshotDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"

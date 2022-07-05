@@ -27,7 +27,7 @@ func testAccAnalyzer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerAnalyzerNameConfig(rName),
+				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
@@ -58,7 +58,7 @@ func testAccAnalyzer_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerAnalyzerNameConfig(rName),
+				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					testAccCheckAnalyzerDisappears(&analyzer),
@@ -82,7 +82,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerTags1Config(rName, "key1", "value1"),
+				Config: testAccAnalyzerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -95,7 +95,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnalyzerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnalyzerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -104,7 +104,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnalyzerTags1Config(rName, "key2", "value2"),
+				Config: testAccAnalyzerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -132,7 +132,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 		CheckDestroy:      testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerTypeOrganizationConfig(rName),
+				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "type", accessanalyzer.TypeOrganization),
@@ -221,7 +221,7 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 	}
 }
 
-func testAccAnalyzerAnalyzerNameConfig(rName string) string {
+func testAccAnalyzerConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -229,7 +229,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName)
 }
 
-func testAccAnalyzerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAnalyzerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -241,7 +241,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAnalyzerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAnalyzerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -254,7 +254,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAnalyzerTypeOrganizationConfig(rName string) string {
+func testAccAnalyzerConfig_typeOrganization(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

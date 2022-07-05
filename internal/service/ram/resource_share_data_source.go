@@ -35,12 +35,15 @@ func DataSourceResourceShare() *schema.Resource {
 			},
 
 			"resource_owner": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ram.ResourceOwnerOtherAccounts,
-					ram.ResourceOwnerSelf,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceOwner_Values(), false),
+			},
+
+			"resource_share_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
 			},
 
 			"name": {
@@ -80,6 +83,10 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	params := &ram.GetResourceSharesInput{
 		Name:          aws.String(name),
 		ResourceOwner: aws.String(owner),
+	}
+
+	if v, ok := d.GetOk("resource_share_status"); ok {
+		params.ResourceShareStatus = aws.String(v.(string))
 	}
 
 	if filtersOk {

@@ -102,7 +102,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating CloudWatch Composite Alarm (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
@@ -129,7 +129,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		err = UpdateTags(conn, aws.StringValue(alarm.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 			return resourceCompositeAlarmRead(ctx, d, meta)
 		}
@@ -191,7 +191,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := ListTags(conn, aws.StringValue(alarm.AlarmArn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 		return nil
 	}
@@ -232,7 +232,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 			return resourceCompositeAlarmRead(ctx, d, meta)
 		}

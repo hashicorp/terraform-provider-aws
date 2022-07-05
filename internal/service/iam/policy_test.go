@@ -29,7 +29,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyNameConfig(rName),
+				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
@@ -62,7 +62,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyDescriptionConfig(rName, "description1"),
+				Config: testAccPolicyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -89,7 +89,7 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyTags1Config(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -102,7 +102,7 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPolicyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -111,7 +111,7 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyTags1Config(rName, "key2", "value2"),
+				Config: testAccPolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -134,7 +134,7 @@ func TestAccIAMPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyNameConfig(rName),
+				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourcePolicy(), resourceName),
@@ -156,7 +156,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyNamePrefixConfig(acctest.ResourcePrefix),
+				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
@@ -184,7 +184,7 @@ func TestAccIAMPolicy_path(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyPathConfig(rName, "/path1/"),
+				Config: testAccPolicyConfig_path(rName, "/path1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "path", "/path1/"),
@@ -213,18 +213,18 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPolicyPolicyConfig(rName, "not-json"),
+				Config:      testAccPolicyConfig_basic(rName, "not-json"),
 				ExpectError: regexp.MustCompile("invalid JSON"),
 			},
 			{
-				Config: testAccPolicyPolicyConfig(rName, policy1),
+				Config: testAccPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "policy", policy1),
 				),
 			},
 			{
-				Config: testAccPolicyPolicyConfig(rName, policy2),
+				Config: testAccPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &out),
 					resource.TestCheckResourceAttr(resourceName, "policy", policy2),
@@ -291,7 +291,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPolicyDescriptionConfig(rName, description string) string {
+func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   description = %q
@@ -315,7 +315,7 @@ EOF
 `, description, rName)
 }
 
-func testAccPolicyNameConfig(rName string) string {
+func testAccPolicyConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -338,7 +338,7 @@ EOF
 `, rName)
 }
 
-func testAccPolicyNamePrefixConfig(namePrefix string) string {
+func testAccPolicyConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name_prefix = %q
@@ -361,7 +361,7 @@ EOF
 `, namePrefix)
 }
 
-func testAccPolicyPathConfig(rName, path string) string {
+func testAccPolicyConfig_path(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -385,7 +385,7 @@ EOF
 `, rName, path)
 }
 
-func testAccPolicyPolicyConfig(rName, policy string) string {
+func testAccPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name   = %q
@@ -394,7 +394,7 @@ resource "aws_iam_policy" "test" {
 `, rName, policy)
 }
 
-func testAccPolicyTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q
@@ -421,7 +421,7 @@ EOF
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccPolicyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name = %q

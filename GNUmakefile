@@ -14,6 +14,10 @@ ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
 endif
 
+ifneq ($(origin SWEEPERS), undefined)
+	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
 default: build
 
 build: fmtcheck
@@ -27,8 +31,12 @@ gen:
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/*_gen.go
+	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .semgrep-caps-aws-ec2.yml
+	rm -f .semgrep-configs.yml
+	rm -f .semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
@@ -194,6 +202,8 @@ semgrep:
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep -c .semgrep.yml
+	@semgrep -c .semgrep-caps-aws-ec2.yml
+	@semgrep -c .semgrep-configs.yml
 	@semgrep -c .semgrep-service-name0.yml
 	@semgrep -c .semgrep-service-name1.yml
 	@semgrep -c .semgrep-service-name2.yml

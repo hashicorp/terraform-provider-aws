@@ -1,6 +1,8 @@
 package ds
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -44,4 +46,36 @@ func findDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	}
 
 	return directory, nil
+}
+
+func findSharedDirectoryByIDs(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryId string, sharedDirectoryId string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ds-in-func-name
+	input := &directoryservice.DescribeSharedDirectoriesInput{
+		OwnerDirectoryId:   aws.String(ownerDirectoryId),
+		SharedDirectoryIds: []*string{aws.String(sharedDirectoryId)},
+	}
+
+	output, err := conn.DescribeSharedDirectoriesWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.SharedDirectories) == 0 || output.SharedDirectories[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.SharedDirectories); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	sharedDirectory := output.SharedDirectories[0]
+
+	if status := aws.StringValue(sharedDirectory.ShareStatus); status == directoryservice.ShareStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return sharedDirectory, nil
 }

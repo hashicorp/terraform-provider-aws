@@ -318,6 +318,11 @@ type TestCase struct {
 
 	// ProviderFactories can be specified for the providers that are valid.
 	//
+	// This can also be specified at the TestStep level to enable per-step
+	// differences in providers, however all provider specifications must
+	// be done either at the TestCase level or TestStep level, otherwise the
+	// testing framework will raise an error and fail the test.
+	//
 	// These are the providers that can be referenced within the test. Each key
 	// is an individually addressable provider. Typically you will only pass a
 	// single value here for the provider you are testing. Aliases are not
@@ -339,6 +344,11 @@ type TestCase struct {
 	// ProtoV5ProviderFactories serves the same purpose as ProviderFactories,
 	// but for protocol v5 providers defined using the terraform-plugin-go
 	// ProviderServer interface.
+	//
+	// This can also be specified at the TestStep level to enable per-step
+	// differences in providers, however all provider specifications must
+	// be done either at the TestCase level or TestStep level, otherwise the
+	// testing framework will raise an error and fail the test.
 	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 	// ProtoV6ProviderFactories serves the same purpose as ProviderFactories,
@@ -346,6 +356,11 @@ type TestCase struct {
 	// ProviderServer interface.
 	// The version of Terraform used in acceptance testing must be greater
 	// than or equal to v0.15.4 to use ProtoV6ProviderFactories.
+	//
+	// This can also be specified at the TestStep level to enable per-step
+	// differences in providers, however all provider specifications must
+	// be done either at the TestCase level or TestStep level, otherwise the
+	// testing framework will raise an error and fail the test.
 	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 
 	// Providers is the ResourceProvider that will be under test.
@@ -354,11 +369,18 @@ type TestCase struct {
 	Providers map[string]*schema.Provider
 
 	// ExternalProviders are providers the TestCase relies on that should
-	// be downloaded from the registry during init. This is only really
-	// necessary to set if you're using import, as providers in your config
-	// will be automatically retrieved during init. Import doesn't use a
-	// config, however, so we allow manually specifying them here to be
-	// downloaded for import tests.
+	// be downloaded from the registry during init.
+	//
+	// This can also be specified at the TestStep level to enable per-step
+	// differences in providers, however all provider specifications must
+	// be done either at the TestCase level or TestStep level, otherwise the
+	// testing framework will raise an error and fail the test.
+	//
+	// This is generally unnecessary to set at the TestCase level, however
+	// it has existing in the testing framework prior to the introduction of
+	// TestStep level specification and was only necessary for performing
+	// import testing where the configuration contained a provider outside the
+	// one under test.
 	ExternalProviders map[string]ExternalProvider
 
 	// PreventPostDestroyRefresh can be set to true for cases where data sources
@@ -540,6 +562,74 @@ type TestStep struct {
 	// fields that can't be refreshed and don't matter.
 	ImportStateVerify       bool
 	ImportStateVerifyIgnore []string
+
+	// ProviderFactories can be specified for the providers that are valid for
+	// this TestStep. When providers are specified at the TestStep level, all
+	// TestStep within a TestCase must declare providers.
+	//
+	// This can also be specified at the TestCase level for all TestStep,
+	// however all provider specifications must be done either at the TestCase
+	// level or TestStep level, otherwise the testing framework will raise an
+	// error and fail the test.
+	//
+	// These are the providers that can be referenced within the test. Each key
+	// is an individually addressable provider. Typically you will only pass a
+	// single value here for the provider you are testing. Aliases are not
+	// supported by the test framework, so to use multiple provider instances,
+	// you should add additional copies to this map with unique names. To set
+	// their configuration, you would reference them similar to the following:
+	//
+	//  provider "my_factory_key" {
+	//    # ...
+	//  }
+	//
+	//  resource "my_resource" "mr" {
+	//    provider = my_factory_key
+	//
+	//    # ...
+	//  }
+	ProviderFactories map[string]func() (*schema.Provider, error)
+
+	// ProtoV5ProviderFactories serves the same purpose as ProviderFactories,
+	// but for protocol v5 providers defined using the terraform-plugin-go
+	// ProviderServer interface. When providers are specified at the TestStep
+	// level, all TestStep within a TestCase must declare providers.
+	//
+	// This can also be specified at the TestCase level for all TestStep,
+	// however all provider specifications must be done either at the TestCase
+	// level or TestStep level, otherwise the testing framework will raise an
+	// error and fail the test.
+	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
+	// ProtoV6ProviderFactories serves the same purpose as ProviderFactories,
+	// but for protocol v6 providers defined using the terraform-plugin-go
+	// ProviderServer interface.
+	// The version of Terraform used in acceptance testing must be greater
+	// than or equal to v0.15.4 to use ProtoV6ProviderFactories. When providers
+	// are specified at the TestStep level, all TestStep within a TestCase must
+	// declare providers.
+	//
+	// This can also be specified at the TestCase level for all TestStep,
+	// however all provider specifications must be done either at the TestCase
+	// level or TestStep level, otherwise the testing framework will raise an
+	// error and fail the test.
+	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
+
+	// ExternalProviders are providers the TestStep relies on that should
+	// be downloaded from the registry during init. When providers are
+	// specified at the TestStep level, all TestStep within a TestCase must
+	// declare providers.
+	//
+	// This can also be specified at the TestCase level for all TestStep,
+	// however all provider specifications must be done either at the TestCase
+	// level or TestStep level, otherwise the testing framework will raise an
+	// error and fail the test.
+	//
+	// Outside specifying an earlier version of the provider under test,
+	// typically for state upgrader testing, this is generally only necessary
+	// for performing import testing where the prior TestStep configuration
+	// contained a provider outside the one under test.
+	ExternalProviders map[string]ExternalProvider
 }
 
 // ParallelTest performs an acceptance test on a resource, allowing concurrency
@@ -593,6 +683,16 @@ func Test(t testing.T, c TestCase) {
 	ctx := context.Background()
 	ctx = logging.InitTestContext(ctx, t)
 
+	err := c.validate(ctx)
+
+	if err != nil {
+		logging.HelperResourceError(ctx,
+			"Test validation error",
+			map[string]interface{}{logging.KeyError: err},
+		)
+		t.Fatalf("Test validation error: %s", err)
+	}
+
 	// We only run acceptance tests if an env var is set because they're
 	// slow and generally require some outside configuration. You can opt out
 	// of this with OverrideEnvVar on individual TestCases.
@@ -608,9 +708,6 @@ func Test(t testing.T, c TestCase) {
 		c.ProviderFactories = map[string]func() (*schema.Provider, error){}
 
 		for name, p := range c.Providers {
-			if _, ok := c.ProviderFactories[name]; ok {
-				t.Fatalf("ProviderFactory for %q already exists, cannot overwrite with Provider", name)
-			}
 			prov := p
 			c.ProviderFactories[name] = func() (*schema.Provider, error) { //nolint:unparam // required signature
 				return prov, nil
@@ -648,43 +745,6 @@ func Test(t testing.T, c TestCase) {
 	logging.HelperResourceDebug(ctx, "Finished TestCase")
 }
 
-// testProviderConfig takes the list of Providers in a TestCase and returns a
-// config with only empty provider blocks. This is useful for Import, where no
-// config is provided, but the providers must be defined.
-func testProviderConfig(c TestCase) (string, error) {
-	var lines []string
-	var requiredProviders []string
-	for p := range c.Providers {
-		lines = append(lines, fmt.Sprintf("provider %q {}\n", p))
-	}
-	for p, v := range c.ExternalProviders {
-		if _, ok := c.Providers[p]; ok {
-			return "", fmt.Errorf("Provider %q set in both Providers and ExternalProviders for TestCase. Must be set in only one.", p)
-		}
-		if _, ok := c.ProviderFactories[p]; ok {
-			return "", fmt.Errorf("Provider %q set in both ProviderFactories and ExternalProviders for TestCase. Must be set in only one.", p)
-		}
-		lines = append(lines, fmt.Sprintf("provider %q {}\n", p))
-		var providerBlock string
-		if v.VersionConstraint != "" {
-			providerBlock = fmt.Sprintf("%s\nversion = %q", providerBlock, v.VersionConstraint)
-		}
-		if v.Source != "" {
-			providerBlock = fmt.Sprintf("%s\nsource = %q", providerBlock, v.Source)
-		}
-		if providerBlock != "" {
-			providerBlock = fmt.Sprintf("%s = {%s\n}\n", p, providerBlock)
-		}
-		requiredProviders = append(requiredProviders, providerBlock)
-	}
-
-	if len(requiredProviders) > 0 {
-		lines = append([]string{fmt.Sprintf("terraform {\nrequired_providers {\n%s}\n}\n\n", strings.Join(requiredProviders, ""))}, lines...)
-	}
-
-	return strings.Join(lines, ""), nil
-}
-
 // UnitTest is a helper to force the acceptance testing harness to run in the
 // normal unit test suite. This should only be used for resource that don't
 // have any external dependencies.
@@ -698,10 +758,6 @@ func UnitTest(t testing.T, c TestCase) {
 }
 
 func testResource(c TestStep, state *terraform.State) (*terraform.ResourceState, error) {
-	if c.ResourceName == "" {
-		return nil, fmt.Errorf("ResourceName must be set in TestStep")
-	}
-
 	for _, m := range state.Modules {
 		if len(m.Resources) > 0 {
 			if v, ok := m.Resources[c.ResourceName]; ok {

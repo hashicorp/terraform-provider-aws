@@ -57,6 +57,11 @@ func ResourceEBSVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -186,7 +191,7 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volume(%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EBS Volume (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -246,13 +251,21 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("type") {
-			input.VolumeType = aws.String(d.Get("type").(string))
+			volumeType := d.Get("type").(string)
+			input.VolumeType = aws.String(volumeType)
+
+			// Get Iops value because in the ec2.ModifyVolumeInput API,
+			// if you change the volume type to io1, io2, or gp3, the default is 3,000.
+			// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVolume.html
+			if volumeType == ec2.VolumeTypeIo1 || volumeType == ec2.VolumeTypeIo2 || volumeType == ec2.VolumeTypeGp3 {
+				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			}
 		}
 
 		_, err := conn.ModifyVolume(input)
 
 		if err != nil {
-			return fmt.Errorf("modifying EBS Volume(%s): %w", d.Id(), err)
+			return fmt.Errorf("modifying EBS Volume (%s): %w", d.Id(), err)
 		}
 
 		if _, err := WaitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -273,6 +286,38 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	if d.Get("final_snapshot").(bool) {
+		input := &ec2.CreateSnapshotInput{
+			TagSpecifications: tagSpecificationsFromMap(d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			VolumeId:          aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+			func() (interface{}, error) {
+				return conn.CreateSnapshot(input)
+			},
+			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
+
+		if err != nil {
+			return fmt.Errorf("creating EBS Snapshot (%s): %w", d.Id(), err)
+		}
+
+		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+			func() (interface{}, error) {
+				return nil, conn.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+					SnapshotIds: aws.StringSlice([]string{snapshotID}),
+				})
+			},
+			errCodeResourceNotReady)
+
+		if err != nil {
+			return fmt.Errorf("waiting for EBS Snapshot (%s) create: %w", snapshotID, err)
+		}
+	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
@@ -340,7 +385,7 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		// Update.
 
 		// Setting 'iops = 0' is a no-op if the volume type does not require Iops to be specified.
-		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && iops == 0 {
+		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && volumeType != ec2.VolumeTypeGp3 && iops == 0 {
 			return diff.Clear("iops")
 		}
 	}

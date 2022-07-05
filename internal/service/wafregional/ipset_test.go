@@ -192,7 +192,7 @@ func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 		CheckDestroy:      testAccCheckIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPSetConfig_IPSetDescriptors(ipsetName, strings.Join(ipSetDescriptors, "\n")),
+				Config: testAccIPSetConfig_ipSetDescriptors(ipsetName, strings.Join(ipSetDescriptors, "\n")),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
@@ -479,7 +479,7 @@ resource "aws_wafregional_ipset" "ipset" {
 `, name)
 }
 
-func testAccIPSetConfig_IPSetDescriptors(name, ipSetDescriptors string) string {
+func testAccIPSetConfig_ipSetDescriptors(name, ipSetDescriptors string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"

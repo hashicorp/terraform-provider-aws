@@ -36,7 +36,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(resourceName, &dbCluster),
 					testAccCheckClusterActivityStreamAttributes(&dbCluster),
@@ -73,7 +73,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterActivityStreamConfig(clusterName, instanceName),
+				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
@@ -195,7 +195,7 @@ resource "aws_rds_cluster_instance" "test" {
 `, clusterName, instanceName))
 }
 
-func testAccClusterActivityStreamConfig(clusterName, instanceName string) string {
+func testAccClusterActivityStreamConfig_basic(clusterName, instanceName string) string {
 	return acctest.ConfigCompose(testAccClusterActivityStreamConfigBase(clusterName, instanceName), `
 resource "aws_rds_cluster_activity_stream" "test" {
   resource_arn = aws_rds_cluster.test.arn

@@ -21,7 +21,7 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVersionBasicDataSourceConfig(version),
+				Config: testAccVersionDataSourceConfig_basic(version),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
@@ -41,7 +41,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVersionPreferredDataSourceConfig(),
+				Config: testAccVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "2.4.1.1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
@@ -67,7 +67,7 @@ func testAccVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccVersionBasicDataSourceConfig(version string) string {
+func testAccVersionDataSourceConfig_basic(version string) string {
 	return fmt.Sprintf(`
 data "aws_msk_kafka_version" "test" {
   version = %[1]q
@@ -75,7 +75,7 @@ data "aws_msk_kafka_version" "test" {
 `, version)
 }
 
-func testAccVersionPreferredDataSourceConfig() string {
+func testAccVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_msk_kafka_version" "test" {
   preferred_versions = ["2.4.1.1", "2.4.1", "2.2.1"]

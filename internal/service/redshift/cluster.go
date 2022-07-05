@@ -156,6 +156,7 @@ func ResourceCluster() *schema.Resource {
 			"default_iam_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"dns_name": {

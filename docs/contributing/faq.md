@@ -6,10 +6,8 @@
 
 The HashiCorp Terraform AWS provider team is :
 
-* Mary Cutrali, Product Manager - GitHub [@maryelizbeth](https://github.com/maryelizbeth) Twitter [@marycutrali](https://twitter.com/marycutrali)
 * Simon Davis, Engineering Manager - GitHub [@breathingdust](https://github.com/breathingdust)
 * Justin Retzolk, Technical Community Manager - GitHub [@justinretzolk](https://github.com/justinretzolk)
-* Angie Pinilla, Engineer - GitHub [@angie44](https://github.com/angie44)
 * Dirk Avery, Engineer - GitHub [@YakDriver](https://github.com/yakdriver)
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
 * Kerim Satirli, Developer Advocate - GitHub [@ksatirli](https://github.com/ksatirli)
