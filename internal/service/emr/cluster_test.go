@@ -3565,7 +3565,7 @@ resource "aws_emr_cluster" "test" {
       volumes_per_instance = %[2]d
     }
     ebs_config {
-      size                 = 10
+      size                 = 125
       type                 = "sc1"
       volumes_per_instance = %[2]d
     }
@@ -3579,7 +3579,7 @@ resource "aws_emr_cluster" "test" {
       volumes_per_instance = %[2]d
     }
     ebs_config {
-      size                 = 10
+      size                 = 125
       type                 = "sc1"
       volumes_per_instance = %[2]d
     }
