@@ -1,5 +1,5 @@
 site_name: Terraform AWS Provider - Contributor Guide
-site_description: 'Docsite generated from terraform-provider-aws'
+site_description: 'Contributor documentation and reference for the Terraform AWS Provider'
 copyright: Hashicorp
 repo_name: hashicorp/terraform-provider-aws
 repo_url: https://github.com/hashicorp/terraform-provider-aws
