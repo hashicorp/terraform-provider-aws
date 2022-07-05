@@ -53,10 +53,10 @@ resource "aws_sqs_queue" "terraform_queue" {
 
 ```terraform
 resource "aws_sqs_queue" "terraform_queue_deadletter" {
-  name                  = "terraform-example-deadletter-queue"
-  redrive_allow_policy  = jsonencode({
-    redrivePermission   = "byQueue",
-    sourceQueueArns     = [aws_sqs_queue.terraform_queue.arn]
+  name = "terraform-example-deadletter-queue"
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns   = [aws_sqs_queue.terraform_queue.arn]
   })
 }
 ```
