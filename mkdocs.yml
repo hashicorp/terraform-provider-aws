@@ -20,6 +20,7 @@ nav:
       - Resource Tagging: resource-tagging.md
       - Tag Resource: adding-a-tag-resource.md
       - Bugs and Enhancements: bugs-and-enhancements.md
+      - Documentation Changes: documentation-changes.md
     - Acceptance Tests: running-and-writing-acceptance-tests.md
     - Changelog Process: changelog-process.md
     - Raising a Pull Request: raising-a-pull-request.md
@@ -64,3 +65,6 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - toc:
       permalink: "#"
+
+extra_css:
+  - stylesheets/extra.css
