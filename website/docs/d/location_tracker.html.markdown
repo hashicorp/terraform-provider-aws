@@ -28,6 +28,6 @@ data "aws_location_tracker" "example" {
 * `description` - The optional description for the tracker resource.
 * `kms_key_id` - A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `position_filtering` - The position filtering method of the tracker resource.
-* `tags` - Key-value map of resource tags for the map.
+* `tags` - Key-value map of resource tags for the tracker.
 * `tracker_arn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
 * `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
