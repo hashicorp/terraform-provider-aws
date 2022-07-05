@@ -1221,6 +1221,47 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_ingressMultipleIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.0", "2001:db8:85a3::/64"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.1", "2001:db8:85a3:2::/64"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "self", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccSecurityGroupRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2076,6 +2117,37 @@ resource "aws_security_group_rule" "test" {
   to_port           = 0
   protocol          = "-1"
   ipv6_cidr_blocks  = ["::/244"]
+  security_group_id = aws_security_group.test.id
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_ingressMultipleIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "tftest" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.tftest.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type             = "ingress"
+  protocol         = "6"
+  from_port        = 80
+  to_port          = 8000
+  ipv6_cidr_blocks = ["2001:db8:85a3::/64", "2001:db8:85a3:2::/64"]
+
   security_group_id = aws_security_group.test.id
 }
 `, rName)
