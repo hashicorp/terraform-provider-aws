@@ -587,10 +587,6 @@ resource "aws_apprunner_service" "test" {
     kms_key = aws_kms_key.test.arn
   }
 
-  observability_configuration {
-    enabled = true
-  }
-
   source_configuration {
     auto_deployments_enabled = false
     image_repository {
