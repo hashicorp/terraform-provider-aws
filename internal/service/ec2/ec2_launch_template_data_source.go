@@ -146,6 +146,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"disable_api_stop": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -791,7 +795,7 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("name", lt.LaunchTemplateName)
 
-	if err := flattenResponseLaunchTemplateData(d, ltv.LaunchTemplateData); err != nil {
+	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
 		return err
 	}
 

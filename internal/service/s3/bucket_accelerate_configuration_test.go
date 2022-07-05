@@ -30,7 +30,7 @@ func TestAccS3BucketAccelerateConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
@@ -60,7 +60,7 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
@@ -68,7 +68,7 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusSuspended),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, s3.BucketAccelerateStatusSuspended),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
@@ -98,7 +98,7 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(bucketName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketAccelerateConfiguration(), resourceName),
@@ -121,14 +121,14 @@ func TestAccS3BucketAccelerateConfiguration_migrate_noChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketConfig_acceleration(rName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
 				),
 			},
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(rName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(rName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
@@ -151,14 +151,14 @@ func TestAccS3BucketAccelerateConfiguration_migrate_withChange(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketAccelerateConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_withAcceleration(rName, s3.BucketAccelerateStatusEnabled),
+				Config: testAccBucketConfig_acceleration(rName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acceleration_status", s3.BucketAccelerateStatusEnabled),
 				),
 			},
 			{
-				Config: testAccBucketAccelerateConfigurationBasicConfig(rName, s3.BucketAccelerateStatusSuspended),
+				Config: testAccBucketAccelerateConfigurationConfig_basic(rName, s3.BucketAccelerateStatusSuspended),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
@@ -248,7 +248,7 @@ func testAccCheckBucketAccelerateConfigurationExists(resourceName string) resour
 	}
 }
 
-func testAccBucketAccelerateConfigurationBasicConfig(bucketName, status string) string {
+func testAccBucketAccelerateConfigurationConfig_basic(bucketName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

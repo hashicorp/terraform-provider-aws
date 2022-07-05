@@ -29,7 +29,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoleAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleAliasConfig(alias),
+				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
@@ -37,7 +37,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate1Config(alias, alias2),
+				Config: testAccRoleAliasConfig_update1(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName),
 					testAccCheckRoleAliasExists(resourceName2),
@@ -46,24 +46,24 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate2Config(alias2),
+				Config: testAccRoleAliasConfig_update2(alias2),
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoleAliasExists(resourceName2)),
 			},
 			{
-				Config: testAccRoleAliasUpdate3Config(alias2),
+				Config: testAccRoleAliasConfig_update3(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 				),
 				ExpectError: regexp.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{
-				Config: testAccRoleAliasUpdate4Config(alias2),
+				Config: testAccRoleAliasConfig_update4(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate5Config(alias2),
+				Config: testAccRoleAliasConfig_update5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
@@ -125,7 +125,7 @@ func testAccCheckRoleAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRoleAliasConfig(alias string) string {
+func testAccRoleAliasConfig_basic(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -152,7 +152,7 @@ resource "aws_iot_role_alias" "ra" {
 `, alias)
 }
 
-func testAccRoleAliasUpdate1Config(alias string, alias2 string) string {
+func testAccRoleAliasConfig_update1(alias string, alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -185,7 +185,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias, alias2)
 }
 
-func testAccRoleAliasUpdate2Config(alias2 string) string {
+func testAccRoleAliasConfig_update2(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -212,7 +212,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias2)
 }
 
-func testAccRoleAliasUpdate3Config(alias2 string) string {
+func testAccRoleAliasConfig_update3(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -244,7 +244,7 @@ resource "aws_iot_role_alias" "ra3" {
 `, alias2, alias2)
 }
 
-func testAccRoleAliasUpdate4Config(alias2 string) string {
+func testAccRoleAliasConfig_update4(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -289,7 +289,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias2)
 }
 
-func testAccRoleAliasUpdate5Config(alias2 string) string {
+func testAccRoleAliasConfig_update5(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"

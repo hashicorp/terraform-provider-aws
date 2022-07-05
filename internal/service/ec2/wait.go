@@ -2266,8 +2266,8 @@ func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Du
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{vpcEndpointStateDeleting},
 		Target:     []string{},
-		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
+		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -2275,6 +2275,44 @@ func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Du
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStatePending},
+		Target:     []string{ec2.ServiceStateAvailable},
+		Refresh:    StatusVPCEndpointServiceStateAvailable(conn, id),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    StatusVPCEndpointServiceStateDeleted(conn, id),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
 		return output, err
 	}
 

@@ -36,7 +36,7 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfiguration(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -54,7 +54,7 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationMultipleRegionConfiguration(acctest.AlternateRegion(), acctest.ThirdRegion()),
+				Config: testAccReplicationConfigurationConfig_multipleRegion(acctest.AlternateRegion(), acctest.ThirdRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -69,7 +69,7 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfiguration(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -95,7 +95,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationRepositoryFilter(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -113,7 +113,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationConfigurationRepositoryFilterMultiple(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_repositoryFilterMultiple(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -127,7 +127,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationConfigurationRepositoryFilter(acctest.AlternateRegion()),
+				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -185,7 +185,7 @@ func testAccCheckReplicationConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccReplicationConfiguration(region string) string {
+func testAccReplicationConfigurationConfig_basic(region string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -202,7 +202,7 @@ resource "aws_ecr_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationMultipleRegionConfiguration(region1, region2 string) string {
+func testAccReplicationConfigurationConfig_multipleRegion(region1, region2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -225,7 +225,7 @@ resource "aws_ecr_replication_configuration" "test" {
 `, region1, region2)
 }
 
-func testAccReplicationConfigurationRepositoryFilter(region string) string {
+func testAccReplicationConfigurationConfig_repositoryFilter(region string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -247,7 +247,7 @@ resource "aws_ecr_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationConfigurationRepositoryFilterMultiple(region string) string {
+func testAccReplicationConfigurationConfig_repositoryFilterMultiple(region string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

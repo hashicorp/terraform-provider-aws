@@ -39,7 +39,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspaceConfig_withoutAlias(),
+				Config: testAccWorkspaceConfig_noAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 				),
@@ -64,7 +64,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_withoutAlias(),
+				Config: testAccWorkspaceConfig_noAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
@@ -191,7 +191,7 @@ resource "aws_prometheus_workspace" "test" {
 `, randName)
 }
 
-func testAccWorkspaceConfig_withoutAlias() string {
+func testAccWorkspaceConfig_noAlias() string {
 	return `
 resource "aws_prometheus_workspace" "test" {
 }

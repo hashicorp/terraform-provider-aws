@@ -69,6 +69,21 @@ func ResourceModel() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.RepositoryAccessMode_Values(), false),
 									},
+									"repository_auth_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_credentials_provider_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -158,6 +173,21 @@ func ResourceModel() *schema.Resource {
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.RepositoryAccessMode_Values(), false),
+									},
+									"repository_auth_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_credentials_provider_arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -408,8 +438,8 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_url"]; ok && v.(string) != "" {
 		container.ModelDataUrl = aws.String(v.(string))
 	}
-	if v, ok := m["environment"]; ok {
-		container.Environment = flex.ExpandStringMap(v.(map[string]interface{}))
+	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
+		container.Environment = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := m["image_config"]; ok {
@@ -430,7 +460,25 @@ func expandModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
 		RepositoryAccessMode: aws.String(m["repository_access_mode"].(string)),
 	}
 
+	if v, ok := m["repository_auth_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		imageConfig.RepositoryAuthConfig = expandRepositoryAuthConfig(v[0].(map[string]interface{}))
+	}
+
 	return imageConfig
+}
+
+func expandRepositoryAuthConfig(tfMap map[string]interface{}) *sagemaker.RepositoryAuthConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &sagemaker.RepositoryAuthConfig{}
+
+	if v, ok := tfMap["repository_credentials_provider_arn"].(string); ok && v != "" {
+		apiObject.RepositoryCredentialsProviderArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandContainers(a []interface{}) []*sagemaker.ContainerDefinition {
@@ -482,7 +530,25 @@ func flattenImageConfig(imageConfig *sagemaker.ImageConfig) []interface{} {
 
 	cfg["repository_access_mode"] = aws.StringValue(imageConfig.RepositoryAccessMode)
 
+	if tfMap := flattenRepositoryAuthConfig(imageConfig.RepositoryAuthConfig); len(tfMap) > 0 {
+		cfg["repository_auth_config"] = []interface{}{tfMap}
+	}
+
 	return []interface{}{cfg}
+}
+
+func flattenRepositoryAuthConfig(apiObject *sagemaker.RepositoryAuthConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.RepositoryCredentialsProviderArn; v != nil {
+		tfMap["repository_credentials_provider_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenContainers(containers []*sagemaker.ContainerDefinition) []interface{} {

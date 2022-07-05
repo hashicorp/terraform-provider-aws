@@ -825,6 +825,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)applicationautoscaling"
     severity: WARNING
+  - id: applicationinsights-in-func-name
+    languages:
+      - go
+    message: Do not use "ApplicationInsights" in func name inside applicationinsights package
+    paths:
+      include:
+        - internal/service/applicationinsights
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationInsights"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: applicationinsights-in-test-name
+    languages:
+      - go
+    message: Include "ApplicationInsights" in test name
+    paths:
+      include:
+        - internal/service/applicationinsights/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccApplicationInsights"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: applicationinsights-in-const-name
+    languages:
+      - go
+    message: Do not use "ApplicationInsights" in const name inside applicationinsights package
+    paths:
+      include:
+        - internal/service/applicationinsights
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationInsights"
+    severity: WARNING
+  - id: applicationinsights-in-var-name
+    languages:
+      - go
+    message: Do not use "ApplicationInsights" in var name inside applicationinsights package
+    paths:
+      include:
+        - internal/service/applicationinsights
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationInsights"
+    severity: WARNING
   - id: appmesh-in-func-name
     languages:
       - go
@@ -1346,6 +1404,49 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Batch"
+    severity: WARNING
+  - id: beanstalk-in-func-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in func name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: beanstalk-in-const-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in const name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
+    severity: WARNING
+  - id: beanstalk-in-var-name
+    languages:
+      - go
+    message: Do not use "beanstalk" in var name inside elasticbeanstalk package
+    paths:
+      include:
+        - internal/service/elasticbeanstalk
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)beanstalk"
     severity: WARNING
   - id: budgets-in-func-name
     languages:
@@ -1969,6 +2070,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudTrail"
+            - pattern-not-regex: ^testAccCloudTrailConfig_.*
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: cloudtrail-in-test-name
@@ -2200,6 +2302,49 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
+    severity: WARNING
+  - id: cloudwatchrum-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in func name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchrum-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in const name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
+    severity: WARNING
+  - id: cloudwatchrum-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchrum" in var name inside rum package
+    paths:
+      include:
+        - internal/service/rum
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchrum"
     severity: WARNING
   - id: codeartifact-in-func-name
     languages:
@@ -2765,47 +2910,4 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConfigService"
             - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
     severity: WARNING

@@ -169,6 +169,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
@@ -984,13 +985,10 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
-					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
-					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "28800"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase1_lifetime_seconds", "28800"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_dh_group_numbers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_encryption_algorithms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms.#", "0"),
@@ -1049,6 +1047,62 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePrivate(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PrivateIpv4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccVPNConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePublic(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
 				),
 			},
 			{
@@ -1650,6 +1704,94 @@ resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = aws_vpn_gateway.test2.id
   customer_gateway_id = aws_customer_gateway.test.id
   type                = "ipsec.1"
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_outsideAddressTypePrivate(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_dx_gateway" "test" {
+  name            = %[1]q
+  amazon_side_asn = "64521"
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  amazon_side_asn = "64522"
+  description     = %[1]q
+  transit_gateway_cidr_blocks = [
+    "10.0.0.0/24",
+  ]
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = 64523
+  ip_address = "10.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_dx_gateway_association" "test" {
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_ec2_transit_gateway.test.id
+
+  allowed_prefixes = [
+    "10.0.0.0/8",
+  ]
+}
+
+data "aws_ec2_transit_gateway_dx_gateway_attachment" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  dx_gateway_id      = aws_dx_gateway.test.id
+
+  depends_on = [
+    aws_dx_gateway_association.test
+  ]
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id                     = aws_customer_gateway.test.id
+  outside_ip_address_type                 = "PrivateIpv4"
+  transit_gateway_id                      = aws_ec2_transit_gateway.test.id
+  transport_transit_gateway_attachment_id = data.aws_ec2_transit_gateway_dx_gateway_attachment.test.id
+  type                                    = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_outsideAddressTypePublic(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id     = aws_customer_gateway.test.id
+  outside_ip_address_type = "PublicIpv4"
+  type                    = "ipsec.1"
+  vpn_gateway_id          = aws_vpn_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, rBgpAsn)
 }

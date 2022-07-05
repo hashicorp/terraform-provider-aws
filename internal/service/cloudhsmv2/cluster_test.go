@@ -24,7 +24,7 @@ func testAccCluster_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^cluster-.+`)),
@@ -59,7 +59,7 @@ func testAccCluster_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig(),
+				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
@@ -82,7 +82,7 @@ func testAccCluster_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterTags2Config("key1", "value1", "key2", "value2"),
+				Config: testAccClusterConfig_tags2("key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -97,7 +97,7 @@ func testAccCluster_Tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"cluster_certificates"},
 			},
 			{
-				Config: testAccClusterTags1Config("key1", "value1updated"),
+				Config: testAccClusterConfig_tags1("key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,7 +105,7 @@ func testAccCluster_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterTags2Config("key1", "value1updated", "key3", "value3"),
+				Config: testAccClusterConfig_tags2("key1", "value1updated", "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -142,7 +142,7 @@ resource "aws_subnet" "test" {
 `
 }
 
-func testAccClusterConfig() string {
+func testAccClusterConfig_basic() string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), `
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
@@ -151,7 +151,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 `)
 }
 
-func testAccClusterTags1Config(tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"
@@ -164,7 +164,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccClusterTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(), fmt.Sprintf(`
 resource "aws_cloudhsm_v2_cluster" "test" {
   hsm_type   = "hsm1.medium"

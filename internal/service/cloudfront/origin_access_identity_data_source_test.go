@@ -20,7 +20,7 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityDataSourceConfig,
+				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
@@ -35,7 +35,7 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccOriginAccessIdentityDataSourceConfig = `
+const testAccOriginAccessIdentityDataSourceConfig_basic = `
 resource "aws_cloudfront_origin_access_identity" "test" {
   comment = "some comment"
 }

@@ -29,7 +29,7 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStageNameConfig(rName),
+				Config: testAccDeploymentConfig_stageName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -60,7 +60,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStageNameConfig(rName),
+				Config: testAccDeploymentConfig_stageName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					testAccCheckRestAPIExists(restApiResourceName, &restApi),
@@ -84,7 +84,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentTriggersConfig("description1", "https://example.com"),
+				Config: testAccDeploymentConfig_triggers("description1", "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment1),
 					testAccCheckStageExists(resourceName, &stage),
@@ -96,7 +96,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccDeploymentTriggersConfig("description1", "https://example.com"),
+				Config: testAccDeploymentConfig_triggers("description1", "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
@@ -106,7 +106,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeploymentTriggersConfig("description1", "https://example.com"),
+				Config: testAccDeploymentConfig_triggers("description1", "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
@@ -116,7 +116,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeploymentTriggersConfig("description2", "https://example.org"),
+				Config: testAccDeploymentConfig_triggers("description2", "https://example.org"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
@@ -140,14 +140,14 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentDescriptionConfig("description1"),
+				Config: testAccDeploymentConfig_description("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
-				Config: testAccDeploymentDescriptionConfig("description2"),
+				Config: testAccDeploymentConfig_description("description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -169,7 +169,7 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStageDescriptionConfig("description1"),
+				Config: testAccDeploymentConfig_stageDescription("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					testAccCheckStageExists(resourceName, &stage),
@@ -192,7 +192,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStageNameConfig("test"),
+				Config: testAccDeploymentConfig_stageName("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					testAccCheckStageExists(resourceName, &stage),
@@ -200,7 +200,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeploymentRequiredConfig(),
+				Config: testAccDeploymentConfig_required(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
 				),
@@ -220,7 +220,7 @@ func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStageNameConfig(""),
+				Config: testAccDeploymentConfig_stageName(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", ""),
@@ -241,7 +241,7 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 		CheckDestroy:      testAccCheckDeploymentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentVariablesConfig("key1", "value1"),
+				Config: testAccDeploymentConfig_variables("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
@@ -382,7 +382,7 @@ resource "aws_api_gateway_integration_response" "test" {
 `, uri)
 }
 
-func testAccDeploymentTriggersConfig(description string, url string) string {
+func testAccDeploymentConfig_triggers(description string, url string) string {
 	return testAccDeploymentBaseConfig(url) + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   description       = %[1]q
@@ -401,7 +401,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, description)
 }
 
-func testAccDeploymentDescriptionConfig(description string) string {
+func testAccDeploymentConfig_description(description string) string {
 	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
@@ -412,7 +412,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, description)
 }
 
-func testAccDeploymentRequiredConfig() string {
+func testAccDeploymentConfig_required() string {
 	return testAccDeploymentBaseConfig("http://example.com") + `
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
@@ -422,7 +422,7 @@ resource "aws_api_gateway_deployment" "test" {
 `
 }
 
-func testAccDeploymentStageDescriptionConfig(stageDescription string) string {
+func testAccDeploymentConfig_stageDescription(stageDescription string) string {
 	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
@@ -434,7 +434,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, stageDescription)
 }
 
-func testAccDeploymentStageNameConfig(stageName string) string {
+func testAccDeploymentConfig_stageName(stageName string) string {
 	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
@@ -445,7 +445,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, stageName)
 }
 
-func testAccDeploymentVariablesConfig(key1, value1 string) string {
+func testAccDeploymentConfig_variables(key1, value1 string) string {
 	return testAccDeploymentBaseConfig("http://example.com") + fmt.Sprintf(`
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]

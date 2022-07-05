@@ -232,6 +232,10 @@ func TestAccEC2InstanceDataSource_privateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.#", resourceName, "private_dns_name_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name_options.0.hostname_type", resourceName, "private_dns_name_options.0.hostname_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_ip", resourceName, "private_ip"),
 				),
 			},
@@ -647,6 +651,33 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2InstanceDataSource_disableAPIStopTermination(t *testing.T) {
+	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_disableAPIStopTermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "true"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfig_disableAPIStopTermination(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_stop", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "disable_api_termination", "false"),
 				),
 			},
 		},
@@ -1325,4 +1356,27 @@ data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
 `, rName))
+}
+
+func testAccInstanceDataSourceConfig_disableAPIStopTermination(rName string, disableApiStopTermination bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 1),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  disable_api_stop        = %[2]t
+  disable_api_termination = %[2]t
+  instance_type           = "t2.micro"
+  subnet_id               = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName, disableApiStopTermination))
 }

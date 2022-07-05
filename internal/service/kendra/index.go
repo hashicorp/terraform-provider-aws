@@ -26,6 +26,9 @@ import (
 const (
 	// Allow IAM role to become visible to the index
 	propagationTimeout = 2 * time.Minute
+
+	// validationExceptionMessage describes the error returned when the IAM role has not yet propagated
+	validationExceptionMessage = "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity"
 )
 
 func ResourceIndex() *schema.Resource {
@@ -390,7 +393,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
 
-			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity") {
+			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
 				return true, err
 			}
 
@@ -438,10 +441,6 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err != nil {
 		return diag.Errorf("error getting Kendra Index (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return diag.Errorf("error getting Kendra Index (%s): empty response", d.Id())
 	}
 
 	arn := arn.ARN{
@@ -536,10 +535,24 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
 		}
 
-		_, err := conn.UpdateIndex(ctx, input)
+		_, err := tfresource.RetryWhen(
+			propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateIndex(ctx, input)
+			},
+			func(err error) (bool, error) {
+				var validationException *types.ValidationException
+
+				if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
-			return diag.Errorf("[ERROR] Error updating Index (%s): %s", d.Id(), err)
+			return diag.Errorf("error updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED

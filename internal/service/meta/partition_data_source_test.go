@@ -18,7 +18,7 @@ func TestAccMetaPartitionDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPartitionConfig_basic,
+				Config: testAccPartitionDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartition("data.aws_partition.current"),
 					testAccCheckDNSSuffix("data.aws_partition.current"),
@@ -65,6 +65,6 @@ func testAccCheckDNSSuffix(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccPartitionConfig_basic = `
+const testAccPartitionDataSourceConfig_basic = `
 data "aws_partition" "current" {}
 `

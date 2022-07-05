@@ -24,7 +24,7 @@ func TestAccEventsConnectionDataSource_Connection_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc_ConnectionDataConfig(
+				Config: testAccConnectDataSourceConfig_basic(
 					name,
 					description,
 					authorizationType,
@@ -42,7 +42,7 @@ func TestAccEventsConnectionDataSource_Connection_basic(t *testing.T) {
 	})
 }
 
-func testAcc_ConnectionDataConfig(name, description, authorizationType, key, value string) string {
+func testAccConnectDataSourceConfig_basic(name, description, authorizationType, key, value string) string {
 	return acctest.ConfigCompose(
 		testAccConnectionConfig_apiKey(name, description, authorizationType, key, value),
 		`

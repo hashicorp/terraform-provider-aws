@@ -66,6 +66,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", queueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),

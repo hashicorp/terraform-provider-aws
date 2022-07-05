@@ -4,11 +4,13 @@
 package opsworks
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -342,5 +344,20 @@ func sweepUserProfiles(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	var errs *multierror.Error
+	if errors.As(err, &errs) {
+		var es *multierror.Error
+		for _, e := range errs.Errors {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeValidationException, "Cannot delete self") {
+				log.Printf("[WARN] Ignoring error: %s", e.Error())
+			} else {
+				es = multierror.Append(es, e)
+			}
+		}
+		return es.ErrorOrNil()
+	}
+
+	return err
 }

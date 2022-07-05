@@ -62,7 +62,7 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, queueURL)
 
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
 		return nil

@@ -421,6 +421,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)KafkaConnect"
     severity: WARNING
+  - id: kendra-in-func-name
+    languages:
+      - go
+    message: Do not use "Kendra" in func name inside kendra package
+    paths:
+      include:
+        - internal/service/kendra
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Kendra"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: kendra-in-test-name
+    languages:
+      - go
+    message: Include "Kendra" in test name
+    paths:
+      include:
+        - internal/service/kendra/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccKendra"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: kendra-in-const-name
+    languages:
+      - go
+    message: Do not use "Kendra" in const name inside kendra package
+    paths:
+      include:
+        - internal/service/kendra
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Kendra"
+    severity: WARNING
+  - id: kendra-in-var-name
+    languages:
+      - go
+    message: Do not use "Kendra" in var name inside kendra package
+    paths:
+      include:
+        - internal/service/kendra
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Kendra"
+    severity: WARNING
   - id: keyspaces-in-func-name
     languages:
       - go
@@ -2809,4 +2867,47 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccQuickSight"
             - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: quicksight-in-const-name
+    languages:
+      - go
+    message: Do not use "QuickSight" in const name inside quicksight package
+    paths:
+      include:
+        - internal/service/quicksight
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)QuickSight"
+    severity: WARNING
+  - id: quicksight-in-var-name
+    languages:
+      - go
+    message: Do not use "QuickSight" in var name inside quicksight package
+    paths:
+      include:
+        - internal/service/quicksight
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)QuickSight"
+    severity: WARNING
+  - id: ram-in-func-name
+    languages:
+      - go
+    message: Do not use "RAM" in func name inside ram package
+    paths:
+      include:
+        - internal/service/ram
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: ^TestAcc.*
     severity: WARNING

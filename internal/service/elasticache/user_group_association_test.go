@@ -31,7 +31,7 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupAssociationBasicConfig(rName),
+				Config: testAccUserGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-2", rName)),
@@ -62,7 +62,7 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupAssociationPreUpdateConfig(rName),
+				Config: testAccUserGroupAssociationConfig_preUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-2", rName)),
@@ -70,7 +70,7 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserGroupAssociationUpdateConfig(rName),
+				Config: testAccUserGroupAssociationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-3", rName)),
@@ -92,7 +92,7 @@ func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupAssociationBasicConfig(rName),
+				Config: testAccUserGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUserGroupAssociation(), resourceName),
@@ -220,7 +220,7 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
-func testAccUserGroupAssociationBasicConfig(rName string) string {
+func testAccUserGroupAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserGroupAssociationBaseConfig(rName),
 		`
@@ -231,7 +231,7 @@ resource "aws_elasticache_user_group_association" "test" {
 `)
 }
 
-func testAccUserGroupAssociationPreUpdateConfig(rName string) string {
+func testAccUserGroupAssociationConfig_preUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserGroupAssociationBaseConfig(rName),
 		fmt.Sprintf(`
@@ -250,7 +250,7 @@ resource "aws_elasticache_user_group_association" "test" {
 `, rName))
 }
 
-func testAccUserGroupAssociationUpdateConfig(rName string) string {
+func testAccUserGroupAssociationConfig_update(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserGroupAssociationBaseConfig(rName),
 		fmt.Sprintf(`

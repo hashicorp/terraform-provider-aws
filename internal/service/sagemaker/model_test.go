@@ -309,6 +309,34 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerPrivateDockerRegistry(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Vpc"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_auth_config.0.repository_credentials_provider_arn", "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"), //lintignore:AWSAT003,AWSAT005
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
@@ -438,7 +466,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 }
 
 func testAccModelConfig_basic(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -447,11 +475,11 @@ resource "aws_sagemaker_model" "test" {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_inferenceExecution(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -468,11 +496,11 @@ resource "aws_sagemaker_model" "test" {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -485,11 +513,11 @@ resource "aws_sagemaker_model" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -503,11 +531,11 @@ resource "aws_sagemaker_model" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccModelConfig_primaryContainerDataURL(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -578,11 +606,11 @@ resource "aws_s3_object" "test" {
   key     = "model.tar.gz"
   content = "some-data"
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_primaryContainerHostname(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -592,11 +620,11 @@ resource "aws_sagemaker_model" "test" {
     container_hostname = "test"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_primaryContainerImage(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -609,11 +637,11 @@ resource "aws_sagemaker_model" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_primaryContainerEnvironment(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -626,11 +654,11 @@ resource "aws_sagemaker_model" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_primaryContainerModeSingle(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -640,11 +668,11 @@ resource "aws_sagemaker_model" "test" {
     mode  = "SingleModel"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_containers(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
@@ -657,11 +685,11 @@ resource "aws_sagemaker_model" "test" {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_networkIsolation(rName string) string {
-	return testAccModelConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -671,13 +699,11 @@ resource "aws_sagemaker_model" "test" {
     image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccModelConfig_vpcBasic(rName string) string {
-	return testAccModelConfigBase(rName) +
-		acctest.ConfigAvailableAZsNoOptIn() +
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -738,5 +764,60 @@ resource "aws_security_group" "bar" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
+}
+
+//lintignore:AWSAT003,AWSAT005
+func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  execution_role_arn       = aws_iam_role.test.arn
+  enable_network_isolation = true
+
+  primary_container {
+    image = "registry.example.com/test-model"
+
+    image_config {
+      repository_access_mode = "Vpc"
+
+      repository_auth_config {
+        repository_credentials_provider_arn = "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"
+      }
+    }
+  }
+
+  vpc_config {
+    subnets            = [aws_subnet.test.id]
+    security_group_ids = [aws_security_group.test.id]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }

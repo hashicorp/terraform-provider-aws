@@ -69,7 +69,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 		CheckDestroy:      testAccCheckPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolConfig_DeveloperProviderName(name, developerProviderName),
+				Config: testAccPoolConfig_developerProviderName(name, developerProviderName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
@@ -82,7 +82,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPoolConfig_DeveloperProviderName(name, developerProviderNameUpdated),
+				Config: testAccPoolConfig_developerProviderName(name, developerProviderNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v2),
 					testAccCheckPoolRecreated(&v1, &v2),
@@ -360,7 +360,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolConfig_Tags1(name, "key1", "value1"),
+				Config: testAccPoolConfig_tags1(name, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -373,7 +373,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPoolConfig_Tags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPoolConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
@@ -383,7 +383,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPoolConfig_Tags1(name, "key2", "value2"),
+				Config: testAccPoolConfig_tags1(name, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
@@ -502,7 +502,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name)
 }
 
-func testAccPoolConfig_DeveloperProviderName(name, developerProviderName string) string {
+func testAccPoolConfig_developerProviderName(name, developerProviderName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
@@ -673,7 +673,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name)
 }
 
-func testAccPoolConfig_Tags1(name, tagKey1, tagValue1 string) string {
+func testAccPoolConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = %q
@@ -686,7 +686,7 @@ resource "aws_cognito_identity_pool" "main" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccPoolConfig_Tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPoolConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = %q

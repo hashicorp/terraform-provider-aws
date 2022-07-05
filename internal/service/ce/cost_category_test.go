@@ -29,7 +29,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -56,14 +56,14 @@ func TestAccCECostCategory_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCostCategoryOperandAndConfig(rName),
+				Config: testAccCostCategoryConfig_operandAnd(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -90,14 +90,14 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategorySplitChargesConfig(rName, "PROPORTIONAL"),
+				Config: testAccCostCategoryConfig_splitCharges(rName, "PROPORTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccCostCategorySplitChargesConfig(rName, "EVEN"),
+				Config: testAccCostCategoryConfig_splitCharges(rName, "EVEN"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -124,7 +124,7 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig(rName),
+				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCostCategory(), resourceName),
@@ -186,7 +186,7 @@ func testAccCheckCostCategoryDestroy(s *terraform.State) error {
 
 }
 
-func testAccCostCategoryConfig(rName string) string {
+func testAccCostCategoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
@@ -228,7 +228,7 @@ resource "aws_ce_cost_category" "test" {
 `, rName)
 }
 
-func testAccCostCategoryOperandAndConfig(rName string) string {
+func testAccCostCategoryConfig_operandAnd(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
@@ -264,7 +264,7 @@ resource "aws_ce_cost_category" "test" {
 `, rName)
 }
 
-func testAccCostCategorySplitChargesConfig(rName, method string) string {
+func testAccCostCategoryConfig_splitCharges(rName, method string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test1" {
   name         = "%[1]s-1"

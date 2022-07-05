@@ -51,6 +51,10 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -95,6 +99,7 @@ func dataSourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
