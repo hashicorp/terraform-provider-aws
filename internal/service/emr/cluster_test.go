@@ -3560,7 +3560,8 @@ resource "aws_emr_cluster" "test" {
     }
     ebs_config {
       size                 = 50
-      type                 = "gp2"
+      throughput           = 500
+      type                 = "gp3"
       volumes_per_instance = %[2]d
     }
   }
