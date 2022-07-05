@@ -720,7 +720,7 @@ resource "aws_apprunner_service" "test" {
 
   observability_configuration {
     observability_configuration_arn = aws_apprunner_observability_configuration.test.arn
-    observability_enabled 			= true
+    observability_enabled           = true
   }
 
   source_configuration {
