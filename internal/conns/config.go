@@ -83,6 +83,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
+		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
