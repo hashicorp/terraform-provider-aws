@@ -344,6 +344,10 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 		_, err = conn.RevokeSecurityGroupEgress(input)
 	}
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", securityGroupID, ruleType, err)
 	}
