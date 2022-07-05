@@ -24,7 +24,6 @@ nav:
     - Changelog Process: changelog-process.md
     - Raising a Pull Request: raising-a-pull-request.md
     - How We Prioritize: prioritization.md
-    - Issue Reporting and Lifecycle: issue-reporting-and-lifecycle.md
   - Developer Reference:
     - Acceptance Test Environment Variables: acc-test-environment-variables.md
     - Data Handling and Conversion: data-handling-and-conversion.md
@@ -34,6 +33,7 @@ nav:
     - Naming Standards: naming.md
     - Retries and Waiters: retries-and-waiters.md
     - Service Packages Refactor: service-package-pullrequest-guide.md
+  - Submit an Issue: issue-reporting-and-lifecycle.md
   - FAQ: faq.md
 
 theme:
