@@ -13,6 +13,7 @@ nav:
   - Issue Reporting and Lifecycle: issue-reporting-and-lifecycle.md
   - Guides:
     - Adding a New Resource: add-a-new-resource.md
+      - Third: index.md
     - Adding a New Service: add-a-new-service.md
     - Adding a New Datasource: add-a-new-datasource.md
     - Adding a New Region: add-a-new-region.md
