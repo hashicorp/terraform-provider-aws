@@ -199,14 +199,35 @@ func PreCheck(t *testing.T) {
 			conns.FailIfEnvVarEmpty(t, conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
 		}
 
+		var region string
+		var conf *conns.Config
+		if os.Getenv(conns.EnvVarProfile) != "" && os.Getenv(conns.EnvVarDefaultRegion) == "" {
+			conf = &conns.Config{
+				MaxRetries:       5,
+				Profile:          os.Getenv(conns.EnvVarProfile),
+				SuppressDebugLog: true,
+			}
+			client, diags := conf.Client(context.Background())
+			if diags.HasError() {
+				log.Printf("[DEBUG] Error creating AWS client from profile %s: %v", os.Getenv(conns.EnvVarProfile), diags)
+				return
+			}
+			conn, valid := client.(*conns.AWSClient)
+			if !valid {
+				log.Printf("[DEBUG] Unable to create AWS Client from profile %s.", os.Getenv(conns.EnvVarProfile))
+			} else {
+				log.Printf("[DEBUG] Retrived Region from AWS_PROFILE configuration: %s ", conn.Region)
+				region = conn.Region
+			}
+		}
+
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
 		// a provider configuration with a region. This defaults to us-west-2 for provider
 		// developer simplicity and has been in the codebase for a very long time.
-		//
-		// This handling must be preserved until either:
-		//   * AWS_DEFAULT_REGION is required and checked above (should mention us-west-2 default)
-		//   * Region is automatically handled via shared AWS configuration file and still verified
-		region := Region()
+
+		if region == "" && os.Getenv(conns.EnvVarDefaultRegion) != "" {
+			region = Region()
+		}
 		os.Setenv(conns.EnvVarDefaultRegion, region)
 
 		err := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
