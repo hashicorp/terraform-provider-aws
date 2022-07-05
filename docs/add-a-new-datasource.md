@@ -4,11 +4,13 @@ New data sources are required when AWS adds a new service, or adds new features 
 
 Each data source should be submitted for review in isolation, pull requests containing multiple data sources and/or resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
-Please use the [skaff](../skaff/README.md) tool to generate new data source and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
-
 ## Prerequisites
 
-If this is the first addition of a resource or data source for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
+If this is the first addition of a data source for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
+
+Determine which version of the AWS SDK for Go the resource will be built upon. For more information and instructions on how to determine this choice, please read [AWS SDK for Go Versions](aws-sdk-go-versions.md)
+
+*If you are using AWS SDK for Go V2* Please use the [skaff](https://github.com/hashicorp/terraform-provider-aws/blob/main/skaff/README.md) tool to scaffold templates for any new data source. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
 ## Steps to Add a Data Source
 

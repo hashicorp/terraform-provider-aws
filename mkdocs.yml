@@ -28,6 +28,7 @@ nav:
     - Acceptance Test Environment Variables: acc-test-environment-variables.md
     - Data Handling and Conversion: data-handling-and-conversion.md
     - Dependency Updates: dependency-updates.md
+    - AWS SDK for Go Usage: aws-go-sdk-versions.md
     - Error Handling: error-handling.md
     - Provider Design: provider-design.md
     - Naming Standards: naming.md
