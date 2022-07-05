@@ -7,7 +7,7 @@ The Terraform AWS Provider relies on the [AWS SDK for Go](https://aws.amazon.com
 - [AWS SDKs and Tools version support matrix
 ](https://docs.aws.amazon.com/sdkref/latest/guide/version-support-matrix.html)
 
-The vast majority of the provider is based on the [AWS Go SDK V1]([AWS SDK Go V1](https://github.com/aws/aws-sdk-go), however the provider allows the use of either. 
+The vast majority of the provider is based on the [AWS Go SDK V1](https://github.com/aws/aws-sdk-go), however the provider allows the use of either. 
 
 ## Which SDK Version should I use?
 
