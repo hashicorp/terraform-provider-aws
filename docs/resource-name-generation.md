@@ -1,4 +1,4 @@
-# Adding resource name generation support
+# Adding Resource Name Generation Support
 
 Terraform AWS Provider resources can use shared logic to support and test name generation, where the operator can choose between an expected naming value, a generated naming value with a prefix, or a fully generated name.
 

@@ -1,4 +1,4 @@
-# Changelog process
+# Changelog Process
 
 HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOG.md that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 

@@ -6,27 +6,6 @@ The Terraform AWS Provider codebase bridges the implementation of a [Terraform P
 
 For further details about how the AWS SDK for Go v1 and the Terraform AWS Provider resource logic handle retryable errors, see the [Retries and Waiters documentation](retries-and-waiters.md).
 
-- [General Guidelines and Helpers](#general-guidelines-and-helpers)
-    - [Naming and Check Style](#naming-and-check-style)
-    - [Wrap Errors](#wrap-errors)
-    - [AWS SDK for Go v1 Errors](#aws-sdk-for-go-v1-errors)
-        - [AWS SDK for Go v1 Error Helpers](#aws-sdk-for-go-error-helpers)
-        - [Use AWS SDK for Go v1 Error Code Constants](#use-aws-sdk-for-go-v1-error-code-constants)
-    - [Terraform Plugin SDK Types and Helpers](#terraform-plugin-sdk-types-and-helpers)
-- [Resource Lifecycle Guidelines](#resource-lifecycle-guidelines)
-    - [Resource Creation](#resource-creation)
-        - [d.IsNewResource() Checks](#disnewresource-checks)
-        - [Creation Error Message Context](#creation-error-message-context)
-    - [Resource Deletion](#resource-deletion)
-        - [Resource Already Deleted](#resource-already-deleted)
-        - [Deletion Error Message Context](#deletion-error-message-context)
-    - [Resource Read](#resource-read)
-        - [Singular Data Source Errors](#singular-data-source-errors)
-        - [Plural Data Source Errors](#plural-data-source-errors)
-        - [Read Error Message Context](#read-error-message-context)
-    - [Resource Update](#resource-update)
-        - [Update Error Message Context](#update-error-message-context)
-
 ## General Guidelines and Helpers
 
 ### Naming and Check Style

@@ -1,20 +1,5 @@
 # Naming Conventions for the AWS Provider
 
-<!-- TOC depthFrom:2 -->
-
-- [Service Identifier](#service-identifier)
-- [Packages](#packages)
-- [Resources and Data Sources](#resources-and-data-sources)
-- [Files](#files)
-- [MixedCaps](#mixedcaps)
-- [Functions](#functions)
-- [Variables and Constants](#variables-and-constants)
-- [Acceptance and Unit Tests](#acceptance-and-unit-tests)
-- [Test Support Functions](#test-support-functions)
-- [Acceptance Test Configurations](#acceptance-test-configurations)
-
-<!-- /TOC -->
-
 ## Service Identifier
 
 In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider use by a practitioner. Prominent places you will see service identifiers:
