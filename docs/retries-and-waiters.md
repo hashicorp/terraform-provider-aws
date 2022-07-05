@@ -1,7 +1,5 @@
 # Retries and Waiters
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
-
 Terraform plugins may run into situations where calling the remote system after an operation may be necessary. These typically fall under three classes where:
 
 - The request never reaches the remote system.
