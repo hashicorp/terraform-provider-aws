@@ -188,12 +188,12 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						"observability_configuration_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"enabled": {
+						"observability_enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -771,11 +771,11 @@ func expandServiceObservabilityConfiguration(l []interface{}) *apprunner.Service
 
 	result := &apprunner.ServiceObservabilityConfiguration{}
 
-	if v, ok := tfMap["arn"].(string); ok {
+	if v, ok := tfMap["observability_configuration_arn"].(string); ok {
 		result.ObservabilityConfigurationArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap["observability_enabled"].(bool); ok {
 		result.ObservabilityEnabled = aws.Bool(v)
 	}
 
@@ -1104,8 +1104,8 @@ func flattenServiceObservabilityConfiguration(config *apprunner.ServiceObservabi
 	}
 
 	m := map[string]interface{}{
-		"arn":     aws.StringValue(config.ObservabilityConfigurationArn),
-		"enabled": aws.BoolValue(config.ObservabilityEnabled),
+		"observability_configuration_arn": aws.StringValue(config.ObservabilityConfigurationArn),
+		"observability_enabled":           aws.BoolValue(config.ObservabilityEnabled),
 	}
 
 	return []interface{}{m}
