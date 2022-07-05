@@ -118,14 +118,14 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	output, err := FindFirewallPolicyByNameAndArn(ctx, conn, arn, name)
 
 	if err != nil {
-		return diag.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): %s", arn, name, err)
+		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): %s", arn, name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): empty output", arn, name)
+		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): empty output", arn, name)
 	}
 	if output.FirewallPolicyResponse == nil {
-		return diag.Errorf("error reading NetworkFirewall Firewall Policy (%s, %s): empty output.FirewallPolicyResponse", arn, name)
+		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): empty output.FirewallPolicyResponse", arn, name)
 	}
 
 	resp := output.FirewallPolicyResponse
@@ -139,13 +139,13 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("update_token", output.UpdateToken)
 
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
-		return diag.Errorf("error setting firewall_policy: %s", err)
+		return diag.Errorf("setting firewall_policy: %s", err)
 	}
 
 	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
