@@ -20,11 +20,11 @@ nav:
       - Resource Tagging: resource-tagging.md
       - Tag Resource: adding-a-tag-resource.md
       - Bugs and Enhancements: bugs-and-enhancements.md
-  - Acceptance Tests: running-and-writing-acceptance-tests.md
-  - Changelog Process: changelog-process.md
-  - Raising a Pull Request: raising-a-pull-request.md
-  - How We Prioritize: prioritization.md
-  - Issue Reporting and Lifecycle: issue-reporting-and-lifecycle.md
+    - Acceptance Tests: running-and-writing-acceptance-tests.md
+    - Changelog Process: changelog-process.md
+    - Raising a Pull Request: raising-a-pull-request.md
+    - How We Prioritize: prioritization.md
+    - Issue Reporting and Lifecycle: issue-reporting-and-lifecycle.md
   - Developer Reference:
     - Acceptance Test Environment Variables: acc-test-environment-variables.md
     - Data Handling and Conversion: data-handling-and-conversion.md
