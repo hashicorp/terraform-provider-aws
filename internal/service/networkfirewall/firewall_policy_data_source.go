@@ -3,12 +3,15 @@ package networkfirewall
 import (
 	"context"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceFirewallPolicy() *schema.Resource {
@@ -19,6 +22,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				AtLeastOneOf: []string{"arn", "name"},
 				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -96,6 +100,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				AtLeastOneOf: []string{"arn", "name"},
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"update_token": {

@@ -48,10 +48,8 @@ One or more of the following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the firewall policy.
 * `description` - A description of the firewall policy.
 * `firewall_policy` - The [policy][2] for the specified firewall policy.
-* `name` - The descriptive name of the firewall policy.
 * `tags` - Key-value tags for the firewall policy.
 * `update_token` - A token used for optimistic locking.
 
