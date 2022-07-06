@@ -1,19 +1,19 @@
 package transcribe_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,6 +24,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	file := "test-fixtures/test1.txt"
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -37,7 +38,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMedicalVocabularyConfig_basic(rName),
+				Config: testAccMedicalVocabularyConfig_basic(rName, file),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -60,24 +61,24 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var medicalvocabulary transcribe.DescribeMedicalVocabularyResponse
+	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_transcribe_medicalvocabulary.test"
+	resourceName := "aws_transcribe_medical_vocabulary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(transcribe.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, transcribe.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMedicalVocabularyConfig_basic(rName, testAccMedicalVocabularyVersionNewer),
+				Config: testAccMedicalVocabularyConfig_basic(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalvocabulary),
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
 					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,19 +91,17 @@ func testAccCheckMedicalVocabularyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_transcribe_medicalvocabulary" {
+		if rs.Type != "aws_transcribe_medical_vocabulary" {
 			continue
 		}
 
-		input := &transcribe.DescribeMedicalVocabularyInput{
-			MedicalVocabularyId: aws.String(rs.Primary.ID),
+		_, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeMedicalVocabulary(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, transcribe.ErrCodeNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
@@ -112,7 +111,7 @@ func testAccCheckMedicalVocabularyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckMedicalVocabularyExists(name string, medicalvocabulary *transcribe.DescribeMedicalVocabularyResponse) resource.TestCheckFunc {
+func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcribe.GetMedicalVocabularyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -124,15 +123,13 @@ func testAccCheckMedicalVocabularyExists(name string, medicalvocabulary *transcr
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-		resp, err := conn.DescribeMedicalVocabulary(&transcribe.DescribeMedicalVocabularyInput{
-			MedicalVocabularyId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Transcribe MedicalVocabulary: %s", err.Error())
 		}
 
-		*medicalvocabulary = *resp
+		*medicalVocabulary = *resp
 
 		return nil
 	}
@@ -141,9 +138,9 @@ func testAccCheckMedicalVocabularyExists(name string, medicalvocabulary *transcr
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
 
-	input := &transcribe.ListMedicalVocabularysInput{}
+	input := &transcribe.ListMedicalVocabulariesInput{}
 
-	_, err := conn.ListMedicalVocabularys(input)
+	_, err := conn.ListMedicalVocabularies(context.Background(), input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -154,17 +151,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckMedicalVocabularyNotRecreated(before, after *transcribe.DescribeMedicalVocabularyResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.MedicalVocabularyId), aws.StringValue(after.MedicalVocabularyId); before != after {
-			return fmt.Errorf("Transcribe MedicalVocabulary (%s/%s) recreated", before, after)
-		}
-
-		return nil
-	}
-}
-
-func testAccMedicalVocabularyBaseConfig(rName string) string {
+func testAccMedicalVocabularyBaseConfig(rName, file string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -174,14 +161,16 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test.txt"
-  source = "test.txt"
+  source = %[2]q
 }
 
-`, rName)
+`, rName, file)
 }
 
-func testAccMedicalVocabularyConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
+func testAccMedicalVocabularyConfig_basic(rName, file string) string {
+	return acctest.ConfigCompose(
+		testAccMedicalVocabularyBaseConfig(rName, file),
+		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
   medicalvocabulary_name             = %[1]q
   engine_type             = "ActiveTranscribe"
@@ -200,5 +189,5 @@ resource "aws_transcribe_medical_vocabulary" "test" {
     password = "TestTest1234"
   }
 }
-`, rName, version)
+`, rName, file))
 }

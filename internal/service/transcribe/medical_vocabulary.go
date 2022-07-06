@@ -135,7 +135,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set("language_code", out.LanguageCode)
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
 	}
@@ -159,34 +159,25 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeConn
 
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &transcribe.UpdateMedicalVocabularyInput{
+			VocabularyName: aws.String(d.Id()),
+			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+		}
 
-	in := &transcribe.UpdateMedicalVocabularyInput{
-		VocabularyName: aws.String(d.Id()),
-	}
+		if d.HasChanges("vocabulary_file_uri") {
+			in.VocabularyFileUri = aws.String(d.Get("vocabulary_file_uri").(string))
+		}
 
-	if d.HasChanges("vocabulary_file_uri") {
-		in.VocabularyFileUri = aws.String(d.Get("vocabulary_file_uri").(string))
-		update = true
-	}
+		log.Printf("[DEBUG] Updating Transcribe MedicalVocabulary (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateMedicalVocabulary(ctx, in)
+		if err != nil {
+			return diag.Errorf("updating Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
+		}
 
-	if d.HasChanges("language_code") {
-		in.LanguageCode = types.LanguageCode(d.Get("language_code").(string))
-		update = true
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating Transcribe MedicalVocabulary (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateMedicalVocabulary(ctx, in)
-	if err != nil {
-		return diag.Errorf("updating Transcribe MedicalVocabulary (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitMedicalVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Transcribe MedicalVocabulary (%s) update: %s", d.Id(), err)
+		if _, err := waitMedicalVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Transcribe MedicalVocabulary (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -209,8 +200,8 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 		VocabularyName: aws.String(d.Id()),
 	})
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	var badRequestException *types.BadRequestException
+	if errors.As(err, &badRequestException) {
 		return nil
 	}
 
@@ -302,8 +293,8 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	out, err := conn.GetMedicalVocabulary(ctx, in)
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	var badRequestException *types.BadRequestException
+	if errors.As(err, &badRequestException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
