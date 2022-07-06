@@ -631,7 +631,7 @@ func expandCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 }
 
 func expandRevocationConfiguration(l []interface{}) *acmpca.RevocationConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
