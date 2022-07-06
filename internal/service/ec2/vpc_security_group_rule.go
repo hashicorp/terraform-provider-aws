@@ -287,8 +287,46 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("description") {
-		if err := resourceSecurityGroupRuleDescriptionUpdate(conn, d); err != nil {
-			return err
+		securityGroupID := d.Get("security_group_id").(string)
+
+		conns.GlobalMutexKV.Lock(securityGroupID)
+		defer conns.GlobalMutexKV.Unlock(securityGroupID)
+
+		sg, err := FindSecurityGroupByID(conn, securityGroupID)
+
+		if err != nil {
+			return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
+		}
+
+		ipPermission := expandIpPermission(d, sg)
+		ruleType := d.Get("type").(string)
+		isVPC := aws.StringValue(sg.VpcId) != ""
+
+		switch ruleType {
+		case securityGroupRuleTypeIngress:
+			input := &ec2.UpdateSecurityGroupRuleDescriptionsIngressInput{
+				IpPermissions: []*ec2.IpPermission{ipPermission},
+			}
+
+			if isVPC {
+				input.GroupId = sg.GroupId
+			} else {
+				input.GroupName = sg.GroupName
+			}
+
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsIngress(input)
+
+		case securityGroupRuleTypeEgress:
+			input := &ec2.UpdateSecurityGroupRuleDescriptionsEgressInput{
+				GroupId:       sg.GroupId,
+				IpPermissions: []*ec2.IpPermission{ipPermission},
+			}
+
+			_, err = conn.UpdateSecurityGroupRuleDescriptionsEgress(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("updating Security Group (%s) Rule (%s) description: %w", securityGroupID, d.Id(), err)
 		}
 	}
 
@@ -340,7 +378,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", securityGroupID, ruleType, err)
+		return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", securityGroupID, d.Id(), err)
 	}
 
 	return nil
@@ -549,160 +587,6 @@ func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	}
 
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
-}
-
-func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermission, error) {
-	var perm ec2.IpPermission
-
-	protocol := ProtocolForValue(d.Get("protocol").(string))
-	perm.IpProtocol = aws.String(protocol)
-
-	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
-	if protocol != "-1" {
-		perm.FromPort = aws.Int64(int64(d.Get("from_port").(int)))
-		perm.ToPort = aws.Int64(int64(d.Get("to_port").(int)))
-	}
-
-	// build a group map that behaves like a set
-	groups := make(map[string]bool)
-	if raw, ok := d.GetOk("source_security_group_id"); ok {
-		groups[raw.(string)] = true
-	}
-
-	if _, ok := d.GetOk("self"); ok {
-		if aws.StringValue(sg.VpcId) != "" {
-			groups[*sg.GroupId] = true
-		} else {
-			groups[*sg.GroupName] = true
-		}
-	}
-
-	description := d.Get("description").(string)
-
-	if len(groups) > 0 {
-		perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, len(groups))
-		// build string list of group name/ids
-		var gl []string
-		for k := range groups {
-			gl = append(gl, k)
-		}
-
-		for i, name := range gl {
-			ownerId, id := "", name
-			if items := strings.Split(id, "/"); len(items) > 1 {
-				ownerId, id = items[0], items[1]
-			}
-
-			perm.UserIdGroupPairs[i] = &ec2.UserIdGroupPair{
-				GroupId: aws.String(id),
-				UserId:  aws.String(ownerId),
-			}
-
-			if aws.StringValue(sg.VpcId) == "" {
-				perm.UserIdGroupPairs[i].GroupId = nil
-				perm.UserIdGroupPairs[i].GroupName = aws.String(id)
-				perm.UserIdGroupPairs[i].UserId = nil
-			}
-
-			if description != "" {
-				perm.UserIdGroupPairs[i].Description = aws.String(description)
-			}
-		}
-	}
-
-	if raw, ok := d.GetOk("cidr_blocks"); ok {
-		list := raw.([]interface{})
-		perm.IpRanges = make([]*ec2.IpRange, len(list))
-		for i, v := range list {
-			cidrIP, ok := v.(string)
-			if !ok {
-				return nil, fmt.Errorf("empty element found in cidr_blocks - consider using the compact function")
-			}
-			perm.IpRanges[i] = &ec2.IpRange{CidrIp: aws.String(cidrIP)}
-
-			if description != "" {
-				perm.IpRanges[i].Description = aws.String(description)
-			}
-		}
-	}
-
-	if raw, ok := d.GetOk("ipv6_cidr_blocks"); ok {
-		list := raw.([]interface{})
-		perm.Ipv6Ranges = make([]*ec2.Ipv6Range, len(list))
-		for i, v := range list {
-			cidrIP, ok := v.(string)
-			if !ok {
-				return nil, fmt.Errorf("empty element found in ipv6_cidr_blocks - consider using the compact function")
-			}
-			perm.Ipv6Ranges[i] = &ec2.Ipv6Range{CidrIpv6: aws.String(cidrIP)}
-
-			if description != "" {
-				perm.Ipv6Ranges[i].Description = aws.String(description)
-			}
-		}
-	}
-
-	if raw, ok := d.GetOk("prefix_list_ids"); ok {
-		list := raw.([]interface{})
-		perm.PrefixListIds = make([]*ec2.PrefixListId, len(list))
-		for i, v := range list {
-			prefixListID, ok := v.(string)
-			if !ok {
-				return nil, fmt.Errorf("empty element found in prefix_list_ids - consider using the compact function")
-			}
-			perm.PrefixListIds[i] = &ec2.PrefixListId{PrefixListId: aws.String(prefixListID)}
-
-			if description != "" {
-				perm.PrefixListIds[i].Description = aws.String(description)
-			}
-		}
-	}
-
-	return &perm, nil
-}
-
-func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.ResourceData) error {
-	sg_id := d.Get("security_group_id").(string)
-
-	conns.GlobalMutexKV.Lock(sg_id)
-	defer conns.GlobalMutexKV.Unlock(sg_id)
-
-	sg, err := FindSecurityGroupByID(conn, sg_id)
-	if err != nil {
-		return err
-	}
-
-	perm, err := expandIPPerm(d, sg)
-	if err != nil {
-		return err
-	}
-	ruleType := d.Get("type").(string)
-	switch ruleType {
-	case securityGroupRuleTypeIngress:
-		req := &ec2.UpdateSecurityGroupRuleDescriptionsIngressInput{
-			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm},
-		}
-
-		_, err = conn.UpdateSecurityGroupRuleDescriptionsIngress(req)
-
-		if err != nil {
-			return fmt.Errorf("Error updating security group %s rule description: %w", sg_id, err)
-		}
-	case securityGroupRuleTypeEgress:
-		req := &ec2.UpdateSecurityGroupRuleDescriptionsEgressInput{
-			GroupId:       sg.GroupId,
-			IpPermissions: []*ec2.IpPermission{perm},
-		}
-
-		_, err = conn.UpdateSecurityGroupRuleDescriptionsEgress(req)
-
-		if err != nil {
-			return fmt.Errorf("Error updating security group %s rule description: %w", sg_id, err)
-		}
-	}
-
-	return nil
 }
 
 // validateSecurityGroupRuleImportString does minimal validation of import string without going to AWS
