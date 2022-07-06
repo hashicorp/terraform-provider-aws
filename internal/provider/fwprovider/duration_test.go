@@ -1,4 +1,4 @@
-package types_test
+package fwprovider_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider"
 )
 
 func TestDurationTypeValueFromTerraform(t *testing.T) {
@@ -21,15 +21,15 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: types.Duration{Null: true},
+			expected: fwprovider.Duration{Null: true},
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: types.Duration{Unknown: true},
+			expected: fwprovider.Duration{Unknown: true},
 		},
 		"valid duration": {
 			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: types.Duration{Value: 2 * time.Hour},
+			expected: fwprovider.Duration{Value: 2 * time.Hour},
 		},
 		"invalid duration": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),
@@ -41,7 +41,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			ctx := context.TODO()
-			val, err := types.DurationType.ValueFromTerraform(ctx, test.val)
+			val, err := fwprovider.DurationType.ValueFromTerraform(ctx, test.val)
 
 			if err == nil && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -90,7 +90,7 @@ func TestDurationTypeValidate(t *testing.T) {
 			ctx := context.TODO()
 
 			attributePath := tftypes.NewAttributePath().WithAttributeName("test")
-			diags := types.DurationType.Validate(ctx, test.val, attributePath)
+			diags := fwprovider.DurationType.Validate(ctx, test.val, attributePath)
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

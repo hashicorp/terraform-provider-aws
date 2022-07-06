@@ -5,8 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,132 +27,132 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"access_key": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The access key for API operations. You can retrieve this\nfrom the 'Security & Credentials' section of the AWS console.",
 			},
 			"allowed_account_ids": {
-				Type:     fwtypes.SetType{ElemType: fwtypes.StringType},
+				Type:     types.SetType{ElemType: types.StringType},
 				Optional: true,
 			},
 			"custom_ca_bundle": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "File containing custom root and intermediate certificates. Can also be configured using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)",
 			},
 			"ec2_metadata_service_endpoint": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "Address of the EC2 metadata service endpoint to use. Can also be configured using the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.",
 			},
 			"ec2_metadata_service_endpoint_mode": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "Protocol to use with EC2 metadata service endpoint.Valid values are `IPv4` and `IPv6`. Can also be configured using the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.",
 			},
 			"forbidden_account_ids": {
-				Type:     fwtypes.SetType{ElemType: fwtypes.StringType},
+				Type:     types.SetType{ElemType: types.StringType},
 				Optional: true,
 			},
 			"http_proxy": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The address of an HTTP proxy to use when accessing the AWS API. Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
 			},
 			"insecure": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, default value is `false`",
 			},
 			"max_retries": {
-				Type:        fwtypes.Int64Type,
+				Type:        types.Int64Type,
 				Optional:    true,
 				Description: "The maximum number of times an AWS API request is\nbeing executed. If the API request still fails, an error is\nthrown.",
 			},
 			"profile": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The profile for API operations. If not set, the default profile\ncreated with `aws configure` will be used.",
 			},
 			"region": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
-				Type:               fwtypes.BoolType,
+				Type:               types.BoolType,
 				Optional:           true,
 				Description:        "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 				DeprecationMessage: "Use s3_use_path_style instead.",
 			},
 			"s3_use_path_style": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
 			"secret_key": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The secret key for API operations. You can retrieve this\nfrom the 'Security & Credentials' section of the AWS console.",
 			},
 			"shared_config_files": {
-				Type:        fwtypes.ListType{ElemType: fwtypes.StringType},
+				Type:        types.ListType{ElemType: types.StringType},
 				Optional:    true,
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 			},
 			"shared_credentials_file": {
-				Type:               fwtypes.StringType,
+				Type:               types.StringType,
 				Optional:           true,
 				Description:        "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
 				DeprecationMessage: "Use shared_credentials_files instead.",
 			},
 			"shared_credentials_files": {
-				Type:        fwtypes.ListType{ElemType: fwtypes.StringType},
+				Type:        types.ListType{ElemType: types.StringType},
 				Optional:    true,
 				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
 			},
 			"skip_credentials_validation": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
 			"skip_metadata_api_check": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "Skip the AWS Metadata API check. Used for AWS API implementations that do not have a metadata api endpoint.",
 			},
 			"skip_region_validation": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Skip static validation of region name. Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 			"skip_requesting_account_id": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Skip requesting the account ID. Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 			"sts_region": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "The region where AWS STS operations will take place. Examples\nare us-east-1 and us-west-2.", // lintignore:AWSAT003
 			},
 			"token": {
-				Type:        fwtypes.StringType,
+				Type:        types.StringType,
 				Optional:    true,
 				Description: "session token. A session token is only required if you are\nusing temporary security credentials.",
 			},
 			"use_dualstack_endpoint": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Resolve an endpoint with DualStack capability",
 			},
 			"use_fips_endpoint": {
-				Type:        fwtypes.BoolType,
+				Type:        types.BoolType,
 				Optional:    true,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
@@ -162,48 +161,48 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        types.DurationType,
+						Type:        DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
 					"duration_seconds": {
-						Type:               fwtypes.Int64Type,
+						Type:               types.Int64Type,
 						Optional:           true,
 						Description:        "The duration, in seconds, of the role session.",
 						DeprecationMessage: "Use assume_role.duration instead",
 					},
 					"external_id": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "A unique identifier that might be required when you assume a role in another account.",
 					},
 					"policy": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
 					},
 					"policy_arns": {
-						Type:        fwtypes.SetType{ElemType: fwtypes.StringType},
+						Type:        types.SetType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 					},
 					"role_arn": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					},
 					"session_name": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
 					"tags": {
-						Type:        fwtypes.MapType{ElemType: fwtypes.StringType},
+						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Assume role session tags.",
 					},
 					"transitive_tag_keys": {
-						Type:        fwtypes.SetType{ElemType: fwtypes.StringType},
+						Type:        types.SetType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Assume role session tag keys to pass to any subsequent sessions.",
 					},
@@ -214,36 +213,36 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        types.DurationType,
+						Type:        DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
 					"policy": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
 					},
 					"policy_arns": {
-						Type:        fwtypes.SetType{ElemType: fwtypes.StringType},
+						Type:        types.SetType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
 					},
 					"role_arn": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					},
 					"session_name": {
-						Type:        fwtypes.StringType,
+						Type:        types.StringType,
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
 					"web_identity_token": {
-						Type:     fwtypes.StringType,
+						Type:     types.StringType,
 						Optional: true,
 					},
 					"web_identity_token_file": {
-						Type:     fwtypes.StringType,
+						Type:     types.StringType,
 						Optional: true,
 					},
 				},
@@ -253,7 +252,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"default_tags": {
 				Attributes: map[string]tfsdk.Attribute{
 					"tags": {
-						Type:        fwtypes.MapType{ElemType: fwtypes.StringType},
+						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Resource tags to default across all resources",
 					},
@@ -266,12 +265,12 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"ignore_tags": {
 				Attributes: map[string]tfsdk.Attribute{
 					"key_prefixes": {
-						Type:        fwtypes.SetType{ElemType: fwtypes.StringType},
+						Type:        types.SetType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Resource tag key prefixes to ignore across all resources.",
 					},
 					"keys": {
-						Type:        fwtypes.SetType{ElemType: fwtypes.StringType},
+						Type:        types.SetType{ElemType: types.StringType},
 						Optional:    true,
 						Description: "Resource tag keys to ignore across all resources.",
 					},
@@ -315,7 +314,7 @@ func endpointsBlock() tfsdk.Block {
 
 	for _, serviceKey := range names.Aliases() {
 		endpointsAttributes[serviceKey] = tfsdk.Attribute{
-			Type:        fwtypes.StringType,
+			Type:        types.StringType,
 			Optional:    true,
 			Description: "Use this to override the default service endpoint URL",
 		}
