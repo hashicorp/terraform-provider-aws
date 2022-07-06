@@ -266,7 +266,7 @@ func testAccMedicalVocabularyConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
   vocabulary_name     = %[1]q
-  language_code      = "en-US"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
   tags = {
@@ -287,7 +287,7 @@ func testAccMedicalVocabularyConfig_updateFile(rName, fileName string) string {
 		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
   vocabulary_name     = %[1]q
-  language_code      = "en-US"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/transcribe/%[2]s"
 
   tags = {
@@ -309,7 +309,7 @@ func testAccMedicalVocabularyConfig_tags1(rName, key1, value1 string) string {
 		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
   vocabulary_name     = %[1]q
-  language_code      = "en-US"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
   tags = {
@@ -329,7 +329,7 @@ func testAccMedicalVocabularyConfig_tags2(rName, key1, value1, key2, value2 stri
 		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
   vocabulary_name     = %[1]q
-  language_code      = "en-US"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
   tags = {

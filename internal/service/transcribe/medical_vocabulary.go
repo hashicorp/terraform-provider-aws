@@ -51,7 +51,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"en-US"}, false), // un-US is the only supported language for this service
+				ValidateFunc: validation.StringInSlice([]string{"en-US"}, false), // en-US is the only supported language for this service
 			},
 			"vocabulary_file_uri": {
 				Type:         schema.TypeString,
