@@ -17,7 +17,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestIPPermissionIDHash(t *testing.T) {
+func TestSecurityGroupRuleCreateID(t *testing.T) {
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
 		FromPort:   aws.Int64(80),
@@ -103,7 +103,7 @@ func TestIPPermissionIDHash(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := tfec2.IPPermissionIDHash("sg-12345", tc.Type, tc.Input)
+		actual := tfec2.SecurityGroupRuleCreateID("sg-12345", tc.Type, tc.Input)
 		if actual != tc.Output {
 			t.Errorf("input: %s - %s\noutput: %s", tc.Type, tc.Input, actual)
 		}

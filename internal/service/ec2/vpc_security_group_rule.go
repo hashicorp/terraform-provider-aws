@@ -159,7 +159,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	ipPermission := expandIpPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
-	id := IPPermissionIDHash(securityGroupID, ruleType, ipPermission)
+	id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -276,7 +276,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	if strings.Contains(d.Id(), "_") {
 		// import so fix the id
-		id := IPPermissionIDHash(securityGroupID, ruleType, ipPermission)
+		id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
 		d.SetId(id)
 	}
 
@@ -520,9 +520,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) (
 	return rule, description
 }
 
-func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
+func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermission) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", sg_id))
+
+	buf.WriteString(fmt.Sprintf("%s-", securityGroupID))
 	if aws.Int64Value(ip.FromPort) > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", *ip.FromPort))
 	}
