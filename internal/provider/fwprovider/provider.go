@@ -10,11 +10,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func New() tfsdk.Provider {
-	return &provider{}
+func New(version string) tfsdk.Provider {
+	return &provider{
+		Version: version,
+	}
 }
 
-type provider struct{}
+type provider struct {
+	Version string
+}
 
 // GetSchema returns the schema for this provider's configuration.
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
