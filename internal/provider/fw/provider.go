@@ -90,7 +90,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"region": {
 				Type:        fwtypes.StringType,
 				Optional:    true,
-				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.",
+				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
 			"s3_force_path_style": {
 				Type:               fwtypes.BoolType,
