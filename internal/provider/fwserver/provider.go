@@ -1,4 +1,4 @@
-package fw
+package fwserver
 
 import (
 	"context"
@@ -11,29 +11,13 @@ import (
 )
 
 func New() tfsdk.Provider {
-	return &provider{}
+	return &providerServer{}
 }
 
-type provider struct{}
+type providerServer struct{}
 
-func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
-}
-
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]tfsdk.DataSourceType)
-
-	return dataSources, diags
-}
-
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]tfsdk.ResourceType)
-
-	return resources, diags
-}
-
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+// GetSchema returns the schema for this provider's configuration.
+func (p *providerServer) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
@@ -296,6 +280,30 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 	}
 
 	return schema, diags
+}
+
+// Configure is called at the beginning of the provider lifecycle, when
+// Terraform sends to the provider the values the user specified in the
+// provider configuration block.
+func (p *providerServer) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
+}
+
+// GetResources returns a mapping of resource names to type
+// implementations.
+func (p *providerServer) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	resources := make(map[string]tfsdk.ResourceType)
+
+	return resources, diags
+}
+
+// GetDataSources returns a mapping of data source name to types
+// implementations.
+func (p *providerServer) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	dataSources := make(map[string]tfsdk.DataSourceType)
+
+	return dataSources, diags
 }
 
 func endpointsBlock() tfsdk.Block {
