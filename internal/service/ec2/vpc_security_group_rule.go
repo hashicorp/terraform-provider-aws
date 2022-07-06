@@ -159,6 +159,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	ipPermission := expandIpPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
+	id := IPPermissionIDHash(securityGroupID, ruleType, ipPermission)
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -192,10 +193,8 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 	}
 
 	if err != nil {
-		return fmt.Errorf("authorizing Security Group (%s) Rule (%s): %w", securityGroupID, ruleType, err)
+		return fmt.Errorf("authorizing Security Group (%s) Rule (%s): %w", securityGroupID, id, err)
 	}
-
-	id := IPPermissionIDHash(securityGroupID, ruleType, ipPermission)
 
 	_, err = tfresource.RetryWhenNotFound(5*time.Minute, func() (interface{}, error) {
 		sg, err := FindSecurityGroupByID(conn, securityGroupID)
@@ -212,7 +211,7 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 			rules = sg.IpPermissionsEgress
 		}
 
-		rule := findRuleMatch(ipPermission, rules, isVPC)
+		rule, _ := findRuleMatch(ipPermission, rules, isVPC)
 
 		if rule == nil {
 			return nil, &resource.NotFoundError{}
@@ -222,7 +221,7 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for Security Group (%s) Rule (%s): %w", securityGroupID, id, err)
+		return fmt.Errorf("waiting for Security Group (%s) Rule (%s) create: %w", securityGroupID, id, err)
 	}
 
 	d.SetId(id)
@@ -232,60 +231,52 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 
 func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-	sg_id := d.Get("security_group_id").(string)
-	sg, err := FindSecurityGroupByID(conn, sg_id)
+	securityGroupID := d.Get("security_group_id").(string)
+	ruleType := d.Get("type").(string)
+
+	sg, err := FindSecurityGroupByID(conn, securityGroupID)
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Security Group (%s) not found, removing Rule (%s) from state", sg_id, d.Id())
+		log.Printf("[WARN] Security Group (%s) not found, removing from state", securityGroupID)
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error finding Security Group (%s) for Rule (%s): %w", sg_id, d.Id(), err)
+		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
+	ipPermission := expandIpPermission(d, sg)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 
-	var rule *ec2.IpPermission
 	var rules []*ec2.IpPermission
-	ruleType := d.Get("type").(string)
-	switch ruleType {
-	case securityGroupRuleTypeIngress:
+
+	if ruleType == securityGroupRuleTypeIngress {
 		rules = sg.IpPermissions
-	default:
+	} else {
 		rules = sg.IpPermissionsEgress
 	}
-	log.Printf("[DEBUG] Rules %v", rules)
 
-	p, err := expandIPPerm(d, sg)
-	if err != nil {
-		return err
+	rule, description := findRuleMatch(ipPermission, rules, isVPC)
+
+	if rule == nil {
+		if !d.IsNewResource() {
+			log.Printf("[WARN] Security Group (%s) Rule (%s) not found, removing from state", securityGroupID, d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		// Shouldn't reach here as we aren't called from resourceSecurityGroupRuleCreate.
+		return fmt.Errorf("reading Security Group (%s) Rule (%s): %w", securityGroupID, d.Id(), &resource.NotFoundError{})
 	}
 
-	if !d.IsNewResource() && len(rules) == 0 {
-		log.Printf("[WARN] No %s rules were found for Security Group (%s) looking for Security Group Rule (%s)", ruleType, aws.StringValue(sg.GroupName), d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	rule = findRuleMatch(p, rules, isVPC)
-
-	if !d.IsNewResource() && rule == nil {
-		log.Printf("[DEBUG] Unable to find matching %s Security Group Rule (%s) for Group %s", ruleType, d.Id(), sg_id)
-		d.SetId("")
-		return nil
-	}
-
-	log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", d.Id(), rule)
-
+	flattenIpPermission(d, ipPermission, isVPC)
+	d.Set("description", description)
 	d.Set("type", ruleType)
-
-	setFromIPPerm(d, sg, p)
-
-	d.Set("description", descriptionFromIPPerm(d, rule))
 
 	if strings.Contains(d.Id(), "_") {
 		// import so fix the id
-		id := IPPermissionIDHash(sg_id, ruleType, p)
+		id := IPPermissionIDHash(securityGroupID, ruleType, ipPermission)
 		d.SetId(id)
 	}
 
@@ -373,8 +364,9 @@ func (b ByGroupPair) Less(i, j int) bool {
 	panic("mismatched security group rules, may be a terraform bug")
 }
 
-func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *ec2.IpPermission {
+func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) (*ec2.IpPermission, string) {
 	var rule *ec2.IpPermission
+	var description string
 
 	for _, r := range rules {
 		if p.ToPort != nil && r.ToPort != nil && aws.Int64Value(p.ToPort) != aws.Int64Value(r.ToPort) {
@@ -397,6 +389,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				}
 				if aws.StringValue(v1.CidrIp) == aws.StringValue(v2.CidrIp) {
 					remaining--
+
+					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+						description = v
+					}
 				}
 			}
 		}
@@ -413,6 +409,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				}
 				if aws.StringValue(v1.CidrIpv6) == aws.StringValue(v2.CidrIpv6) {
 					remaining--
+
+					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+						description = v
+					}
 				}
 			}
 		}
@@ -429,6 +429,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 				}
 				if aws.StringValue(v1.PrefixListId) == aws.StringValue(v2.PrefixListId) {
 					remaining--
+
+					if v := aws.StringValue(v2.Description); v != "" && description == "" {
+						description = v
+					}
 				}
 			}
 		}
@@ -446,6 +450,10 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 					}
 					if aws.StringValue(v1.GroupId) == aws.StringValue(v2.GroupId) {
 						remaining--
+
+						if v := aws.StringValue(v2.Description); v != "" && description == "" {
+							description = v
+						}
 					}
 				} else {
 					if v1.GroupName == nil || v2.GroupName == nil {
@@ -453,19 +461,25 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 					}
 					if aws.StringValue(v1.GroupName) == aws.StringValue(v2.GroupName) {
 						remaining--
+
+						if v := aws.StringValue(v2.Description); v != "" && description == "" {
+							description = v
+						}
 					}
 				}
 			}
 		}
 
 		if remaining > 0 {
+			description = ""
+
 			continue
 		}
 
 		rule = r
 	}
 
-	return rule
+	return rule, description
 }
 
 func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
@@ -645,150 +659,6 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 	}
 
 	return &perm, nil
-}
-
-func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPermission) {
-	isVPC := aws.StringValue(sg.VpcId) != ""
-
-	d.Set("from_port", rule.FromPort)
-	d.Set("to_port", rule.ToPort)
-	d.Set("protocol", rule.IpProtocol)
-
-	var cb []string
-	for _, c := range rule.IpRanges {
-		cb = append(cb, *c.CidrIp)
-	}
-	d.Set("cidr_blocks", cb)
-
-	var ipv6 []string
-	for _, ip := range rule.Ipv6Ranges {
-		ipv6 = append(ipv6, *ip.CidrIpv6)
-	}
-	d.Set("ipv6_cidr_blocks", ipv6)
-
-	var pl []string
-	for _, p := range rule.PrefixListIds {
-		pl = append(pl, *p.PrefixListId)
-	}
-	d.Set("prefix_list_ids", pl)
-
-	if len(rule.UserIdGroupPairs) > 0 {
-		s := rule.UserIdGroupPairs[0]
-
-		if isVPC {
-			if existingSourceSgId, ok := d.GetOk("source_security_group_id"); ok {
-				sgIdComponents := strings.Split(existingSourceSgId.(string), "/")
-				hasAccountIdPrefix := len(sgIdComponents) == 2
-
-				if hasAccountIdPrefix && s.UserId != nil {
-					// then ensure on refresh that we preserve the account id prefix
-					d.Set("source_security_group_id", fmt.Sprintf("%s/%s", aws.StringValue(s.UserId), aws.StringValue(s.GroupId)))
-				} else {
-					d.Set("source_security_group_id", s.GroupId)
-				}
-			} else {
-				d.Set("source_security_group_id", s.GroupId)
-			}
-		} else {
-			d.Set("source_security_group_id", s.GroupName)
-		}
-	}
-}
-
-func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) string {
-	// probe IpRanges
-	cidrIps := make(map[string]bool)
-	if raw, ok := d.GetOk("cidr_blocks"); ok {
-		for _, v := range raw.([]interface{}) {
-			cidrIps[v.(string)] = true
-		}
-	}
-
-	if len(cidrIps) > 0 {
-		for _, c := range rule.IpRanges {
-			if _, ok := cidrIps[*c.CidrIp]; !ok {
-				continue
-			}
-
-			if desc := aws.StringValue(c.Description); desc != "" {
-				return desc
-			}
-		}
-	}
-
-	// probe Ipv6Ranges
-	cidrIpv6s := make(map[string]bool)
-	if raw, ok := d.GetOk("ipv6_cidr_blocks"); ok {
-		for _, v := range raw.([]interface{}) {
-			cidrIpv6s[v.(string)] = true
-		}
-	}
-
-	if len(cidrIpv6s) > 0 {
-		for _, ip := range rule.Ipv6Ranges {
-			if _, ok := cidrIpv6s[*ip.CidrIpv6]; !ok {
-				continue
-			}
-
-			if desc := aws.StringValue(ip.Description); desc != "" {
-				return desc
-			}
-		}
-	}
-
-	// probe PrefixListIds
-	listIds := make(map[string]bool)
-	if raw, ok := d.GetOk("prefix_list_ids"); ok {
-		for _, v := range raw.([]interface{}) {
-			listIds[v.(string)] = true
-		}
-	}
-
-	if len(listIds) > 0 {
-		for _, p := range rule.PrefixListIds {
-			if _, ok := listIds[*p.PrefixListId]; !ok {
-				continue
-			}
-
-			if desc := aws.StringValue(p.Description); desc != "" {
-				return desc
-			}
-		}
-	}
-
-	// probe UserIdGroupPairs
-	if raw, ok := d.GetOk("source_security_group_id"); ok {
-		components := strings.Split(raw.(string), "/")
-
-		switch len(components) {
-		case 2:
-			userId := components[0]
-			groupId := components[1]
-
-			for _, gp := range rule.UserIdGroupPairs {
-				if aws.StringValue(gp.GroupId) != groupId || aws.StringValue(gp.UserId) != userId {
-					continue
-				}
-
-				if desc := aws.StringValue(gp.Description); desc != "" {
-					return desc
-				}
-			}
-		case 1:
-			groupId := components[0]
-			for _, gp := range rule.UserIdGroupPairs {
-				if aws.StringValue(gp.GroupId) != groupId {
-					continue
-				}
-
-				if desc := aws.StringValue(gp.Description); desc != "" {
-					return desc
-				}
-			}
-		}
-	}
-
-	return ""
 }
 
 func resourceSecurityGroupRuleDescriptionUpdate(conn *ec2.EC2, d *schema.ResourceData) error {
@@ -1048,4 +918,61 @@ func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 	}
 
 	return apiObject
+}
+
+func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission, isVPC bool) { // nosemgrep:caps5-in-func-name
+	if apiObject == nil {
+		return
+	}
+
+	d.Set("from_port", apiObject.FromPort)
+	d.Set("protocol", apiObject.IpProtocol)
+	d.Set("to_port", apiObject.ToPort)
+
+	if v := apiObject.IpRanges; len(v) > 0 {
+		var ipRanges []string
+
+		for _, v := range v {
+			ipRanges = append(ipRanges, aws.StringValue(v.CidrIp))
+		}
+
+		d.Set("cidr_blocks", ipRanges)
+	}
+
+	if v := apiObject.Ipv6Ranges; len(v) > 0 {
+		var ipv6Ranges []string
+
+		for _, v := range v {
+			ipv6Ranges = append(ipv6Ranges, aws.StringValue(v.CidrIpv6))
+		}
+
+		d.Set("ipv6_cidr_blocks", ipv6Ranges)
+	}
+
+	if v := apiObject.PrefixListIds; len(v) > 0 {
+		var prefixListIDs []string
+
+		for _, v := range v {
+			prefixListIDs = append(prefixListIDs, aws.StringValue(v.PrefixListId))
+		}
+
+		d.Set("prefix_list_ids", prefixListIDs)
+	}
+
+	if v := apiObject.UserIdGroupPairs; len(v) > 0 {
+		v := v[0]
+
+		if isVPC {
+			if old, ok := d.GetOk("source_security_group_id"); ok {
+				// [OwnerID/]SecurityGroupID.
+				if parts := strings.Split(old.(string), "/"); len(parts) == 1 || aws.StringValue(v.UserId) == "" {
+					d.Set("source_security_group_id", v.GroupId)
+				} else {
+					d.Set("source_security_group_id", strings.Join([]string{aws.StringValue(v.UserId), aws.StringValue(v.GroupId)}, "/"))
+				}
+			}
+		} else {
+			d.Set("source_security_group_id", v.GroupName)
+		}
+	}
 }

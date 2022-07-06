@@ -1019,7 +1019,7 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multipleSearchingAllProtocolCrash(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(sgResourceName, &group),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "10.0.0.0/8"),
@@ -1082,7 +1082,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multiDescription(rName, "ingress"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(sg1ResourceName, &group1),
 					testAccCheckSecurityGroupExists(sg2ResourceName, &group2),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
@@ -1142,7 +1142,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 			},
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multiDescription(rName, "egress"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(sg1ResourceName, &group1),
 					testAccCheckSecurityGroupExists(sg2ResourceName, &group2),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
@@ -2537,7 +2537,7 @@ resource "aws_security_group_rule" "test" {
   from_port        = 80
   to_port          = 8000
   prefix_list_ids  = [aws_ec2_managed_prefix_list.test.id]
-
+  self             = true
 
   security_group_id = aws_security_group.test.id
 }
