@@ -194,11 +194,12 @@ func Provider() *schema.Provider {
 
 	// The actual provider
 	provider := &schema.Provider{
+		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
+		// Notable, the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The access key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -287,14 +288,12 @@ func Provider() *schema.Provider {
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 					"default value is `false`",
 			},
 			"max_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  25,
 				Description: "The maximum number of times an AWS API request is\n" +
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
@@ -302,7 +301,6 @@ func Provider() *schema.Provider {
 			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The profile for API operations. If not set, the default profile\n" +
 					"created with `aws configure` will be used.",
 			},
@@ -315,7 +313,6 @@ func Provider() *schema.Provider {
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Default:    false,
 				Deprecated: "Use s3_use_path_style instead.",
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
@@ -325,7 +322,6 @@ func Provider() *schema.Provider {
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
@@ -334,7 +330,6 @@ func Provider() *schema.Provider {
 			"secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -347,7 +342,6 @@ func Provider() *schema.Provider {
 			"shared_credentials_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Default:       "",
 				Deprecated:    "Use shared_credentials_files instead.",
 				ConflictsWith: []string{"shared_credentials_files"},
 				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
@@ -362,14 +356,12 @@ func Provider() *schema.Provider {
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
@@ -383,41 +375,35 @@ func Provider() *schema.Provider {
 			"skip_region_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip static validation of region name. " +
 					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 			"skip_requesting_account_id": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 			"sts_region": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The region where AWS STS operations will take place. Examples\n" +
 					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with DualStack capability",
 			},
 			"use_fips_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
 		},
@@ -2120,7 +2106,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		HTTPProxy:                      d.Get("http_proxy").(string),
 		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
-		MaxRetries:                     d.Get("max_retries").(int),
+		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
@@ -2136,6 +2122,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if v, ok := d.GetOk("max_retries"); ok {
+		config.MaxRetries = v.(int)
+	}
+
 	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2147,6 +2137,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if v := d.Get("shared_credentials_file").(string); v != "" {
 		config.SharedCredentialsFiles = []string{v}
 	}
+
 	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2165,8 +2156,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
-	endpointsSet := d.Get("endpoints").(*schema.Set)
-	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
+	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
 	}
 
