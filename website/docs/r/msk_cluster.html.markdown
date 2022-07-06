@@ -104,56 +104,59 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "3.2.0"
-  number_of_broker_nodes = 3
+	cluster_type           = "PROVISIONED"
+	
+	provisioned {
+    kafka_version          = "3.2.0"
+		number_of_broker_nodes = 3
+    broker_node_group_info {
+      instance_type = "kafka.m5.large"
+      client_subnets = [
+        aws_subnet.subnet_az1.id,
+        aws_subnet.subnet_az2.id,
+        aws_subnet.subnet_az3.id,
+      ]
+      storage_info {
+        ebs_storage_info {
+          volume_size = 1000
+        }
+      }
+      security_groups = [aws_security_group.sg.id]
+    }
 
-  broker_node_group_info {
-    instance_type = "kafka.m5.large"
-    client_subnets = [
-      aws_subnet.subnet_az1.id,
-      aws_subnet.subnet_az2.id,
-      aws_subnet.subnet_az3.id,
-    ]
-    storage_info {
-      ebs_storage_info {
-        volume_size = 1000
+    encryption_info {
+      encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
+    }
+
+    open_monitoring {
+      prometheus {
+        jmx_exporter {
+          enabled_in_broker = true
+        }
+        node_exporter {
+          enabled_in_broker = true
+        }
       }
     }
-    security_groups = [aws_security_group.sg.id]
-  }
 
-  encryption_info {
-    encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
-  }
-
-  open_monitoring {
-    prometheus {
-      jmx_exporter {
-        enabled_in_broker = true
-      }
-      node_exporter {
-        enabled_in_broker = true
+    logging_info {
+      broker_logs {
+        cloudwatch_logs {
+          enabled   = true
+          log_group = aws_cloudwatch_log_group.test.name
+        }
+        firehose {
+          enabled         = true
+          delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
+        }
+        s3 {
+          enabled = true
+          bucket  = aws_s3_bucket.bucket.id
+          prefix  = "logs/msk-"
+        }
       }
     }
-  }
-
-  logging_info {
-    broker_logs {
-      cloudwatch_logs {
-        enabled   = true
-        log_group = aws_cloudwatch_log_group.test.name
-      }
-      firehose {
-        enabled         = true
-        delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
-      }
-      s3 {
-        enabled = true
-        bucket  = aws_s3_bucket.bucket.id
-        prefix  = "logs/msk-"
-      }
-    }
-  }
+	}
 
   tags = {
     foo = "bar"
@@ -161,7 +164,7 @@ resource "aws_msk_cluster" "example" {
 }
 
 output "zookeeper_connect_string" {
-  value = aws_msk_cluster.example.zookeeper_connect_string
+  value = aws_msk_cluster.example.provisioned.zookeeper_connect_string
 }
 
 output "bootstrap_brokers_tls" {
@@ -203,17 +206,33 @@ resource "aws_msk_cluster" "example" {
 
 The following arguments are supported:
 
-* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.
+* `cluster_type` - (Required) Type of the MSK cluster. Valid values: PROVISIONED, SERVERLESS.
+* `provisioned` - (Optional) Configuration block for the provisioned type of the Kafka cluster.
+* `serverless` - (Optional) Configuration block for the serverless type of the Kafka cluster.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### provisioned Argument Reference
+
 * `kafka_version` - (Required) Specify the desired Kafka software version.
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
+* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
 * `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
 * `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### serverless Argument Reference
+
+* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
+* `vpc_configs` - (Required) Configuration block for specifying a vpc. See below.
+
+### vpc_configs Argument Reference
+
+* `security_group_ids` - (Optional) Identifiers of the security groups for the serverless cluster.
+* `subnet_ids` - (Required) A list of VPC subnet IDs.
 
 ### broker_node_group_info Argument Reference
 
@@ -255,7 +274,7 @@ The following arguments are supported:
 
 #### client_authentication sasl Argument Reference
 
-* `iam` - (Optional) Enables IAM client authentication. Defaults to `false`.
+* `iam` - (Optional) Enables IAM client authentication. Defaults to `false` for provisioned types. Defaults to `true` for serverless types.
 * `scram` - (Optional) Enables SCRAM client authentication via AWS Secrets Manager. Defaults to `false`.
 
 #### client_authentication tls Argument Reference
