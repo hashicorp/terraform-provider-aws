@@ -103,6 +103,7 @@ func ResourceParameter() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
+				Computed:     true,
 				ExactlyOneOf: []string{"insecure_value", "value"},
 			},
 			"version": {
@@ -118,8 +119,15 @@ func ResourceParameter() *schema.Resource {
 				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
 			}),
 			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("value") || diff.HasChange("insecure_value")
+				return diff.HasChange("value")
 			}),
+			customdiff.ComputedIf("value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("insecure_value")
+			}),
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value")
+			}),
+
 			verify.SetTagsDiff,
 		),
 	}
@@ -228,12 +236,10 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("type", param.Type)
 	d.Set("version", param.Version)
 
-	if _, ok := d.GetOk("value"); ok {
-		d.Set("value", param.Value)
-	}
-
-	if aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
+	if _, ok := d.GetOk("insecure_value"); ok && aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
+	} else {
+		d.Set("value", param.Value)
 	}
 
 	if aws.StringValue(param.Type) == ssm.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
