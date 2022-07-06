@@ -28,7 +28,7 @@ resource "aws_s3_object" "object" {
 
 resource "aws_transcribe_medical_vocabulary" "example" {
   vocabulary_name     = "example"
-  language_code      = "en-US"
+  language_code       = "en-US"
   vocabulary_file_uri = "s3://${aws_s3_bucket.example.id}/${aws_s3_object.object.key}"
 
   tags = {
