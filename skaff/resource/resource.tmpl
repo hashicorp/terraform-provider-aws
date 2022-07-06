@@ -28,6 +28,14 @@ import (
 	// This is a common set of imports but not customized to your code since
 	// your code hasn't been written yet. Make sure you, your IDE, or
 	// goimports -w <file> fixes these imports.
+	//
+	// The provider linter wants your imports to be in two groups: first,
+	// standard library (i.e., "fmt" or "strings"), second, everything else.
+	// 
+	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
+	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// need to import types and reference the nested types, e.g., as
+	// types.Type.
 {{- end }}
 	"context"
 	"errors"
@@ -38,9 +46,14 @@ import (
 	"strings"
 	"time"
 
+{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types" {{- if .IncludeComments }} // TIP: Some v2 packages use a separate package for types while some do not.{{- end }}
+{{- else }}
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
