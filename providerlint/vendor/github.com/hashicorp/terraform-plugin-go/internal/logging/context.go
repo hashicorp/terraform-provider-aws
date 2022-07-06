@@ -22,12 +22,19 @@ func InitContext(ctx context.Context, sdkOpts tfsdklog.Options, providerOpts tfl
 	ctx = tfsdklog.NewRootSDKLogger(ctx, append(tfsdklog.Options{
 		tfsdklog.WithLevelFromEnv(EnvTfLogSdk),
 	}, sdkOpts...)...)
+	ctx = ProtoSubsystemContext(ctx, sdkOpts)
+	ctx = tfsdklog.NewRootProviderLogger(ctx, providerOpts...)
+
+	return ctx
+}
+
+// ProtoSubsystemContext adds the proto subsystem to the SDK logger context.
+func ProtoSubsystemContext(ctx context.Context, sdkOpts tfsdklog.Options) context.Context {
 	ctx = tfsdklog.NewSubsystem(ctx, SubsystemProto, append(tfsdklog.Options{
 		// All calls are through the Protocol* helper functions
 		tfsdklog.WithAdditionalLocationOffset(1),
 		tfsdklog.WithLevelFromEnv(EnvTfLogSdkProto),
 	}, sdkOpts...)...)
-	ctx = tfsdklog.NewRootProviderLogger(ctx, providerOpts...)
 
 	return ctx
 }
