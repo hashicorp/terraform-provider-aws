@@ -1,0 +1,8 @@
+
+```release-note:note
+resource/aws_msk_cluster: Add support for AWS MSK serverless cluster type
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Add cluster_type, provisioned and serverless argument
+```
