@@ -31,11 +31,13 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	// 
+{{- end }}
+{{- if and .IncludeComments .AWSGoSDKV2 }}
+	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .ServicePackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.Type.
+	// types.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
@@ -45,11 +47,10 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-{{- if .AWSGoSDKV2 }}
+{{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types" {{- if .IncludeComments }} // TIP: Some v2 packages use a separate package for types while some do not.{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
@@ -97,7 +98,7 @@ func Resource{{ .Resource }}() *schema.Resource {
 		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#adding-resource-import-support
 		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#implicit-state-passthrough
 		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#virtual-attributes
-		{{- end }}		
+		{{- end }}
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

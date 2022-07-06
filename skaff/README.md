@@ -17,11 +17,11 @@
 ## Running `skaff`
 
 1. Use Git to clone the GitHub [https://github.com/hashicorp/terraform-provider-aws](hashicorp/terraform-provider-aws) repository.
-1. `cd skaff`
-2. `go install .`
-3. Change directories to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
-4. To get help, enter `skaff` without arguments.
-5. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
+2. `cd skaff`
+3. `go install .`
+4. Change directories to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
+5. To get help, enter `skaff` without arguments.
+6. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
 
 ## Usage 
 
