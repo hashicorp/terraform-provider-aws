@@ -31,11 +31,13 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
+{{- end }}
+{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .ServicePackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.Type.
+	// types.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
