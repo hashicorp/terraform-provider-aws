@@ -75,5 +75,5 @@ In addition to all arguments above, the following attributes are exported:
 Transcribe MedicalVocabulary can be imported using the `vocabulary_name`, e.g.,
 
 ```
-$ terraform import aws_transcribe_medicalvocabulary.example example-name
+$ terraform import aws_transcribe_medical_vocabulary.example example-name
 ```
