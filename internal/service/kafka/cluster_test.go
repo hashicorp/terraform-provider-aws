@@ -69,7 +69,7 @@ func TestAccKafkaCluster_Basic_Provisioned(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_type", "provisioned"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_type", kafka.ClusterTypeProvisioned),
 					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
 					resource.TestCheckResourceAttr(resourceName, "provisioned.0.broker_node_group_info.0.ebs_volume_size", "10"),
@@ -133,7 +133,7 @@ func TestAccKafkaCluster_Basic_Serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_tls", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_type", "serverless"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_type", kafka.ClusterTypeServerless),
 					resource.TestCheckResourceAttr(resourceName, "serverless.0.client_authentication.0.sasl.0.iam", "true"),
 					resource.TestCheckResourceAttr(resourceName, "serverless.0.vpc_configs.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "serverless.0.vpc_configs.0.security_group_ids.*", "aws_security_group.example_sg", "id"),
@@ -1473,7 +1473,7 @@ func testAccClusterConfig_basicProvisioned(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  cluster_type           = "provisioned"
+  cluster_type           = "PROVISIONED"
 
   provisioned {
 		kafka_version   = "2.7.1"
@@ -1493,7 +1493,7 @@ func testAccClusterConfig_basicServerless(rName string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  cluster_type           = "serverless"
+  cluster_type           = "SERVERLESS"
 
   serverless {
 	client_authentication {
@@ -1515,7 +1515,7 @@ func testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName strin
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1535,7 +1535,7 @@ func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeOnly(rName str
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1559,7 +1559,7 @@ func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThro
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1586,7 +1586,7 @@ func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThro
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1614,7 +1614,7 @@ func testAccClusterConfig_brokerNodeGroupInfoInstanceType(rName string, t string
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1649,7 +1649,7 @@ func testAccClusterConfig_brokerNodeGroupInfoNoPublicAccessSASLIAM(rName string)
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1683,7 +1683,7 @@ func testAccClusterConfig_brokerNodeGroupInfoPublicAccessSASLIAM(rName string, p
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1742,7 +1742,7 @@ func testAccClusterConfig_clientAuthenticationTLSCertificateAuthorityARNs(rName,
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1782,7 +1782,7 @@ func testAccClusterConfig_rootCANoClientAuthentication(rName, commonName string)
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1809,7 +1809,7 @@ func testAccClusterConfig_clientAuthenticationSASLScram(rName string, scramEnabl
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1837,7 +1837,7 @@ func testAccClusterConfig_clientAuthenticationSASLIAM(rName string, saslEnabled 
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1872,7 +1872,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1915,7 +1915,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1948,7 +1948,7 @@ resource "aws_kms_key" "example_key" {
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1973,7 +1973,7 @@ func testAccClusterConfig_encryptionInfoEncryptionInTransitClientBroker(rName, c
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -1999,7 +1999,7 @@ func testAccClusterConfig_encryptionInfoEncryptionInTransitIn(rName string, inCl
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -2025,7 +2025,7 @@ func testAccClusterConfig_enhancedMonitoring(rName, enhancedMonitoring string) s
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -2047,7 +2047,7 @@ func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) str
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -2068,7 +2068,7 @@ func testAccClusterConfig_openMonitoring(rName string, jmxExporterEnabled bool, 
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -2169,7 +2169,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version   = "2.7.1"
@@ -2207,7 +2207,7 @@ func testAccClusterConfig_version(rName string, kafkaVersion string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version          = %[2]q
@@ -2256,7 +2256,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version          = %[2]q
@@ -2287,7 +2287,7 @@ func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version          = "2.7.1"
@@ -2312,7 +2312,7 @@ func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 st
 	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
 	cluster_name           = %[1]q
-	cluster_type           = "provisioned"
+	cluster_type           = "PROVISIONED"
 	
 	provisioned {
 		kafka_version          = "2.7.1"

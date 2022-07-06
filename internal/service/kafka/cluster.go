@@ -560,11 +560,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	clusterType := d.Get("cluster_type").(string)
-	if clusterType == "serverless" {
+	if clusterType == kafka.ClusterTypeServerless {
 		if v, ok := d.GetOk("serverless"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			inputV2.Serverless = expandServerlessRequest(v.([]interface{})[0].(map[string]interface{}))
 		}
-	} else if clusterType == "provisioned" {
+	} else if clusterType == kafka.ClusterTypeProvisioned {
 		if v, ok := d.GetOk("provisioned"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			inputV2.Provisioned = expandProvisionedRequest(v.([]interface{})[0].(map[string]interface{}))
 		}
@@ -624,13 +624,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("current_version", cluster.CurrentVersion)
 
 	if cluster.Provisioned != nil {
-		d.Set("cluster_type", aws.String("provisioned"))
+		d.Set("cluster_type", aws.String(kafka.ClusterTypeProvisioned))
 		if err := d.Set("provisioned", []interface{}{flattenProvisioned(cluster.Provisioned)}); err != nil {
 			return diag.Errorf("setting provisioned: %s", err)
 		}
 	}
 	if cluster.Serverless != nil {
-		d.Set("cluster_type", aws.String("serverless"))
+		d.Set("cluster_type", aws.String(kafka.ClusterTypeServerless))
 		if err := d.Set("serverless", []interface{}{flattenServerless(cluster.Serverless)}); err != nil {
 			return diag.Errorf("setting serverless: %s", err)
 		}
