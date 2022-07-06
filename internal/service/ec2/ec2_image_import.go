@@ -1,17 +1,17 @@
 package ec2
 
 import (
+	"bytes"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,7 +20,9 @@ import (
 func ResourceImageImport() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceImageImportCreate,
-		Read:   resourceImageImportRead,
+		// The remaining operations are shared with the generic aws_ami resource,
+		// since the aws_ec2_image_import resource only differs in how it's created.
+		Read:   resourceAMIUpdate,
 		Update: resourceAMIUpdate,
 		Delete: resourceAMIDelete,
 
@@ -36,6 +38,10 @@ func ResourceImageImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"boot_mode": {
@@ -128,10 +134,119 @@ func ResourceImageImport() *schema.Resource {
 					},
 				},
 			},
+			// The following block device attributes intentionally mimick the
+			// corresponding attributes on aws_instance, since they have the
+			// same meaning.
+			// However, we don't use root_block_device here because the constraint
+			// on which root device attributes can be overridden for an instance to
+			// not apply when registering an AMI.
+			"ebs_block_device": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"iops": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"outpost_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snapshot_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"throughput": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"volume_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					return create.StringHashcode(buf.String())
+				},
+			},
+			"ena_support": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+			},
+			"ephemeral_block_device": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					return create.StringHashcode(buf.String())
+				},
+			},
+			"hypervisor": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"image_location": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kernel_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -142,6 +257,10 @@ func ResourceImageImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"owner_alias": {
@@ -158,14 +277,49 @@ func ResourceImageImport() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"ramdisk_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"role_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  DefaultSnapshotImportRoleName,
 			},
+			"root_device_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"root_snapshot_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sriov_net_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"virtualization_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -234,6 +388,7 @@ func resourceImageImportCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.ImageId))
+	d.Set("manage_ebs_snapshots", true)
 
 	if len(tags) > 0 {
 		if err := CreateTags(conn, d.Id(), tags); err != nil {
@@ -241,52 +396,11 @@ func resourceImageImportCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceImageImportRead(d, meta)
-}
-
-func resourceImageImportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	image, err := FindImageByID(conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Image %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 	}
 
-	if err != nil {
-		return fmt.Errorf("reading EC2 Image (%s): %w", d.Id(), err)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-	d.Set("description", image.Description)
-	d.Set("encrypted", image.BlockDeviceMappings[0].Ebs.Encrypted)
-	d.Set("kms_key_id", image.BlockDeviceMappings[0].Ebs.KmsKeyId)
-	d.Set("owner_alias", image.ImageOwnerAlias)
-	d.Set("owner_id", image.OwnerId)
-	d.Set("platform", image.Platform)
-
-	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return resourceAMIRead(d, meta)
 }
 
 func expandImageDiskContainers(containers []interface{}) ([]*ec2.ImageDiskContainer, error) {

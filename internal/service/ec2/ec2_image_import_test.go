@@ -144,8 +144,12 @@ func TestAccEC2ImageImport_tags(t *testing.T) {
 	})
 }
 
-func testAccImageImportNonBucketConfig(t *testing.T) string {
-	return `
+func testAccImageImportNonBucketConfig(t *testing.T, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
 
 # The following resources are for the *vmimport service user*
 # See: https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html#vmimport-role
@@ -204,37 +208,27 @@ data "aws_iam_policy_document" "vmimport-trust" {
     }
   }
 }
-`
+`, rName)
 }
 
 func testAccImageImportBaseConfig(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccImageImportNonBucketConfig(t), fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccImageImportNonBucketConfig(t, rName), fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   bucket         = aws_s3_bucket.test.id
   key            = "diskimage.vhd"
-  content_base64 = %[2]q
+  content_base64 = %[1]q
 }
-`, rName, testAccImageDisk(t)))
+`, testAccImageDisk(t)))
 }
 
 func testAccImageImportBaseConfigNoOs(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccImageImportNonBucketConfig(t), fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccImageImportNonBucketConfig(t, rName), fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   bucket         = aws_s3_bucket.test.id
-  key            = "diskimage.vhd"
-  content_base64 = %[2]q
+  key            = "diskimage-no-os.vhd"
+  content_base64 = %[1]q
 }
-`, rName, testAccImageDiskNoOS(t)))
+`, testAccImageDiskNoOS(t)))
 }
 
 func testAccImageImportConfig_basic(t *testing.T, rName string) string {

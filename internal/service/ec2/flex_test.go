@@ -468,7 +468,7 @@ func TestExpandClientData(t *testing.T) {
 		"comment":      "bucket",
 		"upload_end":   "2018-05-13T07:44:12Z",
 		"upload_start": "2018-05-13T07:44:12Z",
-		"upload_size":  123,
+		"upload_size":  123.123,
 	}
 
 	data := ExpandClientData(expanded)
@@ -478,7 +478,7 @@ func TestExpandClientData(t *testing.T) {
 	expected := &ec2.ClientData{
 		Comment:     aws.String("bucket"),
 		UploadEnd:   aws.Time(ti),
-		UploadSize:  aws.Float64(123),
+		UploadSize:  aws.Float64(123.123),
 		UploadStart: aws.Time(ti),
 	}
 
