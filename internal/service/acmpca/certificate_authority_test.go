@@ -881,8 +881,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
   revocation_configuration {
     ocsp_configuration {
-	  enabled            = true
-      ocsp_custom_cname  = %[2]q
+      enabled           = true
+      ocsp_custom_cname = %[2]q
     }
   }
 }
@@ -905,7 +905,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
   revocation_configuration {
     ocsp_configuration {
-      enabled            = %[2]t
+      enabled = %[2]t
     }
   }
 }
