@@ -3,7 +3,6 @@ package transcribe_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -24,7 +23,6 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 
 	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	file := "test-fixtures/test1.txt"
 	resourceName := "aws_transcribe_medical_vocabulary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,19 +36,108 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMedicalVocabularyConfig_basic(rName, file),
+				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transcribe", regexp.MustCompile(`medicalvocabulary:+.`)),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{"vocabulary_file_uri", "download_uri"},
+			},
+		},
+	})
+}
+
+func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_medical_vocabulary.test"
+
+	file1 := "test1.txt"
+	file2 := "test2.txt"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
+				),
+			},
+			{
+				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var medicalVocabulary transcribe.GetMedicalVocabularyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_medical_vocabulary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMedicalVocabularyConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccMedicalVocabularyConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccMedicalVocabularyConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -76,7 +163,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMedicalVocabularyConfig_basic(rName, ""),
+				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
 					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
@@ -151,43 +238,108 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccMedicalVocabularyBaseConfig(rName, file string) string {
+func testAccMedicalVocabularyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_object" "object" {
+resource "aws_s3_object" "object1" {
   bucket = aws_s3_bucket.test.id
-  key    = "transcribe/test.txt"
-  source = %[2]q
+  key    = "transcribe/test1.txt"
+  source = "test-fixtures/test1.txt"
 }
 
-`, rName, file)
+resource "aws_s3_object" "object2" {
+  bucket = aws_s3_bucket.test.id
+  key    = "transcribe/test2.txt"
+  source = "test-fixtures/test2.txt"
 }
 
-func testAccMedicalVocabularyConfig_basic(rName, file string) string {
+`, rName)
+}
+
+func testAccMedicalVocabularyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccMedicalVocabularyBaseConfig(rName, file),
+		testAccMedicalVocabularyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_transcribe_medical_vocabulary" "test" {
-  medicalvocabulary_name             = %[1]q
-  engine_type             = "ActiveTranscribe"
-  engine_version          = %[2]q
-  host_instance_type      = "transcribe.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  vocabulary_name     = %[1]q
+  language_code      = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
-  logs {
-    general = true
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  depends_on = [
+    aws_s3_object.object1
+  ]
 }
-`, rName, file))
+`, rName))
+}
+
+func testAccMedicalVocabularyConfig_updateFile(rName, fileName string) string {
+	return acctest.ConfigCompose(
+		testAccMedicalVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_medical_vocabulary" "test" {
+  vocabulary_name     = %[1]q
+  language_code      = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/transcribe/%[2]s"
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
+
+  depends_on = [
+    aws_s3_object.object1,
+    aws_s3_object.object2
+  ]
+}
+`, rName, fileName))
+}
+
+func testAccMedicalVocabularyConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccMedicalVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_medical_vocabulary" "test" {
+  vocabulary_name     = %[1]q
+  language_code      = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [
+    aws_s3_object.object1
+  ]
+}
+`, rName, key1, value1))
+}
+
+func testAccMedicalVocabularyConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccMedicalVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_medical_vocabulary" "test" {
+  vocabulary_name     = %[1]q
+  language_code      = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [
+    aws_s3_object.object1
+  ]
+}
+`, rName, key1, value1, key2, value2))
 }
