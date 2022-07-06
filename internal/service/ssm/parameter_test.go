@@ -2,6 +2,7 @@ package ssm_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -634,6 +635,46 @@ func TestAccSSMParameter_secure(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameter_insecure(t *testing.T) {
+	var param ssm.Parameter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_insecure(rName, "String", "notsecret"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_insecure(rName, "String", "newvalue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "insecure_value", "newvalue"),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+				),
+			},
+			{
+				Config:             testAccParameterConfig_insecure(rName, "String", "diff"),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:      testAccParameterConfig_insecure(rName, "SecureString", "notsecret"),
+				ExpectError: regexp.MustCompile("invalid configuration"),
+			},
+		},
+	})
+}
+
 func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 	var param ssm.Parameter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -818,6 +859,16 @@ resource "aws_ssm_parameter" "test" {
   name  = %[1]q
   type  = %[2]q
   value = %[3]q
+}
+`, rName, pType, value)
+}
+
+func testAccParameterConfig_insecure(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name           = %[1]q
+  type           = %[2]q
+  insecure_value = %[3]q
 }
 `, rName, pType, value)
 }
