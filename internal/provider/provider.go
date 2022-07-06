@@ -195,7 +195,7 @@ func Provider() *schema.Provider {
 	// The actual provider
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
-		// Notable, the attributes can have no Default values.
+		// Notably the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:     schema.TypeString,
