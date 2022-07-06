@@ -1,4 +1,4 @@
-package tf6provider
+package types
 
 import (
 	"context"
@@ -9,10 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
-
-//
-// Copied from https://github.com/hashicorp/terraform-provider-awscc/blob/main/internal/types/duration.go.
-//
 
 type durationType uint8
 
@@ -159,4 +155,33 @@ func (d Duration) Equal(other attr.Value) bool {
 		return false
 	}
 	return d.Value == o.Value
+}
+
+// IsNull returns true if the Value is not set, or is explicitly set to null.
+func (d Duration) IsNull() bool {
+	return d.Null
+}
+
+// IsUnknown returns true if the Value is not yet known.
+func (d Duration) IsUnknown() bool {
+	return d.Unknown
+}
+
+// String returns a summary representation of either the underlying Value,
+// or UnknownValueString (`<unknown>`) when IsUnknown() returns true,
+// or NullValueString (`<null>`) when IsNull() return true.
+//
+// This is an intentionally lossy representation, that are best suited for
+// logging and error reporting, as they are not protected by
+// compatibility guarantees within the framework.
+func (d Duration) String() string {
+	if d.IsUnknown() {
+		return attr.UnknownValueString
+	}
+
+	if d.IsNull() {
+		return attr.NullValueString
+	}
+
+	return d.Value.String()
 }
