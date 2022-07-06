@@ -16,6 +16,18 @@ import (
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(cloudtrail.EndpointsID, testAccErrorCheckSkip)
+
+}
+
+// testAccErrorCheckSkip skips CloudTrail tests that have error messages indicating unsupported features
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"AccessDeniedException:",
+	)
+}
+
 func TestAccCloudTrail_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {

@@ -149,7 +149,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 
 	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}.test"
+	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceLower }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -157,9 +157,9 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .DataSource }}Destroy,
+		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{{ .DataSource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),

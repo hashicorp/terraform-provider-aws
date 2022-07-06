@@ -711,9 +711,11 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
-			"aws_kendra_faq":       kendra.DataSourceFaq(),
-			"aws_kendra_index":     kendra.DataSourceIndex(),
-			"aws_kendra_thesaurus": kendra.DataSourceThesaurus(),
+			"aws_kendra_experience":                   kendra.DataSourceExperience(),
+			"aws_kendra_faq":                          kendra.DataSourceFaq(),
+			"aws_kendra_index":                        kendra.DataSourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.DataSourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.DataSourceThesaurus(),
 
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
@@ -741,8 +743,10 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map":         location.DataSourceMap(),
-			"aws_location_place_index": location.DataSourcePlaceIndex(),
+			"aws_location_map":              location.DataSourceMap(),
+			"aws_location_place_index":      location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator": location.DataSourceRouteCalculator(),
+			"aws_location_tracker":          location.DataSourceTracker(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -999,6 +1003,7 @@ func Provider() *schema.Provider {
 
 			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
+			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
@@ -1263,9 +1268,11 @@ func Provider() *schema.Provider {
 			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
-			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
-			"aws_directory_service_directory":             ds.ResourceDirectory(),
-			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),
+			"aws_directory_service_conditional_forwarder":     ds.ResourceConditionalForwarder(),
+			"aws_directory_service_directory":                 ds.ResourceDirectory(),
+			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
+			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
+			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
 			"aws_dynamodb_contributor_insights":          dynamodb.ResourceContributorInsights(),
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
@@ -1634,6 +1641,7 @@ func Provider() *schema.Provider {
 			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),
+			"aws_lakeformation_resource_lf_tags":   lakeformation.ResourceResourceLFTags(),
 
 			"aws_lambda_alias":                          lambda.ResourceAlias(),
 			"aws_lambda_code_signing_config":            lambda.ResourceCodeSigningConfig(),
@@ -1657,6 +1665,7 @@ func Provider() *schema.Provider {
 
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
+			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
 			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
 			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
 			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
@@ -1664,9 +1673,10 @@ func Provider() *schema.Provider {
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map":         location.ResourceMap(),
-			"aws_location_place_index": location.ResourcePlaceIndex(),
-			"aws_location_tracker":     location.ResourceTracker(),
+			"aws_location_map":              location.ResourceMap(),
+			"aws_location_place_index":      location.ResourcePlaceIndex(),
+			"aws_location_route_calculator": location.ResourceRouteCalculator(),
+			"aws_location_tracker":          location.ResourceTracker(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),

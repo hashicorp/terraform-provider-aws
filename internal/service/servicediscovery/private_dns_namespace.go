@@ -140,7 +140,7 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("name", ns.Name)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTagsWithContext(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery Private DNS Namespace (%s): %s", arn, err)
@@ -166,7 +166,7 @@ func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}

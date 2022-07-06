@@ -157,9 +157,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
+		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
@@ -201,9 +201,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
+		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),

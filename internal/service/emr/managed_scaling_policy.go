@@ -78,8 +78,11 @@ func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}
 		}
 		if v, ok := cl["maximum_core_capacity_units"].(int); ok && v > 0 {
 			computeLimits.MaximumCoreCapacityUnits = aws.Int64(int64(v))
-		}
-		if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+
+			if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+				computeLimits.MaximumOnDemandCapacityUnits = aws.Int64(int64(v))
+			}
+		} else if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v >= 0 {
 			computeLimits.MaximumOnDemandCapacityUnits = aws.Int64(int64(v))
 		}
 		managedScalingPolicy := &emr.ManagedScalingPolicy{
