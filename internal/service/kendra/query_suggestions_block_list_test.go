@@ -30,9 +30,9 @@ func testAccQuerySuggestionsBlockList_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
@@ -71,9 +71,9 @@ func testAccQuerySuggestionsBlockList_Description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_description(rName, "description1"),
@@ -120,9 +120,9 @@ func testAccQuerySuggestionsBlockList_Name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName1),
@@ -161,9 +161,9 @@ func testAccQuerySuggestionsBlockList_RoleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
@@ -202,9 +202,9 @@ func testAccQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
@@ -245,9 +245,9 @@ func testAccQuerySuggestionsBlockList_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
@@ -275,9 +275,9 @@ func testAccQuerySuggestionsBlockList_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQuerySuggestionsBlockListDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQuerySuggestionsBlockListDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_tags1(rName, "key1", "value1"),

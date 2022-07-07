@@ -30,9 +30,9 @@ func testAccThesaurus_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -72,9 +72,9 @@ func testAccThesaurus_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -102,9 +102,9 @@ func testAccThesaurus_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_tags1(rName, "key1", "value1"),
@@ -154,9 +154,9 @@ func testAccThesaurus_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_description(rName, "description1"),
@@ -203,9 +203,9 @@ func testAccThesaurus_name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName1),
@@ -244,9 +244,9 @@ func testAccThesaurus_roleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -285,9 +285,9 @@ func testAccThesaurus_sourceS3Path(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
