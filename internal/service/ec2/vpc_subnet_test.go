@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -104,16 +103,15 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 }
 
 func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -162,16 +160,15 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 }
 
 func TestAccVPCSubnet_DefaultTags_updateToProviderOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
@@ -205,16 +202,15 @@ func TestAccVPCSubnet_DefaultTags_updateToProviderOnly(t *testing.T) {
 }
 
 func TestAccVPCSubnet_DefaultTags_updateToResourceOnly(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -248,16 +244,15 @@ func TestAccVPCSubnet_DefaultTags_updateToResourceOnly(t *testing.T) {
 }
 
 func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -313,16 +308,15 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 }
 
 func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -374,14 +368,13 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 }
 
 func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -396,16 +389,15 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) 
 }
 
 func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
@@ -439,15 +431,14 @@ func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 // eliminating "Inconsistent final plan" errors
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
 func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckSubnetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource1("key1", "value1"),
@@ -475,16 +466,15 @@ func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
 }
 
 func TestAccVPCSubnet_ignoreTags(t *testing.T) {
-	var providers []*schema.Provider
 	var subnet ec2.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesInternal(&providers),
-		CheckDestroy:      testAccCheckVPCDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_basic(rName),
