@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Add support to monthly performance insights retention period
+```
