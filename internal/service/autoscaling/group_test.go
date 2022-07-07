@@ -141,14 +141,20 @@ func TestAccAutoScalingGroup_defaultInstanceWarmup(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_defaultInstanceWarmup(rName),
+				Config: testAccGroupConfig_defaultInstanceWarmup(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "default_instance_warmup", "30"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_defaultInstanceWarmup(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "default_instance_warmup", "15"),
+				),
+			},
 		},
 	})
 }
@@ -3303,16 +3309,17 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_defaultInstanceWarmup(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), `
+func testAccGroupConfig_defaultInstanceWarmup(rName string, defaultInstanceWarmup int) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones      = [data.aws_availability_zones.available.names[0]]
   max_size                = 0
   min_size                = 0
-  default_instance_warmup = 30
+  name                    = %[1]q
+  default_instance_warmup = %[2]d
   launch_configuration    = aws_launch_configuration.test.name
 }
-`)
+`, rName, defaultInstanceWarmup))
 }
 
 func testAccGroupConfig_nameGenerated(rName string) string {
