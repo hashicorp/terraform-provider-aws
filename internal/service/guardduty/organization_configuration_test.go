@@ -18,8 +18,8 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// GuardDuty Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
 		CheckDestroy: testAccCheckDetectorDestroy,
@@ -56,9 +56,9 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDetectorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
