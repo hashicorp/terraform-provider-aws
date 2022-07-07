@@ -7,7 +7,7 @@
 1. Figure out what you're trying to do:
     * Create a resource or a data source?
     * [AWS Go SDK v1 or v2](aws-go-sdk-versions) code?
-    * Name of the new resource or data source?
+    * [Name](naming.md) of the new resource or data source?
 2. Use `skaff` to generate provider code
 3. Go through the generated code completing code and customizing for the AWS Go SDK API
 4. Run, test, refine
