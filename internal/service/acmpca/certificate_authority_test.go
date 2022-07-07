@@ -489,6 +489,155 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			// Test creating OCSP revocation configuration on resource creation
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test importing OCSP revocation configuration
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+			// Test disabling OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, false),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+			// Test enabling OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test removing revocation configuration on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_required(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) {
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+
+	domain := acctest.RandomDomain()
+	commonName := domain.String()
+	customCName := domain.Subdomain("ocspl").String()
+	customCName2 := domain.Subdomain("ocsp2").String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			// Test creating revocation configuration on resource creation
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName),
+				),
+			},
+			// Test importing OCSP revocation configuration
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+			// Test updating OCSP revocation configuration
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName2),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName2),
+				),
+			},
+			// Test removing OCSP custom cname on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName, true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", ""),
+				),
+			},
+			// Test adding OCSP custom cname on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname", customCName),
+				),
+			},
+			// Test removing revocation configuration on resource update
+			{
+				Config: testAccCertificateAuthorityConfig_required(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -779,6 +928,53 @@ resource "aws_acmpca_certificate_authority" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 }
 `, commonName, s3ObjectAcl))
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationCustomCNAME(commonName, customCname string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+    ocsp_configuration {
+      enabled           = true
+      ocsp_custom_cname = %[2]q
+    }
+  }
+}
+`, commonName, customCname)
+}
+
+func testAccCertificateAuthorityConfig_revocationConfigurationOcspConfigurationEnabled(commonName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  revocation_configuration {
+    ocsp_configuration {
+      enabled = %[2]t
+    }
+  }
+}
+`, commonName, enabled)
 }
 
 func testAccCertificateAuthorityConfig_S3Bucket(rName string) string {
