@@ -531,7 +531,7 @@ resource "aws_config_remediation_configuration" "test" {
 
   parameter {
     name          = "AutomationAssumeRole"
-    static_values = [aws_iam_role.test.arn, aws_iam_role.test2.arn] 
+    static_values = [aws_iam_role.test.arn, aws_iam_role.test2.arn]
   }
 
   parameter {
