@@ -19,10 +19,10 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_basic,
@@ -55,10 +55,10 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	resourceName := "aws_licensemanager_license_configuration.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_basic,
