@@ -20,10 +20,10 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThingPrincipalAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingPrincipalAttachmentConfig_basic(thingName),
