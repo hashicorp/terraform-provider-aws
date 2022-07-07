@@ -69,12 +69,10 @@ func Skip(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// ProviderFactories is a static map containing only the main provider instance
+// ProtoV5ProviderFactories is a static map containing only the main provider instance
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
-var ProviderFactories map[string]func() (*schema.Provider, error)
-
 var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 // Provider is the "main" provider instance
@@ -98,10 +96,6 @@ func init() {
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
-	}
-
 	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
 		ProviderName: func() (tfprotov5.ProviderServer, error) {
 			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
