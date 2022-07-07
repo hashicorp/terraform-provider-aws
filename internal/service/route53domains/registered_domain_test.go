@@ -67,10 +67,10 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key1", "value1"),
@@ -108,10 +108,10 @@ func testAccRegisteredDomain_autoRenew(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_autoRenew(domainName, false),
@@ -139,10 +139,10 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_contacts(domainName),
@@ -242,10 +242,10 @@ func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, true, true, true),
@@ -277,10 +277,10 @@ func testAccRegisteredDomain_nameservers(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_nameservers(domainName),
@@ -321,10 +321,10 @@ func testAccRegisteredDomain_transferLock(t *testing.T) {
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegisteredDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_transferLock(domainName, false),
