@@ -337,7 +337,7 @@ timestream-query,timestreamquery,timestreamquery,timestreamquery,,timestreamquer
 timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,1,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,
 ,,,,,,,,,,,,,,,,Tools for PowerShell,AWS,x,,,,No SDK support
 ,,,,,,,,,,,,,,,,Training and Certification,AWS,x,,,,No SDK support
-transcribe,transcribe,transcribeservice,transcribe,,transcribe,,transcribeservice,Transcribe,TranscribeService,,1,,aws_transcribe_,,transcribe_,Transcribe,Amazon,,,,,
+transcribe,transcribe,transcribeservice,transcribe,,transcribe,,transcribeservice,Transcribe,TranscribeService,x,2,,aws_transcribe_,,transcribe_,Transcribe,Amazon,,,,,
 ,,transcribestreamingservice,transcribestreaming,,transcribestreaming,,transcribestreamingservice,TranscribeStreaming,TranscribeStreamingService,,1,,aws_transcribestreaming_,,transcribestreaming_,Transcribe Streaming,Amazon,,,,,
 transfer,transfer,transfer,transfer,,transfer,,,Transfer,Transfer,,1,,aws_transfer_,,transfer_,Transfer Family,AWS,,,,,
 ,,,,,transitgateway,ec2,,TransitGateway,,,,aws_ec2_transit_gateway,aws_transitgateway_,transitgateway_,ec2_transit_gateway,Transit Gateway,AWS,x,x,,,Part of EC2

@@ -25,6 +25,7 @@ import (
 const (
 	KendraEndpointID         = "kendra"
 	Route53DomainsEndpointID = "route53domains"
+	TranscribeEndpointID     = "transcribe"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
