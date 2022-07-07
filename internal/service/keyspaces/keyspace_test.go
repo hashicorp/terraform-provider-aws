@@ -25,10 +25,10 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_basic(rName),
@@ -53,10 +53,10 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_basic(rName),
@@ -75,10 +75,10 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_tags1(rName, "key1", "value1"),
