@@ -28,9 +28,9 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 			testAccPreCheckGlobalTable(t)
 			testAccGlobalTablePreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
