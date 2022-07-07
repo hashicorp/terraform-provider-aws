@@ -38,10 +38,10 @@ func testAccContactFlow_basic(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
@@ -87,10 +87,10 @@ func testAccContactFlow_filename(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
@@ -139,10 +139,10 @@ func testAccContactFlow_disappears(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Disappear"),
