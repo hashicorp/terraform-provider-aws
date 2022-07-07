@@ -96,8 +96,14 @@ func init() {
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		ProviderName: func() (tfprotov5.ProviderServer, error) {
+	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit([]string{ProviderName})
+}
+
+func protoV5ProviderFactoriesInit(providerNames []string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
+
+	for _, name := range providerNames {
+		factories[name] = func() (tfprotov5.ProviderServer, error) {
 			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
@@ -105,11 +111,12 @@ func init() {
 			}
 
 			return providerServerFactory(), nil
-		},
+		}
 	}
+
+	return factories
 }
 
-// factoriesInit creates ProviderFactories for the provider under testing.
 func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
