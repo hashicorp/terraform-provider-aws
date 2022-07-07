@@ -10,19 +10,17 @@ If this is the first resource for a new service, please ensure the Service Clien
 
 Determine which version of the AWS SDK for Go the resource will be built upon. For more information and instructions on how to determine this choice, please read [AWS SDK for Go Versions](aws-go-sdk-versions.md)
 
-_If you are using AWS SDK for Go V2_ Please use the [skaff](https://github.com/hashicorp/terraform-provider-aws/blob/main/skaff/README.md) tool to generate new resource and test templates for any new resource. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
-
 ## Steps to Add a Resource
 
 ### Fork the provider and create a feature branch
 
 For a new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-### Name the resource
-
-Create the resource file using `skaff` to generate a template or manually.
+### Create and Name the Resource
 
 See the [Naming Guide](/naming/#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
+
+Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
 ### Fill out the Resource Schema
 

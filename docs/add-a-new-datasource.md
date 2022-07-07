@@ -10,23 +10,17 @@ If this is the first addition of a data source for a new service, please ensure 
 
 Determine which version of the AWS SDK for Go the resource will be built upon. For more information and instructions on how to determine this choice, please read [AWS SDK for Go Versions](aws-go-sdk-versions.md)
 
-*If you are using AWS SDK for Go V2* Please use the [skaff](https://github.com/hashicorp/terraform-provider-aws/blob/main/skaff/README.md) tool to scaffold templates for any new data source. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
-
 ## Steps to Add a Data Source
 
 ### Fork the Provider and Create a Feature Branch
 
 For a new data source use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-### Name the Data Source
+### Create and Name the Data Source
 
-Either by creating the file manually, or using `skaff` to generate a template.
+See the [Naming Guide](/naming/#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
-All data sources should be named with the following pattern: `aws_<service>_<name>`
-
-Where `<service>` is the AWS short service name that matches the key in the `serviceData` map in the `conns` package (created via the [Adding a new Service](add-a-new-service.md))
-
-Where `<name>` represents the conceptual infrastructure represented by the create, read, update, and delete methods of the service API. It should be a singular noun. For example, in an API that has methods such as `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name of the resource would end in `_thing`.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
 
 ### Fill out the Data Source Schema
 
