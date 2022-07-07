@@ -24,10 +24,10 @@ func TestAccIPAM_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_base,
@@ -100,10 +100,10 @@ func TestAccIPAM_cascade(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_cascade(),
@@ -130,10 +130,10 @@ func TestAccIPAM_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_tags("key1", "value1"),

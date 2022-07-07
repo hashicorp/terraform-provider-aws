@@ -25,9 +25,9 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -75,9 +75,9 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
@@ -123,9 +123,9 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorFilter(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),

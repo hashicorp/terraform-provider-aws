@@ -25,10 +25,10 @@ func testAccTransitGatewayVPCAttachment_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_basic(),
@@ -59,10 +59,10 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_basic(),
@@ -81,10 +81,10 @@ func testAccTransitGatewayVPCAttachment_ApplianceModeSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTransitGatewayVPCAttachmentConfig_applianceModeSupport("false"),
@@ -123,10 +123,10 @@ func testAccTransitGatewayVPCAttachment_DNSSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_dnsSupport(ec2.DnsSupportValueDisable),
@@ -158,10 +158,10 @@ func testAccTransitGatewayVPCAttachment_IPv6Support(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_ipv6Support(rName, ec2.Ipv6SupportValueEnable),
@@ -224,10 +224,10 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIds2(),
@@ -266,10 +266,10 @@ func testAccTransitGatewayVPCAttachment_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_tags1("key1", "value1"),
@@ -314,10 +314,10 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_defaultRouteTableAssociationAndPropagationDisabled(),
@@ -346,10 +346,10 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociati
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_defaultRouteTableAssociation(false),
@@ -396,10 +396,10 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayVPCAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayVPCAttachmentConfig_defaultRouteTablePropagation(false),

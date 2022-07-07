@@ -22,10 +22,10 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 	pcxResourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCPeeringConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionOptionsConfig_sameRegionSameAccount(rName, true, true),
