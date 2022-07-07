@@ -93,6 +93,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"disappears":    testAccRemediationConfiguration_disappears,
 			"recreates":     testAccRemediationConfiguration_recreates,
 			"updates":       testAccRemediationConfiguration_updates,
+			"values":        testAccRemediationConfiguration_values,
 		},
 	}
 
