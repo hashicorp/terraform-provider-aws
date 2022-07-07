@@ -48,7 +48,6 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
