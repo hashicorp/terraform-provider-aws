@@ -29,10 +29,10 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
@@ -70,10 +70,10 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRemediationConfigurationConfig_olderSchema(prefix, sseAlgorithm, rInt),
@@ -107,10 +107,10 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
@@ -140,10 +140,10 @@ func testAccRemediationConfiguration_recreates(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRemediationConfigurationConfig_basic(originalName, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
@@ -185,10 +185,10 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	updatedSseAlgorithm := "aws:kms"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRemediationConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRemediationConfigurationConfig_basic(name, originalSseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
