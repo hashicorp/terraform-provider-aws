@@ -20,7 +20,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitsDataSourceConfig,
+				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "children.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
@@ -32,7 +32,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccOrganizationalUnitsDataSourceConfig = `
+const testAccOrganizationalUnitsDataSourceConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {

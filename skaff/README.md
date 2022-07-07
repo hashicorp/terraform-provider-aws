@@ -1,16 +1,27 @@
 # skaff
 
-**WARNING:** We are actively developing this tool. We may completely change it, abandon it, or delete it without notice. *We do not recommend using this tool at this time.*
+`skaff` is a Terraform AWS Provider scaffolding tool.
 
-The `skaff` tool is a Terraform AWS Provider scaffolding tool.
+## Overview workflow steps
 
-To use `skaff`, starting in the `terraform-provider-aws` directory:
+1. Figure out what you're trying to do:
+    * Create a resource or a data source?
+    * AWS Go SDK v1 or v2 code?
+    * Name of the new resource or data source?
+2. Use `skaff` to generate provider code
+3. Go through the generated code completing code and customizing for the AWS Go SDK API
+4. Run, test, refine
+5. Remove "TIP" comments
+6. Submit code in pull request
 
-1. `cd skaff`
-2. `go install .`
-3. Go to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
-4. To get help, enter `skaff` without arguments.
-5. Generate a resource with helpful comments. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
+## Running `skaff`
+
+1. Use Git to clone the GitHub [https://github.com/hashicorp/terraform-provider-aws](hashicorp/terraform-provider-aws) repository.
+2. `cd skaff`
+3. `go install .`
+4. Change directories to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
+5. To get help, enter `skaff` without arguments.
+6. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
 
 ## Usage 
 

@@ -33,7 +33,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -48,7 +48,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -78,7 +78,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationPartMethodConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -95,7 +95,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentationPartMethodConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -127,7 +127,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -146,7 +146,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
@@ -179,7 +179,7 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
@@ -253,7 +253,7 @@ func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccDocumentationPartConfig(apiName, properties string) string {
+func testAccDocumentationPartConfig_basic(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
@@ -269,7 +269,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, properties, apiName)
 }
 
-func testAccDocumentationPartMethodConfig(apiName, properties string) string {
+func testAccDocumentationPartConfig_method(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
@@ -287,7 +287,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, properties, apiName)
 }
 
-func testAccDocumentationPartResponseHeaderConfig(apiName, properties string) string {
+func testAccDocumentationPartConfig_responseHeader(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {

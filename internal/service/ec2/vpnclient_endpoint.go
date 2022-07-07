@@ -470,7 +470,7 @@ func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) e
 		ClientVpnEndpointId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return nil
 	}
 

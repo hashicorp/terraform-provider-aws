@@ -222,7 +222,6 @@ func testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore() string {
 	return `
 data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
   most_recent = true
-  owners      = ["amazon"]
 
   filter {
     name   = "name"

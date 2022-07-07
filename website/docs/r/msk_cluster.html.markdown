@@ -104,7 +104,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "2.4.1"
+  kafka_version          = "3.2.0"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

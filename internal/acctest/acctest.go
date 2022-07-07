@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -82,6 +83,8 @@ var Providers map[string]*schema.Provider
 // for tests requiring special provider configurations.
 var ProviderFactories map[string]func() (*schema.Provider, error)
 
+var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
+
 // Provider is the "main" provider instance
 //
 // This Provider can be used in testing code for API calls without requiring
@@ -109,6 +112,18 @@ func init() {
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
 	ProviderFactories = map[string]func() (*schema.Provider, error){
 		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
+	}
+
+	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+		ProviderName: func() (tfprotov5.ProviderServer, error) {
+			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
+
+			if err != nil {
+				return nil, err
+			}
+
+			return providerServerFactory(), nil
+		},
 	}
 }
 
@@ -1688,6 +1703,44 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   }
 }
 `
+}
+
+func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = [%[1]q]
+  }
+}
+`, architecture)
+}
+
+// ConfigLatestAmazonLinux2HVMEBSX8664AMI returns the configuration for a data source that
+// describes the latest Amazon Linux 2 x86_64 AMI using HVM virtualization and an EBS root device.
+// The data source is named 'amzn2-ami-minimal-hvm-ebs-x86_64'.
+func ConfigLatestAmazonLinux2HVMEBSX8664AMI() string {
+	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesX8664)
+}
+
+// ConfigLatestAmazonLinux2HVMEBSARM64AMI returns the configuration for a data source that
+// describes the latest Amazon Linux 2 arm64 AMI using HVM virtualization and an EBS root device.
+// The data source is named 'amzn2-ami-minimal-hvm-ebs-arm64'.
+func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
+	return configLatestAmazonLinux2HVMEBSAMI(ec2.ArchitectureValuesArm64)
 }
 
 func ConfigLambdaBase(policyName, roleName, sgName string) string {

@@ -21,7 +21,7 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolClientConfigDataSource_basic(rName),
+				Config: testAccUserPoolClientDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -35,7 +35,7 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolClientConfigDataSource_basic(rName string) string {
+func testAccUserPoolClientDataSourceConfig_basic(rName string) string {
 	return testAccUserPoolClientConfig_basic(rName) + `
 data "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id

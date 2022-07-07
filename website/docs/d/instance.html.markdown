@@ -62,6 +62,8 @@ interpolation.
 * `arn` - The ARN of the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
+* `disable_api_stop` - Whether or not EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection) is enabled (Boolean).
+* `disable_api_termination` - Whether or not [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination) is enabled (Boolean).
 * `ebs_block_device` - The EBS block device mappings of the Instance.
     * `delete_on_termination` - If the EBS volume will be deleted on termination.
     * `device_name` - The physical name of the device.
@@ -93,6 +95,10 @@ interpolation.
 * `private_dns` - The private DNS name assigned to the Instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC.
+* `private_dns_name_options` - The options for the instance hostname.
+    * `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+    * `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+    * `hostname_type` - The type of hostname for EC2 instances.
 * `private_ip` - The private IP address assigned to the Instance.
 * `secondary_private_ips` - The secondary private IPv4 addresses assigned to the instance's primary network interface (eth0) in a VPC.
 * `public_dns` - The public DNS name assigned to the Instance. For EC2-VPC, this

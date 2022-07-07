@@ -513,7 +513,7 @@ func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error 
 	resp, err := retryListenerRuleCreate(conn, d, params, listenerArn)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Listener Rule (%s) create failed (%s) with tags. Trying create without tags.", listenerArn, err)
 		params.Tags = nil
 		resp, err = retryListenerRuleCreate(conn, d, params, listenerArn)
@@ -529,7 +529,7 @@ func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error 
 	if params.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for ELBv2 Listener Rule (%s): %s", d.Id(), err)
 			return resourceListenerRuleRead(d, meta)
@@ -767,7 +767,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	// tags at the end because, if not supported, will skip the rest of Read
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
 		return nil
 	}
@@ -866,7 +866,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
 			return resourceListenerRuleRead(d, meta)
 		}

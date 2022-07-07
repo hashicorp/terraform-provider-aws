@@ -20,8 +20,8 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccRestAPIConfig_Name(rName),
-					testAccRestAPINameDataSourceConfig(),
+					testAccRestAPIConfig_name(rName),
+					testAccRestAPIDataSourceConfig_name(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -52,8 +52,8 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccRestAPIEndpointConfigurationVPCEndpointIds1Config(rName),
-					testAccRestAPINameDataSourceConfig(),
+					testAccRestAPIConfig_vpcEndpointIDs1(rName),
+					testAccRestAPIDataSourceConfig_name(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -74,7 +74,7 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	})
 }
 
-func testAccRestAPINameDataSourceConfig() string {
+func testAccRestAPIDataSourceConfig_name() string {
 	return `
 data "aws_api_gateway_rest_api" "test" {
   name = aws_api_gateway_rest_api.test.name

@@ -282,13 +282,23 @@ func sweepKeyGroup(region string) error {
 		}
 
 		for _, item := range output.KeyGroupList.Items {
-			strId := aws.StringValue(item.KeyGroup.Id)
-			log.Printf("[INFO] CloudFront key group %s", strId)
-			_, err := conn.DeleteKeyGroup(&cloudfront.DeleteKeyGroupInput{
-				Id: item.KeyGroup.Id,
+			id := item.KeyGroup.Id
+			out, err := conn.GetKeyGroup(&cloudfront.GetKeyGroupInput{
+				Id: id,
 			})
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudFront key group %s: %w", strId, err)
+				sweeperErr := fmt.Errorf("error reading CloudFront key group %s: %w", aws.StringValue(id), err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			_, err = conn.DeleteKeyGroup(&cloudfront.DeleteKeyGroupInput{
+				Id:      id,
+				IfMatch: out.ETag,
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error sweeping CloudFront key group %s: %w", aws.StringValue(id), err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue

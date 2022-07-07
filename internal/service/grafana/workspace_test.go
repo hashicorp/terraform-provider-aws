@@ -34,9 +34,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccWorkspaceSamlConfiguration_basic,
-			"loginValidity": testAccWorkspaceSamlConfiguration_loginValidity,
-			"assertions":    testAccWorkspaceSamlConfiguration_assertions,
+			"basic":         testAccWorkspaceSAMLConfiguration_basic,
+			"loginValidity": testAccWorkspaceSAMLConfiguration_loginValidity,
+			"assertions":    testAccWorkspaceSAMLConfiguration_assertions,
 		},
 		"RoleAssociation": {
 			"usersAdmin":           testAccRoleAssociation_usersAdmin,
@@ -73,7 +73,7 @@ func testAccWorkspace_saml(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
+				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "grafana", regexp.MustCompile(`/workspaces/.+`)),
@@ -120,7 +120,7 @@ func testAccWorkspace_sso(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "AWS_SSO"),
+				Config: testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "grafana", regexp.MustCompile(`/workspaces/.+`)),
@@ -162,7 +162,7 @@ func testAccWorkspace_disappears(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
+				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfgrafana.ResourceWorkspace(), resourceName),
@@ -189,7 +189,7 @@ func testAccWorkspace_organization(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigOrganization(rName),
+				Config: testAccWorkspaceConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", managedgrafana.AccountAccessTypeOrganization),
@@ -219,7 +219,7 @@ func testAccWorkspace_tags(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccWorkspaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -232,7 +232,7 @@ func testAccWorkspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWorkspaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -241,7 +241,7 @@ func testAccWorkspace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccWorkspaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -264,7 +264,7 @@ func testAccWorkspace_dataSources(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigDataSources(rName),
+				Config: testAccWorkspaceConfig_dataSources(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "grafana", regexp.MustCompile(`/workspaces/.+`)),
@@ -308,7 +308,7 @@ func testAccWorkspace_permissionType(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigPermissionType(rName, "CUSTOMER_MANAGED"),
+				Config: testAccWorkspaceConfig_permissionType(rName, "CUSTOMER_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeCustomerManaged),
@@ -320,7 +320,7 @@ func testAccWorkspace_permissionType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspaceConfigPermissionType(rName, "SERVICE_MANAGED"),
+				Config: testAccWorkspaceConfig_permissionType(rName, "SERVICE_MANAGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permission_type", managedgrafana.PermissionTypeServiceManaged),
@@ -341,7 +341,7 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"),
+				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -350,7 +350,7 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspaceConfigNotificationDestinations(rName),
+				Config: testAccWorkspaceConfig_notificationDestinations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -390,7 +390,7 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccWorkspaceConfigAuthenticationProvider(rName, authenticationProvider string) string {
+func testAccWorkspaceConfig_authenticationProvider(rName, authenticationProvider string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
@@ -401,7 +401,7 @@ resource "aws_grafana_workspace" "test" {
 `, authenticationProvider))
 }
 
-func testAccWorkspaceConfigOrganization(rName string) string {
+func testAccWorkspaceConfig_organization(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "ORGANIZATION"
@@ -420,7 +420,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, rName))
 }
 
-func testAccWorkspaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccWorkspaceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
@@ -437,7 +437,7 @@ resource "aws_grafana_workspace" "test" {
   `, rName, tagKey1, tagValue1))
 }
 
-func testAccWorkspaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWorkspaceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
@@ -455,7 +455,7 @@ resource "aws_grafana_workspace" "test" {
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccWorkspaceConfigDataSources(rName string) string {
+func testAccWorkspaceConfig_dataSources(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
@@ -469,7 +469,7 @@ resource "aws_grafana_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspaceConfigPermissionType(rName, permissionType string) string {
+func testAccWorkspaceConfig_permissionType(rName, permissionType string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
@@ -480,7 +480,7 @@ resource "aws_grafana_workspace" "test" {
 `, permissionType))
 }
 
-func testAccWorkspaceConfigNotificationDestinations(rName string) string {
+func testAccWorkspaceConfig_notificationDestinations(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceRole(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type       = "CURRENT_ACCOUNT"

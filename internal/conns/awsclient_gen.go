@@ -4,7 +4,9 @@ package conns
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -160,7 +162,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -289,7 +290,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/aws/aws-sdk-go/service/transcribeservice"
 	"github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/translate"
@@ -474,7 +474,7 @@ type AWSClient struct {
 	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
-	KendraConn                       *kendra.Kendra
+	KendraConn                       *kendra.Client
 	KeyspacesConn                    *keyspaces.Keyspaces
 	KinesisConn                      *kinesis.Kinesis
 	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
@@ -605,7 +605,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribeservice.TranscribeService
+	TranscribeConn                   *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate

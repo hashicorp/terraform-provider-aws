@@ -29,7 +29,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName, modelName),
+				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName, modelName, &conf),
 					testAccCheckModelAttributes(&conf, modelName),
@@ -65,7 +65,7 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName, modelName),
+				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName, modelName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceModel(), resourceName),
@@ -168,7 +168,7 @@ func testAccModelImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccModelConfig(rName, modelName string) string {
+func testAccModelConfig_basic(rName, modelName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

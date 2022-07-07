@@ -127,7 +127,7 @@ func ResourcePlan() *schema.Resource {
 						"recovery_point_tags": tftags.TagsSchema(),
 					},
 				},
-				Set: backupBackupPlanHash,
+				Set: planHash,
 			},
 			"advanced_backup_setting": {
 				Type:     schema.TypeSet,
@@ -173,8 +173,8 @@ func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
 			BackupPlanName:         aws.String(d.Get("name").(string)),
-			Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
-			AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
+			Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
 		BackupPlanTags: Tags(tags.IgnoreAWS()),
 	}
@@ -211,13 +211,13 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	if err := d.Set("rule", flattenBackupPlanRules(resp.BackupPlan.Rules)); err != nil {
+	if err := d.Set("rule", flattenPlanRules(resp.BackupPlan.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
 	// AdvancedBackupSettings being read direct from resp and not from under
 	// resp.BackupPlan is deliberate - the latter always contains null
-	if err := d.Set("advanced_backup_setting", flattenBackupPlanAdvancedBackupSettings(resp.AdvancedBackupSettings)); err != nil {
+	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(resp.AdvancedBackupSettings)); err != nil {
 		return fmt.Errorf("error setting advanced_backup_setting: %w", err)
 	}
 
@@ -247,8 +247,8 @@ func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				BackupPlanName:         aws.String(d.Get("name").(string)),
-				Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
-				AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
+				Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			},
 		}
 
@@ -305,7 +305,7 @@ func resourcePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
+func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {
 	rules := []*backup.RuleInput{}
 
 	for _, vRule := range vRules.List() {
@@ -339,10 +339,10 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
-			rule.Lifecycle = expandBackupPlanLifecycle(vLifecycle)
+			rule.Lifecycle = expandPlanLifecycle(vLifecycle)
 		}
 
-		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
+		if vCopyActions := expandPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
 			rule.CopyActions = vCopyActions
 		}
 
@@ -352,7 +352,7 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 	return rules
 }
 
-func expandBackupPlanAdvancedBackupSettings(vAdvancedBackupSettings *schema.Set) []*backup.AdvancedBackupSetting {
+func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []*backup.AdvancedBackupSetting {
 	advancedBackupSettings := []*backup.AdvancedBackupSetting{}
 
 	for _, vAdvancedBackupSetting := range vAdvancedBackupSettings.List() {
@@ -379,7 +379,7 @@ func expandBackupPlanAdvancedBackupSettings(vAdvancedBackupSettings *schema.Set)
 	return advancedBackupSettings
 }
 
-func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
+func expandPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
 	actions := []*backup.CopyAction{}
 
 	for _, i := range actionList {
@@ -389,7 +389,7 @@ func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction 
 		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
 
 		if v, ok := item["lifecycle"].([]interface{}); ok && len(v) > 0 {
-			action.Lifecycle = expandBackupPlanLifecycle(v)
+			action.Lifecycle = expandPlanLifecycle(v)
 		}
 
 		actions = append(actions, action)
@@ -398,7 +398,7 @@ func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction 
 	return actions
 }
 
-func expandBackupPlanLifecycle(l []interface{}) *backup.Lifecycle {
+func expandPlanLifecycle(l []interface{}) *backup.Lifecycle {
 	lifecycle := new(backup.Lifecycle)
 
 	for _, i := range l {
@@ -414,7 +414,7 @@ func expandBackupPlanLifecycle(l []interface{}) *backup.Lifecycle {
 	return lifecycle
 }
 
-func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
+func flattenPlanRules(rules []*backup.Rule) *schema.Set {
 	vRules := []interface{}{}
 
 	for _, rule := range rules {
@@ -429,18 +429,18 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
-			mRule["lifecycle"] = flattenBackupPlanCopyActionLifecycle(lifecycle)
+			mRule["lifecycle"] = flattenPlanCopyActionLifecycle(lifecycle)
 		}
 
-		mRule["copy_action"] = flattenBackupPlanCopyActions(rule.CopyActions)
+		mRule["copy_action"] = flattenPlanCopyActions(rule.CopyActions)
 
 		vRules = append(vRules, mRule)
 	}
 
-	return schema.NewSet(backupBackupPlanHash, vRules)
+	return schema.NewSet(planHash, vRules)
 }
 
-func flattenBackupPlanAdvancedBackupSettings(advancedBackupSettings []*backup.AdvancedBackupSetting) *schema.Set {
+func flattenPlanAdvancedSettings(advancedBackupSettings []*backup.AdvancedBackupSetting) *schema.Set {
 	vAdvancedBackupSettings := []interface{}{}
 
 	for _, advancedBackupSetting := range advancedBackupSettings {
@@ -452,10 +452,10 @@ func flattenBackupPlanAdvancedBackupSettings(advancedBackupSettings []*backup.Ad
 		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)
 	}
 
-	return schema.NewSet(backupBackupPlanHash, vAdvancedBackupSettings)
+	return schema.NewSet(planHash, vAdvancedBackupSettings)
 }
 
-func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
+func flattenPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
 	if len(copyActions) == 0 {
 		return nil
 	}
@@ -472,7 +472,7 @@ func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{
 		}
 
 		if copyAction.Lifecycle != nil {
-			tfMap["lifecycle"] = flattenBackupPlanCopyActionLifecycle(copyAction.Lifecycle)
+			tfMap["lifecycle"] = flattenPlanCopyActionLifecycle(copyAction.Lifecycle)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -481,7 +481,7 @@ func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{
 	return tfList
 }
 
-func flattenBackupPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
+func flattenPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
 	if copyActionLifecycle == nil {
 		return []interface{}{}
 	}
@@ -494,7 +494,7 @@ func flattenBackupPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle)
 	return []interface{}{m}
 }
 
-func backupBackupPlanHash(vRule interface{}) int {
+func planHash(vRule interface{}) int {
 	var buf bytes.Buffer
 
 	mRule := vRule.(map[string]interface{})

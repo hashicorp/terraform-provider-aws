@@ -157,7 +157,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -280,7 +279,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/aws/aws-sdk-go/service/transcribeservice"
 	"github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/translate"
@@ -452,7 +450,6 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		KMSConn:                          kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.KMS])})),
 		KafkaConn:                        kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Kafka])})),
 		KafkaConnectConn:                 kafkaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.KafkaConnect])})),
-		KendraConn:                       kendra.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Kendra])})),
 		KeyspacesConn:                    keyspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Keyspaces])})),
 		KinesisConn:                      kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Kinesis])})),
 		KinesisAnalyticsConn:             kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.KinesisAnalytics])})),
@@ -576,7 +573,6 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		TextractConn:                     textract.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Textract])})),
 		TimestreamQueryConn:              timestreamquery.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.TimestreamQuery])})),
 		TimestreamWriteConn:              timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.TimestreamWrite])})),
-		TranscribeConn:                   transcribeservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Transcribe])})),
 		TranscribeStreamingConn:          transcribestreamingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.TranscribeStreaming])})),
 		TransferConn:                     transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Transfer])})),
 		TranslateConn:                    translate.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Translate])})),

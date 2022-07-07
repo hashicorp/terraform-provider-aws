@@ -166,7 +166,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"name":     "region",
 						"order_by": "DESC",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "11"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						"name": "id",
 						"type": "text",
@@ -202,6 +202,14 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						"name": "manager_id",
 						"type": "text",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "nicknames",
+						"type": "list<text>",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
+						"name": "tags",
+						"type": "map<text, text>",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
@@ -646,6 +654,16 @@ resource "aws_keyspaces_table" "test" {
     column {
       name = "manager_id"
       type = "text"
+    }
+
+    column {
+      name = "nicknames"
+      type = "list<text>"
+    }
+
+    column {
+      name = "tags"
+      type = "map<text, text>"
     }
 
     partition_key {

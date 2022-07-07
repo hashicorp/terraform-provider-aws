@@ -32,7 +32,7 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(authType, rEmail),
+				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
@@ -67,7 +67,7 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(authType, rEmail),
+				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUser(), resourceName),
@@ -96,7 +96,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
+				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
@@ -112,7 +112,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"send_email_notification"},
 			},
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, true),
+				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
@@ -122,7 +122,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserCompleteConfig(authType, rEmail, firstName, lastName, false),
+				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
@@ -202,7 +202,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserConfig(authType, userName string) string {
+func testAccUserConfig_basic(authType, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_user" "test" {
   authentication_type = %[1]q
@@ -211,7 +211,7 @@ resource "aws_appstream_user" "test" {
 `, authType, userName)
 }
 
-func testAccUserCompleteConfig(authType, userName, firstName, lastName string, enabled bool) string {
+func testAccUserConfig_complete(authType, userName, firstName, lastName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_user" "test" {
   authentication_type = %[1]q

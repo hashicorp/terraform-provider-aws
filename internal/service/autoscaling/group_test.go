@@ -58,7 +58,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
@@ -67,6 +67,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
+					resource.TestCheckResourceAttr(resourceName, "default_instance_warmup", "0"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
@@ -117,12 +118,42 @@ func TestAccAutoScalingGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_defaultInstanceWarmup(t *testing.T) {
+	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_defaultInstanceWarmup(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "default_instance_warmup", "30"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_defaultInstanceWarmup(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "default_instance_warmup", "15"),
+				),
 			},
 		},
 	})
@@ -140,7 +171,7 @@ func TestAccAutoScalingGroup_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupNameGeneratedConfig(rName),
+				Config: testAccGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -164,7 +195,7 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupNamePrefixConfig(rName, "tf-acc-test-prefix-"),
+				Config: testAccGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
@@ -188,7 +219,7 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfigTags1(rName, "key1", "value1", true),
+				Config: testAccGroupConfig_tags1(rName, "key1", "value1", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
@@ -202,7 +233,7 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfigTags2(rName, "key1", "value1updated", true, "key2", "value2", false),
+				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", true, "key2", "value2", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "2"),
@@ -220,7 +251,7 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfigTags1(rName, "key2", "value2", true),
+				Config: testAccGroupConfig_tags1(rName, "key2", "value2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
@@ -248,7 +279,7 @@ func TestAccAutoScalingGroup_deprecatedTags(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfigDeprecatedTags1(rName, "key1", "value1", true),
+				Config: testAccGroupConfig_deprecatedTags1(rName, "key1", "value1", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", "0"),
@@ -277,7 +308,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupSimpleConfig(rName),
+				Config: testAccGroupConfig_simple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
@@ -327,7 +358,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupSimpleUpdatedConfig(rName),
+				Config: testAccGroupConfig_simpleUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
@@ -390,14 +421,14 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupTerminationPoliciesUpdatedConfig(rName),
+				Config: testAccGroupConfig_terminationPoliciesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "1"),
@@ -405,14 +436,14 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupTerminationPoliciesExplicitDefaultConfig(rName),
+				Config: testAccGroupConfig_terminationPoliciesExplicitDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.0", "Default"),
 				),
 			},
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "termination_policies.#", "0"),
@@ -434,7 +465,7 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithAZConfig(rName),
+				Config: testAccGroupConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
@@ -443,7 +474,7 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupWithVPCZoneIdentifierConfig(rName),
+				Config: testAccGroupConfig_vpcZoneIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
@@ -468,7 +499,7 @@ func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithLoadBalancerConfig(rName),
+				Config: testAccGroupConfig_loadBalancer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
@@ -498,7 +529,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithLoadBalancerConfig(rName),
+				Config: testAccGroupConfig_loadBalancer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
@@ -506,7 +537,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupWithTargetGroupConfig(rName),
+				Config: testAccGroupConfig_target2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
@@ -515,7 +546,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupWithLoadBalancerConfig(rName),
+				Config: testAccGroupConfig_loadBalancer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
@@ -538,7 +569,7 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithPlacementGroupConfig(rName),
+				Config: testAccGroupConfig_placement(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "placement_group", "aws_placement_group.test", "name"),
@@ -561,14 +592,14 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupWithEnabledMetricsConfig(rName),
+				Config: testAccGroupConfig_enabledMetrics(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "5"),
@@ -596,7 +627,7 @@ func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithAllMetricsEnabledConfig(rName),
+				Config: testAccGroupConfig_allMetricsEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "13"),
@@ -616,7 +647,7 @@ func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupWithEnabledMetricsConfig(rName),
+				Config: testAccGroupConfig_enabledMetrics(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "enabled_metrics.#", "5"),
@@ -643,14 +674,14 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupSimpleConfig(rName),
+				Config: testAccGroupConfig_simple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupWithSuspendedProcessesConfig(rName),
+				Config: testAccGroupConfig_suspendedProcesses(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "2"),
@@ -660,7 +691,7 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupWithSuspendedProcessesUpdatedConfig(rName),
+				Config: testAccGroupConfig_suspendedProcessesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "suspended_processes.#", "2"),
@@ -684,7 +715,7 @@ func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithServiceLinkedRoleARNConfig(rName),
+				Config: testAccGroupConfig_serviceLinkedRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "service_linked_role_arn", "data.aws_iam_role.test", "arn"),
@@ -707,7 +738,7 @@ func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithMaxInstanceLifetimeConfig(rName, 864000),
+				Config: testAccGroupConfig_maxInstanceLifetime(rName, 864000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "864000"),
@@ -715,7 +746,7 @@ func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupWithMaxInstanceLifetimeConfig(rName, 604800),
+				Config: testAccGroupConfig_maxInstanceLifetime(rName, 604800),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "max_instance_lifetime", "604800"),
@@ -737,7 +768,7 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithInitialLifecycleHookConfig(rName),
+				Config: testAccGroupConfig_initialLifecycleHook(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 2),
@@ -767,7 +798,7 @@ func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupLaunchTemplateConfig(rName),
+				Config: testAccGroupConfig_launchTemplate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
@@ -793,7 +824,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupLaunchTemplateConfig(rName),
+				Config: testAccGroupConfig_launchTemplate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
@@ -805,7 +836,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig(rName),
+				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", "aws_launch_configuration.test", "name"),
@@ -813,7 +844,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupLaunchTemplateNameConfig(rName),
+				Config: testAccGroupConfig_launchTemplateName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
@@ -824,7 +855,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupLaunchTemplateLatestVersionConfig(rName),
+				Config: testAccGroupConfig_launchTemplateLatestVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
@@ -835,7 +866,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupLaunchTemplateConfig(rName),
+				Config: testAccGroupConfig_launchTemplate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "launch_configuration", ""),
@@ -861,7 +892,7 @@ func TestAccAutoScalingGroup_largeDesiredCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupLargeDesiredCapacityConfig(rName, 101),
+				Config: testAccGroupConfig_largeDesiredCapacity(rName, 101),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 101),
@@ -886,7 +917,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupInstanceRefreshBasicConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
@@ -896,7 +927,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshMinHealthyPercentageConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshMinHealthyPercentage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
@@ -911,7 +942,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshSkipMatchingConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshSkipMatching(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
@@ -926,7 +957,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshFullConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
@@ -946,7 +977,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshDisabledConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "0"),
@@ -969,7 +1000,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-1-"),
+				Config: testAccGroupConfig_instanceRefreshStart(rName, acctest.ResourcePrefix+"-1-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
@@ -977,7 +1008,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-2-"),
+				Config: testAccGroupConfig_instanceRefreshStart(rName, acctest.ResourcePrefix+"-2-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
@@ -986,7 +1017,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshStartConfig(rName, acctest.ResourcePrefix+"-3-"),
+				Config: testAccGroupConfig_instanceRefreshStart(rName, acctest.ResourcePrefix+"-3-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
@@ -1011,7 +1042,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupInstanceRefreshBasicConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
@@ -1021,7 +1052,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupInstanceRefreshTriggersConfig(rName),
+				Config: testAccGroupConfig_instanceRefreshTriggers(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckGroupExists(resourceName, &group),
@@ -1051,7 +1082,7 @@ func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupLoadBalancersConfig(rName, 11),
+				Config: testAccGroupConfig_loadBalancers(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
@@ -1059,14 +1090,14 @@ func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupLoadBalancersConfig(rName, 0),
+				Config: testAccGroupConfig_loadBalancers(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupLoadBalancersConfig(rName, 11),
+				Config: testAccGroupConfig_loadBalancers(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "11"),
@@ -1088,14 +1119,14 @@ func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupTargetGroupConfig(rName, 0),
+				Config: testAccGroupConfig_target(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				Config: testAccGroupTargetGroupConfig(rName, 12),
+				Config: testAccGroupConfig_target(rName, 12),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "12"),
@@ -1103,7 +1134,7 @@ func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupTargetGroupConfig(rName, 1),
+				Config: testAccGroupConfig_target(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
@@ -1126,7 +1157,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupTargetGroupELBCapacityConfig(rName),
+				Config: testAccGroupConfig_targetELBCapacity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
@@ -1150,7 +1181,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWarmPoolEmptyConfig(rName),
+				Config: testAccGroupConfig_warmPoolEmpty(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
@@ -1162,7 +1193,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupWarmPoolFullConfig(rName),
+				Config: testAccGroupConfig_warmPoolFull(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "1"),
@@ -1174,7 +1205,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupWarmPoolNoneConfig(rName),
+				Config: testAccGroupConfig_warmPoolNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckNoResourceAttr(resourceName, "warm_pool.#"),
@@ -1196,7 +1227,7 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupPartitionConfig(rName),
+				Config: testAccGroupConfig_partition(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 				),
@@ -1218,7 +1249,7 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDestroyWhenProtectedFromScaleInBeforeDestroyConfig(rName),
+				Config: testAccGroupConfig_destroyWhenProtectedFromScaleInBeforeDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 2),
@@ -1226,7 +1257,7 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupDestroyWhenProtectedFromScaleInAfterDestroyConfig(rName),
+				Config: testAccGroupConfig_destroyWhenProtectedFromScaleInAfterDestroy(rName),
 				// Reaching this step is good enough, as it indicates the ASG was destroyed successfully.
 			},
 		},
@@ -1245,7 +1276,7 @@ func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1276,7 +1307,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicy_capacityRebalance(t *testing.T
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyCapacityRebalanceConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyCapacityRebalance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "true"),
@@ -1310,7 +1341,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandA
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandAllocationStrategyConfig(rName, "prioritized"),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandAllocationStrategy(rName, "prioritized"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1335,7 +1366,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandB
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName, 1),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1345,7 +1376,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandB
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName, 2),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1354,7 +1385,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandB
 				),
 			},
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName, 0),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1379,7 +1410,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZ
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName, 1),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1389,7 +1420,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZ
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName, 0),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1414,7 +1445,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandP
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacityConfig(rName, 1),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1424,7 +1455,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandP
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacityConfig(rName, 2),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1448,7 +1479,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAlloc
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotAllocationStrategyConfig(rName, "lowest-price"),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotAllocationStrategy(rName, "lowest-price"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1473,7 +1504,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInsta
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotInstancePoolsConfig(rName, 2),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotInstancePools(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1483,7 +1514,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInsta
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotInstancePoolsConfig(rName, 3),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotInstancePools(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1507,7 +1538,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, "0.50"),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotMaxPrice(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1517,7 +1548,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, "0.51"),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotMaxPrice(rName, "0.51"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1526,7 +1557,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 				),
 			},
 			{
-				Config: testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, ""),
+				Config: testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotMaxPrice(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1550,7 +1581,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateNameConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1576,7 +1607,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, "1"),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersion(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1587,7 +1618,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, "$Latest"),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersion(rName, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1612,7 +1643,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, "t3.small"),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceType(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1624,7 +1655,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, "t3.medium"),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceType(rName, "t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1650,7 +1681,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeWithLaunchTemplateSpecificationConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1679,7 +1710,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideWeightedCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1708,7 +1739,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityWithELBConfig(rName),
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -1737,7 +1768,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`memory_mib {
                        min = 500
                      }
@@ -1760,7 +1791,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`memory_mib {
                        min = 1000
                        max = 10000
@@ -1802,7 +1833,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_count {
                        min = 2
                      }
@@ -1825,7 +1856,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_count {
                        min = 1
                        max = 3
@@ -1850,7 +1881,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_count {
                        max = 0
                      }
@@ -1888,7 +1919,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_manufacturers = ["amazon-web-services"]
                      memory_mib {
                        min = 500
@@ -1909,7 +1940,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_manufacturers = ["amazon-web-services", "amd", "nvidia", "xilinx"]
                      memory_mib {
                        min = 500
@@ -1948,7 +1979,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_names = ["a100"]
                      memory_mib {
                        min = 500
@@ -1969,7 +2000,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_names = ["a100", "v100", "k80", "t4", "m60", "radeon-pro-v520", "vu9p"]
                      memory_mib {
                        min = 500
@@ -2011,7 +2042,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_total_memory_mib {
                        min = 32
                      }
@@ -2035,7 +2066,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_total_memory_mib {
                        max = 12000
                      }
@@ -2059,7 +2090,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_total_memory_mib {
                        min = 32
                        max = 12000
@@ -2099,7 +2130,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_types = ["fpga"]
                      memory_mib {
                        min = 500
@@ -2120,7 +2151,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`accelerator_types = ["fpga", "gpu", "inference"]
                      memory_mib {
                        min = 500
@@ -2158,7 +2189,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`bare_metal = "excluded"
                      memory_mib {
                        min = 500
@@ -2178,7 +2209,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`bare_metal = "included"
                      memory_mib {
                        min = 500
@@ -2198,7 +2229,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`bare_metal = "required"
                      memory_mib {
                        min = 500
@@ -2233,7 +2264,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                      }
@@ -2256,7 +2287,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`baseline_ebs_bandwidth_mbps {
                        max = 20000
                      }
@@ -2279,7 +2310,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`baseline_ebs_bandwidth_mbps {
                        min = 10
                        max = 20000
@@ -2319,7 +2350,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`burstable_performance = "excluded"
                      memory_mib {
                        min = 500
@@ -2339,7 +2370,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`burstable_performance = "included"
                      memory_mib {
                        min = 500
@@ -2359,7 +2390,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`burstable_performance = "required"
                      memory_mib {
                        min = 500
@@ -2394,7 +2425,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`cpu_manufacturers = ["amazon-web-services"]
                      memory_mib {
                        min = 500
@@ -2415,7 +2446,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`cpu_manufacturers = ["amazon-web-services", "amd", "intel"]
                      memory_mib {
                        min = 500
@@ -2453,7 +2484,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`excluded_instance_types = ["t2.nano"]
                      memory_mib {
                        min = 500
@@ -2474,7 +2505,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`excluded_instance_types = ["t2.nano", "t3*", "t4g.*"]
                      memory_mib {
                        min = 500
@@ -2512,7 +2543,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`instance_generations = ["current"]
                      memory_mib {
                        min = 500
@@ -2533,7 +2564,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`instance_generations = ["current", "previous"]
                      memory_mib {
                        min = 500
@@ -2570,7 +2601,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`local_storage = "excluded"
                      memory_mib {
                        min = 500
@@ -2590,7 +2621,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`local_storage = "included"
                      memory_mib {
                        min = 500
@@ -2610,7 +2641,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`local_storage = "required"
                      memory_mib {
                        min = 500
@@ -2645,7 +2676,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`local_storage_types = ["hdd"]
                      memory_mib {
                        min = 500
@@ -2666,7 +2697,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`local_storage_types = ["hdd", "ssd"]
                      memory_mib {
                        min = 500
@@ -2703,7 +2734,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`memory_gib_per_vcpu {
                        min = 0.5
                      }
@@ -2726,7 +2757,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`memory_gib_per_vcpu {
                        max = 9.5
                      }
@@ -2749,7 +2780,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`memory_gib_per_vcpu {
                        min = 0.5
                        max = 9.5
@@ -2789,7 +2820,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`network_interface_count {
                        min = 1
                      }
@@ -2812,7 +2843,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`network_interface_count {
                        max = 10
                      }
@@ -2835,7 +2866,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`network_interface_count {
                        min = 1
                        max = 10
@@ -2875,7 +2906,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`on_demand_max_price_percentage_over_lowest_price = 50
                      memory_mib {
                        min = 500
@@ -2910,7 +2941,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`require_hibernate_support = false
                      memory_mib {
                        min = 500
@@ -2930,7 +2961,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`require_hibernate_support = true
                      memory_mib {
                        min = 500
@@ -2965,7 +2996,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`spot_max_price_percentage_over_lowest_price = 75
                      memory_mib {
                        min = 500
@@ -3000,7 +3031,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`total_local_storage_gb {
                        min = 0.5
                      }
@@ -3023,7 +3054,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`total_local_storage_gb {
                        max = 20.5
                      }
@@ -3046,7 +3077,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName,
+				Config: testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName,
 					`total_local_storage_gb {
                        min = 0.5
                        max = 20.5
@@ -3266,7 +3297,7 @@ resource "aws_launch_template" "test" {
 `, rName, instanceType))
 }
 
-func testAccGroupConfig(rName string) string {
+func testAccGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3278,7 +3309,20 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupNameGeneratedConfig(rName string) string {
+func testAccGroupConfig_defaultInstanceWarmup(rName string, defaultInstanceWarmup int) string {
+	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones      = [data.aws_availability_zones.available.names[0]]
+  max_size                = 0
+  min_size                = 0
+  name                    = %[1]q
+  default_instance_warmup = %[2]d
+  launch_configuration    = aws_launch_configuration.test.name
+}
+`, rName, defaultInstanceWarmup))
+}
+
+func testAccGroupConfig_nameGenerated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3289,7 +3333,7 @@ resource "aws_autoscaling_group" "test" {
 `)
 }
 
-func testAccGroupNamePrefixConfig(rName, namePrefix string) string {
+func testAccGroupConfig_namePrefix(rName, namePrefix string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3301,7 +3345,7 @@ resource "aws_autoscaling_group" "test" {
 `, namePrefix))
 }
 
-func testAccGroupConfigTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
+func testAccGroupConfig_tags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3319,7 +3363,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, tagKey1, tagValue1, tagPropagateAtLaunch1))
 }
 
-func testAccGroupConfigTags2(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool, tagKey2, tagValue2 string, tagPropagateAtLaunch2 bool) string {
+func testAccGroupConfig_tags2(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool, tagKey2, tagValue2 string, tagPropagateAtLaunch2 bool) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3343,7 +3387,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, tagKey1, tagValue1, tagPropagateAtLaunch1, tagKey2, tagValue2, tagPropagateAtLaunch2))
 }
 
-func testAccGroupConfigDeprecatedTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
+func testAccGroupConfig_deprecatedTags1(rName, tagKey1, tagValue1 string, tagPropagateAtLaunch1 bool) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3361,7 +3405,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, tagKey1, tagValue1, tagPropagateAtLaunch1))
 }
 
-func testAccGroupSimpleConfig(rName string) string {
+func testAccGroupConfig_simple(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3383,7 +3427,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupSimpleUpdatedConfig(rName string) string {
+func testAccGroupConfig_simpleUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_launch_configuration" "test2" {
   name          = "%[1]s-2"
@@ -3414,7 +3458,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupTerminationPoliciesExplicitDefaultConfig(rName string) string {
+func testAccGroupConfig_terminationPoliciesExplicitDefault(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3427,7 +3471,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupTerminationPoliciesUpdatedConfig(rName string) string {
+func testAccGroupConfig_terminationPoliciesUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3440,7 +3484,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithAZConfig(rName string) string {
+func testAccGroupConfig_az(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
@@ -3463,7 +3507,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithVPCZoneIdentifierConfig(rName string) string {
+func testAccGroupConfig_vpcZoneIdentifier(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
@@ -3566,7 +3610,7 @@ EOF
 `, rName))
 }
 
-func testAccGroupWithLoadBalancerConfig(rName string) string {
+func testAccGroupConfig_loadBalancer(rName string) string {
 	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier  = aws_subnet.test[*].id
@@ -3590,7 +3634,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithTargetGroupConfig(rName string) string {
+func testAccGroupConfig_target2(rName string) string {
 	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   vpc_zone_identifier  = aws_subnet.test[*].id
@@ -3614,7 +3658,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithPlacementGroupConfig(rName string) string {
+func testAccGroupConfig_placement(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "c3.large"), fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -3643,7 +3687,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithEnabledMetricsConfig(rName string) string {
+func testAccGroupConfig_enabledMetrics(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3663,7 +3707,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithAllMetricsEnabledConfig(rName string) string {
+func testAccGroupConfig_allMetricsEnabled(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3692,7 +3736,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithSuspendedProcessesConfig(rName string) string {
+func testAccGroupConfig_suspendedProcesses(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3716,7 +3760,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithSuspendedProcessesUpdatedConfig(rName string) string {
+func testAccGroupConfig_suspendedProcessesUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3740,7 +3784,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithServiceLinkedRoleARNConfig(rName string) string {
+func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AWSServiceRoleForAutoScaling"
@@ -3758,7 +3802,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWithMaxInstanceLifetimeConfig(rName string, maxInstanceLifetime int) string {
+func testAccGroupConfig_maxInstanceLifetime(rName string, maxInstanceLifetime int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3772,7 +3816,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, maxInstanceLifetime))
 }
 
-func testAccGroupWithInitialLifecycleHookConfig(rName string) string {
+func testAccGroupConfig_initialLifecycleHook(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3801,7 +3845,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupLaunchTemplateConfig(rName string) string {
+func testAccGroupConfig_launchTemplate(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -3817,7 +3861,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupLaunchTemplateNameConfig(rName string) string {
+func testAccGroupConfig_launchTemplateName(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -3832,7 +3876,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupLaunchTemplateLatestVersionConfig(rName string) string {
+func testAccGroupConfig_launchTemplateLatestVersion(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -3848,7 +3892,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupLargeDesiredCapacityConfig(rName string, n int) string {
+func testAccGroupConfig_largeDesiredCapacity(rName string, n int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3867,7 +3911,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, n))
 }
 
-func testAccGroupInstanceRefreshBasicConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshBasic(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3890,7 +3934,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupInstanceRefreshMinHealthyPercentageConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshMinHealthyPercentage(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3917,7 +3961,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupInstanceRefreshSkipMatchingConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshSkipMatching(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3945,7 +3989,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupInstanceRefreshFullConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshFull(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3975,7 +4019,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupInstanceRefreshDisabledConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshDisabled(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -3994,7 +4038,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupInstanceRefreshStartConfig(rName, launchConfigurationNamePrefix string) string {
+func testAccGroupConfig_instanceRefreshStart(rName, launchConfigurationNamePrefix string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -4030,7 +4074,7 @@ resource "aws_launch_configuration" "test" {
 `, rName, launchConfigurationNamePrefix))
 }
 
-func testAccGroupInstanceRefreshTriggersConfig(rName string) string {
+func testAccGroupConfig_instanceRefreshTriggers(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4060,7 +4104,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupLoadBalancersConfig(rName string, elbCount int) string {
+func testAccGroupConfig_loadBalancers(rName string, elbCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
@@ -4111,7 +4155,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, elbCount))
 }
 
-func testAccGroupTargetGroupConfig(rName string, targetGroupCount int) string {
+func testAccGroupConfig_target(rName string, targetGroupCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
@@ -4145,7 +4189,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, targetGroupCount))
 }
 
-func testAccGroupTargetGroupELBCapacityConfig(rName string) string {
+func testAccGroupConfig_targetELBCapacity(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigVPCWithSubnets(rName, 2),
@@ -4263,7 +4307,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWarmPoolEmptyConfig(rName string) string {
+func testAccGroupConfig_warmPoolEmpty(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4284,7 +4328,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWarmPoolFullConfig(rName string) string {
+func testAccGroupConfig_warmPoolFull(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4312,7 +4356,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupWarmPoolNoneConfig(rName string) string {
+func testAccGroupConfig_warmPoolNone(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.nano"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
@@ -4331,7 +4375,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupPartitionConfig(rName string) string {
+func testAccGroupConfig_partition(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -4366,7 +4410,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupDestroyWhenProtectedFromScaleInBeforeDestroyConfig(rName string) string {
+func testAccGroupConfig_destroyWhenProtectedFromScaleInBeforeDestroy(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones    = [data.aws_availability_zones.available.names[0]]
@@ -4386,11 +4430,11 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupDestroyWhenProtectedFromScaleInAfterDestroyConfig(rName string) string {
+func testAccGroupConfig_destroyWhenProtectedFromScaleInAfterDestroy(rName string) string {
 	return testAccGroupLaunchConfigurationBaseConfig(rName, "t3.micro")
 }
 
-func testAccGroupMixedInstancesPolicyConfig(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicy(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4420,7 +4464,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyCapacityRebalanceConfig(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicyCapacityRebalance(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4451,7 +4495,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandAllocationStrategyConfig(rName, onDemandAllocationStrategy string) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandAllocationStrategy(rName, onDemandAllocationStrategy string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4483,7 +4527,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, onDemandAllocationStrategy))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandBaseCapacityConfig(rName string, onDemandBaseCapacity int) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandBaseCapacity(rName string, onDemandBaseCapacity int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4515,7 +4559,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, onDemandBaseCapacity))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacityConfig(rName string, onDemandPercentageAboveBaseCapacity int) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionOnDemandPercentageAboveBaseCapacity(rName string, onDemandPercentageAboveBaseCapacity int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4547,7 +4591,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, onDemandPercentageAboveBaseCapacity))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionSpotAllocationStrategyConfig(rName, spotAllocationStrategy string) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotAllocationStrategy(rName, spotAllocationStrategy string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4579,7 +4623,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotAllocationStrategy))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionSpotInstancePoolsConfig(rName string, spotInstancePools int) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotInstancePools(rName string, spotInstancePools int) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4611,7 +4655,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotInstancePools))
 }
 
-func testAccGroupMixedInstancesPolicyInstancesDistributionSpotMaxPriceConfig(rName, spotMaxPrice string) string {
+func testAccGroupConfig_mixedInstancesPolicyInstancesDistributionSpotMaxPrice(rName, spotMaxPrice string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4643,7 +4687,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, spotMaxPrice))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateNameConfig(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationLaunchTemplateName(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4671,7 +4715,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersionConfig(rName, version string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateLaunchTemplateSpecificationVersion(rName, version string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4700,7 +4744,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName, version))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeConfig(rName, instanceType string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4728,20 +4772,13 @@ resource "aws_autoscaling_group" "test" {
 `, rName, instanceType))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceTypeWithLaunchTemplateSpecificationConfig(rName string) string {
-	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
-data "aws_ami" "amzn-ami-hvm-arm64-gp2" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-arm64-gp2"]
-  }
-}
-
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceTypeLaunchTemplateSpecification(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test-arm" {
-  image_id      = data.aws_ami.amzn-ami-hvm-arm64-gp2.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = "t4g.micro"
   name          = "%[1]s-arm"
 }
@@ -4776,7 +4813,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityConfig(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideWeightedCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]
@@ -4812,7 +4849,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityWithELBConfig(rName string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideWeightedCapacityELB(rName string) string {
 	return acctest.ConfigCompose(testAccGroupELBBaseConfig(rName), fmt.Sprintf(`
 locals {
   user_data = <<EOF
@@ -4866,7 +4903,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupMixedInstancesPolicyLaunchTemplateOverrideInstanceRequirementsConfig(rName string, instanceRequirements string) string {
+func testAccGroupConfig_mixedInstancesPolicyLaunchTemplateOverrideInstanceRequirements(rName string, instanceRequirements string) string {
 	return acctest.ConfigCompose(testAccGroupLaunchTemplateBaseConfig(rName, "t3.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = [data.aws_availability_zones.available.names[0]]

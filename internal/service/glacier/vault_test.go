@@ -28,7 +28,7 @@ func TestAccGlacierVault_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultBasicConfig(rName),
+				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -60,7 +60,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultNotificationConfig(rName),
+				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
@@ -74,7 +74,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVaultBasicConfig(rName),
+				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
@@ -82,7 +82,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVaultNotificationConfig(rName),
+				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
@@ -106,7 +106,7 @@ func TestAccGlacierVault_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultPolicyConfig(rName),
+				Config: testAccVaultConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -120,7 +120,7 @@ func TestAccGlacierVault_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVaultPolicyConfigUpdated(rName),
+				Config: testAccVaultConfig_policyUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -129,7 +129,7 @@ func TestAccGlacierVault_policy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVaultBasicConfig(rName),
+				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
@@ -151,7 +151,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfigTags1(rName, "key1", "value1"),
+				Config: testAccVaultConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -164,7 +164,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVaultConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVaultConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -173,7 +173,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVaultConfigTags1(rName, "key2", "value2"),
+				Config: testAccVaultConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -196,7 +196,7 @@ func TestAccGlacierVault_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultBasicConfig(rName),
+				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglacier.ResourceVault(), resourceName),
@@ -219,7 +219,7 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultPolicyOrderConfig(rName),
+				Config: testAccVaultConfig_policyOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -230,7 +230,7 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccVaultPolicyNewOrderConfig(rName),
+				Config:   testAccVaultConfig_policyNewOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -325,7 +325,7 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVaultBasicConfig(rName string) string {
+func testAccVaultConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %[1]q
@@ -333,7 +333,7 @@ resource "aws_glacier_vault" "test" {
 `, rName)
 }
 
-func testAccVaultNotificationConfig(rName string) string {
+func testAccVaultConfig_notification(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -350,7 +350,7 @@ resource "aws_glacier_vault" "test" {
 `, rName)
 }
 
-func testAccVaultPolicyConfig(rName string) string {
+func testAccVaultConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -385,7 +385,7 @@ EOF
 `, rName)
 }
 
-func testAccVaultPolicyConfigUpdated(rName string) string {
+func testAccVaultConfig_policyUpdated(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -421,7 +421,7 @@ EOF
 `, rName)
 }
 
-func testAccVaultConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVaultConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %[1]q
@@ -433,7 +433,7 @@ resource "aws_glacier_vault" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccVaultConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVaultConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %[1]q
@@ -446,7 +446,7 @@ resource "aws_glacier_vault" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVaultPolicyOrderConfig(rName string) string {
+func testAccVaultConfig_policyOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -479,7 +479,7 @@ resource "aws_glacier_vault" "test" {
 `, rName)
 }
 
-func testAccVaultPolicyNewOrderConfig(rName string) string {
+func testAccVaultConfig_policyNewOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

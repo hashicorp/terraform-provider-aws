@@ -75,11 +75,11 @@ func waitLicenseAssociationCreated(conn *managedgrafana.ManagedGrafana, id strin
 	return nil, err
 }
 
-func waitWorkspaceSamlConfigurationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.SamlAuthentication, error) {
+func waitWorkspaceSAMLConfigurationCreated(conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.SamlAuthentication, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{managedgrafana.SamlConfigurationStatusNotConfigured},
 		Target:  []string{managedgrafana.SamlConfigurationStatusConfigured},
-		Refresh: statusWorkspaceSamlConfiguration(conn, id),
+		Refresh: statusWorkspaceSAMLConfiguration(conn, id),
 		Timeout: timeout,
 	}
 

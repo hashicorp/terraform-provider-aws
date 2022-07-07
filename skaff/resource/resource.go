@@ -30,6 +30,7 @@ type TemplateData struct {
 	Service         string
 	ServiceLower    string
 	AWSServiceName  string
+	AWSGoSDKV2      bool
 }
 
 func toSnakeCase(upper string, snakeName string) string {
@@ -44,7 +45,7 @@ func toSnakeCase(upper string, snakeName string) string {
 	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
 }
 
-func Create(resName, snakeName string, comments, force bool) error {
+func Create(resName, snakeName string, comments, force, v2 bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -82,6 +83,7 @@ func Create(resName, snakeName string, comments, force bool) error {
 		Service:         s,
 		ServiceLower:    strings.ToLower(s),
 		AWSServiceName:  sn,
+		AWSGoSDKV2:      v2,
 	}
 
 	f := fmt.Sprintf("%s.go", toSnakeCase(resName, snakeName))
