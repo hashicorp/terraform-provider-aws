@@ -196,13 +196,14 @@ func TestAccProvider_endpoints(t *testing.T) {
 }
 
 func TestAccProvider_fipsEndpoint(t *testing.T) {
+	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(ResourcePrefix)
 	resourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { PreCheck(t) },
 		ErrorCheck:        ErrorCheck(t),
-		ProviderFactories: ProviderFactories,
+		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
