@@ -25,10 +25,10 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_basic(rName),
@@ -56,10 +56,10 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_preUpdate(rName),
@@ -86,10 +86,10 @@ func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_user_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserGroupAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_basic(rName),
