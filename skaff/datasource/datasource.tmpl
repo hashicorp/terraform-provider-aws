@@ -140,8 +140,6 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 			},
 			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
