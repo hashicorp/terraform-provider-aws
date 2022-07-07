@@ -9,15 +9,18 @@ import (
 )
 
 const (
-	ErrActionCheckingDestroyed  = "checking destroyed"
-	ErrActionCheckingExistence  = "checking existence"
-	ErrActionCreating           = "creating"
-	ErrActionDeleting           = "deleting"
-	ErrActionReading            = "reading"
-	ErrActionSetting            = "setting"
-	ErrActionUpdating           = "updating"
-	ErrActionWaitingForCreation = "waiting for creation"
-	ErrActionWaitingForDeletion = "waiting for delete"
+	ErrActionCheckingDestroyed    = "checking destroyed"
+	ErrActionCheckingExistence    = "checking existence"
+	ErrActionCheckingNotRecreated = "checking not recreated"
+	ErrActionCheckingRecreated    = "checking recreated"
+	ErrActionCreating             = "creating"
+	ErrActionDeleting             = "deleting"
+	ErrActionReading              = "reading"
+	ErrActionSetting              = "setting"
+	ErrActionUpdating             = "updating"
+	ErrActionWaitingForCreation   = "waiting for creation"
+	ErrActionWaitingForDeletion   = "waiting for delete"
+	ErrActionWaitingForUpdate     = "waiting for update"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings
