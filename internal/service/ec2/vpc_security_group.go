@@ -187,7 +187,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	output, err := conn.CreateSecurityGroup(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Security Group (%s): %w", name, err)
+		return fmt.Errorf("creating Security Group (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GroupId))
@@ -196,11 +196,11 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	group, err := WaitSecurityGroupCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Security Group (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Security Group (%s) create: %w", d.Id(), err)
 	}
 
-	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we
-	// revoke that rule, so users don't unknowingly have/use it.
+	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
+	// Here we revoke that rule, so users don't unknowingly have/use it.
 	if aws.StringValue(group.VpcId) != "" {
 		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId: aws.String(d.Id()),
@@ -219,7 +219,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
-			return fmt.Errorf("error revoking default egress rule for Security Group (%s): %w", d.Id(), err)
+			return fmt.Errorf("revoking default IPv4 egress rule for Security Group (%s): %w", d.Id(), err)
 		}
 
 		input = &ec2.RevokeSecurityGroupEgressInput{
@@ -239,13 +239,11 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
-			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
-			//enabled SG
+			// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
 			if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
-				return fmt.Errorf("error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
+				return fmt.Errorf("revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
 			}
 		}
-
 	}
 
 	return resourceSecurityGroupUpdate(d, meta)
