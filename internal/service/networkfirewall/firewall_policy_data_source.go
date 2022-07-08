@@ -120,7 +120,7 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s %s", arn, name)
 
-	output, err := FindFirewallPolicyByNameAndArn(ctx, conn, arn, name)
+	output, err := FindFirewallPolicyByNameAndARN(ctx, conn, arn, name)
 
 	if err != nil {
 		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): %s", arn, name, err)

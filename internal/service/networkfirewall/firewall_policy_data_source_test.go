@@ -70,7 +70,7 @@ func TestAccFirewallPolicyDataSource_name(t *testing.T) {
 	})
 }
 
-func TestAccFirewallPolicyDataSource_nameAndArn(t *testing.T) {
+func TestAccFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -82,7 +82,7 @@ func TestAccFirewallPolicyDataSource_nameAndArn(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyDataSource_nameAndArn(rName),
+				Config: testAccFirewallPolicyDataSource_nameAndARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -130,7 +130,7 @@ data "aws_networkfirewall_firewall_policy" "test" {
 }`)
 }
 
-func testAccFirewallPolicyDataSource_nameAndArn(rName string) string {
+func testAccFirewallPolicyDataSource_nameAndARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFirewallPolicyDataSource_basic(rName),
 		`
