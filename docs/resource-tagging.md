@@ -109,6 +109,16 @@ For example, the Route 53 service uses the field `Keys`, so the flag is `-UntagI
 For more details on flags for generating tag updating functions, see the
 [documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
 
+### Specifying the AWS SDK for Go version
+
+The vast majority of the Terraform AWS Provider is implemented using [version 1 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go).
+For new services, however, we have started to use [version 2 of the SDK](https://github.com/aws/aws-sdk-go-v2).
+
+By default, the generated code uses the AWS SDK for Go v1.
+To generate code using the AWS SDK for Go v2, pass the flag `-AwsSdkVersion=2`.
+
+For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
+
 ### Running Code generation
 
 Run the command `make gen` to run the code generators for the project.
