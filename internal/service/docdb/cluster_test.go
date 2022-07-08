@@ -323,8 +323,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-
-		CheckDestroy: testAccCheckClusterDestroy,
+		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),

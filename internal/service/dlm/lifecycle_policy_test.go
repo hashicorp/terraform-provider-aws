@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -381,8 +380,6 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 }
 
 func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
-	var providers []*schema.Provider
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
@@ -392,9 +389,9 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dlm.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      lifecyclePolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             lifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_crossRegionCopyRule(rName),
