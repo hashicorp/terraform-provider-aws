@@ -135,15 +135,6 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 	return factories
 }
 
-// FactoriesInternal creates ProviderFactories for provider configuration testing
-//
-// This should only be used for TestAccProvider_ tests which need to
-// reference the provider instance itself. Other testing should use
-// ProviderFactories or other related functions.
-func FactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{ProviderName})
-}
-
 // FactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
 //
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
