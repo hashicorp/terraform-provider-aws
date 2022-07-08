@@ -145,8 +145,8 @@ github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16 h1:Ac/qv9kXBBeyIAGkZdy+Id
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16/go.mod h1:xySJRdcDB8hVSmboo3X+evGhZPzBYwPmZbQxLgfGfBw=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17 h1:hUG69tIA35oNI2hoeURCnShSViDNCmcQdLSngP89124=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17/go.mod h1:MS242y2IOhTXoT0nhbJt/Z1p/6hlisZunHwvrWAcJyY=
-github.com/hashicorp/awspolicyequivalence v1.5.0 h1:tGw6h9qN1AWNBaUf4OUcdCyE/kqNBItTiyTPQeV/KUg=
-github.com/hashicorp/awspolicyequivalence v1.5.0/go.mod h1:9IOaIHx+a7C0NfUNk1A93M7kHd5rJ19aoUx37LZGC14=
+github.com/hashicorp/awspolicyequivalence v1.6.0 h1:7aadmkalbc5ewStC6g3rljx1iNvP4QyAhg2KsHx8bU8=
+github.com/hashicorp/awspolicyequivalence v1.6.0/go.mod h1:9IOaIHx+a7C0NfUNk1A93M7kHd5rJ19aoUx37LZGC14=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
