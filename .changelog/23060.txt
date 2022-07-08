@@ -3,5 +3,5 @@ resource/aws_iam_role: Fix diffs in `assume_role_policy` when there are no seman
 ```
 
 ```release-note:bug
-resource/aws_iam_role: Fix problem with exclusion management of inline and managed policies when empty (i.e., remove out-of-band policies)
+resource/aws_iam_role: Fix problem with exclusive management of inline and managed policies when empty (i.e., remove out-of-band policies)
 ```
