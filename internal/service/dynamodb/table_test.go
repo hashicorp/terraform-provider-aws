@@ -1544,6 +1544,63 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaPITR(rName, false, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaPITR(rName, true, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
@@ -2675,6 +2732,47 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTableConfig_replicaPITR(rName string, mainPITR, replica1, replica2 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = %[2]t
+  }
+
+  replica {
+    region_name            = data.aws_region.alternate.name
+    point_in_time_recovery = %[3]t
+  }
+
+  replica {
+    region_name            = data.aws_region.third.name
+    point_in_time_recovery = %[4]t
+  }
+}
+`, rName, mainPITR, replica1, replica2))
 }
 
 func testAccTableConfig_replica2(rName string) string {

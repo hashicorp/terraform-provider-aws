@@ -175,6 +175,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
@@ -756,6 +757,8 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
+
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
 			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
 			"aws_networkmanager_core_network_policy_document": networkmanager.DataSourceCoreNetworkPolicyDocument(),
@@ -832,6 +835,7 @@ func Provider() *schema.Provider {
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
+			"aws_secretsmanager_random_password": secretsmanager.DataSourceRandomPassword(),
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
@@ -2028,6 +2032,8 @@ func Provider() *schema.Provider {
 
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
+
+			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),

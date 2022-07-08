@@ -26,6 +26,11 @@ func init() {
 		F:    sweepPlaceIndexes,
 	})
 
+	resource.AddTestSweepers("aws_location_route_calculator", &resource.Sweeper{
+		Name: "aws_location_route_calculator",
+		F:    sweepRouteCalculators,
+	})
+
 	resource.AddTestSweepers("aws_location_tracker", &resource.Sweeper{
 		Name: "aws_location_tracker",
 		F:    sweepTrackers,
@@ -98,7 +103,7 @@ func sweepPlaceIndexes(region string) error {
 		}
 
 		for _, entry := range page.Entries {
-			r := ResourceMap()
+			r := ResourcePlaceIndex()
 			d := r.Data(nil)
 
 			id := aws.StringValue(entry.IndexName)
@@ -126,6 +131,53 @@ func sweepPlaceIndexes(region string) error {
 	return errs.ErrorOrNil()
 }
 
+func sweepRouteCalculators(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).LocationConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &locationservice.ListRouteCalculatorsInput{}
+
+	err = conn.ListRouteCalculatorsPages(input, func(page *locationservice.ListRouteCalculatorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			r := ResourceRouteCalculator()
+			d := r.Data(nil)
+
+			id := aws.StringValue(entry.CalculatorName)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Route Calculator for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Route Calculator for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Location Service Route Calculator sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
 func sweepTrackers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
@@ -145,7 +197,7 @@ func sweepTrackers(region string) error {
 		}
 
 		for _, entry := range page.Entries {
-			r := ResourceMap()
+			r := ResourceTracker()
 			d := r.Data(nil)
 
 			id := aws.StringValue(entry.TrackerName)

@@ -31,7 +31,7 @@ The `Installer` offers a few high-level methods:
 The `Installer` methods accept number of different `Source` types.
 Each comes with different trade-offs described below.
 
- - `fs.{AnyVersion,ExactVersion}` - Finds a binary in `$PATH` (or additional paths)
+ - `fs.{AnyVersion,ExactVersion,Version}` - Finds a binary in `$PATH` (or additional paths)
    - **Pros:**
      - This is most convenient when you already have the product installed on your system
       which you already manage.

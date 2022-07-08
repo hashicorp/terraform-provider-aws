@@ -68,6 +68,10 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"default_instance_warmup": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"desired_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -878,6 +882,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createInput.DefaultCooldown = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("default_instance_warmup"); ok {
+		createInput.DefaultInstanceWarmup = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("health_check_type"); ok {
 		createInput.HealthCheckType = aws.String(v.(string))
 	}
@@ -1031,6 +1039,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
+	d.Set("default_instance_warmup", g.DefaultInstanceWarmup)
 	d.Set("desired_capacity", g.DesiredCapacity)
 	if len(g.EnabledMetrics) > 0 {
 		d.Set("enabled_metrics", flattenEnabledMetrics(g.EnabledMetrics))
@@ -1160,6 +1169,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("default_cooldown") {
 			input.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
+		}
+
+		if d.HasChange("default_instance_warmup") {
+			input.DefaultInstanceWarmup = aws.Int64(int64(d.Get("default_instance_warmup").(int)))
 		}
 
 		if d.HasChange("desired_capacity") {
