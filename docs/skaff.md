@@ -23,10 +23,11 @@
 5. To get help, enter `skaff` without arguments.
 6. Generate a resource. _E.g._, `skaff resource --name BrokerReboot` (or equivalently `skaff resource -n BrokerReboot`).
 
-## Usage 
+## Usage
 
 ### Help
-```
+
+```console
 $ skaff --help
 Usage:
   skaff [command]
@@ -42,8 +43,10 @@ Flags:
 ```
 
 ### Autocompletion
+
 Generate the autocompletion script for skaff for the specified shell
-```
+
+```console
 $ skaff completion --help
 Usage:
   skaff completion [command]
@@ -60,9 +63,11 @@ Flags:
 Use "skaff completion [command] --help" for more information about a command
 ```
 
-### Data Source 
+### Data Source
+
 Create scaffolding for a data source
-```
+
+```console
 $ skaff datasource --help
 Usage:
   skaff datasource [flags]
@@ -77,8 +82,10 @@ Flags:
 ```
 
 ### Resource
+
 Create scaffolding for a resource
-```
+
+```console
 $ skaff resource --help
 Usage:
   skaff resource [flags]

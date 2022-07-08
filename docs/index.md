@@ -45,4 +45,4 @@ Pull requests are usually triaged within a few days of creation and are prioriti
 
 ### Submit an Issue
 
-In addition to contributions, we welcome [bug reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md). 
+In addition to contributions, we welcome [bug reports](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/hashicorp/terraform-provider-aws/issues/new?assignees=&labels=enhancement&template=Feature_Request.md).
