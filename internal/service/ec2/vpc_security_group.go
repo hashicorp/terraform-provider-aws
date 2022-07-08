@@ -257,13 +257,13 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	sg, err := FindSecurityGroupByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Security Group %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Security Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Security Group (%s): %w", d.Id(), err)
 	}
 
 	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
@@ -293,22 +293,22 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
-		return fmt.Errorf("error setting ingress: %w", err)
+		return fmt.Errorf("setting ingress: %w", err)
 	}
 
 	if err := d.Set("egress", egressRules); err != nil {
-		return fmt.Errorf("error setting egress: %w", err)
+		return fmt.Errorf("setting egress: %w", err)
 	}
 
 	tags := KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
