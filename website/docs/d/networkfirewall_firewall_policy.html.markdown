@@ -13,6 +13,7 @@ Retrieve information about a firewall policy.
 ## Example Usage
 
 ### Find firewall policy by name
+
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
   name = var.firewall_policy_name
@@ -20,6 +21,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 ```
 
 ### Find firewall policy by Amazon Resource Name (ARN)
+
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
   arn  = var.firewall_policy_arn
@@ -27,6 +29,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 ```
 
 ### Find firewall policy by name and ARN
+
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
   arn  = var.firewall_policy_arn
