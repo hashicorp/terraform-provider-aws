@@ -1,4 +1,9 @@
 ## 4.23.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_networkfirewall_firewall_policy` ([#24748](https://github.com/hashicorp/terraform-provider-aws/issues/24748))
+
 ## 4.22.0 (July  8, 2022)
 
 FEATURES:
