@@ -228,7 +228,6 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test1"
@@ -238,9 +237,9 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_two(rName),

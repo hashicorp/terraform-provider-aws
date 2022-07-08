@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -170,7 +169,6 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 }
 
 func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
-	var providers []*schema.Provider
 	var v s3control.MultiRegionAccessPointReport
 	resourceName := "aws_s3control_multi_region_access_point.test"
 	bucket1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,10 +181,10 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),

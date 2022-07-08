@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1930,7 +1929,6 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1938,9 +1936,9 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_validationNoNodeType(rName),
@@ -1955,7 +1953,6 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1963,9 +1960,9 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_validationGlobalIdAndNodeType(rName),
@@ -1980,7 +1977,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	var pg elasticache.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1992,8 +1988,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg),
@@ -2029,7 +2025,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var rg1, rg2 elasticache.ReplicationGroup
 	var pg1, pg2 elasticache.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2044,8 +2039,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg1),
@@ -2099,7 +2094,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
@@ -2109,9 +2103,9 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
@@ -2130,7 +2124,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var rg1, rg2 elasticache.ReplicationGroup
 	var pg1, pg2 elasticache.CacheParameterGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2142,8 +2135,8 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg1),
@@ -2196,7 +2189,6 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2204,9 +2196,9 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_globalIDClusterModeNumNodeOnSecondary(rName),

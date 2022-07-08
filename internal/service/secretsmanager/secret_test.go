@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -119,16 +118,15 @@ func TestAccSecretsManagerSecret_description(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
-	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckSecretDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_basicReplica(rName),
@@ -143,16 +141,15 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecret_overwriteReplica(t *testing.T) {
-	var providers []*schema.Provider
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckSecretDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckSecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_overwriteReplica(rName, true),

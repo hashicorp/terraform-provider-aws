@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,7 +49,6 @@ func TestAccIPAM_basic(t *testing.T) {
 }
 
 func TestAccIPAM_modify(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,9 +57,9 @@ func TestAccIPAM_modify(t *testing.T) {
 			testAccIPAMPreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_base,

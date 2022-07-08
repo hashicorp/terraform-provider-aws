@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -145,7 +144,6 @@ func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_global_replication_group.test"
@@ -155,9 +153,9 @@ func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) 
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalReplicationGroupConfig_multipleSecondaries(rName),
@@ -174,7 +172,6 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_global_replication_group.test"
@@ -184,9 +181,9 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckGlobalReplicationGroupDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalReplicationGroupConfig_replaceSecondaryDifferentRegionSetup(rName),

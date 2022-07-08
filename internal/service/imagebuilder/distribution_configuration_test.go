@@ -121,9 +121,9 @@ func TestAccImageBuilderDistributionConfiguration_distribution(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(nil, 2),
-		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfigurationConfig_2(rName),

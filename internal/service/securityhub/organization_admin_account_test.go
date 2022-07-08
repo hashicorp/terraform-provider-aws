@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -67,8 +66,6 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 }
 
 func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
-	var providers []*schema.Provider
-
 	resourceName := "aws_securityhub_organization_admin_account.test"
 	altResourceName := "aws_securityhub_organization_admin_account.alternate"
 	thirdResourceName := "aws_securityhub_organization_admin_account.third"
@@ -79,9 +76,9 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_multiRegion(),
