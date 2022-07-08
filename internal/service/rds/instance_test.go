@@ -1201,7 +1201,6 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.
 
 	var dbInstance rds.DBInstance
 	var dbSubnetGroup rds.DBSubnetGroup
-	var providers []*schema.Provider
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
@@ -1214,9 +1213,9 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckOrganizationsEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternateAccountAndAlternateRegion(&providers),
-		CheckDestroy:      testAccCheckInstanceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternateAccountAndAlternateRegion(),
+		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),

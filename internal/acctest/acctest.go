@@ -96,10 +96,10 @@ func init() {
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit([]string{ProviderName})
+	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit(ProviderName)
 }
 
-func protoV5ProviderFactoriesInit(providerNames []string) map[string]func() (tfprotov5.ProviderServer, error) {
+func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -147,17 +147,17 @@ func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schem
 	})
 }
 
-// FactoriesAlternateAccountAndAlternateRegion creates ProviderFactories for cross-account and cross-region configurations
+// ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
-func FactoriesAlternateAccountAndAlternateRegion(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func ProtoV5FactoriesAlternateAccountAndAlternateRegion() map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
 		ProviderNameSameAccountAlternateRegion,
-	})
+	)
 }
 
 // FactoriesMultipleRegion creates ProviderFactories for the number of region configurations
