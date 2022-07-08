@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.7
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.7
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.17.0
