@@ -24,7 +24,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
-  arn  = var.firewall_policy_arn
+  arn = var.firewall_policy_arn
 }
 ```
 
