@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/account"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -88,7 +87,6 @@ func TestAccAccountAlternateContact_disappears(t *testing.T) {
 }
 
 func TestAccAccountAlternateContact_accountID(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_account_alternate_contact.test"
 	domain := acctest.RandomDomainName()
 	emailAddress1 := acctest.RandomEmailAddress(domain)
@@ -103,9 +101,9 @@ func TestAccAccountAlternateContact_accountID(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, account.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccAlternateContactDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, account.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccAlternateContactDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAlternateContactConfig_organization(rName1, emailAddress1),
