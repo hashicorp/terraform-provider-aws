@@ -163,6 +163,12 @@ func (c *Constraint) Check(v *Version) bool {
 	return c.f(v, c.check)
 }
 
+// Prerelease returns true if the version underlying this constraint
+// contains a prerelease field.
+func (c *Constraint) Prerelease() bool {
+	return len(c.check.Prerelease()) > 0
+}
+
 func (c *Constraint) String() string {
 	return c.original
 }

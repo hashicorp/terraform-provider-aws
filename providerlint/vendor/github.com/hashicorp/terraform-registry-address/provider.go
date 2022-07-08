@@ -16,9 +16,9 @@ type Provider struct {
 	Hostname  svchost.Hostname
 }
 
-// DefaultRegistryHost is the hostname used for provider addresses that do
+// DefaultProviderRegistryHost is the hostname used for provider addresses that do
 // not have an explicit hostname.
-const DefaultRegistryHost = svchost.Hostname("registry.terraform.io")
+const DefaultProviderRegistryHost = svchost.Hostname("registry.terraform.io")
 
 // BuiltInProviderHost is the pseudo-hostname used for the "built-in" provider
 // namespace. Built-in provider addresses must also have their namespace set
@@ -34,11 +34,18 @@ const BuiltInProviderHost = svchost.Hostname("terraform.io")
 // special, even if they haven't encountered the concept formally yet.
 const BuiltInProviderNamespace = "builtin"
 
+// UnknownProviderNamespace is the special string used to indicate
+// unknown namespace, e.g. in "aws". This is equivalent to
+// LegacyProviderNamespace for <0.12 style address. This namespace
+// would never be produced by Terraform itself explicitly, it is
+// only an internal placeholder.
+const UnknownProviderNamespace = "?"
+
 // LegacyProviderNamespace is the special string used in the Namespace field
 // of type Provider to mark a legacy provider address. This special namespace
 // value would normally be invalid, and can be used only when the hostname is
-// DefaultRegistryHost because that host owns the mapping from legacy name to
-// FQN.
+// DefaultProviderRegistryHost because that host owns the mapping from legacy name to
+// FQN. This may be produced by Terraform 0.13.
 const LegacyProviderNamespace = "-"
 
 // String returns an FQN string, indended for use in machine-readable output.
@@ -56,7 +63,7 @@ func (pt Provider) ForDisplay() string {
 		panic("called ForDisplay on zero-value addrs.Provider")
 	}
 
-	if pt.Hostname == DefaultRegistryHost {
+	if pt.Hostname == DefaultProviderRegistryHost {
 		return pt.Namespace + "/" + pt.Type
 	}
 	return pt.Hostname.ForDisplay() + "/" + pt.Namespace + "/" + pt.Type
@@ -75,73 +82,24 @@ func (pt Provider) ForDisplay() string {
 // ParseProviderPart first to check that the given value is valid.
 func NewProvider(hostname svchost.Hostname, namespace, typeName string) Provider {
 	if namespace == LegacyProviderNamespace {
-		// Legacy provider addresses must always be created via
-		// NewLegacyProvider so that we can use static analysis to find
-		// codepaths still working with those.
-		panic("attempt to create legacy provider address using NewProvider; use NewLegacyProvider instead")
+		// Legacy provider addresses must always be created via struct
+		panic("attempt to create legacy provider address using NewProvider; use Provider{} instead")
+	}
+	if namespace == UnknownProviderNamespace {
+		// Provider addresses with unknown namespace must always
+		// be created via struct
+		panic("attempt to create provider address with unknown namespace using NewProvider; use Provider{} instead")
+	}
+	if namespace == "" {
+		// This case is already handled by MustParseProviderPart() below,
+		// but we catch it early to provide more helpful message.
+		panic("attempt to create provider address with empty namespace")
 	}
 
 	return Provider{
 		Type:      MustParseProviderPart(typeName),
 		Namespace: MustParseProviderPart(namespace),
 		Hostname:  hostname,
-	}
-}
-
-// ImpliedProviderForUnqualifiedType represents the rules for inferring what
-// provider FQN a user intended when only a naked type name is available.
-//
-// For all except the type name "terraform" this returns a so-called "default"
-// provider, which is under the registry.terraform.io/hashicorp/ namespace.
-//
-// As a special case, the string "terraform" maps to
-// "terraform.io/builtin/terraform" because that is the more likely user
-// intent than the now-unmaintained "registry.terraform.io/hashicorp/terraform"
-// which remains only for compatibility with older Terraform versions.
-func ImpliedProviderForUnqualifiedType(typeName string) Provider {
-	switch typeName {
-	case "terraform":
-		// Note for future maintainers: any additional strings we add here
-		// as implied to be builtin must never also be use as provider names
-		// in the registry.terraform.io/hashicorp/... namespace, because
-		// otherwise older versions of Terraform could implicitly select
-		// the registry name instead of the internal one.
-		return NewBuiltInProvider(typeName)
-	default:
-		return NewDefaultProvider(typeName)
-	}
-}
-
-// NewDefaultProvider returns the default address of a HashiCorp-maintained,
-// Registry-hosted provider.
-func NewDefaultProvider(name string) Provider {
-	return Provider{
-		Type:      MustParseProviderPart(name),
-		Namespace: "hashicorp",
-		Hostname:  DefaultRegistryHost,
-	}
-}
-
-// NewBuiltInProvider returns the address of a "built-in" provider. See
-// the docs for Provider.IsBuiltIn for more information.
-func NewBuiltInProvider(name string) Provider {
-	return Provider{
-		Type:      MustParseProviderPart(name),
-		Namespace: BuiltInProviderNamespace,
-		Hostname:  BuiltInProviderHost,
-	}
-}
-
-// NewLegacyProvider returns a mock address for a provider.
-// This will be removed when ProviderType is fully integrated.
-func NewLegacyProvider(name string) Provider {
-	return Provider{
-		// We intentionally don't normalize and validate the legacy names,
-		// because existing code expects legacy provider names to pass through
-		// verbatim, even if not compliant with our new naming rules.
-		Type:      name,
-		Namespace: LegacyProviderNamespace,
-		Hostname:  DefaultRegistryHost,
 	}
 }
 
@@ -165,6 +123,12 @@ func (pt Provider) LegacyString() string {
 // such a value is likely to either panic or otherwise misbehave.
 func (pt Provider) IsZero() bool {
 	return pt == Provider{}
+}
+
+// HasKnownNamespace returns true if the provider namespace is known
+// (also if it is legacy namespace)
+func (pt Provider) HasKnownNamespace() bool {
+	return pt.Namespace != UnknownProviderNamespace
 }
 
 // IsBuiltIn returns true if the receiver is the address of a "built-in"
@@ -201,17 +165,8 @@ func (pt Provider) IsLegacy() bool {
 		panic("called IsLegacy() on zero-value addrs.Provider")
 	}
 
-	return pt.Hostname == DefaultRegistryHost && pt.Namespace == LegacyProviderNamespace
+	return pt.Hostname == DefaultProviderRegistryHost && pt.Namespace == LegacyProviderNamespace
 
-}
-
-// IsDefault returns true if the provider is a default hashicorp provider
-func (pt Provider) IsDefault() bool {
-	if pt.IsZero() {
-		panic("called IsDefault() on zero-value addrs.Provider")
-	}
-
-	return pt.Hostname == DefaultRegistryHost && pt.Namespace == "hashicorp"
 }
 
 // Equals returns true if the receiver and other provider have the same attributes.
@@ -219,7 +174,7 @@ func (pt Provider) Equals(other Provider) bool {
 	return pt == other
 }
 
-// ParseRawProviderSourceString parses the source attribute and returns a provider.
+// ParseProviderSource parses the source attribute and returns a provider.
 // This is intended primarily to parse the FQN-like strings returned by
 // terraform-config-inspect.
 //
@@ -230,7 +185,7 @@ func (pt Provider) Equals(other Provider) bool {
 //
 // "name"-only format is parsed as -/name (i.e. legacy namespace)
 // requiring further identification of the namespace via Registry API
-func ParseRawProviderSourceString(str string) (Provider, error) {
+func ParseProviderSource(str string) (Provider, error) {
 	var ret Provider
 	parts, err := parseSourceStringParts(str)
 	if err != nil {
@@ -239,10 +194,14 @@ func ParseRawProviderSourceString(str string) (Provider, error) {
 
 	name := parts[len(parts)-1]
 	ret.Type = name
-	ret.Hostname = DefaultRegistryHost
+	ret.Hostname = DefaultProviderRegistryHost
 
 	if len(parts) == 1 {
-		return NewLegacyProvider(name), nil
+		return Provider{
+			Hostname:  DefaultProviderRegistryHost,
+			Namespace: UnknownProviderNamespace,
+			Type:      name,
+		}, nil
 	}
 
 	if len(parts) >= 2 {
@@ -278,13 +237,13 @@ func ParseRawProviderSourceString(str string) (Provider, error) {
 		ret.Hostname = hn
 	}
 
-	if ret.Namespace == LegacyProviderNamespace && ret.Hostname != DefaultRegistryHost {
+	if ret.Namespace == LegacyProviderNamespace && ret.Hostname != DefaultProviderRegistryHost {
 		// Legacy provider addresses must always be on the default registry
 		// host, because the default registry host decides what actual FQN
 		// each one maps to.
 		return Provider{}, &ParserError{
 			Summary: "Invalid provider namespace",
-			Detail:  "The legacy provider namespace \"-\" can be used only with hostname " + DefaultRegistryHost.ForDisplay() + ".",
+			Detail:  "The legacy provider namespace \"-\" can be used only with hostname " + DefaultProviderRegistryHost.ForDisplay() + ".",
 		}
 	}
 
@@ -332,28 +291,52 @@ func ParseRawProviderSourceString(str string) (Provider, error) {
 	return ret, nil
 }
 
-// ParseAndInferProviderSourceString parses the source attribute and returns a provider.
-// This is intended primarily to parse the FQN-like strings returned by
-// terraform-config-inspect.
-//
-// The following are valid source string formats:
-// 		name
-// 		namespace/name
-// 		hostname/namespace/name
-//
-// "name" format is assumed to be hashicorp/name
-func ParseAndInferProviderSourceString(str string) (Provider, error) {
-	var ret Provider
-	parts, err := parseSourceStringParts(str)
+// MustParseProviderSource is a wrapper around ParseProviderSource that panics if
+// it returns an error.
+func MustParseProviderSource(raw string) (Provider) {
+	p, err := ParseProviderSource(raw)
 	if err != nil {
-		return ret, err
+		panic(err)
+	}
+	return p
+}
+
+// ValidateProviderAddress returns error if the given address is not FQN,
+// that is if it is missing any of the three components from
+// hostname/namespace/name.
+func ValidateProviderAddress(raw string) error {
+	parts, err := parseSourceStringParts(raw)
+	if err != nil {
+		return err
 	}
 
-	if len(parts) == 1 {
-		return NewDefaultProvider(parts[0]), nil
+	if len(parts) != 3 {
+		return &ParserError{
+			Summary: "Invalid provider address format",
+			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
+		}
 	}
 
-	return ParseRawProviderSourceString(str)
+	p, err := ParseProviderSource(raw)
+	if err != nil {
+		return err
+	}
+
+	if !p.HasKnownNamespace() {
+		return &ParserError{
+			Summary: "Unknown provider namespace",
+			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
+		}
+	}
+
+	if !p.IsLegacy() {
+		return &ParserError{
+			Summary: "Invalid legacy provider namespace",
+			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
+		}
+	}
+
+	return nil
 }
 
 func parseSourceStringParts(str string) ([]string, error) {
@@ -388,16 +371,6 @@ func parseSourceStringParts(str string) ([]string, error) {
 	parts[len(parts)-1] = name
 
 	return parts, nil
-}
-
-// MustParseRawProviderSourceString is a wrapper around ParseRawProviderSourceString that panics if
-// it returns an error.
-func MustParseRawProviderSourceString(str string) Provider {
-	result, err := ParseRawProviderSourceString(str)
-	if err != nil {
-		panic(err)
-	}
-	return result
 }
 
 // ParseProviderPart processes an addrs.Provider namespace or type string
@@ -467,16 +440,4 @@ func MustParseProviderPart(given string) string {
 		panic(err.Error())
 	}
 	return result
-}
-
-// IsProviderPartNormalized compares a given string to the result of ParseProviderPart(string)
-func IsProviderPartNormalized(str string) (bool, error) {
-	normalized, err := ParseProviderPart(str)
-	if err != nil {
-		return false, err
-	}
-	if str == normalized {
-		return true, nil
-	}
-	return false, nil
 }

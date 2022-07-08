@@ -10,6 +10,24 @@ const (
 	// CLI installation, if installation is required.
 	EnvTfAccTempDir = "TF_ACC_TEMP_DIR"
 
+	// Environment variable with level to filter Terraform logs during
+	// acceptance testing. This value sets TF_LOG in a safe manner when
+	// executing Terraform CLI commands, which would otherwise interfere
+	// with the testing framework using TF_LOG to set the Go standard library
+	// log package level.
+	//
+	// This value takes precedence over TF_LOG_CORE, due to precedence rules
+	// in the Terraform core code, so it is not possible to set this to a level
+	// and also TF_LOG_CORE=OFF. Use TF_LOG_CORE and TF_LOG_PROVIDER in that
+	// case instead.
+	//
+	// If not set, but TF_ACC_LOG_PATH or TF_LOG_PATH_MASK is set, it defaults
+	// to TRACE. If Terraform CLI is version 0.14 or earlier, it will have no
+	// separate affect from the TF_ACC_LOG_PATH or TF_LOG_PATH_MASK behavior,
+	// as those earlier versions of Terraform are unreliable with the logging
+	// level being outside TRACE.
+	EnvTfAccLog = "TF_ACC_LOG"
+
 	// Environment variable with path to save Terraform logs during acceptance
 	// testing. This value sets TF_LOG_PATH in a safe manner when executing
 	// Terraform CLI commands, which would otherwise be ignored since it could
@@ -17,6 +35,17 @@ const (
 	//
 	// If TF_LOG_PATH_MASK is set, it takes precedence over this value.
 	EnvTfAccLogPath = "TF_ACC_LOG_PATH"
+
+	// Environment variable with level to filter Terraform core logs during
+	// acceptance testing. This value sets TF_LOG_CORE separate from
+	// TF_LOG_PROVIDER when calling Terraform.
+	//
+	// This value has no affect when TF_ACC_LOG is set (which sets Terraform's
+	// TF_LOG), due to precedence rules in the Terraform core code. Use
+	// TF_LOG_CORE and TF_LOG_PROVIDER in that case instead.
+	//
+	// If not set, defaults to TF_ACC_LOG behaviors.
+	EnvTfLogCore = "TF_LOG_CORE"
 
 	// Environment variable with path containing the string %s, which is
 	// replaced with the test name, to save separate Terraform logs during
@@ -26,6 +55,22 @@ const (
 	//
 	// Takes precedence over TF_ACC_LOG_PATH.
 	EnvTfLogPathMask = "TF_LOG_PATH_MASK"
+
+	// Environment variable with level to filter Terraform provider logs during
+	// acceptance testing. This value sets TF_LOG_PROVIDER separate from
+	// TF_LOG_CORE.
+	//
+	// During testing, this only affects external providers whose logging goes
+	// through Terraform. The logging for the provider under test is controlled
+	// by the testing framework as it is running the provider code. Provider
+	// code using the Go standard library log package is controlled by TF_LOG
+	// for historical compatibility.
+	//
+	// This value takes precedence over TF_ACC_LOG for external provider logs,
+	// due to rules in the Terraform core code.
+	//
+	// If not set, defaults to TF_ACC_LOG behaviors.
+	EnvTfLogProvider = "TF_LOG_PROVIDER"
 
 	// Environment variable with acceptance testing Terraform CLI version to
 	// download from releases.hashicorp.com, checksum verify, and install. The

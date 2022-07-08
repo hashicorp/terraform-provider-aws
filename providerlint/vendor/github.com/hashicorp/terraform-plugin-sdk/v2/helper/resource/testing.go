@@ -237,6 +237,7 @@ func runSweeperWithRegion(region string, s *Sweeper, sweepers map[string]*Sweepe
 		depSweeper, ok := sweepers[dep]
 
 		if !ok {
+			log.Printf("[ERROR] Sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
 			return fmt.Errorf("sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
 		}
 

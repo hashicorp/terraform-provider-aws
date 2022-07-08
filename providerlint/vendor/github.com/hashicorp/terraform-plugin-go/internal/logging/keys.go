@@ -5,8 +5,29 @@ package logging
 // Practitioners or tooling reading logs may be depending on these keys, so be
 // conscious of that when changing them.
 const (
+	// Attribute of the diagnostic being logged.
+	KeyDiagnosticAttribute = "diagnostic_attribute"
+
+	// Number of the error diagnostics.
+	KeyDiagnosticErrorCount = "diagnostic_error_count"
+
+	// Severity of the diagnostic being logged.
+	KeyDiagnosticSeverity = "diagnostic_severity"
+
+	// Detail of the diagnostic being logged.
+	KeyDiagnosticDetail = "diagnostic_detail"
+
+	// Summary of the diagnostic being logged.
+	KeyDiagnosticSummary = "diagnostic_summary"
+
+	// Number of the warning diagnostics.
+	KeyDiagnosticWarningCount = "diagnostic_warning_count"
+
 	// Underlying error string
 	KeyError = "error"
+
+	// Duration in milliseconds for the RPC request
+	KeyRequestDurationMs = "tf_req_duration_ms"
 
 	// A unique ID for the RPC request
 	KeyRequestID = "tf_req_id"
