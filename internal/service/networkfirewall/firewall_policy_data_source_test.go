@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFirewallPolicyDataSource_arn(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -40,7 +40,7 @@ func TestAccFirewallPolicyDataSource_arn(t *testing.T) {
 	})
 }
 
-func TestAccFirewallPolicyDataSource_name(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -70,7 +70,7 @@ func TestAccFirewallPolicyDataSource_name(t *testing.T) {
 	})
 }
 
-func TestAccFirewallPolicyDataSource_nameAndARN(t *testing.T) {
+func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
