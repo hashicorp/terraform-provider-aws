@@ -1413,7 +1413,6 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 	}
 
 	var table dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1422,9 +1421,9 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replica2(rName),
@@ -1463,7 +1462,6 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	}
 
 	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1472,9 +1470,9 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replica1(rName),
@@ -1513,7 +1511,6 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	}
 
 	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
@@ -1526,9 +1523,9 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaCMK(rName),
@@ -1550,7 +1547,6 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	}
 
 	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1559,9 +1555,9 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaPITR(rName, false, true, false),

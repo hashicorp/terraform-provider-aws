@@ -176,6 +176,19 @@ func FactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[str
 	return factoriesInit(providers, providerNames)
 }
 
+func ProtoV5FactoriesMultipleRegions(n int) map[string]func() (tfprotov5.ProviderServer, error) {
+	providerNames := []string{
+		ProviderName,
+		ProviderNameAlternate,
+	}
+
+	if n >= 3 {
+		providerNames = append(providerNames, ProviderNameThird)
+	}
+
+	return protoV5ProviderFactoriesInit(providerNames...)
+}
+
 // PreCheck verifies and sets required provider testing configuration
 //
 // This PreCheck function should be present in every acceptance test. It allows
