@@ -147,6 +147,10 @@ func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schem
 	})
 }
 
+func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+}
+
 // ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
