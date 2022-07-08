@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	ISO8601UTC = "2006-01-02T15:04:05-07:00"
+)
+
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceDataSourceCreate,
@@ -974,7 +978,6 @@ func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttribute
 	// Only one of these values can be set at a time
 	if v, ok := tfMap["date_value"].(string); ok && v != "" {
 		// A date expressed as an ISO 8601 string.
-		const ISO8601UTC = "2006-01-02T15:04:05+01:00"
 		timeValue, _ := time.Parse(ISO8601UTC, v)
 		result.DateValue = aws.Time(timeValue)
 	} else if v, ok := tfMap["string_value"].(string); ok && v != "" {
@@ -1177,7 +1180,7 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 	// only one of these values should be set at a time
 	if v := apiObject.DateValue; v != nil {
 		// A date expressed as an ISO 8601 string.
-		m["date_value"] = aws.ToTime(v).Format("2006-01-02T15:04:05+01:00")
+		m["date_value"] = aws.ToTime(v).Format(ISO8601UTC)
 	} else if v := apiObject.StringValue; v != nil {
 		m["string_value"] = v
 	} else if v := apiObject.StringListValue; v != nil {
