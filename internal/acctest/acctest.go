@@ -1194,15 +1194,6 @@ provider "aws" {
 `, os.Getenv(conns.EnvVarAccAssumeRoleARN), policy)
 }
 
-const testAccProviderConfig_assumeRoleEmpty = `
-provider "aws" {
-  assume_role {
-  }
-}
-
-data "aws_caller_identity" "current" {}
-` //lintignore:AT004
-
 const testAccProviderConfigBase = `
 data "aws_partition" "provider_test" {}
 
