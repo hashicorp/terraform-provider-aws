@@ -183,7 +183,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -1422,7 +1422,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1471,7 +1471,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
 		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1524,7 +1524,7 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
 		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1556,7 +1556,7 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3), // 3 due to shared test configuration
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
 		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{

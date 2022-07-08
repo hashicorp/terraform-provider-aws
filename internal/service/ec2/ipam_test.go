@@ -58,7 +58,7 @@ func TestAccIPAM_modify(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{

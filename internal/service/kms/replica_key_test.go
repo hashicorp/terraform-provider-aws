@@ -238,7 +238,7 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{

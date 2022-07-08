@@ -154,7 +154,7 @@ func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) 
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -182,7 +182,7 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{

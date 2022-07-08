@@ -1937,7 +1937,7 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1961,7 +1961,7 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1989,7 +1989,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg),
@@ -2040,7 +2040,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg1),
@@ -2104,7 +2104,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2136,7 +2136,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy,
 			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(&pg1),
@@ -2197,7 +2197,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{

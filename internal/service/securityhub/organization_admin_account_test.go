@@ -77,7 +77,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -176,7 +176,7 @@ func FactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[str
 	return factoriesInit(providers, providerNames)
 }
 
-func ProtoV5FactoriesMultipleRegions(n int) map[string]func() (tfprotov5.ProviderServer, error) {
+func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	providerNames := []string{
 		ProviderName,
 		ProviderNameAlternate,
