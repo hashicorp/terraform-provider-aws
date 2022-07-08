@@ -160,33 +160,20 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string
 	)
 }
 
-// FactoriesMultipleRegion creates ProviderFactories for the number of region configurations
+// ProtoV5FactoriesMultipleRegions creates ProtoV5ProviderFactories for the specified number of region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
-func FactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[string]func() (*schema.Provider, error) {
-	providerNames := []string{
-		ProviderName,
-		ProviderNameAlternate,
-	}
-
-	if regions >= 3 {
-		providerNames = append(providerNames, ProviderNameThird)
-	}
-
-	return factoriesInit(providers, providerNames)
-}
-
 func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
-	providerNames := []string{
-		ProviderName,
-		ProviderNameAlternate,
+	switch n {
+	case 2:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+	case 3:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate, ProviderNameThird)
+	default:
+		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
 
-	if n >= 3 {
-		providerNames = append(providerNames, ProviderNameThird)
-	}
-
-	return protoV5ProviderFactoriesInit(providerNames...)
+	return nil
 }
 
 // PreCheck verifies and sets required provider testing configuration
