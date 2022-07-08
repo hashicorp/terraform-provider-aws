@@ -40,6 +40,10 @@ func ResourceRole() *schema.Resource {
 			State: resourceRoleImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"assume_role_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -49,10 +53,6 @@ func ResourceRole() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"create_date": {
 				Type:     schema.TypeString,
@@ -157,8 +157,7 @@ func ResourceRole() *schema.Resource {
 	}
 }
 
-func resourceRoleImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRoleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("force_detach_policies", false)
 	return []*schema.ResourceData{d}, nil
 }
@@ -752,16 +751,22 @@ func expandRoleInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.
 		return nil
 	}
 
-	apiObject := &iam.PutRolePolicyInput{
-		RoleName: aws.String(roleName),
-	}
+	apiObject := &iam.PutRolePolicyInput{}
+
+	namePolicy := false
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.PolicyName = aws.String(v)
+		namePolicy = true
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		apiObject.PolicyDocument = aws.String(v)
+		namePolicy = true
+	}
+
+	if namePolicy {
+		apiObject.RoleName = aws.String(roleName)
 	}
 
 	return apiObject
@@ -859,12 +864,14 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if len(apiObjects) == 0 {
-		apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
-			PolicyDocument: aws.String(""),
-			PolicyName:     aws.String(""),
-		})
-	}
+	/*
+		if len(apiObjects) == 0 {
+			apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
+				PolicyDocument: aws.String(""),
+				PolicyName:     aws.String(""),
+			})
+		}
+	*/
 
 	return apiObjects, nil
 }
@@ -885,22 +892,28 @@ func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
 	osPolicies := expandRoleInlinePolicies(roleName, os.List())
 	nsPolicies := expandRoleInlinePolicies(roleName, ns.List())
 
-	return !inlinePoliciesEquivalent(osPolicies, nsPolicies)
+	return !inlinePoliciesEquivalent(nsPolicies, osPolicies)
 }
 
-func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
-	if one == nil && two == nil {
+func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyInput) bool {
+	if readPolicies == nil && configPolicies == nil {
 		return true
 	}
 
-	if len(one) != len(two) {
+	if len(readPolicies) == 0 && len(configPolicies) == 1 {
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(`{}`, aws.StringValue(configPolicies[0].PolicyDocument)); err == nil && equivalent {
+			return true
+		}
+	}
+
+	if len(readPolicies) != len(configPolicies) {
 		return false
 	}
 
 	matches := 0
 
-	for _, policyOne := range one {
-		for _, policyTwo := range two {
+	for _, policyOne := range readPolicies {
+		for _, policyTwo := range configPolicies {
 			if aws.StringValue(policyOne.PolicyName) == aws.StringValue(policyTwo.PolicyName) {
 				matches++
 				if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(policyOne.PolicyDocument), aws.StringValue(policyTwo.PolicyDocument)); err != nil || !equivalent {
@@ -911,5 +924,5 @@ func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
 		}
 	}
 
-	return matches == len(one)
+	return matches == len(readPolicies)
 }

@@ -1,3 +1,7 @@
 ```release-note:bug
-resource/aws_iam_role: Fix diffs in `assume_role_policy` when no changes are detected
+resource/aws_iam_role: Fix diffs in `assume_role_policy` when there are no semantic changes
+```
+
+```release-note:bug
+resource/aws_iam_role: Fix problem with exclusion management of inline and managed policies when empty (i.e., remove out-of-band policies)
 ```
