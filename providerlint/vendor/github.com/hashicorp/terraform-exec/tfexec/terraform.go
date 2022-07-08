@@ -48,10 +48,21 @@ type Terraform struct {
 	skipProviderVerify bool
 	env                map[string]string
 
-	stdout  io.Writer
-	stderr  io.Writer
-	logger  printfer
+	stdout io.Writer
+	stderr io.Writer
+	logger printfer
+
+	// TF_LOG environment variable, defaults to TRACE if logPath is set.
+	log string
+
+	// TF_LOG_CORE environment variable
+	logCore string
+
+	// TF_LOG_PATH environment variable
 	logPath string
+
+	// TF_LOG_PROVIDER environment variable
+	logProvider string
 
 	versionLock  sync.Mutex
 	execVersion  *version.Version
@@ -122,10 +133,58 @@ func (tf *Terraform) SetStderr(w io.Writer) {
 	tf.stderr = w
 }
 
+// SetLog sets the TF_LOG environment variable for Terraform CLI execution.
+// This must be combined with a call to SetLogPath to take effect.
+//
+// This is only compatible with Terraform CLI 0.15.0 or later as setting the
+// log level was unreliable in earlier versions. It will default to TRACE when
+// SetLogPath is called on versions 0.14.11 and earlier, or if SetLogCore and
+// SetLogProvider have not been called before SetLogPath on versions 0.15.0 and
+// later.
+func (tf *Terraform) SetLog(log string) error {
+	err := tf.compatible(context.Background(), tf0_15_0, nil)
+	if err != nil {
+		return err
+	}
+	tf.log = log
+	return nil
+}
+
+// SetLogCore sets the TF_LOG_CORE environment variable for Terraform CLI
+// execution. This must be combined with a call to SetLogPath to take effect.
+//
+// This is only compatible with Terraform CLI 0.15.0 or later.
+func (tf *Terraform) SetLogCore(logCore string) error {
+	err := tf.compatible(context.Background(), tf0_15_0, nil)
+	if err != nil {
+		return err
+	}
+	tf.logCore = logCore
+	return nil
+}
+
 // SetLogPath sets the TF_LOG_PATH environment variable for Terraform CLI
 // execution.
 func (tf *Terraform) SetLogPath(path string) error {
 	tf.logPath = path
+	// Prevent setting the log path without enabling logging
+	if tf.log == "" && tf.logCore == "" && tf.logProvider == "" {
+		tf.log = "TRACE"
+	}
+	return nil
+}
+
+// SetLogProvider sets the TF_LOG_PROVIDER environment variable for Terraform
+// CLI execution. This must be combined with a call to SetLogPath to take
+// effect.
+//
+// This is only compatible with Terraform CLI 0.15.0 or later.
+func (tf *Terraform) SetLogProvider(logProvider string) error {
+	err := tf.compatible(context.Background(), tf0_15_0, nil)
+	if err != nil {
+		return err
+	}
+	tf.logProvider = logProvider
 	return nil
 }
 

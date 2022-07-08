@@ -125,6 +125,9 @@ type ReadResourceRequest struct {
 	// Private is any provider-defined private state stored with the
 	// resource. It is used for keeping state with the resource that is not
 	// meant to be included when calculating diffs.
+	//
+	// To ensure private state data is preserved, copy any necessary data to
+	// the ReadResourceResponse type Private field.
 	Private []byte
 
 	// ProviderMeta supplies the provider metadata configuration for the
@@ -212,6 +215,9 @@ type PlanResourceChangeRequest struct {
 	// PriorPrivate is any provider-defined private state stored with the
 	// resource. It is used for keeping state with the resource that is not
 	// meant to be included when calculating diffs.
+	//
+	// To ensure private state data is preserved, copy any necessary data to
+	// the PlanResourceChangeResponse type PlannedPrivate field.
 	PriorPrivate []byte
 
 	// ProviderMeta supplies the provider metadata configuration for the
@@ -280,6 +286,10 @@ type PlanResourceChangeResponse struct {
 	// like sent with requests for this resource. This state will be
 	// associated with the resource, but will not be considered when
 	// calculating diffs.
+	//
+	// This private state data will be sent in the ApplyResourceChange RPC, in
+	// relation to the types of this package, the ApplyResourceChangeRequest
+	// type PlannedPrivate field.
 	PlannedPrivate []byte
 
 	// Diagnostics report errors or warnings related to determining the
@@ -341,6 +351,13 @@ type ApplyResourceChangeRequest struct {
 	// PlannedPrivate is any provider-defined private state stored with the
 	// resource. It is used for keeping state with the resource that is not
 	// meant to be included when calculating diffs.
+	//
+	// This private state data is sourced from the PlanResourceChange RPC, in
+	// relation to the types in this package, the PlanResourceChangeResponse
+	// type PlannedPrivate field.
+	//
+	// To ensure private state data is preserved, copy any necessary data to
+	// the ApplyResourceChangeResponse type Private field.
 	PlannedPrivate []byte
 
 	// ProviderMeta supplies the provider metadata configuration for the

@@ -103,7 +103,7 @@ func sweepPlaceIndexes(region string) error {
 		}
 
 		for _, entry := range page.Entries {
-			r := ResourceMap()
+			r := ResourcePlaceIndex()
 			d := r.Data(nil)
 
 			id := aws.StringValue(entry.IndexName)
@@ -197,7 +197,7 @@ func sweepTrackers(region string) error {
 		}
 
 		for _, entry := range page.Entries {
-			r := ResourceMap()
+			r := ResourceTracker()
 			d := r.Data(nil)
 
 			id := aws.StringValue(entry.TrackerName)

@@ -251,7 +251,7 @@ func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Expected {{ .Service }} {{ .Resource }} to be destroyed, %s found", rs.Primary.ID)
+		return names.Error(names.{{ .Service }}, names.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
@@ -261,11 +261,11 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No {{ .Service }} {{ .Resource }} is set")
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
@@ -274,7 +274,7 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error describing {{ .Service }} {{ .Resource }}: %s", err.Error())
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 		}
 
 		*{{ .ResourceLower }} = *resp
@@ -302,7 +302,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.StringValue(before.{{ .Resource }}Id), aws.StringValue(after.{{ .Resource }}Id); before != after {
-			return fmt.Errorf("{{ .Service }} {{ .Resource }} (%s/%s) recreated", before, after)
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, aws.StringValue(before.{{ .Resource }}Id), errors.New("recreated"))
 		}
 
 		return nil
