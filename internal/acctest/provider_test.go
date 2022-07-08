@@ -522,16 +522,16 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 }
 
 // Replaces FactoriesInternal.
-func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) {
+func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) { //nolint:unparam
 	p := provider.Provider()
 	*v = p
 
 	return map[string]func() (*schema.Provider, error){
-		acctest.ProviderName: func() (*schema.Provider, error) { return p, nil },
+		acctest.ProviderName: func() (*schema.Provider, error) { return p, nil }, //nolint:unparam
 	}
 }
 
-func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition string) resource.TestCheckFunc {
+func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -547,7 +547,7 @@ func testAccCheckPartition(t *testing.T, p **schema.Provider, expectedPartition 
 	}
 }
 
-func testAccCheckDNSSuffix(t *testing.T, p **schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc {
+func testAccCheckDNSSuffix(t *testing.T, p **schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -563,7 +563,7 @@ func testAccCheckDNSSuffix(t *testing.T, p **schema.Provider, expectedDnsSuffix 
 	}
 }
 
-func testAccCheckRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc {
+func testAccCheckRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -577,7 +577,7 @@ func testAccCheckRegion(t *testing.T, p **schema.Provider, expectedRegion string
 	}
 }
 
-func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc {
+func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -593,7 +593,7 @@ func testAccCheckSTSRegion(t *testing.T, p **schema.Provider, expectedRegion str
 	}
 }
 
-func testAccCheckReverseDNSPrefix(t *testing.T, p **schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc {
+func testAccCheckReverseDNSPrefix(t *testing.T, p **schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -608,7 +608,7 @@ func testAccCheckReverseDNSPrefix(t *testing.T, p **schema.Provider, expectedRev
 	}
 }
 
-func testAccCheckIgnoreTagsKeyPrefixes(t *testing.T, p **schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc {
+func testAccCheckIgnoreTagsKeyPrefixes(t *testing.T, p **schema.Provider, expectedKeyPrefixes []string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -665,7 +665,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(t *testing.T, p **schema.Provider, expect
 	}
 }
 
-func testAccCheckIgnoreTagsKeys(t *testing.T, p **schema.Provider, expectedKeys []string) resource.TestCheckFunc {
+func testAccCheckIgnoreTagsKeys(t *testing.T, p **schema.Provider, expectedKeys []string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -722,7 +722,7 @@ func testAccCheckIgnoreTagsKeys(t *testing.T, p **schema.Provider, expectedKeys 
 	}
 }
 
-func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, expectedTags map[string]string) resource.TestCheckFunc {
+func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, expectedTags map[string]string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -779,7 +779,7 @@ func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, exp
 	}
 }
 
-func testAccCheckEndpoints(t *testing.T, p **schema.Provider) resource.TestCheckFunc {
+func testAccCheckEndpoints(t *testing.T, p **schema.Provider) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -823,7 +823,7 @@ func testAccCheckEndpoints(t *testing.T, p **schema.Provider) resource.TestCheck
 	}
 }
 
-func testAccCheckUnusualEndpoints(t *testing.T, p **schema.Provider, unusual1, unusual2, unusual3 []string) resource.TestCheckFunc {
+func testAccCheckUnusualEndpoints(t *testing.T, p **schema.Provider, unusual1, unusual2, unusual3 []string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
