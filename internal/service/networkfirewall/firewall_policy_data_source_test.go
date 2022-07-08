@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFirewallPolicy_arn(t *testing.T) {
+func TestAccFirewallPolicyDataSource_arn(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -40,7 +40,7 @@ func TestAccFirewallPolicy_arn(t *testing.T) {
 	})
 }
 
-func TestAccFirewallPolicy_name(t *testing.T) {
+func TestAccFirewallPolicyDataSource_name(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -70,7 +70,7 @@ func TestAccFirewallPolicy_name(t *testing.T) {
 	})
 }
 
-func TestAccFirewallPolicy_nameAndArn(t *testing.T) {
+func TestAccFirewallPolicyDataSource_nameAndArn(t *testing.T) {
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
@@ -102,9 +102,8 @@ func TestAccFirewallPolicy_nameAndArn(t *testing.T) {
 
 func testAccFirewallPolicyDataSource_basic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
