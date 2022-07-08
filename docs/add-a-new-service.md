@@ -14,14 +14,21 @@ From there begin to map out the list of resources you would like to implement, a
 
 ## Add a Service Client
 
-Before new resources are submitted, please raise a separate pull request containing just the new AWS Go SDK service client. Doing so will pull the AWS Go SDK service code into the project at the current version. Since the AWS Go SDK is updated frequently, these pull requests can easily have merge conflicts or be out of date. The maintainers prioritize reviewing and merging these quickly to prevent those situations.
+Before new resources are submitted, please raise a separate pull request containing just the new AWS SDK for Go service client.
 
-To add an AWS Go SDK service client:
+To add an AWS SDK for Go service client:
 
-- Determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
-- In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md). **_Be very careful when adding or changing data in `names_data.csv`! The Provider and generators depend on the file being correct._**
+1. Check the file `names/names_data.csv` for the service.
+  If it is already there, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
-- Run the following then submit the pull request:
+1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
+
+1. In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+  **_Be very careful when adding or changing data in `names_data.csv`!
+  The Provider and generators depend on the file being correct.
+  We strongly recommend using an editor with CSV support._**
+
+1. Run the following then submit the pull request:
 
   ```sh
   make gen
@@ -29,4 +36,4 @@ To add an AWS Go SDK service client:
   go mod tidy
   ```
 
-From there you are ready to [create your first resource](add-a-new-resource.md)!
+Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
