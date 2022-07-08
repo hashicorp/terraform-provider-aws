@@ -351,7 +351,11 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	// below. Many resources do include tags so this a reminder to include them
 	// where possible.
 	{{- end }}
+	{{ if .AWSGoSDKV2 }}
 	tags, err := ListTags(ctx, conn, d.Id())
+	{{- else }}
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	{{- end }}
 	if err != nil {
 		return names.DiagError(names.{{ .Service }}, names.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
 	}
