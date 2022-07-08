@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_networkfirewall_firewall_policy` ([#24748](https://github.com/hashicorp/terraform-provider-aws/issues/24748))
 
+ENHANCEMENTS:
+
+* resource/aws_rds_cluster_instance: Allow `performance_insights_retention_period` values that are multiples of `31` ([#25729](https://github.com/hashicorp/terraform-provider-aws/issues/25729))
+
 ## 4.22.0 (July  8, 2022)
 
 FEATURES:
