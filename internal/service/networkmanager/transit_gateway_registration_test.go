@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,13 +105,12 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var providers []*schema.Provider
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_crossRegion(rName),
