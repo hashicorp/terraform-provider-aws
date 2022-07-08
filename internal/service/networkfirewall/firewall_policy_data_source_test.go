@@ -22,7 +22,7 @@ func TestAccFirewallPolicyDataSource_arn(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyDataSource_arn(rName),
+				Config: testAccFirewallPolicyDataSourceConfig_arn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -52,7 +52,7 @@ func TestAccFirewallPolicyDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyDataSource_name(rName),
+				Config: testAccFirewallPolicyDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -82,7 +82,7 @@ func TestAccFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallPolicyDataSource_nameAndARN(rName),
+				Config: testAccFirewallPolicyDataSourceConfig_nameAndARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -100,7 +100,7 @@ func TestAccFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 	})
 }
 
-func testAccFirewallPolicyDataSource_basic(rName string) string {
+func testAccFirewallPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
@@ -112,27 +112,27 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName)
 }
 
-func testAccFirewallPolicyDataSource_arn(rName string) string {
+func testAccFirewallPolicyDataSourceConfig_arn(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFirewallPolicyDataSource_basic(rName),
+		testAccFirewallPolicyDataSourceConfig_basic(rName),
 		`
 data "aws_networkfirewall_firewall_policy" "test" {
   arn = aws_networkfirewall_firewall_policy.test.arn
 }`)
 }
 
-func testAccFirewallPolicyDataSource_name(rName string) string {
+func testAccFirewallPolicyDataSourceConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFirewallPolicyDataSource_basic(rName),
+		testAccFirewallPolicyDataSourceConfig_basic(rName),
 		`
 data "aws_networkfirewall_firewall_policy" "test" {
   name = aws_networkfirewall_firewall_policy.test.name
 }`)
 }
 
-func testAccFirewallPolicyDataSource_nameAndARN(rName string) string {
+func testAccFirewallPolicyDataSourceConfig_nameAndARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFirewallPolicyDataSource_basic(rName),
+		testAccFirewallPolicyDataSourceConfig_basic(rName),
 		`
 data "aws_networkfirewall_firewall_policy" "test" {
   arn  = aws_networkfirewall_firewall_policy.test.arn
