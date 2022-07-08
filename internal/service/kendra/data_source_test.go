@@ -346,7 +346,7 @@ func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 		CheckDestroy:      testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceConfig_typeCustomConflictRoleArn(rName, rName2, rName3, rName4, rName5),
+				Config:      testAccDataSourceConfig_typeCustomConflictRoleARN(rName, rName2, rName3, rName4, rName5),
 				ExpectError: regexp.MustCompile(`role_arn must not be set when type is CUSTOM`),
 			},
 			{
@@ -1055,7 +1055,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName4, tag1, value1, tag2, value2))
 }
 
-func testAccDataSourceConfig_typeCustomConflictRoleArn(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_typeCustomConflictRoleARN(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		fmt.Sprintf(`
@@ -1240,7 +1240,7 @@ resource "aws_kendra_data_source" "test" {
   configuration {
     s3_configuration {
       access_control_list_configuration {
-        key_path = local.select_key_path == "first" ? "s3://${aws_s3_bucket.test.id}/path-1" :"s3://${aws_s3_bucket.test.id}/path-2"
+        key_path = local.select_key_path == "first" ? "s3://${aws_s3_bucket.test.id}/path-1" : "s3://${aws_s3_bucket.test.id}/path-2"
       }
       bucket_name = aws_s3_bucket.test.id
     }
