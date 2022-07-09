@@ -13,7 +13,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/tf5provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/mitchellh/cli"
 )
 
@@ -50,7 +50,7 @@ func main() {
 		Ui: ui,
 	}
 
-	p := tf5provider.Provider()
+	p := provider.Provider()
 
 	if *migrateProvider {
 		migrator.ProviderSchema = p.Schema
