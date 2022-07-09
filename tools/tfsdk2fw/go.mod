@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fx
+module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
 go 1.17
 
