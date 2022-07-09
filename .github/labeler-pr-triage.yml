@@ -821,6 +821,9 @@ service/resourcegroupstaggingapi:
 service/robomaker:
   - 'internal/service/robomaker/**/*'
   - 'website/**/robomaker_*'
+service/rolesanywhere:
+  - 'internal/service/rolesanywhere/**/*'
+  - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
   - 'website/**/route53_delegation_*'
