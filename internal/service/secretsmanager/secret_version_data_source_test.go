@@ -36,6 +36,29 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretVersionDataSource_binary(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	datasourceName := "data.aws_secretsmanager_secret_version.test"
+	// Random binary data: head -c 50 /dev/urandom | base64
+	secretBinary := "OpPVBrq998zQjUkdzv9ftch4YHDWtwCeE4Q2x/3SMfIFPebmHkdV99Rcgi/e36gOkWI="
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionDataSourceConfig_binary(rName, secretBinary),
+				Check: resource.ComposeTestCheckFunc(
+					testAccSecretVersionCheckDataSource(datasourceName, resourceName),
+					resource.TestCheckResourceAttr(datasourceName, "secret_binary", secretBinary),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSecretsManagerSecretVersionDataSource_versionID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_version.test"
@@ -106,6 +129,23 @@ func testAccSecretVersionCheckDataSource(datasourceName, resourceName string) re
 
 		return nil
 	}
+}
+
+func testAccSecretVersionDataSourceConfig_binary(rName, secretBinary string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_binary = "%[2]s"
+}
+
+data "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret_version.test.secret_id
+}
+`, rName, secretBinary)
 }
 
 const testAccSecretVersionDataSourceConfig_nonExistent = `

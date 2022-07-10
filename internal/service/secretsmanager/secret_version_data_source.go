@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceSecretVersion() *schema.Resource {
@@ -89,7 +90,7 @@ func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
-	d.Set("secret_binary", string(output.SecretBinary))
+	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
 	d.Set("arn", output.ARN)
 
 	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
