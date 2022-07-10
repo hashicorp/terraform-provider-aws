@@ -227,7 +227,7 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 func testAccGeofenceCollectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_geofence_collection" "test" {
-    collection_name = %[1]q
+  collection_name = %[1]q
 }
 `, rName)
 }
@@ -235,8 +235,8 @@ resource "aws_location_geofence_collection" "test" {
 func testAccGeofenceCollectionConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_location_geofence_collection" "test" {
-    collection_name = %[1]q
-	description     = %[2]q
+  collection_name = %[1]q
+  description     = %[2]q
 }
 `, rName, description)
 }
@@ -244,12 +244,12 @@ resource "aws_location_geofence_collection" "test" {
 func testAccGeofenceCollectionConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-    deletion_window_in_days = 7
+  deletion_window_in_days = 7
 }
 
 resource "aws_location_geofence_collection" "test" {
-    collection_name = %[1]q
-    kms_key_id      = aws_kms_key.test.arn
+  collection_name = %[1]q
+  kms_key_id      = aws_kms_key.test.arn
 }
 `, rName)
 }
