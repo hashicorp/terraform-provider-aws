@@ -62,23 +62,26 @@ func ResourceStudioSessionMapping() *schema.Resource {
 func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
-	var id string
 	studioId := d.Get("studio_id").(string)
 	identityType := d.Get("identity_type").(string)
+	var identityId string = ""
+	var identityName string = ""
 	input := &emr.CreateStudioSessionMappingInput{
 		IdentityType:     aws.String(identityType),
 		SessionPolicyArn: aws.String(d.Get("session_policy_arn").(string)),
 		StudioId:         aws.String(studioId),
+		IdentityId:       aws.String(""),
+		IdentityName:     aws.String(""),
 	}
 
 	if v, ok := d.GetOk("identity_id"); ok {
 		input.IdentityId = aws.String(v.(string))
-		id = v.(string)
+		identityId = v.(string)
 	}
 
 	if v, ok := d.GetOk("identity_name"); ok {
 		input.IdentityName = aws.String(v.(string))
-		id = v.(string)
+		identityName = v.(string)
 	}
 
 	_, err := conn.CreateStudioSessionMapping(input)
@@ -86,7 +89,7 @@ func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error creating EMR Studio Session Mapping: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", studioId, identityType, id))
+	d.SetId(fmt.Sprintf("%s:%s:%s:%s", studioId, identityType, identityId, identityName))
 
 	return resourceStudioSessionMappingRead(d, meta)
 }
@@ -94,7 +97,7 @@ func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}
 func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
 
-	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
+	studioId, identityType, identityId, identityName, err := readStudioSessionMapping(d.Id())
 	if err != nil {
 		return err
 	}
@@ -104,6 +107,7 @@ func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}
 		IdentityType:     aws.String(identityType),
 		StudioId:         aws.String(studioId),
 		IdentityId:       aws.String(identityId),
+		IdentityName:     aws.String(identityName),
 	}
 
 	_, err = conn.UpdateStudioSessionMapping(input)
@@ -139,7 +143,9 @@ func resourceStudioSessionMappingRead(d *schema.ResourceData, meta interface{}) 
 
 func resourceStudioSessionMappingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn
-	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
+	studioId, identityType, identityId, identityName, err := readStudioSessionMapping(d.Id())
+	_ = identityName
+
 	if err != nil {
 		return err
 	}

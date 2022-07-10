@@ -83,7 +83,7 @@ func FindStudioByID(conn *emr.EMR, id string) (*emr.Studio, error) {
 }
 
 func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
-	studioId, identityType, identityId, err := readStudioSessionMapping(id)
+	studioId, identityType, identityId, identityName, err := readStudioSessionMapping(id)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,14 @@ func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMapping
 	input := &emr.GetStudioSessionMappingInput{
 		StudioId:     aws.String(studioId),
 		IdentityType: aws.String(identityType),
-		IdentityId:   aws.String(identityId),
+	}
+
+	if identityId != "" {
+		input.IdentityId = aws.String(identityId)
+	}
+
+	if identityName != "" {
+		input.IdentityName = aws.String(identityName)
 	}
 
 	output, err := conn.GetStudioSessionMapping(input)
