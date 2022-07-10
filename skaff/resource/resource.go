@@ -100,17 +100,17 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		HumanResourceName: HumanResName(resName),
 	}
 
-	f := fmt.Sprintf("%s.go", ToSnakeCase(resName, snakeName))
+	f := fmt.Sprintf("%s.go", snakeName)
 	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 
-	tf := fmt.Sprintf("%s_test.go", ToSnakeCase(resName, snakeName))
+	tf := fmt.Sprintf("%s_test.go", snakeName)
 	if err = writeTemplate("restest", tf, resourceTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource test template: %w", err)
 	}
 
-	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, ToSnakeCase(resName, snakeName))
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
 	wf = filepath.Join("..", "..", "..", "website", "docs", "r", wf)
 	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource website doc template: %w", err)
