@@ -25,6 +25,7 @@ var websiteTmpl string
 type TemplateData struct {
 	Resource          string
 	ResourceLower     string
+	ResourceSnake     string
 	IncludeComments   bool
 	ServicePackage    string
 	Service           string
@@ -74,6 +75,8 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
+	snakeName = ToSnakeCase(resName, snakeName)
+
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
@@ -87,6 +90,7 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 	templateData := TemplateData{
 		Resource:          resName,
 		ResourceLower:     strings.ToLower(resName),
+		ResourceSnake:     snakeName,
 		IncludeComments:   comments,
 		ServicePackage:    servicePackage,
 		Service:           s,
