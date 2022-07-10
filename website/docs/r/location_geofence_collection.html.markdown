@@ -30,7 +30,6 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `tags` - (Optional) Key-value tags for the geofence collection. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
