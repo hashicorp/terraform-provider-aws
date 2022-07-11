@@ -65,7 +65,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the task definition
+* `id` - The ARN of the task definition
 * `family` - The family of this task definition
 * `network_mode` - The Docker networking mode to use for the containers in this task.
 * `revision` - The revision of this task definition
