@@ -18,9 +18,9 @@ func TestAccFMS_serial(t *testing.T) {
 			"tags":                   testAccPolicy_tags,
 		},
 		"ProtocolList": {
-			"basic":  TestAccProtocolList_basic,
-			"update": TestAccProtocolList_update,
-			"tags":   TestAccProtocolList_tags,
+			"basic":  TestAccFMSProtocolList_basic,
+			"update": TestAccFMSProtocolList_update,
+			"tags":   TestAccFMSProtocolList_tags,
 		},
 	}
 

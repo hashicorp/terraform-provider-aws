@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccProtocolList_basic(t *testing.T) {
+func TestAccFMSProtocolList_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_protocol.test"
 
@@ -52,7 +52,7 @@ func TestAccProtocolList_basic(t *testing.T) {
 	})
 }
 
-func TestAccProtocolList_update(t *testing.T) {
+func TestAccFMSProtocolList_update(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_protocol.test"
@@ -104,7 +104,7 @@ func TestAccProtocolList_update(t *testing.T) {
 	})
 }
 
-func TestAccProtocolList_tags(t *testing.T) {
+func TestAccFMSProtocolList_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_protocol.test"
 
@@ -189,7 +189,7 @@ func testAccCheckProtocolListDestroy(s *terraform.State) error {
 func testAccProtocolListConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_protocol" "test" {
-  name = %q
+  name      = %q
   protocols = ["IPv4", "IPv6", "ICMP"]
 }
 `, rName)
@@ -198,7 +198,7 @@ resource "aws_fms_protocol" "test" {
 func testAccProtocolListConfig_basic2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_protocol" "test" {
-  name = %q
+  name      = %q
   protocols = ["IPv4", "UDP"]
 }
 `, rName)
@@ -207,7 +207,7 @@ resource "aws_fms_protocol" "test" {
 func testAccProtocolListConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_protocol" "test" {
-  name = %q
+  name      = %q
   protocols = ["IPv4", "IPv6", "ICMP"]
   tags = {
     %[2]q = %[3]q
@@ -219,7 +219,7 @@ resource "aws_fms_protocol" "test" {
 func testAccProtocolListConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_protocol" "test" {
-  name = %q
+  name      = %q
   protocols = ["IPv4", "IPv6", "ICMP"]
   tags = {
     %[2]q = %[3]q
