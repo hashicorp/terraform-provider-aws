@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -1268,7 +1269,7 @@ func expandRequestLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData) (*ec
 	}
 
 	if v, ok := d.GetOk("metadata_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.MetadataOptions = expandLaunchTemplateInstanceMetadataOptionsRequest(v.([]interface{})[0].(map[string]interface{}), conn.PartitionID)
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1886,7 +1887,7 @@ func expandLaunchTemplateLicenseConfigurationRequests(tfList []interface{}) []*e
 	return apiObjects
 }
 
-func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
+func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interface{}, partition string) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -1912,7 +1913,7 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 		}
 	}
 
-	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {
+	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" && partition != endpoints.AwsIsoPartitionID {
 		apiObject.HttpProtocolIpv6 = aws.String(v)
 	}
 
