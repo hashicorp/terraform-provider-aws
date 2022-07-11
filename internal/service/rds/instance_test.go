@@ -2003,6 +2003,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"snapshot_identifier",
 				},
@@ -3889,6 +3890,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -3932,6 +3934,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -3977,6 +3980,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
@@ -4030,6 +4034,7 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"password",
 					"skip_final_snapshot",
 					"final_snapshot_identifier",

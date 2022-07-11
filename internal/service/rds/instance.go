@@ -90,7 +90,7 @@ func ResourceInstance() *schema.Resource {
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"arn": {
 				Type:     schema.TypeString,
