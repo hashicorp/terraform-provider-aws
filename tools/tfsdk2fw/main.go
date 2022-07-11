@@ -394,31 +394,15 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 	}
 
 	if def := property.Default; def != nil {
-		switch v := def.(type) {
+		switch def.(type) {
 		case bool:
-			if v {
-				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-			} else {
-				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
-			}
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		case int:
-			if v != 0 {
-				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-			} else {
-				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
-			}
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		case float64:
-			if v != 0 {
-				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-			} else {
-				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
-			}
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		case string:
-			if v != "" {
-				fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-			} else {
-				e.warnf("Attribute %s has spurious Default: %#v", strings.Join(path, "/"), def)
-			}
+			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
 		default:
 		}
 	}
