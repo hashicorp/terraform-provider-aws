@@ -17,6 +17,11 @@ func TestAccFMS_serial(t *testing.T) {
 			"resourceTags":           testAccPolicy_resourceTags,
 			"tags":                   testAccPolicy_tags,
 		},
+		"ProtocolList": {
+			"basic":  TestAccProtocolList_basic,
+			"update": TestAccProtocolList_update,
+			"tags":   TestAccProtocolList_tags,
+		},
 	}
 
 	for group, m := range testCases {

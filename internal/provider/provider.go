@@ -1492,6 +1492,7 @@ func Provider() *schema.Provider {
 
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),
+			"aws_fms_protocol":      fms.ResourceProtocol(),
 
 			"aws_fsx_backup":                        fsx.ResourceBackup(),
 			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
