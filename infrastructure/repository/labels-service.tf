@@ -239,6 +239,7 @@ variable "service_labels" {
     "resourcegroups",
     "resourcegroupstaggingapi",
     "robomaker",
+    "rolesanywhere",
     "route53",
     "route53domains",
     "route53recoverycluster",
