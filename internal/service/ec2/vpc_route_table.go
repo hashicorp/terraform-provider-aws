@@ -217,7 +217,9 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeTable, err := FindRouteTableByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
+		return FindRouteTableByID(conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
@@ -228,6 +230,8 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error reading Route Table (%s): %w", d.Id(), err)
 	}
+
+	routeTable := outputRaw.(*ec2.RouteTable)
 
 	d.Set("vpc_id", routeTable.VpcId)
 
