@@ -2,7 +2,6 @@ package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,11 +39,11 @@ func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.Resourc
 	policy, err := FindResourcePolicy(ctx, conn, resourceArn)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
 	// Id is identical to the resource ARN

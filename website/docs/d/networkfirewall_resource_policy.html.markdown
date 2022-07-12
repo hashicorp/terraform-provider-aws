@@ -6,7 +6,7 @@ description: |-
   Retrieve information about a Network Firewall resource policy.
 ---
 
-# Data Source:  aws_networkfirewall_resource_policy
+# Data Source: aws_networkfirewall_resource_policy
 
 Retrieve information about a Network Firewall resource policy.
 
@@ -27,4 +27,6 @@ data "aws_networkfirewall_resource_policy" "example" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the resource policy.
-* `policy` - The IAM policy for the resource.
+* `policy` - The [policy][1] for the resource.
+
+[1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFirewallResourcePolicyDataSource(t *testing.T) {
+func TestAccNetworkFirewallFirewallResourcePolicyDataSource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -46,7 +46,7 @@ data "aws_networkfirewall_resource_policy" "test" {
 
 // Create the firewall policy
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %[1]q
+  name = %q
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
