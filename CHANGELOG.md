@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_ce_anomaly_monitor` ([#25177](https://github.com/hashicorp/terraform-provider-aws/issues/25177))
+* **New Data Source:** `aws_s3_account_public_access_block` ([#23783](https://github.com/hashicorp/terraform-provider-aws/issues/23783))
 
 BUG FIXES:
 
