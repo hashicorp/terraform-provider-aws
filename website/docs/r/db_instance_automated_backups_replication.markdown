@@ -92,9 +92,9 @@ In addition to all arguments above, the following attributes are exported:
 `aws_db_instance_automated_backups_replication` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
-- `create` - (Default `75m`) How long to wait before RDS initiates the automated backup replication.
-- `update` - (Default `75m`) How long to wait before RDS updates the automated backup replication.
-- `delete` - (Default `75m`) How long to wait before RDS deletes the automated backup replication.
+- `create` - (Default `75m`) How long to wait before RDS successfully starts replication of automated backups to a different AWS Region.
+- `update` - (Default `75m`) How long to wait before RDS completes updating existing replication of automated backups to a different AWS Region.
+- `delete` - (Default `75m`) How long to wait before RDS stops automated backup replication for a DB instance.
 
 ## Import
 
