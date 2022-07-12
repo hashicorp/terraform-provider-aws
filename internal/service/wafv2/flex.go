@@ -395,6 +395,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Body = &wafv2.Body{}
 	}
 
+	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
+		f.Cookies = expandCookies(m["cookies"].([]interface{}))
+	}
+
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -443,6 +447,48 @@ func expandIPSetForwardedIPConfig(l []interface{}) *wafv2.IPSetForwardedIPConfig
 		HeaderName:       aws.String(m["header_name"].(string)),
 		Position:         aws.String(m["position"].(string)),
 	}
+}
+
+func expandCookies(l []interface{}) *wafv2.Cookies {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	cookies := &wafv2.Cookies{
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+
+	if v, ok := m["match_pattern"]; ok && len(v.([]interface{})) > 0 {
+		cookies.MatchPattern = expandCookieMatchPattern(v.([]interface{}))
+	}
+
+	return cookies
+}
+
+func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	CookieMatchPattern := &wafv2.CookieMatchPattern{}
+
+	if v, ok := m["included_cookies"]; ok && len(v.([]interface{})) > 0 {
+		CookieMatchPattern.IncludedCookies = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := m["excluded_cookies"]; ok && len(v.([]interface{})) > 0 {
+		CookieMatchPattern.ExcludedCookies = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := m["all"]; ok && v == true {
+		CookieMatchPattern.All = &wafv2.All{}
+	}
+
+	return CookieMatchPattern
 }
 
 func expandSingleHeader(l []interface{}) *wafv2.SingleHeader {
@@ -928,6 +974,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["body"] = make([]map[string]interface{}, 1)
 	}
 
+	if f.Body != nil {
+		m["cookies"] = make([]map[string]interface{}, 1)
+	}
+
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}
@@ -977,6 +1027,18 @@ func flattenIPSetForwardedIPConfig(i *wafv2.IPSetForwardedIPConfig) interface{} 
 
 	return []interface{}{m}
 }
+
+//func flattenCookies(s *wafv2.Cookies) interface{} {
+//	if s == nil {
+//		return []interface{}{}
+//	}
+//
+//	m := map[string]interface{}{
+//		"name": aws.StringValue(s.Name),
+//	}
+//
+//	return []interface{}{m}
+//}
 
 func flattenSingleHeader(s *wafv2.SingleHeader) interface{} {
 	if s == nil {
