@@ -3,6 +3,7 @@ package rds
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -18,6 +19,12 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 		Create: resourceInstanceAutomatedBackupsReplicationCreate,
 		Read:   resourceInstanceAutomatedBackupsReplicationRead,
 		Delete: resourceInstanceAutomatedBackupsReplicationDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(75 * time.Minute),
+			Update: schema.DefaultTimeout(75 * time.Minute),
+			Delete: schema.DefaultTimeout(75 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
