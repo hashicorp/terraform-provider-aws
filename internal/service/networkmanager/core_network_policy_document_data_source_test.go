@@ -249,7 +249,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     action {
       association_method = "constant"
       segment            = "GoodSegmentSpecification"
-      require_acceptance = true
+      require_acceptance = false
     }
   }
 
@@ -360,7 +360,8 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 1,
       "action": {
         "association-method": "tag",
-        "tag-value-of-key": "segment"
+        "tag-value-of-key": "segment",
+        "require-acceptance": false
       },
       "conditions": [
         {
@@ -442,7 +443,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "action": {
         "association-method": "constant",
         "segment": "GoodSegmentSpecification",
-        "require-acceptance": true
+        "require-acceptance": false
       },
       "conditions": [
         {
