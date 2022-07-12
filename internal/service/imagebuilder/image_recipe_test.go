@@ -944,7 +944,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   block_device_mapping {
     ebs {
       throughput  = %[2]d
-	  volume_type = "gp3"
+      volume_type = "gp3"
     }
   }
 
