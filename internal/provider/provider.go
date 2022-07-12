@@ -1824,6 +1824,7 @@ func Provider() *schema.Provider {
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
+			"aws_route53_cidr_collection":               route53.ResourceCidrCollection(),
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
 			"aws_route53_health_check":                  route53.ResourceHealthCheck(),
 			"aws_route53_hosted_zone_dnssec":            route53.ResourceHostedZoneDNSSEC(),
