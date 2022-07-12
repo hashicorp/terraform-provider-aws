@@ -1,0 +1,38 @@
+package rolesanywhere
+
+import (
+	"context"
+	"errors"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+func FindTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*rolesanywhere.GetTrustAnchorOutput, error) {
+	in := &rolesanywhere.GetTrustAnchorInput{
+		TrustAnchorId: aws.String(id),
+	}
+
+	out, err := conn.GetTrustAnchor(ctx, in)
+
+	var resourceNotFoundException *types.ResourceNotFoundException
+	if errors.As(err, &resourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}

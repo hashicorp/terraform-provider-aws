@@ -144,6 +144,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
@@ -1833,6 +1834,8 @@ func Provider() *schema.Provider {
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
+
+			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
 			"aws_route53_health_check":                  route53.ResourceHealthCheck(),
