@@ -39,7 +39,7 @@ func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.Resourc
 	policy, err := FindResourcePolicy(ctx, conn, resourceArn)
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err)
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {

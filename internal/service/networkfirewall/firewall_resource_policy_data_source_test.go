@@ -21,7 +21,7 @@ func TestAccNetworkFirewallFirewallResourcePolicyDataSource(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyDataSourceConfig(rName),
+				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Verify the resource policy exists
 					testAccCheckResourcePolicyExists(resourceName),
@@ -34,7 +34,7 @@ func TestAccNetworkFirewallFirewallResourcePolicyDataSource(t *testing.T) {
 	})
 }
 
-func testAccResourcePolicyDataSourceConfig(rName string) string {
+func testAccResourcePolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
