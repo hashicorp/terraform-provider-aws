@@ -76,7 +76,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "AnotherGoodSegmentSpecification"
     description                   = "A good segment."
-    require_attachment_acceptance = true
+    require_attachment_acceptance = false
     isolate_attachments           = false
     allow_filter                  = ["AllowThisSegment"]
   }
@@ -99,12 +99,12 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "b"
     require_attachment_acceptance = true
-    isolate_attachments           = false
+    isolate_attachments           = true
   }
   segments {
     name                          = "c"
-    require_attachment_acceptance = true
     isolate_attachments           = false
+    require_attachment_acceptance = true
   }
 
   segment_actions {
@@ -314,6 +314,7 @@ func testAccPolicyDocumentExpectedJSON() string {
         "us-east-1",
         "eu-west-1"
       ],
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
@@ -322,29 +323,35 @@ func testAccPolicyDocumentExpectedJSON() string {
       "allow-filter": [
         "AllowThisSegment"
       ],
-      "require-attachment-acceptance": true
+      "isolate-attachments": false,
+      "require-attachment-acceptance": false
     },
     {
       "name": "AllowThisSegment",
       "deny-filter": [
         "DenyThisSegment"
       ],
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "DenyThisSegment",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "a",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     },
     {
       "name": "b",
+      "isolate-attachments": true,
       "require-attachment-acceptance": true
     },
     {
       "name": "c",
+      "isolate-attachments": false,
       "require-attachment-acceptance": true
     }
   ],
