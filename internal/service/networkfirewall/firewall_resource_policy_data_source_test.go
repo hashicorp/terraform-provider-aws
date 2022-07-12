@@ -44,7 +44,6 @@ data "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_resource_policy.test.resource_arn
 }
 
-// Create the firewall policy
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %q
   firewall_policy {
@@ -53,7 +52,6 @@ resource "aws_networkfirewall_firewall_policy" "test" {
   }
 }
 
-// Create the resource policy for the test firewall policy
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
   # policy's Action element must include all of the following operations
