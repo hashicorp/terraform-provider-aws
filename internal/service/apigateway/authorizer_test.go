@@ -116,7 +116,7 @@ func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerConfig_cognitoAuthorizerCredentials(rName),
+				Config: testAccAuthorizerConfig_cognitoCredentials(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -531,7 +531,7 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAuthorizerConfig_cognitoAuthorizerCredentials(rName string) string {
+func testAccAuthorizerConfig_cognitoCredentials(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

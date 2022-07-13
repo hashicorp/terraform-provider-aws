@@ -239,6 +239,7 @@ Resilience Hub
 Resource Groups
 Resource Groups Tagging
 RoboMaker
+Roles Anywhere
 Route 53
 Route 53 Domains
 Route 53 Recovery Cluster

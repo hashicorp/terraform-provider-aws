@@ -26,7 +26,7 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPolicyConfig(rName),
+				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
@@ -54,7 +54,7 @@ func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPolicyConfig(rName),
+				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPointPolicy(), resourceName),
@@ -77,7 +77,7 @@ func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPolicyConfig(rName),
+				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPoint(), accessPointResourceName),
@@ -99,7 +99,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointPolicyConfig(rName),
+				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
@@ -113,7 +113,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccessPointPolicyUpdatedConfig(rName),
+				Config: testAccAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
@@ -194,7 +194,7 @@ func testAccCheckAccessPointPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAccessPointPolicyConfig(rName string) string {
+func testAccAccessPointPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -234,7 +234,7 @@ resource "aws_s3control_access_point_policy" "test" {
 `, rName)
 }
 
-func testAccAccessPointPolicyUpdatedConfig(rName string) string {
+func testAccAccessPointPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

@@ -27,7 +27,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionBasic(rName),
+				Config: testAccLayerVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
@@ -63,7 +63,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCreateBeforeDestroy(rName, "test-fixtures/lambdatest.zip"),
+				Config: testAccLayerVersionConfig_createBeforeDestroy(rName, "test-fixtures/lambdatest.zip"),
 				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 
@@ -75,7 +75,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 			},
 
 			{
-				Config: testAccLayerVersionCreateBeforeDestroy(rName, "test-fixtures/lambdatest_modified.zip"),
+				Config: testAccLayerVersionConfig_createBeforeDestroy(rName, "test-fixtures/lambdatest_modified.zip"),
 				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 		},
@@ -93,7 +93,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionS3(rName),
+				Config: testAccLayerVersionConfig_s3(rName),
 				Check:  testAccCheckLayerVersionExists(resourceName, rName),
 			},
 
@@ -118,7 +118,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCompatibleRuntimes(rName),
+				Config: testAccLayerVersionConfig_compatibleRuntimes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "2"),
@@ -146,14 +146,14 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesNone(rName),
+				Config: testAccLayerVersionConfig_compatibleArchitecturesNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "0"),
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesX86(rName),
+				Config: testAccLayerVersionConfig_compatibleArchitecturesX86(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
@@ -161,14 +161,14 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesArm(rName),
+				Config: testAccLayerVersionConfig_compatibleArchitecturesArm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
 				),
 			},
 			{
-				Config: testAccLayerVersionCompatibleArchitecturesX86Arm(rName),
+				Config: testAccLayerVersionConfig_compatibleArchitecturesX86Arm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "2"),
@@ -197,7 +197,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionDescription(rName, testDescription),
+				Config: testAccLayerVersionConfig_description(rName, testDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "description", testDescription),
@@ -226,7 +226,7 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 		CheckDestroy:      testAccCheckLayerVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionLicenseInfo(rName, testLicenseInfo),
+				Config: testAccLayerVersionConfig_licenseInfo(rName, testLicenseInfo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", testLicenseInfo),
@@ -254,7 +254,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 		CheckDestroy:      nil, // this purposely leaves dangling resources, since skip_destroy = true
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs12.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs12.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
@@ -263,7 +263,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLayerVersionSkipDestroyConfig(rName, "nodejs14.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs14.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(resourceName, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:2", rName)),
@@ -334,7 +334,7 @@ func testAccCheckLayerVersionExists(res, layerName string) resource.TestCheckFun
 	}
 }
 
-func testAccLayerVersionBasic(rName string) string {
+func testAccLayerVersionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -343,7 +343,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionS3(rName string) string {
+func testAccLayerVersionConfig_s3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = %[1]q
@@ -363,7 +363,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionCreateBeforeDestroy(rName string, filename string) string {
+func testAccLayerVersionConfig_createBeforeDestroy(rName string, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename         = %[1]q
@@ -377,7 +377,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, filename, rName)
 }
 
-func testAccLayerVersionCompatibleRuntimes(rName string) string {
+func testAccLayerVersionConfig_compatibleRuntimes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -388,7 +388,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesNone(rName string) string {
+func testAccLayerVersionConfig_compatibleArchitecturesNone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -397,7 +397,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesX86Arm(rName string) string {
+func testAccLayerVersionConfig_compatibleArchitecturesX86Arm(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -407,7 +407,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesX86(rName string) string {
+func testAccLayerVersionConfig_compatibleArchitecturesX86(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -417,7 +417,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionCompatibleArchitecturesArm(rName string) string {
+func testAccLayerVersionConfig_compatibleArchitecturesArm(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -427,7 +427,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName)
 }
 
-func testAccLayerVersionDescription(rName string, description string) string {
+func testAccLayerVersionConfig_description(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -438,7 +438,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName, description)
 }
 
-func testAccLayerVersionLicenseInfo(rName string, licenseInfo string) string {
+func testAccLayerVersionConfig_licenseInfo(rName string, licenseInfo string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
@@ -449,7 +449,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 `, rName, licenseInfo)
 }
 
-func testAccLayerVersionSkipDestroyConfig(rName, compatRuntime string) string {
+func testAccLayerVersionConfig_skipDestroy(rName, compatRuntime string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename            = "test-fixtures/lambdatest.zip"

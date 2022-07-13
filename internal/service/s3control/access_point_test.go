@@ -96,7 +96,7 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig_Bucket_ARN(rName),
+				Config: testAccAccessPointConfig_bucketARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -231,7 +231,7 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointConfig_publicAccessBlock(rName),
+				Config: testAccAccessPointConfig_publicBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -412,7 +412,7 @@ resource "aws_s3_access_point" "test" {
 `, bucketName, accessPointName)
 }
 
-func testAccAccessPointConfig_Bucket_ARN(rName string) string {
+func testAccAccessPointConfig_bucketARN(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -555,7 +555,7 @@ resource "aws_s3_access_point" "test" {
 `, rName)
 }
 
-func testAccAccessPointConfig_publicAccessBlock(rName string) string {
+func testAccAccessPointConfig_publicBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

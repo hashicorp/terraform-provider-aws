@@ -17,7 +17,7 @@ func TestAccS3CanonicalUserIDDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanonicalUserIdDataSourceConfig,
+				Config: testAccCanonicalUserIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCanonicalUserIdCheckExistsDataSource("data.aws_canonical_user_id.current"),
 				),
@@ -44,6 +44,6 @@ func testAccCanonicalUserIdCheckExistsDataSource(name string) resource.TestCheck
 	}
 }
 
-const testAccCanonicalUserIdDataSourceConfig = `
+const testAccCanonicalUserIDDataSourceConfig_basic = `
 data "aws_canonical_user_id" "current" {}
 `

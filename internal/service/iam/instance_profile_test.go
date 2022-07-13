@@ -28,7 +28,7 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
@@ -57,7 +57,7 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileWithoutRoleConfig(rName),
+				Config: testAccInstanceProfileConfig_noRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 				),
@@ -84,7 +84,7 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileTags1Config(rName, "key1", "value1"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -98,7 +98,7 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config: testAccInstanceProfileTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -107,7 +107,7 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceProfileTags1Config(rName, "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -130,7 +130,7 @@ func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfilePrefixNameConfig(rName),
+				Config: testAccInstanceProfileConfig_prefixName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					testAccCheckInstanceProfileGeneratedNamePrefix(
@@ -159,7 +159,7 @@ func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceInstanceProfile(), resourceName),
@@ -182,7 +182,7 @@ func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 		CheckDestroy:      testAccCheckInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
@@ -289,7 +289,7 @@ EOF
 `, rName)
 }
 
-func testAccInstanceProfileConfig(rName string) string {
+func testAccInstanceProfileConfig_basic(rName string) string {
 	return testAccInstanceProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "test-%[1]s"
@@ -298,7 +298,7 @@ resource "aws_iam_instance_profile" "test" {
 `, rName)
 }
 
-func testAccInstanceProfileWithoutRoleConfig(rName string) string {
+func testAccInstanceProfileConfig_noRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "test-%s"
@@ -306,7 +306,7 @@ resource "aws_iam_instance_profile" "test" {
 `, rName)
 }
 
-func testAccInstanceProfilePrefixNameConfig(rName string) string {
+func testAccInstanceProfileConfig_prefixName(rName string) string {
 	return testAccInstanceProfileBaseConfig(rName) + `
 resource "aws_iam_instance_profile" "test" {
   name_prefix = "test-"
@@ -315,7 +315,7 @@ resource "aws_iam_instance_profile" "test" {
 `
 }
 
-func testAccInstanceProfileTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccInstanceProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "test-%[1]s"
@@ -328,7 +328,7 @@ resource "aws_iam_instance_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccInstanceProfileTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccInstanceProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccInstanceProfileBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "test-%[1]s"

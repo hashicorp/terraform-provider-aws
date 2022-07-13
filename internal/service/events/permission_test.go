@@ -82,7 +82,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccPermissionConfig_defaultEventBusName(principal2, statementID),
+				Config:   testAccPermissionConfig_defaultBusName(principal2, statementID),
 				PlanOnly: true,
 			},
 		},
@@ -361,7 +361,7 @@ resource "aws_cloudwatch_event_permission" "test" {
 `, principal, statementID)
 }
 
-func testAccPermissionConfig_defaultEventBusName(principal, statementID string) string {
+func testAccPermissionConfig_defaultBusName(principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal      = %[1]q

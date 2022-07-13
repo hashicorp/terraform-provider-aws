@@ -22,7 +22,7 @@ func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfileDataSourceConfig(roleName, profileName),
+				Config: testAccInstanceProfileDataSourceConfig_basic(roleName, profileName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_instance_profile.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "path", "/testpath/"),
@@ -35,7 +35,7 @@ func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccInstanceProfileDataSourceConfig(roleName, profileName string) string {
+func testAccInstanceProfileDataSourceConfig_basic(roleName, profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = "%s"

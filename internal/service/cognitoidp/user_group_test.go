@@ -102,7 +102,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 		CheckDestroy:      testAccCheckUserGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupConfig_RoleARN(rName),
+				Config: testAccUserGroupConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
@@ -114,7 +114,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserGroupConfig_RoleARN_Updated(rName),
+				Config: testAccUserGroupConfig_roleARNUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
@@ -245,7 +245,7 @@ resource "aws_cognito_user_group" "main" {
 `, poolName, groupName, groupDescription, precedence)
 }
 
-func testAccUserGroupConfig_RoleARN(rName string) string {
+func testAccUserGroupConfig_roleARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"
@@ -279,7 +279,7 @@ resource "aws_cognito_user_group" "main" {
 `, rName)
 }
 
-func testAccUserGroupConfig_RoleARN_Updated(rName string) string {
+func testAccUserGroupConfig_roleARNUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"

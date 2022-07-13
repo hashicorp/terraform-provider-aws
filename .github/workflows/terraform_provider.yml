@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
+      - .github/scripts/providerlint.sh
       - .go-version
       - .golangci.yml
       - internal/**
@@ -145,7 +146,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd providerlint && go install .
     - name: providerlint
-      run: make providerlint
+      run: .github/scripts/providerlint.sh
 
   go_generate:
     name: go generate
@@ -291,8 +292,11 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-    - run: golangci-lint run ./internal/...
+      shell: bash
+    - run: golangci-lint run ./internal/... --timeout 75m
+      shell: bash
     - run: cd providerlint && golangci-lint run ./...
+      shell: bash
 
   importlint:
     needs: [go_build]

@@ -125,6 +125,8 @@ Contains information about the certificate subject. Identifies the entity that o
 ### revocation_configuration
 
 * `crl_configuration` - (Optional) Nested argument containing configuration of the certificate revocation list (CRL), if any, maintained by the certificate authority. Defined below.
+* `ocsp_configuration` - (Optional) Nested argument containing configuration of
+the custom OCSP responder endpoint. Defined below.
 
 #### crl_configuration
 
@@ -133,6 +135,11 @@ Contains information about the certificate subject. Identifies the entity that o
 * `expiration_in_days` - (Required) Number of days until a certificate expires. Must be between 1 and 5000.
 * `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be less than or equal to 255 characters in length.
 * `s3_object_acl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
+
+#### ocsp_configuration
+
+* `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
+* `ocsp_custom_cname` - (Optional) A CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
 ## Attributes Reference
 

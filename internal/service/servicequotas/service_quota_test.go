@@ -30,7 +30,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(setQuotaServiceCode, setQuotaQuotaCode),
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -67,7 +67,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(unsetQuotaServiceCode, unsetQuotaQuotaCode),
+				Config: testAccServiceQuotaConfig_sameValue(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -120,7 +120,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaValueConfig(serviceCode, quotaCode, value),
+				Config: testAccServiceQuotaConfig_value(serviceCode, quotaCode, value),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -164,7 +164,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaSameValueConfig(serviceCode, quotaCode),
+				Config: testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -173,7 +173,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceQuotaValueConfig(serviceCode, quotaCode, value),
+				Config: testAccServiceQuotaConfig_value(serviceCode, quotaCode, value),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
@@ -193,7 +193,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceQuotaConfig_PermissionError("elasticloadbalancing", "L-53DA6B97"),
+				Config:      testAccServiceQuotaConfig_permissionError("elasticloadbalancing", "L-53DA6B97"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
@@ -201,7 +201,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 }
 
 // nosemgrep: servicequotas-in-func-name
-func testAccServiceQuotaSameValueConfig(serviceCode, quotaCode string) string {
+func testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -216,7 +216,7 @@ resource "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode)
 }
 
-func testAccServiceQuotaValueConfig(serviceCode, quotaCode, value string) string {
+func testAccServiceQuotaConfig_value(serviceCode, quotaCode, value string) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -226,7 +226,7 @@ resource "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode, value)
 }
 
-func testAccServiceQuotaConfig_PermissionError(serviceCode, quotaCode string) string {
+func testAccServiceQuotaConfig_permissionError(serviceCode, quotaCode string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [

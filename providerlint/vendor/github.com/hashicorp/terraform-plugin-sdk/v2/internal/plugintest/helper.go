@@ -139,9 +139,94 @@ func (h *Helper) NewWorkingDir(ctx context.Context, t TestControl) (*WorkingDir,
 		return nil, fmt.Errorf("unable to disable terraform-exec provider verification: %w", err)
 	}
 
+	tfAccLog := os.Getenv(EnvTfAccLog)
+	tfAccLogPath := os.Getenv(EnvTfAccLogPath)
+	tfLogCore := os.Getenv(EnvTfLogCore)
+	tfLogPathMask := os.Getenv(EnvTfLogPathMask)
+	tfLogProvider := os.Getenv(EnvTfLogProvider)
+
+	if tfAccLog != "" && tfLogCore != "" {
+		err = fmt.Errorf(
+			"Invalid environment variable configuration. Cannot set both TF_ACC_LOG and TF_LOG_CORE. " +
+				"Use TF_LOG_CORE and TF_LOG_PROVIDER to separately control the Terraform CLI logging subsystems. " +
+				"To control the Go standard library log package for the provider under test, use TF_LOG.",
+		)
+		logging.HelperResourceError(ctx, err.Error())
+		return nil, err
+	}
+
+	if tfAccLog != "" {
+		logging.HelperResourceTrace(
+			ctx,
+			fmt.Sprintf("Setting terraform-exec log level via %s environment variable, if Terraform CLI is version 0.15 or later", EnvTfAccLog),
+			map[string]interface{}{logging.KeyTestTerraformLogLevel: tfAccLog},
+		)
+
+		err := tf.SetLog(tfAccLog)
+
+		if err != nil {
+			if !errors.As(err, new(*tfexec.ErrVersionMismatch)) {
+				logging.HelperResourceError(
+					ctx,
+					"Unable to set terraform-exec log level",
+					map[string]interface{}{logging.KeyError: err.Error()},
+				)
+				return nil, fmt.Errorf("unable to set terraform-exec log level (%s): %w", tfAccLog, err)
+			}
+
+			logging.HelperResourceWarn(
+				ctx,
+				fmt.Sprintf("Unable to set terraform-exec log level via %s environment variable, as Terraform CLI is version 0.14 or earlier. It will default to TRACE.", EnvTfAccLog),
+				map[string]interface{}{logging.KeyTestTerraformLogLevel: "TRACE"},
+			)
+		}
+	}
+
+	if tfLogCore != "" {
+		logging.HelperResourceTrace(
+			ctx,
+			fmt.Sprintf("Setting terraform-exec core log level via %s environment variable, if Terraform CLI is version 0.15 or later", EnvTfLogCore),
+			map[string]interface{}{
+				logging.KeyTestTerraformLogCoreLevel: tfLogCore,
+			},
+		)
+
+		err := tf.SetLogCore(tfLogCore)
+
+		if err != nil {
+			logging.HelperResourceError(
+				ctx,
+				"Unable to set terraform-exec core log level",
+				map[string]interface{}{logging.KeyError: err.Error()},
+			)
+			return nil, fmt.Errorf("unable to set terraform-exec core log level (%s): %w", tfLogCore, err)
+		}
+	}
+
+	if tfLogProvider != "" {
+		logging.HelperResourceTrace(
+			ctx,
+			fmt.Sprintf("Setting terraform-exec provider log level via %s environment variable, if Terraform CLI is version 0.15 or later", EnvTfLogProvider),
+			map[string]interface{}{
+				logging.KeyTestTerraformLogCoreLevel: tfLogProvider,
+			},
+		)
+
+		err := tf.SetLogProvider(tfLogProvider)
+
+		if err != nil {
+			logging.HelperResourceError(
+				ctx,
+				"Unable to set terraform-exec provider log level",
+				map[string]interface{}{logging.KeyError: err.Error()},
+			)
+			return nil, fmt.Errorf("unable to set terraform-exec provider log level (%s): %w", tfLogProvider, err)
+		}
+	}
+
 	var logPath, logPathEnvVar string
 
-	if tfAccLogPath := os.Getenv(EnvTfAccLogPath); tfAccLogPath != "" {
+	if tfAccLogPath != "" {
 		logPath = tfAccLogPath
 		logPathEnvVar = EnvTfAccLogPath
 	}
@@ -149,7 +234,7 @@ func (h *Helper) NewWorkingDir(ctx context.Context, t TestControl) (*WorkingDir,
 	// Similar to helper/logging.LogOutput() and
 	// terraform-plugin-log/tfsdklog.RegisterTestSink(), the TF_LOG_PATH_MASK
 	// environment variable should take precedence over TF_ACC_LOG_PATH.
-	if tfLogPathMask := os.Getenv(EnvTfLogPathMask); tfLogPathMask != "" {
+	if tfLogPathMask != "" {
 		// Escape special characters which may appear if we have subtests
 		testName := strings.Replace(t.Name(), "/", "__", -1)
 		logPath = fmt.Sprintf(tfLogPathMask, testName)

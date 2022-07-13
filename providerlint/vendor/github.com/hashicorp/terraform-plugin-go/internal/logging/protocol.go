@@ -16,6 +16,11 @@ func ProtocolError(ctx context.Context, msg string, additionalFields ...map[stri
 	tfsdklog.SubsystemError(ctx, SubsystemProto, msg, additionalFields...)
 }
 
+// ProtocolWarn emits a protocol subsystem log at WARN level.
+func ProtocolWarn(ctx context.Context, msg string, additionalFields ...map[string]interface{}) {
+	tfsdklog.SubsystemWarn(ctx, SubsystemProto, msg, additionalFields...)
+}
+
 // ProtocolTrace emits a protocol subsystem log at TRACE level.
 func ProtocolTrace(ctx context.Context, msg string, additionalFields ...map[string]interface{}) {
 	tfsdklog.SubsystemTrace(ctx, SubsystemProto, msg, additionalFields...)

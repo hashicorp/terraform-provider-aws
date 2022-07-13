@@ -28,7 +28,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodConfig(rInt),
+				Config: testAccMethodConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributes(&conf),
@@ -45,7 +45,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccMethodUpdateConfig(rInt),
+				Config: testAccMethodConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributesUpdate(&conf),
@@ -67,7 +67,7 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodWithCustomAuthorizerConfig(rInt),
+				Config: testAccMethodConfig_customAuthorizer(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributes(&conf),
@@ -85,7 +85,7 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 			},
 
 			{
-				Config: testAccMethodUpdateConfig(rInt),
+				Config: testAccMethodConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributesUpdate(&conf),
@@ -109,7 +109,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodWithCognitoAuthorizerConfig(rInt),
+				Config: testAccMethodConfig_cognitoAuthorizer(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributes(&conf),
@@ -122,7 +122,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 			},
 
 			{
-				Config: testAccMethodWithCognitoAuthorizerUpdateConfig(rInt),
+				Config: testAccMethodConfig_cognitoAuthorizerUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributesUpdate(&conf),
@@ -154,7 +154,7 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodWithCustomRequestValidatorConfig(rInt),
+				Config: testAccMethodConfig_customRequestValidator(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributes(&conf),
@@ -172,7 +172,7 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 			},
 
 			{
-				Config: testAccMethodWithCustomRequestValidatorUpdateConfig(rInt),
+				Config: testAccMethodConfig_customRequestValidatorUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					testAccCheckMethodAttributesUpdate(&conf),
@@ -195,7 +195,7 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodConfig(rInt),
+				Config: testAccMethodConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethod(), resourceName),
@@ -218,7 +218,7 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodOperationNameConfig(rInt, "getTest"),
+				Config: testAccMethodConfig_operationName(rInt, "getTest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "getTest"),
@@ -231,7 +231,7 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMethodOperationNameConfig(rInt, "describeTest"),
+				Config: testAccMethodConfig_operationName(rInt, "describeTest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "describeTest"),
@@ -362,7 +362,7 @@ func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func testAccMethodWithCustomAuthorizerConfig(rInt int) string {
+func testAccMethodConfig_customAuthorizer(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-custom-auth-%d"
@@ -468,7 +468,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccMethodWithCognitoAuthorizerConfig(rInt int) string {
+func testAccMethodConfig_cognitoAuthorizer(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
@@ -553,7 +553,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccMethodWithCognitoAuthorizerUpdateConfig(rInt int) string {
+func testAccMethodConfig_cognitoAuthorizerUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
@@ -637,7 +637,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccMethodConfig(rInt int) string {
+func testAccMethodConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
@@ -667,7 +667,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccMethodUpdateConfig(rInt int) string {
+func testAccMethodConfig_update(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
@@ -696,7 +696,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccMethodWithCustomRequestValidatorConfig(rInt int) string {
+func testAccMethodConfig_customRequestValidator(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
@@ -734,7 +734,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccMethodWithCustomRequestValidatorUpdateConfig(rInt int) string {
+func testAccMethodConfig_customRequestValidatorUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
@@ -769,7 +769,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccMethodOperationNameConfig(rInt int, operationName string) string {
+func testAccMethodConfig_operationName(rInt int, operationName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-op-name-%[1]d"
