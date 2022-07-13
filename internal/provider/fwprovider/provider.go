@@ -9,18 +9,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func New(primary MetaProvider) tfsdk.Provider {
+// New returns a new Terraform Plugin Framework-style provider instance.
+func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
 	return &provider{
 		Primary: primary,
 	}
 }
 
-type MetaProvider interface {
-	Meta() interface{}
-}
-
 type provider struct {
-	Primary MetaProvider
+	Primary interface{ Meta() interface{} }
 }
 
 // GetSchema returns the schema for this provider's configuration.
@@ -293,7 +290,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
 func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
-	// Provider configuration is available through the primary provider's Meta() method.
+	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
 }
 
 // GetResources returns a mapping of resource names to type
