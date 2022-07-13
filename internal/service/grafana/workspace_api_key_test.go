@@ -66,5 +66,5 @@ resource "aws_grafana_workspace_api_key" "test" {
   seconds_to_live = 3600
   workspace_id    = aws_grafana_workspace.test.id
 }
-`, apiKey)
+`, rName, apiKey)
 }
