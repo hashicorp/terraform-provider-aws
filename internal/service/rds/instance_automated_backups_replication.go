@@ -14,6 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	InstanceAutomatedBackupsReplicationCreateTimeout = 75 * time.Minute
+	InstanceAutomatedBackupsReplicationDeleteTimeout = 75 * time.Minute
+)
+
 func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceAutomatedBackupsReplicationCreate,
@@ -21,9 +26,8 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 		Delete: resourceInstanceAutomatedBackupsReplicationDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(75 * time.Minute),
-			Update: schema.DefaultTimeout(75 * time.Minute),
-			Delete: schema.DefaultTimeout(75 * time.Minute),
+			Create: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationCreateTimeout),
+			Delete: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationDeleteTimeout),
 		},
 
 		Importer: &schema.ResourceImporter{
