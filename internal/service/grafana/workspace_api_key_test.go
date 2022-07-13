@@ -24,9 +24,9 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceAPIKeyConfig_basic(rName, "test-api-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "key_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "key_role"),
-					resource.TestCheckResourceAttrSet(resourceName, "seconds_to_live"),
+					resource.TestCheckResourceAttr(resourceName, "key_name", "test-api-1"),
+					resource.TestCheckResourceAttr(resourceName, "key_role", "EDITIR"),
+					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key"),
 				),
