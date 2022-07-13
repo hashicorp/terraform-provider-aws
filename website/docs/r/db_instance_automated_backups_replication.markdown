@@ -94,7 +94,6 @@ configuration options:
 
 - `create` - (Default `75m`) How long to wait before RDS successfully starts replication of automated backups to a different AWS Region.
 - `update` - (Default `75m`) How long to wait before RDS completes updating existing replication of automated backups to a different AWS Region.
-- `delete` - (Default `75m`) How long to wait before RDS stops automated backup replication for a DB instance.
 
 ## Import
 
