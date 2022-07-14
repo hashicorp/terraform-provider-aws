@@ -182,9 +182,9 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								// 	Required:     true,
-								// 	// ValidateFunc: verify.ValidARN,
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
