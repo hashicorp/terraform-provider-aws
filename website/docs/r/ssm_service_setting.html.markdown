@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_service_setting"
 description: |-
@@ -12,7 +12,7 @@ Defines how a user interacts with or uses a service or a feature of a SSM servic
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ssm_service_setting" "test_setting" {
   service_id    = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
   service_value = "true"

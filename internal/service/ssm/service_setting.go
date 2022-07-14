@@ -1,4 +1,4 @@
-package aws
+package ssm
 
 import (
 	"fmt"
@@ -7,15 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmServiceSetting() *schema.Resource {
+func ResourceServiceSetting() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmServiceSettingUpdate,
-		Read:   resourceAwsSsmServiceSettingRead,
-		Update: resourceAwsSsmServiceSettingUpdate,
-		Delete: resourceAwsSsmServiceSettingReset,
+		Create: resourceServiceSettingUpdate,
+		Read:   resourceServiceSettingRead,
+		Update: resourceServiceSettingUpdate,
+		Delete: resourceServiceSettingReset,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,8 +50,8 @@ func resourceAwsSsmServiceSetting() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmServiceSettingUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+func resourceServiceSettingUpdate(d *schema.ResourceData, meta interface{}) error {
+	ssmconn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] SSM service setting create: %s", d.Id())
 
@@ -65,11 +66,11 @@ func resourceAwsSsmServiceSettingUpdate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(d.Get("setting_id").(string))
 
-	return resourceAwsSsmServiceSettingRead(d, meta)
+	return resourceServiceSettingRead(d, meta)
 }
 
-func resourceAwsSsmServiceSettingRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error {
+	ssmconn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
@@ -96,8 +97,8 @@ func resourceAwsSsmServiceSettingRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSsmServiceSettingReset(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+func resourceServiceSettingReset(d *schema.ResourceData, meta interface{}) error {
+	ssmconn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
 

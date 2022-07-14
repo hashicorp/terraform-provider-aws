@@ -1,4 +1,4 @@
-package aws
+package ssm_test
 
 import (
 	"fmt"
@@ -9,11 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSSMServiceSetting_basic(t *testing.T) {
+func TestAccSSMServiceSetting_basic(t *testing.T) {
 	var setting ssm.GetServiceSettingOutput
 	resourceName := "aws_ssm_service_setting.test"
 	awsSession := session.New()
@@ -21,14 +23,15 @@ func TestAccAWSSSMServiceSetting_basic(t *testing.T) {
 	result, _ := stssvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSSMServiceSettingDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccServiceSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMServiceSetting(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "false"),
+				Config: testAccServiceSettingConfig_basic(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMServiceSettingExists(resourceName, &setting),
+					testAccServiceSettingExists(resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", "false"),
 				),
 			},
@@ -38,9 +41,9 @@ func TestAccAWSSSMServiceSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSSMServiceSetting(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "true"),
+				Config: testAccServiceSettingConfig_basic(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMServiceSettingExists(resourceName, &setting),
+					testAccServiceSettingExists(resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", "true"),
 				),
 			},
@@ -48,8 +51,8 @@ func TestAccAWSSSMServiceSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSMServiceSettingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssmconn
+func testAccServiceSettingDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_service_setting" {
@@ -71,14 +74,14 @@ func testAccCheckAWSSSMServiceSettingDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSSMServiceSettingExists(n string, res *ssm.GetServiceSettingOutput) resource.TestCheckFunc {
+func testAccServiceSettingExists(n string, res *ssm.GetServiceSettingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		resp, err := conn.GetServiceSetting(&ssm.GetServiceSettingInput{
 			SettingId: aws.String(rs.Primary.Attributes["setting_id"]),
@@ -93,13 +96,15 @@ func testAccCheckAWSSSMServiceSettingExists(n string, res *ssm.GetServiceSetting
 	}
 }
 
-func testAccAWSSSMServiceSetting(accountID, region, value string) string {
+func testAccServiceSettingConfig_basic(accountID, region, value string) string {
 	return fmt.Sprintf(testSettingTemplate, region, accountID, value)
 }
 
 const testSettingTemplate = `
+data "aws_partition" "current" {}
+
 resource "aws_ssm_service_setting" "test" {
-	setting_id = "arn:aws:ssm:%s:%s:servicesetting/ssm/parameter-store/high-throughput-enabled"
-	setting_value = "%s"
+  setting_id    = "arn:${data.aws_partition.current.partition}:ssm:%s:%s:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  setting_value = "%s"
 }
 `
