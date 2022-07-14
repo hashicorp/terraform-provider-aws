@@ -184,8 +184,42 @@ func ResourceGatewayRoute() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"prefix": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+													AtLeastOneOf: []string{
+														"spec.0.http2_route.0.match.0.prefix",
+														"spec.0.http2_route.0.match.0.hostname",
+													},
+												},
+												"hostname": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"exact": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ExactlyOneOf: []string{
+																	"spec.0.http2_route.0.match.0.hostname.0.exact",
+																	"spec.0.http2_route.0.match.0.hostname.0.suffix",
+																},
+															},
+															"suffix": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ExactlyOneOf: []string{
+																	"spec.0.http2_route.0.match.0.hostname.0.exact",
+																	"spec.0.http2_route.0.match.0.hostname.0.suffix",
+																},
+															},
+														},
+													},
+													AtLeastOneOf: []string{
+														"spec.0.http2_route.0.match.0.prefix",
+														"spec.0.http2_route.0.match.0.hostname",
+													},
 												},
 											},
 										},
@@ -241,7 +275,6 @@ func ResourceGatewayRoute() *schema.Resource {
 											},
 										},
 									},
-
 									"match": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -251,8 +284,42 @@ func ResourceGatewayRoute() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"prefix": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+													AtLeastOneOf: []string{
+														"spec.0.http_route.0.match.0.prefix",
+														"spec.0.http_route.0.match.0.hostname",
+													},
+												},
+												"hostname": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"exact": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ExactlyOneOf: []string{
+																	"spec.0.http_route.0.match.0.hostname.0.exact",
+																	"spec.0.http_route.0.match.0.hostname.0.suffix",
+																},
+															},
+															"suffix": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ExactlyOneOf: []string{
+																	"spec.0.http_route.0.match.0.hostname.0.exact",
+																	"spec.0.http_route.0.match.0.hostname.0.suffix",
+																},
+															},
+														},
+													},
+													AtLeastOneOf: []string{
+														"spec.0.http_route.0.match.0.prefix",
+														"spec.0.http_route.0.match.0.hostname",
+													},
 												},
 											},
 										},
@@ -613,6 +680,19 @@ func expandHTTPGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewayRoute 
 			routeMatch.Prefix = aws.String(vPrefix)
 		}
 
+		if vHostnameMatch, ok := mRouteMatch["hostname"].([]interface{}); ok && len(vHostnameMatch) > 0 && vHostnameMatch[0] != nil {
+			hostnameMatch := &appmesh.GatewayRouteHostnameMatch{}
+
+			mHostnameMatch := vHostnameMatch[0].(map[string]interface{})
+			if vExact, ok := mHostnameMatch["exact"].(string); ok && vExact != "" {
+				hostnameMatch.Exact = aws.String(vExact)
+			}
+			if vSuffix, ok := mHostnameMatch["suffix"].(string); ok && vSuffix != "" {
+				hostnameMatch.Suffix = aws.String(vSuffix)
+			}
+			routeMatch.Hostname = hostnameMatch
+		}
+
 		route.Match = routeMatch
 	}
 
@@ -693,8 +773,25 @@ func flattenHTTPGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} 
 	}
 
 	if routeMatch := httpRoute.Match; routeMatch != nil {
-		mRouteMatch := map[string]interface{}{
-			"prefix": aws.StringValue(routeMatch.Prefix),
+
+		mRouteMatch := map[string]interface{}{}
+
+		if routeMatch.Prefix != nil {
+			mRouteMatch["prefix"] = aws.StringValue(routeMatch.Prefix)
+		}
+
+		if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
+
+			mHostnameMatch := map[string]interface{}{}
+			if hostnameMatch.Exact != nil {
+				mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
+			}
+			if hostnameMatch.Suffix != nil {
+				mHostnameMatch["suffix"] = aws.StringValue(hostnameMatch.Suffix)
+			}
+
+			mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
+
 		}
 
 		mHttpRoute["match"] = []interface{}{mRouteMatch}
