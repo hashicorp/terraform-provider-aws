@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,10 +62,10 @@ func ResourceFaq() *schema.Resource {
 				Computed: true,
 			},
 			"file_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(faqFileFormatValues(types.FaqFileFormat("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.FaqFileFormat](),
 			},
 			"index_id": {
 				Type:     schema.TypeString,
@@ -418,17 +419,6 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func faqFileFormatValues(input ...types.FaqFileFormat) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }
 
 func FaqStatusValues(input ...types.FaqStatus) []string {

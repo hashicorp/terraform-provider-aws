@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,16 +52,16 @@ func ResourceRegisteredDomain() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(contactTypeValues(types.ContactType("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ContactType](),
 				},
 				"country_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(countryCodeValues(types.CountryCode("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.CountryCode](),
 				},
 				"email": {
 					Type:         schema.TypeString,
@@ -964,27 +965,6 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	}
 
 	return tfList
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func contactTypeValues(input ...types.ContactType) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func countryCodeValues(input ...types.CountryCode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }
 
 func operationStatusValues(input ...types.OperationStatus) []string {

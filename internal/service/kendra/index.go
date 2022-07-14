@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -152,11 +153,11 @@ func ResourceIndex() *schema.Resource {
 				},
 			},
 			"edition": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      string(types.IndexEditionEnterpriseEdition),
-				ValidateFunc: validation.StringInSlice(indexEditionValues(types.IndexEdition("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          string(types.IndexEditionEnterpriseEdition),
+				ValidateDiagFunc: enum.Validate[types.IndexEdition](),
 			},
 			"error_message": {
 				Type:     schema.TypeString,
@@ -239,10 +240,10 @@ func ResourceIndex() *schema.Resource {
 				Computed: true,
 			},
 			"user_context_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      string(types.UserContextPolicyAttributeFilter),
-				ValidateFunc: validation.StringInSlice(userContextPolicyValues(types.UserContextPolicy("").Values()...), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(types.UserContextPolicyAttributeFilter),
+				ValidateDiagFunc: enum.Validate[types.UserContextPolicy](),
 			},
 			"user_group_resolution_configuration": {
 				Type:     schema.TypeList,
@@ -251,9 +252,9 @@ func ResourceIndex() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"user_group_resolution_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(userGroupResolutionModeValues(types.UserGroupResolutionMode("").Values()...), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.UserGroupResolutionMode](),
 						},
 					},
 				},
@@ -305,9 +306,9 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 65),
 									},
 									"key_location": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(keyLocationValues(types.KeyLocation("").Values()...), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.KeyLocation](),
 									},
 									"secrets_manager_arn": {
 										Type:         schema.TypeString,
@@ -1037,47 +1038,6 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	return []interface{}{values}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func indexEditionValues(input ...types.IndexEdition) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func userContextPolicyValues(input ...types.UserContextPolicy) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func userGroupResolutionModeValues(input ...types.UserGroupResolutionMode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func keyLocationValues(input ...types.KeyLocation) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }
 
 func IndexStatusValues(input ...types.IndexStatus) []string {
