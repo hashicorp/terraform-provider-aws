@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment"
 description: |-
@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway VPC Attachment.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachment" "example" {
   filter {
     name   = "vpc-id"
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpc_attachment" "example" {
   id = "tgw-attach-12345678"
 }

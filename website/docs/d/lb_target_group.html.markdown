@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb_target_group"
 description: |-
@@ -18,7 +18,7 @@ an LB Target Group for use in other resources, given LB Target Group name.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_tg_arn" {
   type    = string
   default = ""

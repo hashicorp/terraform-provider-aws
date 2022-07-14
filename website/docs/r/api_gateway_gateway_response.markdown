@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_gateway_response"
 description: |-
@@ -12,7 +12,7 @@ Provides an API Gateway Gateway Response for a REST API Gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "main" {
   name = "MyDemoAPI"
 }
@@ -42,9 +42,13 @@ The following arguments are supported:
 * `response_templates` - (Optional) A map specifying the templates used to transform the response body.
 * `response_parameters` - (Optional) A map specifying the parameters (paths, query strings and headers) of the Gateway Response.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.
+`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED

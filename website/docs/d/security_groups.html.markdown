@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_groups"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to get IDs and VPC membership of Security Groups that are c
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_security_groups" "test" {
   tags = {
     Application = "k8s"
@@ -21,7 +21,7 @@ data "aws_security_groups" "test" {
 }
 ```
 
-```hcl
+```terraform
 data "aws_security_groups" "test" {
   filter {
     name   = "group-name"

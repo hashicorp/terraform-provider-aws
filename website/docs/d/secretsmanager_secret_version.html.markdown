@@ -16,15 +16,15 @@ Retrieve information about a Secrets Manager secret version, including its secre
 
 By default, this data sources retrieves information based on the `AWSCURRENT` staging label.
 
-```hcl
-data "aws_secretsmanager_secret_version" "example" {
+```terraform
+data "aws_secretsmanager_secret_version" "secret-version" {
   secret_id = data.aws_secretsmanager_secret.example.id
 }
 ```
 
 ### Retrieve Specific Secret Version
 
-```hcl
+```terraform
 data "aws_secretsmanager_secret_version" "by-version-stage" {
   secret_id     = data.aws_secretsmanager_secret.example.id
   version_stage = "example"
@@ -35,7 +35,7 @@ data "aws_secretsmanager_secret_version" "by-version-stage" {
 
 Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
 
-```hcl
+```terraform
 output "example" {
   value = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
@@ -52,5 +52,5 @@ output "example" {
 * `arn` - The ARN of the secret.
 * `id` - The unique identifier of this version of the secret.
 * `secret_string` - The decrypted part of the protected secret information that was originally provided as a string.
-* `secret_binary` - The decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
+* `secret_binary` - The decrypted part of the protected secret information that was originally provided as a binary.
 * `version_id` - The unique identifier of this version of the secret.

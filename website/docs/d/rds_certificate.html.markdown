@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_certificate"
 description: |-
@@ -12,7 +12,7 @@ Information about an RDS Certificate.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_certificate" "example" {
   latest_valid_till = true
 }

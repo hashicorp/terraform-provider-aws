@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route_tables"
 description: |-
@@ -14,7 +14,7 @@ Provides information for multiple EC2 Local Gateway Route Tables, such as their 
 
 The following shows outputing all Local Gateway Route Table Ids.
 
-```hcl
+```terraform
 data "aws_ec2_local_gateway_route_table" "foo" {}
 
 output "foo" {

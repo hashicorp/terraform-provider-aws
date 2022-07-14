@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_route"
 description: |-
@@ -13,7 +13,7 @@ Provides additional routes for AWS Client VPN endpoints. For more information on
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_client_vpn_route" "example" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
   destination_cidr_block = "0.0.0.0/0"
@@ -57,6 +57,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Client VPN endpoint.
 * `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
 * `type` - The type of the route.
+
+## Timeouts
+
+`aws_ec2_client_vpn_route` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `1 minute`) Used for route creation
+- `delete` - (Default `1 minute`) Used for route deletion
 
 ## Import
 

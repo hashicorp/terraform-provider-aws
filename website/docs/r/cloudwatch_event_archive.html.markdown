@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_archive"
 description: |-
@@ -15,7 +15,7 @@ Provides an EventBridge event archive resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_bus" "order" {
   name = "orders"
 }
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 
 ## Example all optional arguments
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_bus" "order" {
   name = "orders"
 }

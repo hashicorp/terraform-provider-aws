@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_image"
 description: |-
@@ -12,7 +12,7 @@ Manages an Image Builder Image.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_imagebuilder_image" "example" {
   distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.example.arn
   image_recipe_arn                 = aws_imagebuilder_image_recipe.example.arn
@@ -24,15 +24,16 @@ resource "aws_imagebuilder_image" "example" {
 
 The following arguments are required:
 
-* `image_recipe_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Recipe.
 * `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
 
 The following arguments are optional:
 
+* `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image.
+* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
 
@@ -56,6 +57,7 @@ In addition to all arguments above, the following attributes are exported:
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version` - Version of the image.
 
 ## Timeouts
@@ -66,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image` resources can be imported using the Amazon Resource Name (ARN), e.g.
+`aws_imagebuilder_image` resources can be imported using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1

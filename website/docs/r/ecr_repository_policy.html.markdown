@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository_policy"
 description: |-
@@ -14,7 +14,7 @@ Note that currently only one policy may be applied to a repository.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.
+ECR Repository Policy can be imported using the repository name, e.g.,
 
 ```
 $ terraform import aws_ecr_repository_policy.example example

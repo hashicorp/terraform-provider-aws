@@ -12,7 +12,7 @@ Provides an Elastic Transcoder pipeline resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elastictranscoder_pipeline" "bar" {
   input_bucket = aws_s3_bucket.input_bucket.bucket
   name         = "aws_elastictranscoder_pipeline_tf_test_"
@@ -103,7 +103,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.
+Elastic Transcoder pipelines can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b

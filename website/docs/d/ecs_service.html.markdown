@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
 description: |-
@@ -13,7 +13,7 @@ Service within a AWS ECS Cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecs_service" "example" {
   service_name = "example"
   cluster_arn  = data.aws_ecs_cluster.example.arn

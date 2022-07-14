@@ -14,11 +14,11 @@ configured in the provider.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_inspector_rules_packages" "rules" {}
 
-# e.g. Use in aws_inspector_assessment_template
+# e.g., Use in aws_inspector_assessment_template
 resource "aws_inspector_resource_group" "group" {
   tags = {
     test = "test"

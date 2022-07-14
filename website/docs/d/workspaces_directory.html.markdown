@@ -12,7 +12,7 @@ Retrieve information about an AWS WorkSpaces directory.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_workspaces_directory" "example" {
   directory_id = "d-9067783251"
 }
@@ -53,6 +53,7 @@ data "aws_workspaces_directory" "example" {
 * `device_type_android` – (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
 * `device_type_chromeos` – (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
 * `device_type_ios` – (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
+* `device_type_linux` – (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
 * `device_type_osx` – (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
 * `device_type_web` – (Optional) Indicates whether users can access their WorkSpaces through a web browser.
 * `device_type_windows` – (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.

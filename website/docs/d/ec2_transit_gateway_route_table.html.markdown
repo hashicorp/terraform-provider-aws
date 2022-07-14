@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table"
 description: |-
@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway Route Table.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_route_table" "example" {
   filter {
     name   = "default-association-route-table"
@@ -30,7 +30,7 @@ data "aws_ec2_transit_gateway_route_table" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_route_table" "example" {
   id = "tgw-rtb-12345678"
 }

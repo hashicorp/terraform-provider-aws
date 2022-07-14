@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_app_cookie_stickiness_policy"
 description: |-
@@ -12,7 +12,7 @@ Provides an application cookie stickiness policy, which allows an ELB to wed its
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.
+Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.,
 
 ```sh
 $ terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy

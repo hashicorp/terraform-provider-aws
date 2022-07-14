@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_subnet_association"
 description: |-
@@ -20,7 +20,7 @@ Association resource. Doing so will cause a conflict of associations and will ov
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint_subnet_association" "sn_ec2" {
   vpc_endpoint_id = aws_vpc_endpoint.ec2.id
   subnet_id       = aws_subnet.sn.id
@@ -47,3 +47,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association.
+
+## Import
+
+VPC Endpoint Subnet Associations can be imported using `vpc_endpoint_id` together with `subnet_id`,
+e.g.,
+
+```
+$ terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
+```

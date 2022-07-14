@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
 description: |-
@@ -15,7 +15,7 @@ error if there is more than one match.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
   name = "my-vpc-link"
 }

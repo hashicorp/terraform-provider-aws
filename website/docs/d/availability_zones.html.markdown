@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_availability_zones"
 description: |-
@@ -21,13 +21,13 @@ which provides some details about a specific availability zone.
 
 ### By State
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# e.g. Create subnets in the first two available availability zones
+# e.g., Create subnets in the first two available availability zones
 
 resource "aws_subnet" "primary" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -46,7 +46,7 @@ resource "aws_subnet" "secondary" {
 
 All Local Zones (regardless of opt-in status):
 
-```hcl
+```terraform
 data "aws_availability_zones" "example" {
   all_availability_zones = true
 
@@ -59,7 +59,7 @@ data "aws_availability_zones" "example" {
 
 Only Availability Zones (no Local Zones):
 
-```
+```terraform
 data "aws_availability_zones" "example" {
   filter {
     name   = "opt-in-status"

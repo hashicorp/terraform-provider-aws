@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
 description: |-
@@ -19,7 +19,7 @@ Cluster, or you may specify different Cluster Instance resources with various
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "docdb-cluster-demo-${count.index}"
@@ -68,7 +68,7 @@ The following arguments are supported:
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
-* `tags` - (Optional) A map of tags to assign to the instance.
+* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -83,6 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 * `port` - The database port
 * `preferred_backup_window` - The daily time range during which automated backups are created if automated backups are enabled.
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 
@@ -104,7 +105,7 @@ the time required to take snapshots
 
 ## Import
 
-DocDB Cluster Instances can be imported using the `identifier`, e.g.
+DocDB Cluster Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1

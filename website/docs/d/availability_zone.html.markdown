@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_availability_zone"
 description: |-
@@ -13,7 +13,7 @@ in the current region.
 
 This can be used both to validate an availability zone given in a variable
 and to split the AZ name into its component parts of an AWS region and an
-AZ identifier letter. The latter may be useful e.g. for implementing a
+AZ identifier letter. The latter may be useful e.g., for implementing a
 consistent subnet numbering scheme across several regions by mapping both
 the region and the subnet letter to network numbers.
 
@@ -25,7 +25,7 @@ which provides a list of the available zones.
 The following example shows how this data source might be used to derive
 VPC and subnet CIDR prefixes systematically for an availability zone.
 
-```hcl
+```terraform
 variable "region_number" {
   # Arbitrary mapping of region name to number to use in
   # a VPC's CIDR prefix.

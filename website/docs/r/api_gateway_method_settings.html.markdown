@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_method_settings"
 description: |-
@@ -16,7 +16,7 @@ Manages API Gateway Stage Method Settings. For example, CloudWatch logging and m
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
@@ -88,7 +88,7 @@ The following arguments are supported:
 
 * `rest_api_id` - (Required) The ID of the REST API
 * `stage_name` - (Required) The name of the stage
-* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g. `trimprefix(aws_api_gateway_resource.example.path, "/")`).
+* `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
 * `settings` - (Required) The settings block, see below.
 
 ### `settings`
@@ -104,9 +104,13 @@ The following arguments are supported:
 * `require_authorization_for_cache_control` - (Optional) Specifies whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) Specifies how to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.
+`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET

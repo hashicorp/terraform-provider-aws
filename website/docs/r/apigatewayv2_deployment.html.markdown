@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_deployment"
 description: |-
@@ -19,7 +19,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_route.example.api_id
   description = "Example deployment"
@@ -34,7 +34,7 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 -> **NOTE:** This is an optional and Terraform 0.12 (or later) advanced configuration that shows calculating a hash of the API's Terraform resources to determine changes that should trigger a new deployment. This value will change after the first Terraform apply of new resources, triggering an immediate redeployment, however it will stabilize afterwards except for resource changes. The `triggers` map can also be configured in other, more complex ways to fit the environment, avoiding the immediate redeployment issue.
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_deployment" "example" {
   api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.
+`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334

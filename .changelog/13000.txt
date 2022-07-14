@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_kms_alias: Fix `name` plan time validation
+```
+
+```release-note:bug
+resource/aws_kms_alias: Fix `name` and `name_prefix` plan time validation
+```

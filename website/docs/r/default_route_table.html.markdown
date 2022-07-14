@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
 description: |-
@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage a default route table of a VPC. This resource can manage the default route table of the default or a non-default VPC.
 
-~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `aws_default_route_table` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management. **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts.
+~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `aws_default_route_table` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management. **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts. See [aws_main_route_table_association][tf-main-route-table-association] documentation for more details.
 
 Every VPC has a default route table that can be managed but not destroyed. When Terraform first adopts a default route table, it **immediately removes all defined routes**. It then proceeds to create any routes specified in the configuration. This step is required so that only the routes specified in the configuration exist in the default route table.
 
@@ -18,16 +18,36 @@ For more information, see the Amazon VPC User Guide on [Route Tables](https://do
 
 ## Example Usage
 
-```hcl
-resource "aws_default_route_table" "r" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+```terraform
+resource "aws_default_route_table" "example" {
+  default_route_table_id = aws_vpc.example.default_route_table_id
 
   route {
-    # ...
+    cidr_block = "10.0.1.0/24"
+    gateway_id = aws_internet_gateway.example.id
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
   }
 
   tags = {
-    Name = "default table"
+    Name = "example"
+  }
+}
+```
+
+To subsequently remove all managed routes:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  default_route_table_id = aws_vpc.example.default_route_table_id
+
+  route = []
+
+  tags = {
+    Name = "example"
   }
 }
 ```
@@ -41,8 +61,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `propagating_vgws` - (Optional) List of virtual gateways for propagation.
-* `route` - (Optional) Configuration block of routes. Detailed below.
-* `tags` - (Optional) Map of tags to assign to the resource.
+* `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### route
 
@@ -52,9 +72,11 @@ One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
 * `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
+* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
 
 One of the following target arguments must be supplied:
 
+* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
@@ -71,12 +93,21 @@ Note that the default route, mapping the VPC's CIDR block to "local", is created
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the route table.
+* `arn` - The ARN of the route table.
 * `owner_id` - ID of the AWS account that owns the route table.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `vpc_id` - ID of the VPC.
+
+## Timeouts
+
+`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `2 minutes`) Used for route creation
+- `update` - (Default `2 minutes`) Used for route creation
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.
+Default VPC route tables can be imported using the `vpc_id`, e.g.,
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd
@@ -84,3 +115,4 @@ $ terraform import aws_default_route_table.example vpc-33cc44dd
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
 [tf-route-tables]: /docs/providers/aws/r/route_table.html
+[tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html

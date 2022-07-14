@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_managed_prefix_list"
 description: |-
@@ -15,7 +15,7 @@ customer-managed prefix list in the current region.
 
 ### Find the regional DynamoDB prefix list
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "example" {
@@ -25,7 +25,7 @@ data "aws_ec2_managed_prefix_list" "example" {
 
 ### Find a managed prefix list using filters
 
-```hcl
+```terraform
 data "aws_ec2_managed_prefix_list" "example" {
   filter {
     name   = "prefix-list-name"

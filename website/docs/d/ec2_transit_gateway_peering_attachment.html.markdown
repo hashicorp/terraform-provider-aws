@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_peering_attachment"
 description: |-
@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway Peering Attachment.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_peering_attachment" "example" {
   filter {
     name   = "transit-gateway-attachment-id"
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_peering_attachment" "attachment" {
   id = "tgw-attach-12345678"
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "Step Function (SFN)"
+subcategory: "SFN (Step Functions)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
 description: |-
@@ -12,7 +12,7 @@ Provides a Step Functions Activity data source
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_sfn_activity" "sfn_activity" {
   name = "my-activity"
 }

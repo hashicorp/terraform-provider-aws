@@ -1,0 +1,79 @@
+name: Semgrep Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - internal/**
+      - .semgrep*yml
+      - .github/workflows/semgrep-ci.yml
+      - .github/scripts/semgrep.sh
+
+jobs:
+  semgrep:
+    name: Semgrep Code Quality Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+    - uses: actions/checkout@v3
+      with:
+       fetch-depth: 0
+    - run: .github/scripts/semgrep.sh .semgrep.yml
+  naming_cac:
+    name: Semgrep Naming Scan Caps/AWS/EC2
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-caps-aws-ec2.yml
+  naming_tests:
+    name: Semgrep Test Configs Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-configs.yml
+  naming_semgrep0:
+    name: Semgrep Service Name Scan A-C
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-service-name0.yml
+  naming_semgrep1:
+    name: Semgrep Service Name Scan C-I
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-service-name1.yml
+  naming_semgrep2:
+    name: Semgrep Service Name Scan I-Q
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-service-name2.yml
+  naming_semgrep3:
+    name: Semgrep Service Name Scan Q-Z
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+    - uses: actions/checkout@v3
+    - run: .github/scripts/semgrep.sh .semgrep-service-name3.yml

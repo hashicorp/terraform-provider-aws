@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb"
 description: |-
@@ -18,7 +18,7 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_arn" {
   type    = string
   default = ""
@@ -41,8 +41,9 @@ The following arguments are supported:
 
 * `arn` - (Optional) The full ARN of the load balancer.
 * `name` - (Optional) The unique name of the load balancer.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
 ## Attributes Reference
 

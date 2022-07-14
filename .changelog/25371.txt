@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_key_pair: Added 2 new attributes - `key_type` and `create_time`
+```
+
+```release-note:enhancement
+data/aws_key_pair: New attribute `public_key` populated by setting the new `include_public_key` argument
+```

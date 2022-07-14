@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connections"
 description: |-
@@ -16,7 +16,7 @@ the data source, as noted in [issue 4149](https://github.com/hashicorp/terraform
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_vpc_peering_connections" "pcs" {
   filter {

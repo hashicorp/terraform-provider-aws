@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_orderable_db_instance"
 description: |-
@@ -12,7 +12,7 @@ Information about DocumentDB orderable DB instances.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_docdb_orderable_db_instance" "test" {
   engine         = "docdb"
   engine_version = "3.6.0"

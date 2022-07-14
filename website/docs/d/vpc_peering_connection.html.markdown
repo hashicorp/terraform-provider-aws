@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection"
 description: |-
@@ -13,7 +13,7 @@ a specific VPC peering connection.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_vpc_peering_connection" "pc" {
   vpc_id          = aws_vpc.foo.id

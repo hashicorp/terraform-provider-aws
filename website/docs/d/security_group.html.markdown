@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
@@ -19,7 +19,7 @@ VPC that the security group belongs to.
 The following example shows how one might accept a Security Group id as a variable
 and use this data source to obtain the data necessary to create a subnet.
 
-```hcl
+```terraform
 variable "security_group_id" {}
 
 data "aws_security_group" "selected" {
