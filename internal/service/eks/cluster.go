@@ -226,7 +226,7 @@ func ResourceCluster() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"outpost_config"},
+							
 						},
 						"endpoint_public_access": {
 							Type:          schema.TypeBool,
