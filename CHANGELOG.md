@@ -10,6 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_networkmanager_core_network_policy_document: Fix bug where bool values in `segments` blocks weren't being included in json payloads ([#25789](https://github.com/hashicorp/terraform-provider-aws/issues/25789))
 * resource/aws_iam_role: Fix diffs in `assume_role_policy` when there are no semantic changes ([#23060](https://github.com/hashicorp/terraform-provider-aws/issues/23060))
 * resource/aws_iam_role: Fix problem with exclusive management of inline and managed policies when empty (i.e., remove out-of-band policies) ([#23060](https://github.com/hashicorp/terraform-provider-aws/issues/23060))
 
