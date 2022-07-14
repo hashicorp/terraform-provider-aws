@@ -30,7 +30,7 @@ linter:
   - '.markdownlint.yml'
   - '.semgrep.yml'
   - '.tflint.hcl'
-  - 'providerlint/**/*'
+  - 'tools/providerlint/**/*'
   - 'staticcheck.conf'
 pre-service-packages:
   - '**/data_source_aws_*'
