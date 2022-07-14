@@ -6,7 +6,6 @@ package span
 
 import (
 	"fmt"
-	"unicode/utf16"
 	"unicode/utf8"
 )
 
@@ -41,15 +40,27 @@ func ToUTF16Column(p Point, content []byte) (int, error) {
 	// Now, truncate down to the supplied column.
 	start = start[:colZero]
 
-	// and count the number of utf16 characters
-	// in theory we could do this by hand more efficiently...
-	return len(utf16.Encode([]rune(string(start)))) + 1, nil
+	cnt := 0
+	for _, r := range string(start) {
+		cnt++
+		if r > 0xffff {
+			cnt++
+		}
+	}
+	return cnt + 1, nil // the +1 is for 1-based columns
 }
 
 // FromUTF16Column advances the point by the utf16 character offset given the
 // supplied line contents.
 // This is used to convert from the utf16 counts used by some editors to the
 // native (always in bytes) column representation.
+//
+// The resulting Point always has an offset.
+//
+// TODO: it looks like this may incorrectly confer a "position" to the
+// resulting Point, when it shouldn't. If p.HasPosition() == false, the
+// resulting Point will return p.HasPosition() == true, but have the wrong
+// position.
 func FromUTF16Column(p Point, chr int, content []byte) (Point, error) {
 	if !p.HasOffset() {
 		return Point{}, fmt.Errorf("FromUTF16Column: point is missing offset")
