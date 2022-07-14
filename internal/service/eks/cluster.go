@@ -163,6 +163,30 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
+			"outpost_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"control_plane_instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							// ValidateFunc: validControlPlaneInstanceType,
+						},
+						"outpost_arns": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+			},
 			"platform_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -248,6 +272,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		EncryptionConfig:   expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandEksLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
+		OutpostConfig:      expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{})),
 		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 	}
@@ -362,6 +387,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
+	}
+
+	if err := d.Set("outpost_config", flattenEksOutpostConfig(cluster.OutpostConfig)); err != nil {
+		return fmt.Errorf("error setting outpost_config: %w", err)
 	}
 
 	d.Set("name", cluster.Name)
@@ -569,6 +598,26 @@ func expandEksProvider(tfList []interface{}) *eks.Provider {
 	return apiObject
 }
 
+func expandEksOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	outpostConfigRequest := &eks.OutpostConfigRequest{}
+
+	if v, ok := tfMap["control_plane_instance_type"].(string); ok && v != "" {
+		outpostConfigRequest.ControlPlaneInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
+		outpostConfigRequest.OutpostArns = flex.ExpandStringSet(v)
+	}
+
+	return outpostConfigRequest
+}
+
 func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
@@ -760,6 +809,19 @@ func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []i
 	tfMap := map[string]interface{}{
 		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
 		"ip_family":         aws.StringValue(apiObject.IpFamily),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenEksOutpostConfig(apiObject *eks.OutpostConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"control_plane_instance_type": aws.StringValue(apiObject.ControlPlaneInstanceType),
+		"outpost_arns":                aws.StringValueSlice(apiObject.OutpostArns),
 	}
 
 	return []interface{}{tfMap}
