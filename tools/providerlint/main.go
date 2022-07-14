@@ -4,7 +4,7 @@ package main
 import (
 	tfpasses "github.com/bflad/tfproviderlint/passes"
 	tfxpasses "github.com/bflad/tfproviderlint/xpasses"
-	awspasses "github.com/hashicorp/terraform-provider-aws/providerlint/passes"
+	awspasses "github.com/hashicorp/terraform-provider-aws/tools/providerlint/passes"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/multichecker"
 )
