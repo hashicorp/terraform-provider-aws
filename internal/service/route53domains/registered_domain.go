@@ -710,8 +710,8 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: operationStatusValues(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  operationStatusValues(types.OperationStatusSuccessful),
+		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
+		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,
 		Refresh: statusOperation(ctx, conn, id),
 	}
@@ -965,14 +965,4 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	}
 
 	return tfList
-}
-
-func operationStatusValues(input ...types.OperationStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

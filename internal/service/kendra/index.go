@@ -638,8 +638,8 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusCreating),
-		Target:  IndexStatusValues(types.IndexStatusActive),
+		Pending: enum.Slice(types.IndexStatusCreating),
+		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -659,8 +659,8 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusUpdating),
-		Target:  IndexStatusValues(types.IndexStatusActive),
+		Pending: enum.Slice(types.IndexStatusUpdating),
+		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
 	}
@@ -679,7 +679,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: IndexStatusValues(types.IndexStatusDeleting),
+		Pending: enum.Slice(types.IndexStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusIndex(ctx, conn, id),
@@ -1038,14 +1038,4 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	return []interface{}{values}
-}
-
-func IndexStatusValues(input ...types.IndexStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

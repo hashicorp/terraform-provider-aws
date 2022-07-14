@@ -325,8 +325,8 @@ func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
-		Pending:                   FaqStatusValues(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
-		Target:                    FaqStatusValues(types.FaqStatusActive),
+		Pending:                   enum.Slice(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
+		Target:                    enum.Slice(types.FaqStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusFaq(ctx, conn, id, indexId),
 		NotFoundChecks:            20,
@@ -347,7 +347,7 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 
 func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: FaqStatusValues(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
+		Pending: enum.Slice(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusFaq(ctx, conn, id, indexId),
@@ -419,17 +419,4 @@ func flattenS3Path(apiObject *types.S3Path) []interface{} {
 	}
 
 	return []interface{}{m}
-}
-
-func FaqStatusValues(input ...types.FaqStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	output = append(output, "PENDING_CREATION")
-	output = append(output, "PENDING_DELETION")
-
-	return output
 }
