@@ -1907,7 +1907,7 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
 			}
 
-			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
+			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" && partition != endpoints.AwsIsoPartitionID {
 				apiObject.InstanceMetadataTags = aws.String(v)
 			}
 		}
