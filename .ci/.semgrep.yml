@@ -815,3 +815,13 @@ rules:
         - pattern: fmt.Errorf(..., $ERR.Code(), ...)
         - pattern: fmt.Errorf(..., $ERR.Message(), ...)
     severity: WARNING
+
+  - id: typed-enum-conversion
+    languages: [go]
+    message: Prefer using `enum.Slice()` to convert a slice of typed string enums to a slice of strings
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: "[]string{..., string($X), ...}"
+    severity: WARNING
