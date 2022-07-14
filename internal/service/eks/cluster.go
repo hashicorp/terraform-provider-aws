@@ -79,6 +79,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"provider": {
@@ -134,6 +135,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
+				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip_family": {
@@ -166,6 +168,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"control_plane_instance_type": {
@@ -177,10 +180,11 @@ func ResourceCluster() *schema.Resource {
 						"outpost_arns": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
+							MinItems: 1,
+							Elem:     &schema.Schema{
+							 	Type:         schema.TypeString,
+							// 	Required:     true,
+							// 	// ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
@@ -221,17 +225,20 @@ func ResourceCluster() *schema.Resource {
 						"endpoint_private_access": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Computed:  true,
+							ConflictsWith: []string{"outpost_config"},
 						},
 						"endpoint_public_access": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Computed:  true,
+							ConflictsWith: []string{"outpost_config"},
 						},
 						"public_access_cidrs": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							ConflictsWith: []string{"outpost_config"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
