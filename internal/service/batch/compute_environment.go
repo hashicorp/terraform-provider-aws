@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -73,7 +74,6 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"allocation_strategy": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 							StateFunc: func(val interface{}) string {
 								return strings.ToUpper(val.(string))
 							},
@@ -82,7 +82,6 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"bid_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
 						},
 						"desired_vcpus": {
 							Type:     schema.TypeInt,
@@ -93,7 +92,6 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -101,13 +99,11 @@ func ResourceComputeEnvironment() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"image_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 								},
@@ -116,48 +112,41 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"ec2_key_pair": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 						"image_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 						"instance_role": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"instance_type": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"launch_template": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"launch_template_id": {
 										Type:          schema.TypeString,
 										Optional:      true,
-										ForceNew:      true,
 										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_name"},
 									},
 									"launch_template_name": {
 										Type:          schema.TypeString,
 										Optional:      true,
-										ForceNew:      true,
 										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
 									},
 									"version": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
@@ -186,11 +175,10 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"tags": tftags.TagsSchemaForceNew(),
+						"tags": tftags.TagsSchema(),
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 							StateFunc: func(val interface{}) string {
 								return strings.ToUpper(val.(string))
 							},
@@ -393,20 +381,102 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 				MaxvCpus: aws.Int64(int64(d.Get("compute_resources.0.max_vcpus").(int))),
 			}
 
-			if d.HasChange("compute_resources.0.desired_vcpus") {
-				computeResourceUpdate.DesiredvCpus = aws.Int64(int64(d.Get("compute_resources.0.desired_vcpus").(int)))
-			}
-
-			if d.HasChange("compute_resources.0.min_vcpus") {
-				computeResourceUpdate.MinvCpus = aws.Int64(int64(d.Get("compute_resources.0.min_vcpus").(int)))
-			}
-
 			if d.HasChange("compute_resources.0.security_group_ids") {
 				computeResourceUpdate.SecurityGroupIds = flex.ExpandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
 			}
 
 			if d.HasChange("compute_resources.0.subnets") {
 				computeResourceUpdate.Subnets = flex.ExpandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
+			}
+
+			if d.HasChange("compute_resources.0.allocation_strategy") {
+				if allocationStrategy, ok := d.GetOk("compute_resources.0.allocation_strategy"); ok {
+					computeResourceUpdate.AllocationStrategy = aws.String(allocationStrategy.(string))
+				} else {
+					computeResourceUpdate.AllocationStrategy = aws.String("")
+				}
+			}
+
+			computeResourceEnvironmentType := d.Get("compute_resources.0.type").(string)
+
+			if d.HasChange("compute_resources.0.type") {
+				computeResourceUpdate.Type = aws.String(computeResourceEnvironmentType)
+			}
+
+			if !isFargateType(computeResourceEnvironmentType) {
+				if d.HasChange("compute_resources.0.desired_vcpus") {
+					if desiredvCpus, ok := d.GetOk("compute_resources.0.desired_vcpus"); ok {
+						computeResourceUpdate.DesiredvCpus = aws.Int64(int64(desiredvCpus.(int)))
+					} else {
+						computeResourceUpdate.DesiredvCpus = aws.Int64(0)
+					}
+				}
+
+				if d.HasChange("compute_resources.0.min_vcpus") {
+					if minVcpus, ok := d.GetOk("compute_resources.0.min_vcpus"); ok {
+						computeResourceUpdate.MinvCpus = aws.Int64(int64(minVcpus.(int)))
+					} else {
+						computeResourceUpdate.MinvCpus = aws.Int64(0)
+					}
+				}
+
+				if d.HasChange("compute_resources.0.bid_percentage") {
+					if bidPercentage, ok := d.GetOk("compute_resources.0.bid_percentage"); ok {
+						computeResourceUpdate.BidPercentage = aws.Int64(int64(bidPercentage.(int)))
+					} else {
+						computeResourceUpdate.BidPercentage = aws.Int64(0)
+					}
+				}
+
+				if d.HasChange("compute_resources.0.ec2_configuration") {
+					defaultImageType := "ECS_AL2"
+					if _, ok := d.GetOk("eks_configuration.#"); ok {
+						defaultImageType = "EKS_AL2"
+					}
+					ec2Configuration := d.Get("compute_resources.0.ec2_configuration").([]interface{})
+					computeResourceUpdate.Ec2Configuration = ExpandComputeEnvironmentEC2ConfigurationUpdate(ec2Configuration, defaultImageType)
+				}
+
+				if d.HasChange("compute_resources.0.ec2_key_pair") {
+					if keyPair, ok := d.GetOk("compute_resources.0.ec2_key_pair"); ok {
+						computeResourceUpdate.Ec2KeyPair = aws.String(keyPair.(string))
+					} else {
+						computeResourceUpdate.Ec2KeyPair = aws.String("")
+					}
+				}
+
+				if d.HasChange("compute_resources.0.image_id") {
+					if imageId, ok := d.GetOk("compute_resources.0.image_id"); ok {
+						computeResourceUpdate.ImageId = aws.String(imageId.(string))
+					} else {
+						computeResourceUpdate.ImageId = aws.String("")
+					}
+				}
+
+				if d.HasChange("compute_resources.0.instance_role") {
+					if instanceRole, ok := d.GetOk("compute_resources.0.instance_role"); ok {
+						computeResourceUpdate.InstanceRole = aws.String(instanceRole.(string))
+					} else {
+						computeResourceUpdate.InstanceRole = aws.String("")
+					}
+				}
+
+				if d.HasChange("compute_resources.0.instance_type") {
+					computeResourceUpdate.InstanceTypes = flex.ExpandStringSet(d.Get("compute_resources.0.instance_type").(*schema.Set))
+				}
+
+				if d.HasChange("compute_resources.0.launch_template") {
+					launchTemplate := d.Get("compute_resources.0.launch_template").([]interface{})
+					computeResourceUpdate.LaunchTemplate = ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate)
+				}
+
+				if d.HasChange("compute_resources.0.tags") {
+					if tags, ok := d.GetOk("compute_resources.0.tags"); ok {
+						computeResourceUpdate.Tags = Tags(tftags.New(ctx, tags.(map[string]interface{})).IgnoreAWS())
+					} else {
+						computeResourceUpdate.Tags = aws.StringMap(map[string]string{})
+					}
+				}
 			}
 
 			input.ComputeResources = computeResourceUpdate
@@ -431,6 +501,55 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
+}
+
+func ExpandComputeEnvironmentEC2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageType string) []*batch.Ec2Configuration {
+	if len(ec2Configuration) == 0 {
+		return []*batch.Ec2Configuration{
+			{
+				ImageType: aws.String(defaultImageType),
+			},
+		}
+	}
+
+	results := make([]*batch.Ec2Configuration, 0)
+	for _, ec2 := range ec2Configuration {
+		result := &batch.Ec2Configuration{}
+		m := ec2.(map[string]interface{})
+		if v, ok := m["image_id_override"]; ok {
+			result.ImageIdOverride = aws.String(v.(string))
+		}
+		if v, ok := m["image_type"]; ok {
+			result.ImageType = aws.String(v.(string))
+		}
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate []interface{}) *batch.LaunchTemplateSpecification {
+	if len(launchTemplate) == 0 {
+		// delete any existing launch template configuration
+		return &batch.LaunchTemplateSpecification{
+			LaunchTemplateId: aws.String(""),
+		}
+	}
+
+	lts := &batch.LaunchTemplateSpecification{}
+	m := launchTemplate[0].(map[string]interface{})
+	if id, ok := m["launch_template_id"]; ok {
+		lts.LaunchTemplateId = aws.String(id.(string))
+	}
+	if name, ok := m["launch_template_name"]; ok {
+		lts.LaunchTemplateName = aws.String(name.(string))
+	}
+	if version, ok := m["version"]; ok {
+		lts.Version = aws.String(version.(string))
+	} else {
+		lts.Version = aws.String("")
+	}
+	return lts
 }
 
 func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -482,21 +601,103 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	if diff.Id() != "" {
 		// Update.
 
-		computeResourceType := strings.ToUpper(diff.Get("compute_resources.0.type").(string))
-		fargateComputeResources := false
-		if computeResourceType == batch.CRTypeFargate || computeResourceType == batch.CRTypeFargateSpot {
-			fargateComputeResources = true
-		}
+		fargateComputeResources := isFargateType(diff.Get("compute_resources.0.type").(string))
 
-		if diff.HasChange("compute_resources.0.security_group_ids") && !fargateComputeResources {
-			if err := diff.ForceNew("compute_resources.0.security_group_ids"); err != nil {
-				return err
+		if !isUpdatableComputeEnvironment(diff) {
+			if diff.HasChange("compute_resources.0.security_group_ids") && !fargateComputeResources {
+				if err := diff.ForceNew("compute_resources.0.security_group_ids"); err != nil {
+					return err
+				}
 			}
-		}
 
-		if diff.HasChange("compute_resources.0.subnets") && !fargateComputeResources {
-			if err := diff.ForceNew("compute_resources.0.subnets"); err != nil {
-				return err
+			if diff.HasChange("compute_resources.0.subnets") && !fargateComputeResources {
+				if err := diff.ForceNew("compute_resources.0.subnets"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.allocation_strategy") {
+				if err := diff.ForceNew("compute_resources.0.allocation_strategy"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.bid_percentage") {
+				if err := diff.ForceNew("compute_resources.0.bid_percentage"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.ec2_configuration.#") {
+				if err := diff.ForceNew("compute_resources.0.ec2_configuration.#"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_id_override") {
+				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_id_override"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_type") {
+				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_type"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.ec2_key_pair") {
+				if err := diff.ForceNew("compute_resources.0.ec2_key_pair"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.image_id") {
+				if err := diff.ForceNew("compute_resources.0.image_id"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.instance_role") {
+				if err := diff.ForceNew("compute_resources.0.instance_role"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.instance_type") {
+				if err := diff.ForceNew("compute_resources.0.instance_type"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.launch_template.#") {
+				if err := diff.ForceNew("compute_resources.0.launch_template.#"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.launch_template.0.launch_template_id") {
+				if err := diff.ForceNew("compute_resources.0.launch_template.0.launch_template_id"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.launch_template.0.launch_template_name") {
+				if err := diff.ForceNew("compute_resources.0.launch_template.0.launch_template_name"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.launch_template.0.version") {
+				if err := diff.ForceNew("compute_resources.0.launch_template.0.version"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.tags") {
+				if err := diff.ForceNew("compute_resources.0.tags"); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -637,6 +838,67 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name 
 	}
 
 	return nil, err
+}
+
+func isFargateType(computeResourceType string) bool {
+	if computeResourceType == batch.CRTypeFargate || computeResourceType == batch.CRTypeFargateSpot {
+		return true
+	}
+	return false
+}
+
+func isUpdatableComputeEnvironment(diff *schema.ResourceDiff) bool {
+	if !isServiceLinkedRoleDiff(diff) {
+		return false
+	}
+	if !isUpdatableAllocationStrategyDiff(diff) {
+		return false
+	}
+	return true
+}
+
+func isServiceLinkedRoleDiff(diff *schema.ResourceDiff) bool {
+	var before, after string
+	if diff.HasChange("service_role") {
+		beforeRaw, afterRaw := diff.GetChange("service_role")
+		before, _ = beforeRaw.(string)
+		after, _ := afterRaw.(string)
+		return isServiceLinkedRole(before) && isServiceLinkedRole(after)
+	}
+	afterRaw, _ := diff.GetOk("service_role")
+	after, _ = afterRaw.(string)
+	return isServiceLinkedRole(after)
+}
+
+func isServiceLinkedRole(roleArn string) bool {
+	if roleArn == "" {
+		// Empty role ARN defaults to AWS service-linked role
+		return true
+	}
+	re := regexp.MustCompile(`arn:[^:]+:iam::\d{12}:role/aws-service-role/batch\.amazonaws\.com/*`)
+	return re.MatchString(roleArn)
+}
+
+func isUpdatableAllocationStrategyDiff(diff *schema.ResourceDiff) bool {
+	var before, after string
+	if computeResourcesCount, ok := diff.Get("compute_resources.#").(int); ok {
+		if computeResourcesCount > 0 {
+			if diff.HasChange("compute_resources.0.allocation_strategy") {
+				beforeRaw, afterRaw := diff.GetChange("compute_resources.0.allocation_strategy")
+				before, _ = beforeRaw.(string)
+				after, _ = afterRaw.(string)
+				return isUpdatableAllocationStrategy(before) && isUpdatableAllocationStrategy(after)
+			}
+			afterRaw, _ := diff.GetOk("compute_resources.0.allocation_strategy")
+			after, _ := afterRaw.(string)
+			return isUpdatableAllocationStrategy(after)
+		}
+	}
+	return false
+}
+
+func isUpdatableAllocationStrategy(allocationStrategy string) bool {
+	return allocationStrategy == batch.CRAllocationStrategyBestFitProgressive || allocationStrategy == batch.CRAllocationStrategySpotCapacityOptimized
 }
 
 func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *batch.ComputeResource {
