@@ -18,7 +18,7 @@ func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3ControlAccountPublicAccessBlockDataSource_basic(),
+				Config: testAccAccountPublicAccessBlockDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "block_public_acls", dataSourceName, "block_public_acls"),
 					resource.TestCheckResourceAttrPair(resourceName, "block_public_policy", dataSourceName, "block_public_policy"),
@@ -30,7 +30,7 @@ func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAccountPublicAccessBlockBaseConfig() string {
+func testAccAccountPublicAccessBlockDataSourceConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
   block_public_acls       = false
@@ -41,8 +41,8 @@ resource "aws_s3_account_public_access_block" "test" {
 `)
 }
 
-func testAccS3ControlAccountPublicAccessBlockDataSource_basic() string {
-	return acctest.ConfigCompose(testAccDataSourceAccountPublicAccessBlockBaseConfig(), `
+func testAccAccountPublicAccessBlockDataSourceConfig_basic() string {
+	return acctest.ConfigCompose(testAccAccountPublicAccessBlockDataSourceConfig_base(), `
 data "aws_s3_account_public_access_block" "test" {
   depends_on = [aws_s3_account_public_access_block.test]
 }
