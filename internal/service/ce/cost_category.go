@@ -457,29 +457,31 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
 
-	input := &costexplorer.UpdateCostCategoryDefinitionInput{
-		CostCategoryArn: aws.String(d.Id()),
-		Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
-		RuleVersion:     aws.String(d.Get("rule_version").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &costexplorer.UpdateCostCategoryDefinitionInput{
+			CostCategoryArn: aws.String(d.Id()),
+			Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+			RuleVersion:     aws.String(d.Get("rule_version").(string)),
+		}
 
-	if d.HasChange("default_value") {
-		input.DefaultValue = aws.String(d.Get("default_value").(string))
-	}
+		if d.HasChange("default_value") {
+			input.DefaultValue = aws.String(d.Get("default_value").(string))
+		}
 
-	if d.HasChange("split_charge_rule") {
-		input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
-	}
+		if d.HasChange("split_charge_rule") {
+			input.SplitChargeRules = expandCostCategorySplitChargeRules(d.Get("split_charge_rule").(*schema.Set).List())
+		}
 
-	_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
+		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
-	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
+		if err != nil {
+			return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
 		}
 	}
