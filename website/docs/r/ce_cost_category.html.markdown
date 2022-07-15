@@ -123,7 +123,7 @@ In addition to all arguments above, the following attributes are exported:
 * `effective_end` - Effective end data of your Cost Category.
 * `effective_start` - Effective state data of your Cost Category.
 * `id` - Unique ID of the cost category.
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
