@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -376,6 +375,9 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Rules:       expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
@@ -390,36 +392,21 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	if len(tags) > 0 {
 		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
 
-	var err error
-	var output *costexplorer.CreateCostCategoryDefinitionOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err = conn.CreateCostCategoryDefinition(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateCostCategoryDefinition(input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateCostCategoryDefinition(input)
+		},
+		costexplorer.ErrCodeResourceNotFoundException)
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionCreating, ResCostCategory, d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.CostCategoryArn))
+	d.SetId(aws.StringValue(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
 
 	return resourceCostCategoryRead(ctx, d, meta)
 }
