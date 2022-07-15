@@ -161,6 +161,13 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			// modeled after null_resource & aws_api_gateway_deployment
+			// only for _updates in-place_ rather than replacements
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"health_check_grace_period_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
