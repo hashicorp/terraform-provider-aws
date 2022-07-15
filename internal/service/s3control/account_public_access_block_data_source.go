@@ -66,7 +66,6 @@ func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error reading S3 Account Public Access Block (%s): missing public access block configuration", accountID)
 	}
 
-	// d.Set("account_id", accountID)
 	d.SetId(accountID)
 	d.Set("block_public_acls", output.PublicAccessBlockConfiguration.BlockPublicAcls)
 	d.Set("block_public_policy", output.PublicAccessBlockConfiguration.BlockPublicPolicy)

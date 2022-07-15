@@ -16,12 +16,6 @@ The S3 account public access block data source returns account-level public acce
 data "aws_s3_account_public_access_block" "example" {
 }
 
-output "foo" {
-  block_public_acls_value = data.aws_s3_bucket_policy.example.block_public_acls
-  block_public_policy_value = data.aws_s3_bucket_policy.example.block_public_policy
-  ignore_public_acls_value = data.aws_s3_bucket_policy.example.ignore_public_acls
-  restrict_public_buckets_value = data.aws_s3_bucket_policy.example.restrict_public_buckets
-}
 ```
 
 ## Argument Reference
