@@ -1,9 +1,7 @@
 package ce
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
@@ -138,7 +136,6 @@ func ResourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							Set: costCategorySplitChargesParameter,
 						},
 						"source": {
 							Type:         schema.TypeString,
@@ -157,7 +154,6 @@ func ResourceCostCategory() *schema.Resource {
 						},
 					},
 				},
-				Set: costCategorySplitCharges,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -989,22 +985,4 @@ func flattenCostCategorySplitChargeRules(apiObjects []*costexplorer.CostCategory
 	}
 
 	return tfList
-}
-
-func costCategorySplitCharges(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["method"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["parameter"].(*schema.Set)))
-	buf.WriteString(m["source"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["targets"].(*schema.Set)))
-	return schema.HashString(buf.String())
-}
-
-func costCategorySplitChargesParameter(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["type"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["values"].([]interface{})))
-	return schema.HashString(buf.String())
 }
