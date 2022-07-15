@@ -18,7 +18,7 @@ import (
 func TestAccCECostCategory_basic(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -42,10 +42,33 @@ func TestAccCECostCategory_basic(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_disappears(t *testing.T) {
+	var output costexplorer.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCostCategoryDestroy,
+		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(resourceName, &output),
+					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCostCategory(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_complete(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -79,7 +102,7 @@ func TestAccCECostCategory_complete(t *testing.T) {
 func TestAccCECostCategory_splitCharge(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -110,10 +133,10 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	})
 }
 
-func TestAccCECostCategory_tagRemove(t *testing.T) {
+func TestAccCECostCategory_tags(t *testing.T) {
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
@@ -122,17 +145,11 @@ func TestAccCECostCategory_tagRemove(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig_tag(rName),
+				Config: testAccCostCategoryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-				),
-			},
-			{
-				Config: testAccCostCategoryConfig_noTag(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -140,62 +157,22 @@ func TestAccCECostCategory_tagRemove(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccCECostCategory_tagAdd(t *testing.T) {
-	var output costexplorer.CostCategory
-	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostCategoryDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig_noTag(rName),
+				Config: testAccCostCategoryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccCostCategoryConfig_tag(rName),
+				Config: testAccCostCategoryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccCECostCategory_disappears(t *testing.T) {
-	var output costexplorer.CostCategory
-	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCostCategoryDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCostCategoryConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(resourceName, &output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCostCategory(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -441,10 +418,10 @@ resource "aws_ce_cost_category" "test" {
 `, rName, method)
 }
 
-func testAccCostCategoryConfig_tag(rName string) string {
+func testAccCostCategoryConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
-  name         = "%[1]s-1"
+  name         = %[1]q
   rule_version = "CostCategoryExpression.v1"
 
   rule {
@@ -460,17 +437,18 @@ resource "aws_ce_cost_category" "test" {
 
     type = "REGULAR"
   }
+
   tags = {
-    Name = %[1]q
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccCostCategoryConfig_noTag(rName string) string {
+func testAccCostCategoryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
-  name         = "%[1]s-1"
+  name         = %[1]q
   rule_version = "CostCategoryExpression.v1"
 
   rule {
@@ -486,6 +464,11 @@ resource "aws_ce_cost_category" "test" {
 
     type = "REGULAR"
   }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
