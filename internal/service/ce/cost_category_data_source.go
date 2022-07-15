@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,6 +120,7 @@ func DataSourceCostCategory() *schema.Resource {
 					},
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -310,6 +312,7 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
 
@@ -329,6 +332,16 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
+
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+
+	if err != nil {
+		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
+	}
 
 	return nil
 }
