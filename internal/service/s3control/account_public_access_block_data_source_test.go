@@ -1,7 +1,6 @@
 package s3control_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -31,14 +30,14 @@ func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 }
 
 func testAccAccountPublicAccessBlockDataSourceConfig_base() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_s3_account_public_access_block" "test" {
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
-`)
+`
 }
 
 func testAccAccountPublicAccessBlockDataSourceConfig_basic() string {
