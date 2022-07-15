@@ -77,9 +77,9 @@ func ResourceCluster() *schema.Resource {
 				Set: schema.HashString,
 			},
 			"encryption_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
 				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -132,10 +132,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"kubernetes_network_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
 				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -166,9 +166,9 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc: validClusterName,
 			},
 			"outpost_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
 				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -182,10 +182,10 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
-							Elem:     &schema.Schema{
-							 	Type:         schema.TypeString,
-							// 	Required:     true,
-							// 	// ValidateFunc: verify.ValidARN,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								// 	Required:     true,
+								// 	// ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
@@ -224,21 +224,21 @@ func ResourceCluster() *schema.Resource {
 							Computed: true,
 						},
 						"endpoint_private_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed:  true,
+							Type:          schema.TypeBool,
+							Optional:      true,
+							Computed:      true,
 							ConflictsWith: []string{"outpost_config"},
 						},
 						"endpoint_public_access": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed:  true,
+							Type:          schema.TypeBool,
+							Optional:      true,
+							Computed:      true,
 							ConflictsWith: []string{"outpost_config"},
 						},
 						"public_access_cidrs": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							Computed:      true,
 							ConflictsWith: []string{"outpost_config"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
