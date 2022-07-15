@@ -418,6 +418,11 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
 	}
