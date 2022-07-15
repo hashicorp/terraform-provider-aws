@@ -27,10 +27,13 @@ func ResourceCostCategory() *schema.Resource {
 		ReadContext:   resourceCostCategoryRead,
 		UpdateContext: resourceCostCategoryUpdate,
 		DeleteContext: resourceCostCategoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -104,8 +107,6 @@ func ResourceCostCategory() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 			"split_charge_rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -160,6 +161,8 @@ func ResourceCostCategory() *schema.Resource {
 				},
 				Set: costCategorySplitCharges,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
