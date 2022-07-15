@@ -599,6 +599,36 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_Outpost_create(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	controlPlaneInstanceType := "m5d.large"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_OutpostConfig(rName, "op-062c383102b6f92a2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterExists(resourceName string, cluster *eks.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1005,4 +1035,33 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, ipFamily))
+}
+
+func testAccClusterConfig_OutpostConfig(rName string, outpostID string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+data "aws_outposts_outpost" "test" {
+  id = %[2]q
+} 
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  outpost_config {
+	control_plane_instance_type = "m5d.large"
+    outpost_arns = [data.aws_outposts_outpost.arn]
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, outpostID))
 }
