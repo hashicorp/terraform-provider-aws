@@ -949,7 +949,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	return []interface{}{mRouteMatch}
 }
 
-func flattenHttpGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrite) []interface{} {
+func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrite) []interface{} {
 	if routeRewrite == nil {
 		return []interface{}{}
 	}
@@ -986,7 +986,7 @@ func flattenHTTPGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} 
 	if routeAction := httpRoute.Action; routeAction != nil {
 		mRouteAction := map[string]interface{}{
 			"target":  flattenGatewayRouteTarget(routeAction.Target),
-			"rewrite": flattenHttpGatewayRouteRewrite(routeAction.Rewrite),
+			"rewrite": flattenHTTPGatewayRouteRewrite(routeAction.Rewrite),
 		}
 
 		mHttpRoute["action"] = []interface{}{mRouteAction}
