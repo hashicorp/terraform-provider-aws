@@ -209,7 +209,10 @@ semall:
 	@semgrep -c .semgrep-service-name2.yml
 	@semgrep -c .semgrep-service-name3.yml
 
+skaff:
+	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
+
 tfsdk2fw:
 	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep tfsdk2fw
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw
