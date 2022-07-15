@@ -4,10 +4,11 @@ go 1.17
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.50
+	github.com/aws/aws-sdk-go v1.44.54
 	github.com/aws/aws-sdk-go-v2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
 	github.com/beevik/etree v1.1.0
@@ -20,6 +21,8 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
+	github.com/hashicorp/hcl/v2 v2.13.0
+	github.com/hashicorp/terraform-plugin-framework v0.9.0
 	github.com/hashicorp/terraform-plugin-go v0.11.0
 	github.com/hashicorp/terraform-plugin-mux v0.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.18.0
@@ -59,7 +62,6 @@ require (
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/hc-install v0.4.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.2 // indirect
 	github.com/hashicorp/terraform-json v0.14.0 // indirect

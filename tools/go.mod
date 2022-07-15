@@ -265,5 +265,3 @@ replace github.com/hashicorp/go-changelog => github.com/breathingdust/go-changel
 
 // v1.5.1 was incorrectly built
 exclude github.com/hashicorp/go-getter v1.5.1
-
-replace github.com/tommy-muehle/go-mnd/v2 => github.com/gdavison/go-mnd/v2 v2.4.1-0.20211001004251-d5db99f5fd61

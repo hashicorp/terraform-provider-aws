@@ -237,6 +237,7 @@ const (
 	ResourceGroups               = "resourcegroups"
 	ResourceGroupsTaggingAPI     = "resourcegroupstaggingapi"
 	RoboMaker                    = "robomaker"
+	RolesAnywhere                = "rolesanywhere"
 	Route53                      = "route53"
 	Route53Domains               = "route53domains"
 	Route53RecoveryCluster       = "route53recoverycluster"

@@ -153,8 +153,8 @@ linter:
   - '.markdownlint.yml'
   - '.semgrep.yml'
   - '.tflint.hcl'
-  - 'providerlint/**/*'
   - 'staticcheck.conf'
+  - 'tools/providerlint/**/*'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'

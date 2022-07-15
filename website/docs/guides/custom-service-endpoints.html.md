@@ -304,6 +304,7 @@ provider "aws" {
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
+  <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53recoverycluster</code></li>

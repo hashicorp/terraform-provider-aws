@@ -11,27 +11,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// ListTags lists networkmanager service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(conn networkmanageriface.NetworkManagerAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn networkmanageriface.NetworkManagerAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &networkmanager.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return KeyValueTags(output.TagList), nil
-}
-
 // []*SERVICE.Tag handling
 
 // Tags returns networkmanager service tags.
