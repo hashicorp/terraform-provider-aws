@@ -127,7 +127,7 @@ func ResourceCostCategory() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(costexplorer.CostCategorySplitChargeRuleParameterType_Values(), false),
 									},
 									"values": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										MaxItems: 500,
@@ -135,7 +135,6 @@ func ResourceCostCategory() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(0, 1024),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -729,8 +728,8 @@ func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *c
 	}
 
 	apiObject := &costexplorer.CostCategorySplitChargeRuleParameter{
-		Type:   aws.String(tfMap["method"].(string)),
-		Values: flex.ExpandStringSet(tfMap["values"].(*schema.Set)),
+		Type:   aws.String(tfMap["type"].(string)),
+		Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
 	}
 
 	return apiObject
@@ -1024,6 +1023,6 @@ func costCategorySplitChargesParameter(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(m["type"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["values"].(*schema.Set)))
+	buf.WriteString(fmt.Sprintf("%+v", m["values"].([]interface{})))
 	return schema.HashString(buf.String())
 }

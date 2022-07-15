@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -289,7 +291,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/aws/aws-sdk-go/service/transcribeservice"
 	"github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/translate"
@@ -557,6 +558,7 @@ type AWSClient struct {
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
+	RolesAnywhereConn                *rolesanywhere.Client
 	Route53Conn                      *route53.Route53
 	Route53DomainsConn               *route53domains.Client
 	Route53RecoveryClusterConn       *route53recoverycluster.Route53RecoveryCluster
@@ -605,7 +607,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribeservice.TranscribeService
+	TranscribeConn                   *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate

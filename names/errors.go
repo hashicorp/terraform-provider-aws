@@ -9,54 +9,76 @@ import (
 )
 
 const (
-	ErrActionReading           = "reading"
-	ErrActionDeleting          = "deleting"
-	ErrActionUpdating          = "updating"
-	ErrActionCreating          = "creating"
-	ErrActionCheckingExistence = "checking existence"
-	ErrActionCheckingDestroyed = "checking destroyed"
+	ErrActionCheckingDestroyed    = "checking destroyed"
+	ErrActionCheckingExistence    = "checking existence"
+	ErrActionCheckingNotRecreated = "checking not recreated"
+	ErrActionCheckingRecreated    = "checking recreated"
+	ErrActionCreating             = "creating"
+	ErrActionDeleting             = "deleting"
+	ErrActionReading              = "reading"
+	ErrActionSetting              = "setting"
+	ErrActionUpdating             = "updating"
+	ErrActionWaitingForCreation   = "waiting for creation"
+	ErrActionWaitingForDeletion   = "waiting for delete"
+	ErrActionWaitingForUpdate     = "waiting for update"
 )
 
+// ProblemStandardMessage is a standardized message for reporting errors and warnings
+func ProblemStandardMessage(service, action, resource, id string, gotError error) string {
+	hf, err := FullHumanFriendly(service)
+
+	if err != nil {
+		return fmt.Sprintf("finding human-friendly name for service (%s) while creating error (%s, %s, %s, %s): %s", service, action, resource, id, gotError, err)
+	}
+
+	if gotError == nil {
+		return fmt.Sprintf("%s %s %s (%s)", action, hf, resource, id)
+	}
+
+	return fmt.Sprintf("%s %s %s (%s): %s", action, hf, resource, id, gotError)
+}
+
+// Error returns an errors.Error with a standardized error message
 func Error(service, action, resource, id string, gotError error) error {
-	hf, err := FullHumanFriendly(service)
-
-	if err != nil {
-		return fmt.Errorf("finding human-friendly name for service (%s) while creating error (%s, %s, %s, %s): %w", service, action, resource, id, gotError, err)
-	}
-
-	if gotError == nil {
-		return fmt.Errorf("%s %s %s (%s)", action, hf, resource, id)
-	}
-
-	return fmt.Errorf("%s %s %s (%s): %w", action, hf, resource, id, gotError)
+	return errors.New(ProblemStandardMessage(service, action, resource, id, gotError))
 }
 
+// DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
+// with a standardized error message
 func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
-	hf, err := FullHumanFriendly(service)
-
-	if err != nil {
-		return diag.Errorf("finding human-friendly name for service (%s) while creating error (%s, %s, %s, %s): %s", service, action, resource, id, gotError, err)
+	return diag.Diagnostics{
+		diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
+		},
 	}
-
-	if gotError == nil {
-		return diag.Errorf("%s %s %s (%s)", action, hf, resource, id)
-	}
-
-	return diag.Errorf("%s %s %s (%s): %s", action, hf, resource, id, gotError)
 }
 
+// AddWarning returns diag.Diagnostics with an additional diag.Diagnostic containing
+// a warning using a standardized problem message
+func AddWarning(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
+	return append(diags,
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
+		},
+	)
+}
+
+// AddWarningNotFoundRemoveState returns diag.Diagnostics with an additional diag.Diagnostic containing
+// a warning using a standardized problem message
+func AddWarningNotFoundRemoveState(service, action, resource, id string) diag.Diagnostics {
+	return append(diag.Diagnostics{},
+		diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  ProblemStandardMessage(service, action, resource, id, errors.New("not found, removing from state")),
+		},
+	)
+}
+
+// WarnLog logs to the default logger a standardized problem message
 func WarnLog(service, action, resource, id string, gotError error) {
-	hf, err := FullHumanFriendly(service)
-
-	if err != nil {
-		log.Printf("[ERROR] finding human-friendly name for service (%s) while logging warn (%s, %s, %s, %s): %s", service, action, resource, id, gotError, err)
-	}
-
-	if gotError == nil {
-		log.Printf("[WARN] %s %s %s (%s)", action, hf, resource, id)
-	}
-
-	log.Printf("[WARN] %s %s %s (%s): %s", action, hf, resource, id, gotError)
+	log.Printf("[WARN] %s", ProblemStandardMessage(service, action, resource, id, gotError))
 }
 
 func LogNotFoundRemoveState(service, action, resource, id string) {

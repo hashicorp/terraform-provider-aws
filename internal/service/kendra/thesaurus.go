@@ -82,6 +82,10 @@ func ResourceThesaurus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"thesaurus_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -185,6 +189,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("role_arn", out.RoleArn)
 	d.Set("status", out.Status)
+	d.Set("thesaurus_id", out.Id)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
 		return diag.Errorf("setting complex argument: %s", err)
@@ -306,47 +311,6 @@ func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return nil
-}
-
-func flattenSourceS3Path(apiObject *types.S3Path) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Bucket; v != nil {
-		m["bucket"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Key; v != nil {
-		m["key"] = aws.ToString(v)
-	}
-
-	return []interface{}{m}
-}
-
-func expandSourceS3Path(tfList []interface{}) *types.S3Path {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	result := &types.S3Path{}
-
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
-		result.Bucket = aws.String(v)
-	}
-
-	if v, ok := tfMap["key"].(string); ok && v != "" {
-		result.Key = aws.String(v)
-	}
-
-	return result
 }
 
 func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {

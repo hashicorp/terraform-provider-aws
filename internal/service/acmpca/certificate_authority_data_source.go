@@ -79,6 +79,24 @@ func DataSourceCertificateAuthority() *schema.Resource {
 								},
 							},
 						},
+						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_OcspConfiguration.html
+						"ocsp_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"ocsp_custom_cname": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},

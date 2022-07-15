@@ -21,10 +21,6 @@ resource "aws_sqs_queue" "terraform_queue" {
     deadLetterTargetArn = aws_sqs_queue.terraform_queue_deadletter.arn
     maxReceiveCount     = 4
   })
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = [aws_sqs_queue.terraform_queue_deadletter.arn]
-  })
 
   tags = {
     Environment = "production"
@@ -50,6 +46,18 @@ resource "aws_sqs_queue" "terraform_queue" {
   fifo_queue            = true
   deduplication_scope   = "messageGroup"
   fifo_throughput_limit = "perMessageGroupId"
+}
+```
+
+## Dead-letter queue
+
+```terraform
+resource "aws_sqs_queue" "terraform_queue_deadletter" {
+  name = "terraform-example-deadletter-queue"
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns   = [aws_sqs_queue.terraform_queue.arn]
+  })
 }
 ```
 

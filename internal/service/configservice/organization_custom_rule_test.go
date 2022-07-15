@@ -1,6 +1,7 @@
 package configservice_test
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -12,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationCustomRule_basic(t *testing.T) {
@@ -69,7 +71,7 @@ func testAccOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationCustomRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -443,19 +445,19 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", resourceName)
+			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("not found"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfigservice.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
+			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, err)
 		}
 
 		if rule == nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) not found", rs.Primary.ID)
+			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("empty response"))
 		}
 
 		*ocr = *rule
@@ -472,18 +474,18 @@ func testAccCheckOrganizationCustomRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfigservice.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
+			return names.Error(names.ConfigService, names.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, err)
 		}
 
 		if rule != nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) still exists", rs.Primary.ID)
+			return names.Error(names.ConfigService, names.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, errors.New("still exists"))
 		}
 	}
 

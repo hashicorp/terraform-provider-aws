@@ -34,6 +34,9 @@ gen:
 	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .semgrep-caps-aws-ec2.yml
+	rm -f .semgrep-configs.yml
+	rm -f .semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
@@ -59,7 +62,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./tools/providerlint/go% ./tools/providerlint/README.md ./tools/providerlint/vendor, $(wildcard ./tools/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -146,7 +149,7 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd providerlint && go install .
+	cd tools/providerlint && go install .
 	cd tools && go install github.com/bflad/tfproviderdocs
 	cd tools && go install github.com/client9/misspell/cmd/misspell
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -199,9 +202,14 @@ semgrep:
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep -c .semgrep.yml
+	@semgrep -c .semgrep-caps-aws-ec2.yml
+	@semgrep -c .semgrep-configs.yml
 	@semgrep -c .semgrep-service-name0.yml
 	@semgrep -c .semgrep-service-name1.yml
 	@semgrep -c .semgrep-service-name2.yml
 	@semgrep -c .semgrep-service-name3.yml
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+tfsdk2fw:
+	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep tfsdk2fw

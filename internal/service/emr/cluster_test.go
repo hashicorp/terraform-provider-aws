@@ -3552,7 +3552,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   master_instance_group {
-    instance_type = "m4.large"
+    instance_type = "m5.xlarge"
     ebs_config {
       size                 = 32
       type                 = "gp2"
@@ -3560,16 +3560,22 @@ resource "aws_emr_cluster" "test" {
     }
     ebs_config {
       size                 = 50
-      type                 = "gp2"
+      throughput           = 500
+      type                 = "gp3"
       volumes_per_instance = %[2]d
     }
   }
   core_instance_group {
     instance_count = 1
-    instance_type  = "m4.large"
+    instance_type  = "m5.xlarge"
     ebs_config {
       size                 = 32
       type                 = "gp2"
+      volumes_per_instance = %[2]d
+    }
+    ebs_config {
+      size                 = 125
+      type                 = "sc1"
       volumes_per_instance = %[2]d
     }
   }

@@ -24,19 +24,33 @@ package {{ .ServicePackage }}_test
 
 import (
 {{- if .IncludeComments }}
-	// TIP: ==== IMPORT ====
-    // This is a common set of imports but not customized to your code
-	// since your code hasn't been written yet. Make sure you, your IDE, or
+	// TIP: ==== IMPORTS ====
+	// This is a common set of imports but not customized to your code since
+	// your code hasn't been written yet. Make sure you, your IDE, or
 	// goimports -w <file> fixes these imports.
+	//
+	// The provider linter wants your imports to be in two groups: first,
+	// standard library (i.e., "fmt" or "strings"), second, everything else.
+{{- end }}
+{{- if and .IncludeComments .AWSGoSDKV2 }}
+	//
+	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
+	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// need to import types and reference the nested types, e.g., as
+	// types.<Type Name>.
 {{- end }}
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
-
+{{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types" {{- if .IncludeComments }} // TIP: Some v2 packages use a separate package for types while some do not.{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+{{- else }}
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -157,9 +171,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
+		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
@@ -201,9 +215,9 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheck{{ .Resource }}Destroy,
+		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
@@ -237,7 +251,7 @@ func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Expected {{ .Service }} {{ .Resource }} to be destroyed, %s found", rs.Primary.ID)
+		return names.Error(names.{{ .Service }}, names.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
@@ -247,11 +261,11 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No {{ .Service }} {{ .Resource }} is set")
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
@@ -260,7 +274,7 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error describing {{ .Service }} {{ .Resource }}: %s", err.Error())
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 		}
 
 		*{{ .ResourceLower }} = *resp
@@ -288,7 +302,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.StringValue(before.{{ .Resource }}Id), aws.StringValue(after.{{ .Resource }}Id); before != after {
-			return fmt.Errorf("{{ .Service }} {{ .Resource }} (%s/%s) recreated", before, after)
+			return names.Error(names.{{ .Service }}, names.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, aws.StringValue(before.{{ .Resource }}Id), errors.New("recreated"))
 		}
 
 		return nil

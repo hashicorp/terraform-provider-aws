@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccECSService_basic(t *testing.T) {
@@ -84,7 +86,7 @@ func TestAccECSService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`(Please verify the ID is correct|Cannot import non-existent remote object)`),
+				ExpectError:       regexp.MustCompile(`Cannot import non-existent remote object`),
 			},
 		},
 	})
@@ -1281,29 +1283,19 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.DescribeServices(&ecs.DescribeServicesInput{
-			Services: []*string{aws.String(rs.Primary.ID)},
-			Cluster:  aws.String(rs.Primary.Attributes["cluster"]),
-		})
+		service, err := tfecs.FindServiceNoTagsByID(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+		if tfresource.NotFound(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
 
-		if err == nil {
-			if len(out.Services) > 0 {
-				var activeServices []*ecs.Service
-				for _, svc := range out.Services {
-					if *svc.Status != "INACTIVE" {
-						activeServices = append(activeServices, svc)
-					}
-				}
-				if len(activeServices) == 0 {
-					return nil
-				}
-
-				return fmt.Errorf("ECS service still exists:\n%#v", activeServices)
-			}
+		if aws.StringValue(service.Status) == "INACTIVE" {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("ECS service still exists:\n%#v", service)
 	}
 
 	return nil
@@ -1318,27 +1310,17 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
-		input := &ecs.DescribeServicesInput{
-			Cluster:  aws.String(rs.Primary.Attributes["cluster"]),
-			Services: []*string{aws.String(rs.Primary.ID)},
-		}
-		var output *ecs.DescribeServicesOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			var err error
-			output, err = conn.DescribeServices(input)
-
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-					return resource.RetryableError(err)
-				}
-				if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
+			service, err = tfecs.FindServiceNoTagsByID(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			if tfresource.NotFound(err) {
+				return resource.RetryableError(err)
 			}
-
-			if len(output.Services) == 0 {
-				return resource.RetryableError(fmt.Errorf("service not found: %s", rs.Primary.ID))
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
+				return resource.NonRetryableError(err)
 			}
 
 			return nil
@@ -1347,8 +1329,6 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 		if err != nil {
 			return err
 		}
-
-		*service = *output.Services[0]
 
 		return nil
 	}

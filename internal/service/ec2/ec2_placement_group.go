@@ -50,6 +50,12 @@ func ResourcePlacementGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"spread_level": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
+			},
 			"strategy": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -81,6 +87,10 @@ func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("partition_count"); ok {
 		input.PartitionCount = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("spread_level"); ok {
+		input.SpreadLevel = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
@@ -121,6 +131,7 @@ func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
+	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
 	tags := KeyValueTags(pg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -190,6 +201,12 @@ func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.Resourc
 	if diff.Id() == "" {
 		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
+		}
+	}
+
+	if diff.Id() == "" {
+		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != ec2.PlacementGroupStrategySpread {
+			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}
 

@@ -389,6 +389,7 @@ The following arguments are supported:
 * `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 * `context` - (Optional) Reserved.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
+* `default_instance_warmup` - (Optional) The amount of time, in seconds, until a newly launched instance can contribute to the Amazon CloudWatch metrics. This delay lets an instance finish initializing before Amazon EC2 Auto Scaling aggregates instance metrics, resulting in more reliable usage data. Set this value equal to the amount of time that it takes for resource consumption to become stable after an instance reaches the InService state. (See [Set the default instance warmup for an Auto Scaling group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-default-instance-warmup.html))
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
 * `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [Launch Template](#launch_template) below for more details.
 * `mixed_instances_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. See [Mixed Instances Policy](#mixed_instances_policy) below for more details.
@@ -662,6 +663,7 @@ In addition to all arguments above, the following attributes are exported:
 * `min_size` - The minimum size of the Auto Scaling Group
 * `max_size` - The maximum size of the Auto Scaling Group
 * `default_cooldown` - Time between a scaling activity and the succeeding scaling activity.
+* `default_instance_warmup` - The duration of the default instance warmup, in seconds.
 * `name` - The name of the Auto Scaling Group
 * `health_check_grace_period` - Time after instance comes into service before checking health.
 * `health_check_type` - "EC2" or "ELB". Controls how health checking is done.
