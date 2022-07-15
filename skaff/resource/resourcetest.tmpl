@@ -163,7 +163,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 
 	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceLower }}.test"
+	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -207,7 +207,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 
 	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceLower }}.test"
+	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -235,7 +235,7 @@ func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" {
+		if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
 			continue
 		}
 
@@ -315,8 +315,8 @@ resource "aws_security_group" "test" {
   name = %[1]q
 }
 
-resource "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" "test" {
-  {{ .ResourceLower }}_name             = %[1]q
+resource "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "test" {
+  {{ .ResourceSnake }}_name             = %[1]q
   engine_type             = "Active{{ .Service }}"
   engine_version          = %[2]q
   host_instance_type      = "{{ .ServicePackage }}.t2.micro"
