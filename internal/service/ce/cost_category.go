@@ -398,7 +398,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			return conn.CreateCostCategoryDefinition(input)
+			return conn.CreateCostCategoryDefinitionWithContext(ctx, input)
 		},
 		costexplorer.ErrCodeResourceNotFoundException)
 
@@ -413,40 +413,37 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Id())})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResCostCategory, d.Id())
-		d.SetId("")
-		return nil
-	}
+	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
 	}
 
-	d.Set("arn", resp.CostCategory.CostCategoryArn)
-	d.Set("default_value", resp.CostCategory.DefaultValue)
-	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
-	d.Set("effective_start", resp.CostCategory.EffectiveStart)
-	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCostCategoryRules(resp.CostCategory.Rules)); err != nil {
+	d.Set("arn", costCategory.CostCategoryArn)
+	d.Set("default_value", costCategory.DefaultValue)
+	d.Set("effective_end", costCategory.EffectiveEnd)
+	d.Set("effective_start", costCategory.EffectiveStart)
+	d.Set("name", costCategory.Name)
+	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
 	}
-	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
+	d.Set("rule_version", costCategory.RuleVersion)
+	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
 		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
 	}
 
-	tResp, err := conn.ListTagsForResourceWithContext(ctx, &costexplorer.ListTagsForResourceInput{ResourceArn: aws.String(d.Id())})
-	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		return nil
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+
+	if err != nil {
+		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
 	}
 
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
 	//lintignore:AWSR002
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := KeyValueTags(tResp.ResourceTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
 	}

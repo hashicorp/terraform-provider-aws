@@ -1,20 +1,18 @@
 package ce_test
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCECostCategory_basic(t *testing.T) {
@@ -203,25 +201,26 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCostCategoryExists(resourceName string, output *costexplorer.CostCategory) resource.TestCheckFunc {
+func testAccCheckCostCategoryExists(n string, v *costexplorer.CostCategory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, resourceName, errors.New("not found in state"))
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CE Cost Category ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
-		resp, err := conn.DescribeCostCategoryDefinition(&costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(rs.Primary.ID)})
+
+		output, err := tfce.FindCostCategoryByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, rs.Primary.ID, err)
+			return err
 		}
 
-		if resp == nil {
-			return names.Error(names.CE, names.ErrActionCheckingExistence, tfce.ResCostCategory, rs.Primary.ID, errors.New("not found"))
-		}
-
-		*output = *resp.CostCategory
+		*v = *output
 
 		return nil
 	}
@@ -235,19 +234,17 @@ func testAccCheckCostCategoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeCostCategoryDefinition(&costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(rs.Primary.ID)})
+		_, err := tfce.FindCostCategoryByARN(context.TODO(), conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResCostCategory, rs.Primary.ID, err)
+			return err
 		}
 
-		if resp != nil && resp.CostCategory != nil {
-			return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResCostCategory, rs.Primary.ID, errors.New("still exists"))
-		}
+		return fmt.Errorf("CE Cost Category %s still exists", rs.Primary.ID)
 	}
 
 	return nil
