@@ -33,10 +33,10 @@ func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 func testAccDataSourceAccountPublicAccessBlockBaseConfig() string {
 	return fmt.Sprintf(`
 resource "aws_s3_account_public_access_block" "test" {
-	block_public_acls       = false
-	block_public_policy     = false
-	ignore_public_acls      = false
-	restrict_public_buckets = false
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 `)
 }
@@ -44,7 +44,7 @@ resource "aws_s3_account_public_access_block" "test" {
 func testAccS3ControlAccountPublicAccessBlockDataSource_basic() string {
 	return acctest.ConfigCompose(testAccDataSourceAccountPublicAccessBlockBaseConfig(), `
 data "aws_s3_account_public_access_block" "test" {
-	depends_on = [aws_s3_account_public_access_block.test]
+  depends_on = [aws_s3_account_public_access_block.test]
 }
 `)
 }

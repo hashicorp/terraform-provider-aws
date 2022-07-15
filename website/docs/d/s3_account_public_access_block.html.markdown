@@ -15,7 +15,6 @@ The S3 account public access block data source returns account-level public acce
 ```terraform
 data "aws_s3_account_public_access_block" "example" {
 }
-
 ```
 
 ## Argument Reference
