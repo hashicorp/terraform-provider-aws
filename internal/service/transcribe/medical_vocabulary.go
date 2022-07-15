@@ -293,8 +293,8 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	out, err := conn.GetMedicalVocabulary(ctx, in)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	var notFoundException *types.NotFoundException
+	if errors.As(err, &notFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
