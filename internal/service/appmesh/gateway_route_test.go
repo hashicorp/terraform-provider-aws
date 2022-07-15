@@ -672,8 +672,8 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         hostname {
-			exact = "test.example.com"
-		}
+          exact = "test.example.com"
+        }
       }
     }
   }
@@ -696,14 +696,14 @@ resource "aws_appmesh_gateway_route" "test" {
             virtual_service_name = aws_appmesh_virtual_service.test[0].name
           }
         }
-		rewrite {
-		  hostname {
-			default_target_hostname = "DISABLED"
-		  }
-		  prefix {
-			default_prefix = "DISABLED"
-		  }
-		}
+        rewrite {
+          hostname {
+            default_target_hostname = "DISABLED"
+          }
+          prefix {
+            default_prefix = "DISABLED"
+          }
+        }
       }
 
       match {
@@ -773,23 +773,23 @@ resource "aws_appmesh_gateway_route" "test" {
   name                 = %[1]q
   mesh_name            = aws_appmesh_mesh.test.name
   virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
-	
+
   spec {
-	http2_route {
-	  action {
-	  	target {
-		  virtual_service {
-			virtual_service_name = aws_appmesh_virtual_service.test[0].name
-		  }
-		}
-	  }
-		
-	  match {
-		hostname {
-		  exact = "test.example.com"
-		}
-	  }
-	}
+    http2_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.test[0].name
+          }
+        }
+      }
+
+      match {
+        hostname {
+          exact = "test.example.com"
+        }
+      }
+    }
   }
 }
 `, grName))
@@ -810,14 +810,14 @@ resource "aws_appmesh_gateway_route" "test" {
             virtual_service_name = aws_appmesh_virtual_service.test[0].name
           }
         }
-		rewrite {
-		  hostname {
-			default_target_hostname = "DISABLED"
-		  }
-		  prefix {
-			default_prefix = "DISABLED"
-		  }
-		}
+        rewrite {
+          hostname {
+            default_target_hostname = "DISABLED"
+          }
+          prefix {
+            default_prefix = "DISABLED"
+          }
+        }
       }
 
       match {
