@@ -493,7 +493,8 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
 	})
-	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+
+	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
