@@ -218,7 +218,6 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(64, 512*1024),
 			},
 			"storage_type": {
@@ -479,6 +478,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
 		if d.HasChange("automatic_backup_retention_days") {
 			input.OpenZFSConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
 		}
@@ -499,6 +502,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			input.OpenZFSConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		if d.HasChange("weekly_maintenance_start_time") {
 			input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
@@ -510,6 +517,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
+		}
+
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
 		}
 
