@@ -975,7 +975,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.Body != nil {
-		m["cookies"] = make([]map[string]interface{}, 1)
+		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
 	if f.Method != nil {
@@ -1028,17 +1028,33 @@ func flattenIPSetForwardedIPConfig(i *wafv2.IPSetForwardedIPConfig) interface{} 
 	return []interface{}{m}
 }
 
-//func flattenCookies(s *wafv2.Cookies) interface{} {
-//	if s == nil {
-//		return []interface{}{}
-//	}
-//
-//	m := map[string]interface{}{
-//		"name": aws.StringValue(s.Name),
-//	}
-//
-//	return []interface{}{m}
-//}
+func flattenCookies(c *wafv2.Cookies) interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"match_scope":       aws.StringValue(c.MatchScope),
+		"oversize_handling": aws.StringValue(c.OversizeHandling),
+		"match_pattern":     flattenCookiesMatchPattern(c.MatchPattern),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCookiesMatchPattern(c *wafv2.CookieMatchPattern) interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"all":              c.All,
+		"included_cookies": aws.StringValueSlice(c.IncludedCookies),
+		"excluded_cookies": aws.StringValueSlice(c.ExcludedCookies),
+	}
+
+	return []interface{}{m}
+}
 
 func flattenSingleHeader(s *wafv2.SingleHeader) interface{} {
 	if s == nil {
