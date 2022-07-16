@@ -730,10 +730,11 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map":              location.DataSourceMap(),
-			"aws_location_place_index":      location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator": location.DataSourceRouteCalculator(),
-			"aws_location_tracker":          location.DataSourceTracker(),
+			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
+			"aws_location_map":                 location.DataSourceMap(),
+			"aws_location_place_index":         location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
+			"aws_location_tracker":             location.DataSourceTracker(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
