@@ -63,3 +63,21 @@ func waitConnectionUpdated(conn *eventbridge.EventBridge, id string) (*eventbrid
 
 	return nil, err
 }
+
+func waitEndpoint(conn *eventbridge.EventBridge, id string, pendingStates []string, targetStates []string) (*eventbridge.DescribeEndpointOutput, error) {
+	timeout := 2 * time.Minute
+	stateConf := &resource.StateChangeConf{
+		Pending: pendingStates,
+		Target:  targetStates,
+		Refresh: statusEndpointState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}

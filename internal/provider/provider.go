@@ -1103,6 +1103,7 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_api_destination": events.ResourceAPIDestination(),
 			"aws_cloudwatch_event_archive":         events.ResourceArchive(),
 			"aws_cloudwatch_event_bus":             events.ResourceBus(),
+			"aws_cloudwatch_global_endpoint":       events.ResourceEndpoint(),
 			"aws_cloudwatch_event_bus_policy":      events.ResourceBusPolicy(),
 			"aws_cloudwatch_event_connection":      events.ResourceConnection(),
 			"aws_cloudwatch_event_permission":      events.ResourcePermission(),

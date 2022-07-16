@@ -104,3 +104,31 @@ func FindTarget(conn *eventbridge.EventBridge, busName, ruleName, targetId strin
 	}
 	return result, nil
 }
+
+func FindEndpointByName(conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeEndpointOutput, error) {
+	input := &eventbridge.DescribeEndpointInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpoint(input)
+
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
