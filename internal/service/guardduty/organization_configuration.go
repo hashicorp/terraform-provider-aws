@@ -182,6 +182,40 @@ func expandOrganizationS3LogsConfiguration(tfMap map[string]interface{}) *guardd
 	return apiObject
 }
 
+func expandOrganizationKubernetesConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationKubernetesConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["audit_logs"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.OrganizationKubernetesConfiguration{
+		AuditLogs: expandOrganizationKubernetesAuditLogsConfiguration(m),
+	}
+}
+
+func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationKubernetesAuditLogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.OrganizationKubernetesAuditLogsConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.AutoEnable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenOrganizationDataSourceConfigurationsResult(apiObject *guardduty.OrganizationDataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
