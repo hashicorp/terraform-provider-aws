@@ -245,3 +245,31 @@ func flattenOrganizationS3LogsConfigurationResult(apiObject *guardduty.Organizat
 
 	return tfMap
 }
+
+func flattenOrganizationKubernetesConfigurationResult(apiObject *guardduty.OrganizationKubernetesConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuditLogs; v != nil {
+		tfMap["audit_logs"] = []interface{}{flattenOrganizationKubernetesAuditLogsConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenOrganizationKubernetesAuditLogsConfiguration(apiObject *guardduty.OrganizationKubernetesAuditLogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoEnable; v != nil {
+		tfMap["enable"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
