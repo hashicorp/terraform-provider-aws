@@ -58,8 +58,8 @@ The following arguments are supported:
 ### Kubernetes
 `kubernetes` block supports the following:
 
- * `audit_logs` - (Required) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts. [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
-   See [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
+* `audit_logs` - (Required) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts. [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  See [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
 
 #### Kubernetes Audit Logs
 
