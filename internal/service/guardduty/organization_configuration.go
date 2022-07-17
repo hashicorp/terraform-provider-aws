@@ -50,6 +50,29 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"kubernetes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audit_logs": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
