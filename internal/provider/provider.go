@@ -1825,6 +1825,7 @@ func Provider() *schema.Provider {
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
+			"aws_rolesanywhere_profile":      rolesanywhere.ResourceProfile(),
 			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
