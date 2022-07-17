@@ -192,7 +192,9 @@ func flattenOrganizationDataSourceConfigurationsResult(apiObject *guardduty.Orga
 	if v := apiObject.S3Logs; v != nil {
 		tfMap["s3_logs"] = []interface{}{flattenOrganizationS3LogsConfigurationResult(v)}
 	}
-
+	if v := apiObject.Kubernetes; v != nil {
+		tfMap["kubernetes"] = []interface{}{flattenOrganizationKubernetesConfigurationResult(v)}
+	}
 	return tfMap
 }
 
