@@ -161,6 +161,10 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 		apiObject.S3Logs = expandOrganizationS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
