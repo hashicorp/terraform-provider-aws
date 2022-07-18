@@ -55,6 +55,12 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 	}
 }
 
+// ErrorSetting returns an errors.Error with a standardized error message when setting
+// arguments and attributes values.
+func ErrorSetting(service, resource, id, argument string, gotError error) error {
+	return errors.New(ProblemStandardMessage(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError))
+}
+
 // AddWarning returns diag.Diagnostics with an additional diag.Diagnostic containing
 // a warning using a standardized problem message
 func AddWarning(diags diag.Diagnostics, service, action, resource, id string, gotError error) diag.Diagnostics {
