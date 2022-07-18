@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
@@ -195,6 +196,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.RolesAnywhereConn = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
+			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
 		}
 	})
 
