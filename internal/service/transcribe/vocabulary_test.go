@@ -1,110 +1,55 @@
 package transcribe_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-
-func TestVocabularyExampleUnitTest(t *testing.T) {
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tftranscribe.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccTranscribeVocabulary_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var vocabulary transcribe.DescribeVocabularyResponse
+	var vocabulary transcribe.GetVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(transcribe.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccVocabulariesPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, transcribe.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyConfig_basic(rName),
+				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &vocabulary),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transcribe", regexp.MustCompile(`vocabulary:+.`)),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{"vocabulary_file_uri", "download_uri"},
 			},
 		},
 	})
@@ -115,22 +60,22 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var vocabulary transcribe.DescribeVocabularyResponse
+	var vocabulary transcribe.GetVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transcribe_vocabulary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(transcribe.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccVocabulariesPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, transcribe.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyConfig_basic(rName, testAccVocabularyVersionNewer),
+				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &vocabulary),
 					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceVocabulary(), resourceName),
@@ -149,15 +94,13 @@ func testAccCheckVocabularyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &transcribe.DescribeVocabularyInput{
-			VocabularyId: aws.String(rs.Primary.ID),
+		_, err := tftranscribe.FindVocabularyByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeVocabulary(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, transcribe.ErrCodeNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
@@ -167,7 +110,7 @@ func testAccCheckVocabularyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVocabularyExists(name string, vocabulary *transcribe.DescribeVocabularyResponse) resource.TestCheckFunc {
+func testAccCheckVocabularyExists(name string, vocabulary *transcribe.GetVocabularyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -179,9 +122,7 @@ func testAccCheckVocabularyExists(name string, vocabulary *transcribe.DescribeVo
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-		resp, err := conn.DescribeVocabulary(&transcribe.DescribeVocabularyInput{
-			VocabularyId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tftranscribe.FindVocabularyByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return names.Error(names.Transcribe, names.ErrActionCheckingExistence, tftranscribe.ResNameVocabulary, rs.Primary.ID, err)
@@ -193,12 +134,12 @@ func testAccCheckVocabularyExists(name string, vocabulary *transcribe.DescribeVo
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccVocabulariesPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
 
-	input := &transcribe.ListVocabularysInput{}
+	input := &transcribe.ListVocabulariesInput{}
 
-	_, err := conn.ListVocabularys(input)
+	_, err := conn.ListVocabularies(context.Background(), input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -209,39 +150,88 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckVocabularyNotRecreated(before, after *transcribe.DescribeVocabularyResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VocabularyId), aws.StringValue(after.VocabularyId); before != after {
-			return names.Error(names.Transcribe, names.ErrActionCheckingNotRecreated, tftranscribe.ResNameVocabulary, aws.StringValue(before.VocabularyId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccVocabularyConfig_basic(rName, version string) string {
+func testAccVocabularyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
 }
 
+resource "aws_s3_object" "object1" {
+  bucket = aws_s3_bucket.test.id
+  key    = "transcribe/test1.txt"
+  source = "test-fixtures/vocabulary_test1.txt"
+}
+
+resource "aws_s3_object" "object2" {
+  bucket = aws_s3_bucket.test.id
+  key    = "transcribe/test2.txt"
+  source = "test-fixtures/vocabulary_test2.txt"
+}
+
+`, rName)
+}
+
+func testAccVocabularyConfig_basicFile(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_transcribe_vocabulary" "test" {
-  vocabulary_name             = %[1]q
-  engine_type             = "ActiveTranscribe"
-  engine_version          = %[2]q
-  host_instance_type      = "transcribe.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  vocabulary_name     = %[1]q
+  language_code       = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
-  logs {
-    general = true
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  depends_on = [
+    aws_s3_object.object1
+  ]
 }
-`, rName, version)
+`, rName))
+}
+
+func testAccVocabularyConfig_basicPhrases(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_vocabulary" "test" {
+  vocabulary_name = %[1]q
+  language_code   = "en-US"
+  phrases         = ["Los-Angeles", "CLI", "Eva-Maria"] 
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
+
+  depends_on = [
+    aws_s3_object.object1
+  ]
+}
+`, rName))
+}
+
+func testAccVocabularyConfig_updateFile(rName, fileName string) string {
+	return acctest.ConfigCompose(
+		testAccMedicalVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_vocabulary" "test" {
+  vocabulary_name     = %[1]q
+  language_code       = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/transcribe/%[2]s"
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
+
+  depends_on = [
+    aws_s3_object.object1,
+    aws_s3_object.object2
+  ]
+}
+`, rName, fileName))
 }

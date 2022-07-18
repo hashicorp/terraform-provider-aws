@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,7 +57,6 @@ func ResourceVocabulary() *schema.Resource {
 			"phrases": {
 				Type:         schema.TypeList,
 				Optional:     true,
-				Computed:     true,
 				MaxItems:     256,
 				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
 				Elem:         &schema.Schema{Type: schema.TypeString},
@@ -92,7 +90,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).TranscribeConn
 
 	in := &transcribe.CreateVocabularyInput{
-		VocabularyName: aws.String(d.Get("name").(string)),
+		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
 		LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
 	}
 
@@ -101,14 +99,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("phrases"); ok {
-		in.Phrases = func(in []interface{}) []string {
-			var out []string
-
-			for _, val := range in {
-				out = append(out, val.(string))
-			}
-			return out
-		}(v.([]interface{}))
+		in.Phrases = expandPhrases(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -162,8 +153,9 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
+	d.Set("language_code", out.LanguageCode)
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameVocabulary, d.Id(), err)
 	}
@@ -187,29 +179,29 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeConn
 
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &transcribe.UpdateVocabularyInput{
+			VocabularyName: aws.String(d.Id()),
+			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+		}
 
-	in := &transcribe.UpdateVocabularyInput{
-		Id: aws.String(d.Id()),
-	}
+		if d.HasChanges("vocabulary_file_uri", "phrases") {
+			if d.Get("vocabulary_file_uri").(string) != "" {
+				in.VocabularyFileUri = aws.String(d.Get("vocabulary_file_uri").(string))
+			} else {
+				in.Phrases = expandPhrases(d.Get("phrases").([]interface{}))
+			}
+		}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
-		update = true
-	}
+		log.Printf("[DEBUG] Updating Transcribe Vocabulary (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateVocabulary(ctx, in)
+		if err != nil {
+			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
+		}
 
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating Transcribe Vocabulary (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateVocabularyWithContext(ctx, in)
-	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
-	}
-
-	if _, err := waitVocabularyUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
+		if _, err := waitVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return names.DiagError(names.Transcribe, names.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
+		}
 	}
 
 	return resourceVocabularyRead(ctx, d, meta)
@@ -220,11 +212,12 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
 
-	_, err := conn.DeleteVocabularyWithContext(ctx, &transcribe.DeleteVocabularyInput{
-		Id: aws.String(d.Id()),
+	_, err := conn.DeleteVocabulary(ctx, &transcribe.DeleteVocabularyInput{
+		VocabularyName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, transcribe.ErrCodeResourceNotFoundException) {
+	var notFoundException *types.NotFoundException
+	if errors.As(err, &notFoundException) {
 		return nil
 	}
 
@@ -239,14 +232,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.Vocabulary, error) {
+func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
@@ -259,13 +245,16 @@ func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*transcribe.GetVocabularyOutput); ok {
+		if status := out.VocabularyState; status == types.VocabularyStateFailed {
+			return out, errors.New(aws.ToString(out.FailureReason))
+		}
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.Vocabulary, error) {
+func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
@@ -278,13 +267,16 @@ func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*transcribe.GetVocabularyOutput); ok {
+		if status := out.VocabularyState; status == types.VocabularyStateFailed {
+			return out, errors.New(aws.ToString(out.FailureReason))
+		}
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.Vocabulary, error) {
+func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: vocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
@@ -295,6 +287,9 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*transcribe.GetVocabularyOutput); ok {
+		if status := out.VocabularyState; status == types.VocabularyStateFailed {
+			return out, errors.New(aws.ToString(out.FailureReason))
+		}
 		return out, err
 	}
 
@@ -323,8 +318,8 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	out, err := conn.GetVocabulary(ctx, in)
 
-	var notFoundException *types.NotFoundException
-	if errors.As(err, &notFoundException) {
+	var badRequestException *types.BadRequestException
+	if errors.As(err, &badRequestException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -350,4 +345,13 @@ func vocabularyStatus(in ...types.VocabularyState) []string {
 	}
 
 	return s
+}
+
+func expandPhrases(in []interface{}) []string {
+	var out []string
+
+	for _, val := range in {
+		out = append(out, val.(string))
+	}
+	return out
 }

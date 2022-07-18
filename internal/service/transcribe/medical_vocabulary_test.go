@@ -248,13 +248,13 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object1" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test1.txt"
-  source = "test-fixtures/test1.txt"
+  source = "test-fixtures/medical_vocabulary_test1.txt"
 }
 
 resource "aws_s3_object" "object2" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test2.txt"
-  source = "test-fixtures/test2.txt"
+  source = "test-fixtures/medical_vocabulary_test2.txt"
 }
 
 `, rName)
