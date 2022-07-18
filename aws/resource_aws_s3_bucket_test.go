@@ -916,7 +916,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(t *testing.T) {
+func TestAccAWSS3Bucket_Security_noConfiguredServerSideEncryptionAfterDefaultEncryptionIsEnabled(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.arbitrary"
 
@@ -929,6 +929,10 @@ func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(
 				Config: testAccAWSS3BucketEnableDefaultEncryptionWithDefaultKey(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
 				),
 			},
 			{
@@ -938,10 +942,13 @@ func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(
 				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 			{
-				Config: testAccAWSS3BucketDisableDefaultEncryption(bucketName),
+				Config: testAccAWSS3BucketNoConfiguredServerSideEncryption(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
 				),
 			},
 		},
@@ -3276,7 +3283,7 @@ resource "aws_s3_bucket" "arbitrary" {
 `, bucketName)
 }
 
-func testAccAWSS3BucketDisableDefaultEncryption(bucketName string) string {
+func testAccAWSS3BucketNoConfiguredServerSideEncryption(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = %[1]q
