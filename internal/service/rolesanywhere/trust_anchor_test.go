@@ -49,7 +49,6 @@ func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 }
 
 func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	caCommonName := acctest.RandomDomainName()
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
@@ -95,7 +94,6 @@ func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 }
 
 func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	caCommonName := acctest.RandomDomainName()
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
@@ -113,6 +111,36 @@ func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfrolesanywhere.ResourceTrustAnchor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_trust_anchor.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTrustAnchorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustAnchorConfig_certificateBundle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", "CERTIFICATE_BUNDLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -166,7 +194,7 @@ func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccTrustAnchorConfigBase(caCommonName string) string {
+func testAccTrustAnchorConfig_acmBase(caCommonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -205,7 +233,7 @@ resource "aws_acmpca_certificate_authority_certificate" "test" {
 
 func testAccTrustAnchorConfig_basic(rName, caCommonName string) string {
 	return acctest.ConfigCompose(
-		testAccTrustAnchorConfigBase(caCommonName),
+		testAccTrustAnchorConfig_acmBase(caCommonName),
 		fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {
   name = %[1]q
@@ -222,7 +250,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 
 func testAccTrustAnchorConfig_tags1(rName, caCommonName, tag, value string) string {
 	return acctest.ConfigCompose(
-		testAccTrustAnchorConfigBase(caCommonName),
+		testAccTrustAnchorConfig_acmBase(caCommonName),
 		fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {
   name = %[1]q
@@ -242,7 +270,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 
 func testAccTrustAnchorConfig_tags2(rName, caCommonName, tag1, value1, tag2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccTrustAnchorConfigBase(caCommonName),
+		testAccTrustAnchorConfig_acmBase(caCommonName),
 		fmt.Sprintf(`
 resource "aws_rolesanywhere_trust_anchor" "test" {
   name = %[1]q
@@ -259,6 +287,23 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
   depends_on = [aws_acmpca_certificate_authority_certificate.test]
 }
 `, rName, tag1, value1, tag2, value2))
+}
+
+func testAccTrustAnchorConfig_certificateBundle(rName string) string {
+	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(caKey)
+
+	return fmt.Sprintf(`
+resource "aws_rolesanywhere_trust_anchor" "test" {
+  name = %[1]q
+  source {
+    source_data {
+      x509_certificate_data = "%[2]s"
+    }
+    source_type = "CERTIFICATE_BUNDLE"
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(caCertificate))
 }
 
 func testAccPreCheck(t *testing.T) {
