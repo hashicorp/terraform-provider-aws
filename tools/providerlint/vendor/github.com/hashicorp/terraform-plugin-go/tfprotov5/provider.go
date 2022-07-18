@@ -46,6 +46,10 @@ type GetProviderSchemaRequest struct{}
 // GetProviderSchemaResponse represents a Terraform RPC response containing the
 // provider's schemas.
 type GetProviderSchemaResponse struct {
+	// ServerCapabilities defines optionally supported protocol features,
+	// such as forward-compatible Terraform behavior changes.
+	ServerCapabilities *ServerCapabilities
+
 	// Provider defines the schema for the provider configuration, which
 	// will be specified in the provider block of the user's configuration.
 	Provider *Schema

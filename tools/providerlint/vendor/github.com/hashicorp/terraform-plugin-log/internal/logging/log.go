@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	// Default provider root logger name.
+	// DefaultProviderRootLoggerName is the default provider root logger name.
 	DefaultProviderRootLoggerName string = "provider"
 
-	// Default SDK root logger name.
+	// DefaultSDKRootLoggerName is the default SDK root logger name.
 	DefaultSDKRootLoggerName string = "sdk"
 )
 
@@ -47,7 +47,51 @@ const (
 	// assist creating subsystem loggers, as most options cannot be fetched and
 	// a logger does not provide set methods for these options.
 	SinkOptionsKey loggerKey = "sink-options"
+
+	// TFLoggerOpts is the loggerKey that will hold the LoggerOpts associated
+	// with the provider root logger (at `provider.tf-logger-opts`), and the
+	// provider sub-system logger (at `provider.SUBSYSTEM.tf-logger-opts`),
+	// in the context.Context.
+	// Note that only some LoggerOpts require to be stored this way,
+	// while others use the underlying *hclog.LoggerOptions of hclog.Logger.
+	TFLoggerOpts loggerKey = "tf-logger-opts"
 )
+
+// providerSubsystemLoggerKey is the loggerKey that will hold the subsystem logger
+// for writing logs from within a provider subsystem.
+func providerSubsystemLoggerKey(subsystem string) loggerKey {
+	return ProviderRootLoggerKey + loggerKey("."+subsystem)
+}
+
+// providerRootTFLoggerOptsKey is the loggerKey that will hold
+// the LoggerOpts of the provider.
+func providerRootTFLoggerOptsKey() loggerKey {
+	return ProviderRootLoggerKey + "." + TFLoggerOpts
+}
+
+// providerRootTFLoggerOptsKey is the loggerKey that will hold
+// the LoggerOpts of a provider subsystem.
+func providerSubsystemTFLoggerOptsKey(subsystem string) loggerKey {
+	return providerSubsystemLoggerKey(subsystem) + "." + TFLoggerOpts
+}
+
+// providerSubsystemLoggerKey is the loggerKey that will hold the subsystem logger
+// for writing logs from within an SDK subsystem.
+func sdkSubsystemLoggerKey(subsystem string) loggerKey {
+	return SDKRootLoggerKey + loggerKey("."+subsystem)
+}
+
+// sdkRootTFLoggerOptsKey is the loggerKey that will hold
+// the LoggerOpts of the SDK.
+func sdkRootTFLoggerOptsKey() loggerKey {
+	return SDKRootLoggerKey + "." + TFLoggerOpts
+}
+
+// sdkSubsystemTFLoggerOptsKey is the loggerKey that will hold
+// the LoggerOpts of an SDK subsystem.
+func sdkSubsystemTFLoggerOptsKey(subsystem string) loggerKey {
+	return sdkSubsystemLoggerKey(subsystem) + "." + TFLoggerOpts
+}
 
 var (
 	// Stderr caches the original os.Stderr when the process is started.
