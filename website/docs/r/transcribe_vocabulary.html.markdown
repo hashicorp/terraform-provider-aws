@@ -15,7 +15,30 @@ Terraform resource for managing an AWS Transcribe Vocabulary.
 ### Basic Usage
 
 ```terraform
+resource "aws_s3_bucket" "example" {
+  bucket        = "example-vocab-123"
+  force_destroy = true
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.example.id
+  key    = "transcribe/test1.txt"
+  source = "test.txt"
+}
+
 resource "aws_transcribe_vocabulary" "example" {
+  vocabulary_name     = "example"
+  language_code       = "en-US"
+  vocabulary_file_uri = "s3://${aws_s3_bucket.example.id}/${aws_s3_object.object.key}"
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
+
+  depends_on = [
+    aws_s3_object.object
+  ]
 }
 ```
 
@@ -23,30 +46,35 @@ resource "aws_transcribe_vocabulary" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description.
+* `language_code` - (Required) The language code you selected for your vocabulary.
+* `vocabulary_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
+* `vocabulary_name` - (Required) The name of the Medical Vocabulary.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description.
+* `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabular_file_uri`
+* `vocabulary_file_uri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
+* `tags` - (Optional) A map of tags to assign to the MedicalVocabulary. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Vocabulary.
-* `example_attribute` - Concise description.
+* `id` - Name of the MedicalVocabulary.
+* `arn` - ARN of the MedicalVocabulary.
+* `download_uri` - Generated download URI.
 
 ## Timeouts
 
-`aws_transcribe_vocabulary` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_transcribe_medicalvocabulary` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-* `create` - (Optional, Default: `60m`)
-* `update` - (Optional, Default: `180m`)
-* `delete` - (Optional, Default: `90m`)
+* `create` - (Optional, Default: `30m`)
+* `update` - (Optional, Default: `30m`)
+* `delete` - (Optional, Default: `30m`)
 
 ## Import
 
-Transcribe Vocabulary can be imported using the `example_id_arg`, e.g.,
+Transcribe Vocabulary can be imported using the `vocabulary_name`, e.g.,
 
 ```
 $ terraform import aws_transcribe_vocabulary.example rft-8012925589

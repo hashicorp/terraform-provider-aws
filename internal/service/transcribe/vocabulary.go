@@ -216,8 +216,8 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 		VocabularyName: aws.String(d.Id()),
 	})
 
-	var notFoundException *types.NotFoundException
-	if errors.As(err, &notFoundException) {
+	var badRequestException *types.BadRequestException
+	if errors.As(err, &badRequestException) {
 		return nil
 	}
 
