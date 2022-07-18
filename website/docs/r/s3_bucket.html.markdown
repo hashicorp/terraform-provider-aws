@@ -287,7 +287,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 ```
 
-### Enable Default Server Side Encryption
+### Enable SSE-KMS Server Side Encryption
 
 ```hcl
 resource "aws_kms_key" "mykey" {
