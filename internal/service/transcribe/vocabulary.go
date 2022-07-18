@@ -204,6 +204,14 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating Transcribe Vocabulary (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceVocabularyRead(ctx, d, meta)
 }
 
