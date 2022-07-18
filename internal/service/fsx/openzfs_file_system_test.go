@@ -65,8 +65,9 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "crossmnt"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "0"),
 				),
@@ -93,12 +94,12 @@ func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
 		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName),
+				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 192),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 				),
 			},
 			{
@@ -106,6 +107,15 @@ func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "200"),
+				),
 			},
 		},
 	})
@@ -604,6 +614,78 @@ func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	})
 }
 
+func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOpenzfsFileSystemConfig_throughputCapacity(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccOpenzfsFileSystemConfig_storageCapacity(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "75"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOpenzfsFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -704,8 +786,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `)
 }
 
-func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), `
+func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string, iops int) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   storage_type        = "SSD"
@@ -714,10 +796,14 @@ resource "aws_fsx_openzfs_file_system" "test" {
   throughput_capacity = 64
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
-    iops = 3072
+    iops = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`)
+`, rName, iops))
 }
 
 func testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName string) string {
@@ -1129,4 +1215,34 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, rName, dataCompression, readOnly, userQuota, groupQuota))
+}
+
+func testAccOpenzfsFileSystemConfig_throughputCapacity(rName string) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 128
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccOpenzfsFileSystemConfig_storageCapacity(rName string) string {
+	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 75
+  subnet_ids          = [aws_subnet.test1.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
