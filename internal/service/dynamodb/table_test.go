@@ -1,6 +1,7 @@
 package dynamodb_test
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -1601,6 +1603,86 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaTagsOne(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), false),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "false",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaTagsTwo(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), true),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
@@ -1772,6 +1854,53 @@ func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutpu
 		}
 
 		*table = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckReplicaHasTags(n string, region string, should bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DynamoDB table name specified!")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
+
+		if aws.StringValue(conn.Config.Region) != region {
+			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+			if err != nil {
+				return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.ID, err)
+			}
+
+			conn = dynamodb.New(session)
+		}
+
+		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes["arn"], region)
+
+		if err != nil {
+			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.ID, err)
+		}
+
+		tags, err := tfdynamodb.ListTags(conn, newARN)
+
+		if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], err)
+		}
+
+		if len(tags.Keys()) > 0 && !should {
+			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], errors.New("replica should not have tags but does"))
+		}
+
+		if len(tags.Keys()) == 0 && should {
+			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], errors.New("replica should have tags but does not"))
+		}
 
 		return nil
 	}
@@ -2805,6 +2934,91 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.third.name
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaTagsOne(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+	propagate_tags = true
+  }
+
+  replica {
+    region_name = data.aws_region.third.name
+  }
+
+  tags = {
+    Name    = %[1]q
+    Pozo    = "Amargo"
+    Alcazar = "Toledo"
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaTagsTwo(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = data.aws_region.alternate.name
+    propagate_tags = true
+  }
+
+  replica {
+    region_name    = data.aws_region.third.name
+    propagate_tags = true
+  }
+
+  tags = {
+    Name    = %[1]q
+    Pozo    = "Amargo"
+    Alcazar = "Toledo"
   }
 }
 `, rName))

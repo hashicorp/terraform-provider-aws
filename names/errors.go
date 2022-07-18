@@ -13,6 +13,7 @@ const (
 	ErrActionCheckingExistence    = "checking existence"
 	ErrActionCheckingNotRecreated = "checking not recreated"
 	ErrActionCheckingRecreated    = "checking recreated"
+	ErrActionChecking             = "checking"
 	ErrActionCreating             = "creating"
 	ErrActionDeleting             = "deleting"
 	ErrActionReading              = "reading"

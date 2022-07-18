@@ -261,6 +261,11 @@ func ResourceTable() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"propagate_tags": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"region_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -564,7 +569,9 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("name").(string))
 
-	if _, err := waitTableActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	var output *dynamodb.TableDescription
+	var err error
+	if output, err = waitTableActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
@@ -583,6 +590,10 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
 		if err := createReplicas(conn, d.Id(), v.List(), meta.(*conns.AWSClient).TerraformVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error initially creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
+		}
+
+		if err := updateReplicaTags(conn, d.Id(), aws.StringValue(output.TableArn), v.List(), nil, tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -675,6 +686,8 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	if replicas, err = addReplicaPITRs(conn, d.Id(), meta.(*conns.AWSClient).TerraformVersion, replicas); err != nil {
 		return names.Error(names.DynamoDB, names.ErrActionReading, "Table", d.Id(), err)
 	}
+
+	replicas = addReplicaTagPropagates(d.Get("replica").(*schema.Set), replicas)
 
 	if err := d.Set("replica", replicas); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
@@ -896,22 +909,28 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("replica") {
+		if err := updateReplica(d, conn, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
+		}
+
+		if v, ok := d.Get("replica").(*schema.Set); ok && v.Len() > 0 {
+			if err := updateReplicaTags(conn, d.Id(), d.Get("arn").(string), v.List(), o, n, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
+			}
 		}
 	}
 
 	if d.HasChange("point_in_time_recovery") {
 		if err := updatePITR(conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("replica") {
-		if err := updateReplica(d, conn, meta.(*conns.AWSClient).TerraformVersion); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %w", d.Id(), err)
 		}
 	}
 
@@ -1043,7 +1062,44 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 		if err = updatePITR(conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), tfVersion, timeout); err != nil {
 			return names.Error(names.DynamoDB, names.ErrActionUpdating, "Table", tableName, err)
 		}
+	}
 
+	return nil
+}
+
+func updateReplicaTags(conn *dynamodb.DynamoDB, tableID string, rn string, replicas []interface{}, oldTags interface{}, newTags interface{}, terraformVersion string) error {
+	for _, tfMapRaw := range replicas {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		region, ok := tfMap["region_name"].(string)
+
+		if !ok || region == "" {
+			continue
+		}
+
+		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
+			if aws.StringValue(conn.Config.Region) != region {
+				session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+				if err != nil {
+					return names.Error(names.DynamoDB, names.ErrActionUpdating, "Table", tableID, err)
+				}
+
+				conn = dynamodb.New(session)
+			}
+
+			newARN, err := ARNForNewRegion(rn, region)
+			if err != nil {
+				return names.Error(names.DynamoDB, names.ErrActionUpdating, "Table", tableID, err)
+			}
+
+			if err := UpdateTags(conn, newARN, oldTags, newTags); err != nil {
+				return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", tableID, err)
+			}
+		}
 	}
 
 	return nil
@@ -1408,7 +1464,6 @@ func addReplicaPITRs(conn *dynamodb.DynamoDB, tableName string, tfVersion string
 	// must come from a region-specific connection. A future table_replica
 	// resource may improve this.
 
-	// addReplicaPITRs(conn, d.Id(), meta.(*conns.AWSClient).TerraformVersion, replicas)
 	for i, replicaRaw := range replicas {
 		replica := replicaRaw.(map[string]interface{})
 
@@ -1422,6 +1477,37 @@ func addReplicaPITRs(conn *dynamodb.DynamoDB, tableName string, tfVersion string
 	}
 
 	return replicas, nil
+}
+
+func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{}) []interface{} {
+	if configReplicas.Len() == 0 {
+		return replicas
+	}
+
+	l := configReplicas.List()
+
+	for i, replicaRaw := range replicas {
+		replica := replicaRaw.(map[string]interface{})
+
+		prop := false
+
+		for _, configReplicaRaw := range l {
+			configReplica := configReplicaRaw.(map[string]interface{})
+
+			if v, ok := configReplica["region_name"].(string); ok && v != replica["region_name"].(string) {
+				continue
+			}
+
+			if v, ok := configReplica["propagate_tags"].(bool); ok && v {
+				prop = true
+				break
+			}
+		}
+		replica["propagate_tags"] = prop
+		replicas[i] = replica
+	}
+
+	return replicas
 }
 
 // flatteners, expanders
