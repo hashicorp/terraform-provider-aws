@@ -6,7 +6,7 @@ description: |-
     Retrieve information about a Location Service Geofence Collection.
 ---
 
-# Data Source: aws_location_geofencecollection
+# Data Source: aws_location_geofence_collection
 
 Retrieve information about a Location Service Geofence Collection.
 
