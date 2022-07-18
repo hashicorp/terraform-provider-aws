@@ -367,7 +367,7 @@ resource "aws_s3_bucket" "source" {
 }
 ```
 
-### Enable Default Server Side Encryption
+### Enable SSE-KMS Encryption
 
 -> **NOTE:** The parameter `server_side_encryption_configuration` is deprecated.
 Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
