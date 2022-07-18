@@ -639,7 +639,7 @@ func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccOpenzfsFileSystemThroughputCapacityConfig(rName),
+				Config: testAccOpenzfsFileSystemConfig_throughputCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -675,7 +675,7 @@ func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccOpenzfsFileSystemStorageCapacityConfig(rName),
+				Config: testAccOpenzfsFileSystemConfig_storageCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -1217,7 +1217,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName, dataCompression, readOnly, userQuota, groupQuota))
 }
 
-func testAccOpenzfsFileSystemThroughputCapacityConfig(rName string) string {
+func testAccOpenzfsFileSystemConfig_throughputCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
@@ -1232,7 +1232,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName))
 }
 
-func testAccOpenzfsFileSystemStorageCapacityConfig(rName string) string {
+func testAccOpenzfsFileSystemConfig_storageCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 75
