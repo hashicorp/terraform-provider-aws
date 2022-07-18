@@ -23,6 +23,8 @@ The DynamoDB API expects attribute structure (name and type) to be passed along 
 
 ## Example Usage
 
+### Basic Example
+
 The following dynamodb table description models the table and GSI shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
 ```terraform
@@ -98,6 +100,68 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
+### Replica Tagging
+
+You can manage global table replicas' tags in various ways. This example shows using `replica.*.propagate_tags` for the first replica and the `aws_dynamodb_tag` resource for the other.
+
+```terraform
+provider "aws" {
+  region = "us-west-2"
+}
+
+provider "awsalternate" {
+  region = "us-east-1"
+}
+
+provider "awsthird" {
+  region = "us-east-2"
+}
+
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "example" {
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "TestTableHashKey"
+  name             = "example-13281"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  replica {
+    region_name    = data.aws_region.third.name
+    propagate_tags = true
+  }
+
+  tags = {
+    Architect = "Eleanor"
+    Zone      = "SW"
+  }
+}
+
+# Set the tag on the replica.
+resource "aws_dynamodb_tag" "example" {
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
+  key          = "Architect"
+  value        = "Gigi"
+}
+```
+
 ## Argument Reference
 
 Required arguments:
@@ -154,8 +218,11 @@ Optional arguments:
 
 ### `replica`
 
+~> **NOTE:** Using `replica.*.propagate_tags` _and_ the `aws_dynamodb_tag` resource to manage _the same_ replica's tags will result in conflicts and unwanted differences. The example above shows two ways to tag _two different_ replicas.
+
 * `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
-* `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica.
+* `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `propagate_tags` - (Optional) Whether to propagate the main table's tags to a replica. Default is `false`. Setting this to `false` after tags have been propagated will not remove tags from a replica.
 * `region_name` - (Required) Region name of the replica.
 
 ### `server_side_encryption`
