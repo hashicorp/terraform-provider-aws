@@ -21,7 +21,7 @@ func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 	caCommonName := acctest.RandomDomainName()
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -53,7 +53,7 @@ func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 	caCommonName := acctest.RandomDomainName()
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -98,7 +98,7 @@ func TestAccRolesAnywhereTrustAnchor_disappears(t *testing.T) {
 	caCommonName := acctest.RandomDomainName()
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -120,7 +120,7 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_trust_anchor.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
