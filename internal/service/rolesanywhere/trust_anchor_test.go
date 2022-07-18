@@ -2,19 +2,17 @@ package rolesanywhere_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrolesanywhere "github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -128,39 +126,32 @@ func testAccCheckTrustAnchorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.GetTrustAnchor(context.TODO(), &rolesanywhere.GetTrustAnchorInput{
-			TrustAnchorId: aws.String(rs.Primary.ID),
-		})
+		_, err := tfrolesanywhere.FindTrustAnchorByID(context.TODO(), conn, rs.Primary.ID)
 
-		if err == nil {
-			if *resp.TrustAnchor.TrustAnchorId == rs.Primary.ID {
-				return fmt.Errorf("Trust Anchor %s still exists", rs.Primary.ID)
-			}
-		}
-
-		var resourceNotFoundException *types.ResourceNotFoundException
-		if errors.As(err, &resourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("RolesAnywhere Trust Anchor %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTrustAnchorExists(name string) resource.TestCheckFunc {
+func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Trust Anchor is set")
+			return fmt.Errorf("No RolesAnywhere Trust Anchor ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
@@ -168,7 +159,7 @@ func testAccCheckTrustAnchorExists(name string) resource.TestCheckFunc {
 		_, err := tfrolesanywhere.FindTrustAnchorByID(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error describing Trust Anchor: %s", err.Error())
+			return err
 		}
 
 		return nil

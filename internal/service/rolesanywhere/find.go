@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*rolesanywhere.GetTrustAnchorOutput, error) {
+func FindTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*types.TrustAnchorDetail, error) {
 	in := &rolesanywhere.GetTrustAnchorInput{
 		TrustAnchorId: aws.String(id),
 	}
@@ -30,9 +30,9 @@ func FindTrustAnchorByID(ctx context.Context, conn *rolesanywhere.Client, id str
 		return nil, err
 	}
 
-	if out == nil {
+	if out == nil || out.TrustAnchor == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out, nil
+	return out.TrustAnchor, nil
 }

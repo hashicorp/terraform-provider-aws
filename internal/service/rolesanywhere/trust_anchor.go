@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,6 +23,7 @@ func ResourceTrustAnchor() *schema.Resource {
 		ReadContext:   resourceTrustAnchorRead,
 		UpdateContext: resourceTrustAnchorUpdate,
 		DeleteContext: resourceTrustAnchorDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -77,6 +79,7 @@ func ResourceTrustAnchor() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -94,11 +97,13 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:    Tags(tags.IgnoreAWS()),
 	}
 
-	var output *rolesanywhere.CreateTrustAnchorOutput
+	log.Printf("[DEBUG] Creating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
 	output, err := conn.CreateTrustAnchor(ctx, input)
+
 	if err != nil {
 		return diag.Errorf("creating RolesAnywhere Trust Anchor (%s): %s", name, err)
 	}
+
 	d.SetId(aws.StringValue(output.TrustAnchor.TrustAnchorId))
 
 	return resourceTrustAnchorRead(ctx, d, meta)
@@ -109,10 +114,9 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	getTrustAnchorOutput, err := FindTrustAnchorByID(ctx, conn, d.Id())
+	trustAnchor, err := FindTrustAnchorByID(ctx, conn, d.Id())
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if !d.IsNewResource() && errors.As(err, &resourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Trust Anchor (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -122,17 +126,16 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
 
-	trustAnchor := getTrustAnchorOutput.TrustAnchor
-
 	d.Set("arn", trustAnchor.TrustAnchorArn)
 	d.Set("enabled", trustAnchor.Enabled)
 	d.Set("name", trustAnchor.Name)
 
 	if err := d.Set("source", flattenSource(trustAnchor.Source)); err != nil {
-		return diag.Errorf("setting RolesAnywhere Trust Anchor source: %s", err)
+		return diag.Errorf("setting source: %s", err)
 	}
 
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+
 	if err != nil {
 		return diag.Errorf("listing tags for RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
@@ -154,29 +157,30 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereConn
 
-	input := &rolesanywhere.UpdateTrustAnchorInput{
-		TrustAnchorId: aws.String(d.Id()),
-		Name:          aws.String(d.Get("name").(string)),
-		Source:        expandSource(d.Get("source").([]interface{})),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &rolesanywhere.UpdateTrustAnchorInput{
+			TrustAnchorId: aws.String(d.Id()),
+			Name:          aws.String(d.Get("name").(string)),
+			Source:        expandSource(d.Get("source").([]interface{})),
+		}
 
-	log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
-	_, err := conn.UpdateTrustAnchor(ctx, input)
-	if err != nil {
-		return diag.Errorf("updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
-	}
+		log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
+		_, err := conn.UpdateTrustAnchor(ctx, input)
 
-	if d.HasChange("enabled") {
-		_, n := d.GetChange("enabled")
-		if n == "true" {
-			err := enableTrustAnchor(ctx, d.Id(), meta)
-			if err != nil {
-				diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
-			}
-		} else {
-			err := disableTrustAnchor(ctx, d.Id(), meta)
-			if err != nil {
-				diag.Errorf("disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+		if err != nil {
+			return diag.Errorf("updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+		}
+
+		if d.HasChange("enabled") {
+			_, n := d.GetChange("enabled")
+			if n == "true" {
+				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
+					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+				}
+			} else {
+				if err := disableTrustAnchor(ctx, d.Id(), meta); err != nil {
+					diag.Errorf("disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -184,7 +188,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
+			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -194,11 +198,10 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereConn
 
-	input := &rolesanywhere.DeleteTrustAnchorInput{
+	log.Printf("[DEBUG] Deleting RolesAnywhere Trust Anchor (%s)", d.Id())
+	_, err := conn.DeleteTrustAnchor(ctx, &rolesanywhere.DeleteTrustAnchorInput{
 		TrustAnchorId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteTrustAnchor(ctx, input)
+	})
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
