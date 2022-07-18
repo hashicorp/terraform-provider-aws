@@ -583,6 +583,7 @@ func ResourceBucket() *schema.Resource {
 				Type:       schema.TypeList,
 				MaxItems:   1,
 				Optional:   true,
+				Computed:   true,
 				Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
