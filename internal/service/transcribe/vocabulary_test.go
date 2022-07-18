@@ -321,7 +321,7 @@ func testAccVocabularyConfig_basicPhrases(rName string) string {
 resource "aws_transcribe_vocabulary" "test" {
   vocabulary_name = %[1]q
   language_code   = "en-US"
-  phrases         = ["Los-Angeles", "CLI", "Eva-Maria"] 
+  phrases = ["Los-Angeles", "CLI", "Eva-Maria"]
 
   tags = {
     tag1 = "value1"
