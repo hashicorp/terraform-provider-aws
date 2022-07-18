@@ -1623,7 +1623,7 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaTags(rName, true, false),
+				Config: testAccTableConfig_replicaTags(rName, "benny", "smiles", true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
@@ -1663,7 +1663,7 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 		CheckDestroy:      testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaTags(rName, true, true),
+				Config: testAccTableConfig_replicaTags(rName, "Structure", "Adobe", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
 					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
@@ -2939,7 +2939,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaTags(rName string, propagate1, propagate2 bool) string {
+func testAccTableConfig_replicaTags(rName, key, value string, propagate1, propagate2 bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
@@ -2965,21 +2965,21 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name    = data.aws_region.alternate.name
-    propagate_tags = %[2]t
+    propagate_tags = %[4]t
   }
 
   replica {
     region_name    = data.aws_region.third.name
-    propagate_tags = %[3]t
+    propagate_tags = %[5]t
   }
 
   tags = {
-    Name    = %[1]q
-    Pozo    = "Amargo"
-    Alcazar = "Toledo"
+    Name  = %[1]q
+    Pozo  = "Amargo"
+    %[2]s = %[3]q
   }
 }
-`, rName, propagate1, propagate2))
+`, rName, key, value, propagate1, propagate2))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {

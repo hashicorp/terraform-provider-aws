@@ -154,7 +154,6 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 
-# Set the tag on the replica.
 resource "aws_dynamodb_tag" "example" {
   resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
   key          = "Architect"
@@ -218,11 +217,9 @@ Optional arguments:
 
 ### `replica`
 
-~> **NOTE:** Using `replica.*.propagate_tags` _and_ the `aws_dynamodb_tag` resource to manage _the same_ replica's tags will result in conflicts and unwanted differences. The example above shows two ways to tag _two different_ replicas.
-
 * `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
-* `propagate_tags` - (Optional) Whether to propagate the main table's tags to a replica. Default is `false`. Setting this to `false` after tags have been propagated will not remove tags from a replica.
+* `propagate_tags` - (Optional) Whether to propagate the main table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from main to replica. In other words, tag drift on a replica will not trigger an update. Tag changes on the main table, whether from drift or configuration changes, are propagated to replicas.
 * `region_name` - (Required) Region name of the replica.
 
 ### `server_side_encryption`
