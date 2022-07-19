@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	ErrCodeNotFound = 404
+)
+
 func ResourceExperimentTemplate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceExperimentTemplateCreate,
@@ -223,7 +227,10 @@ func resourceExperimentTemplateCreate(d *schema.ResourceData, meta interface{}) 
 		Description:    aws.String(d.Get("description").(string)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
 		StopConditions: expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:           Tags(tags.IgnoreAWS()),
+	}
+
+	if len(Tags(tags.IgnoreAWS())) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -247,9 +254,10 @@ func resourceExperimentTemplateRead(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	out, err := conn.GetExperimentTemplate(&fis.GetExperimentTemplateInput{Id: aws.String(d.Id())})
+	input := &fis.GetExperimentTemplateInput{Id: aws.String(d.Id())}
+	out, err := conn.GetExperimentTemplate(input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && (tfawserr.ErrStatusCodeEquals(err, ErrCodeNotFound) || tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException)) {
 		log.Printf("[WARN] Experiment Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -338,12 +346,12 @@ func resourceExperimentTemplateDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteExperimentTemplate(&fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
 	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
-			log.Printf("[INFO] ExperimentTemplate %s could not be found. skipping delete.", d.Id())
-			return nil
-		}
 
+	if tfawserr.ErrStatusCodeEquals(err, ErrCodeNotFound) || tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("Deleting Experiment Template failed: %w", err)
 	}
 

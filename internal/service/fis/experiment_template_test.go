@@ -119,7 +119,7 @@ func testAccExperimentTemplateDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.GetExperimentTemplate(&fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
-		if !tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
+		if !tfawserr.ErrStatusCodeEquals(err, tffis.ErrCodeNotFound) && !tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("Experiment Template '%s' was not deleted properly", rs.Primary.ID)
 		}
 	}
@@ -134,24 +134,18 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "fis.${data.aws_partition.current.dns_suffix}"
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
         ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+      }
+    }]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_fis_experiment_template" "test" {
@@ -181,6 +175,10 @@ resource "aws_fis_experiment_template" "test" {
       key   = "env"
       value = "test"
     }
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName)
