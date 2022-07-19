@@ -54,8 +54,8 @@ import (
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+{{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -351,7 +351,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	// below. Many resources do include tags so this a reminder to include them
 	// where possible.
 	{{- end }}
-	{{ if .AWSGoSDKV2 }}
+	{{- if .AWSGoSDKV2 }}
 	tags, err := ListTags(ctx, conn, d.Id())
 	{{- else }}
 	tags, err := ListTagsWithContext(ctx, conn, d.Id())
@@ -488,6 +488,16 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
+	{{- if .AWSGoSDKV2 }}
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil
+		}
+
+		return names.DiagError(names.Comprehend, names.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+	}
+	{{- else }}
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
 		return nil
 	}
@@ -495,6 +505,7 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return names.DiagError(names.{{ .Service }}, names.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
 	}
+	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for delete to complete
 	{{- end }}
@@ -628,6 +639,19 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	}
 
 	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
+	{{- if .AWSGoSDKV2 }}
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+	{{- else }}
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -638,6 +662,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	if err != nil {
 		return nil, err
 	}
+	{{- end }}
 
 	if out == nil || out.{{ .Resource }} == nil {
 		return nil, tfresource.NewEmptyResultError(in)
