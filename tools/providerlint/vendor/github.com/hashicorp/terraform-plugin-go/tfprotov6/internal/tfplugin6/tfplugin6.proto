@@ -1,6 +1,6 @@
-// Terraform Plugin RPC protocol version 6.2
+// Terraform Plugin RPC protocol version 6.3
 //
-// This file defines version 6.2 of the RPC protocol. To implement a plugin
+// This file defines version 6.3 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -17,7 +17,7 @@
 // branch or any other development branch.
 //
 syntax = "proto3";
-option go_package = "github.com/hashicorp/terraform/internal/tfplugin6";
+option go_package = "github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6";
 
 package tfplugin6;
 
@@ -176,6 +176,18 @@ message GetProviderSchema {
         map<string, Schema> data_source_schemas = 3;
         repeated Diagnostic diagnostics = 4;
         Schema provider_meta = 5;
+        ServerCapabilities server_capabilities = 6;
+    }
+
+
+    // ServerCapabilities allows providers to communicate extra information
+    // regarding supported protocol features. This is used to indicate
+    // availability of certain forward-compatible changes which may be optional
+    // in a major protocol version, but cannot be tested for directly.
+    message ServerCapabilities {
+        // The plan_destroy capability signals that a provider expects a call
+        // to PlanResourceChange when a resource is going to be destroyed.
+        bool plan_destroy = 1;
     }
 }
 

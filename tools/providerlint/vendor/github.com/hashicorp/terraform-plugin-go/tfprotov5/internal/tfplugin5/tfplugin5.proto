@@ -1,6 +1,6 @@
-// Terraform Plugin RPC protocol version 5.2
+// Terraform Plugin RPC protocol version 5.3
 //
-// This file defines version 5.2 of the RPC protocol. To implement a plugin
+// This file defines version 5.3 of the RPC protocol. To implement a plugin
 // against this protocol, copy this definition into your own codebase and
 // use protoc to generate stubs for your target language.
 //
@@ -13,7 +13,7 @@
 // official protocol releases. Proto files taken from other commits may include
 // incomplete changes or features that did not make it into a final release.
 // In all reasonable cases, plugin developers should take the proto file from
-// the tag of the most recent release of Terraform, and not from the master
+// the tag of the most recent release of Terraform, and not from the main
 // branch or any other development branch.
 //
 syntax = "proto3";
@@ -118,7 +118,7 @@ message Schema {
 
     // The version of the schema.
     // Schemas are versioned, so that providers can upgrade a saved resource
-    // state when the schema is changed. 
+    // state when the schema is changed.
     int64 version = 1;
 
     // Block is the top level configuration block for this schema.
@@ -157,6 +157,18 @@ message GetProviderSchema {
         map<string, Schema> data_source_schemas = 3;
         repeated Diagnostic diagnostics = 4;
         Schema provider_meta = 5;
+        ServerCapabilities server_capabilities = 6;
+    }
+
+
+    // ServerCapabilities allows providers to communicate extra information
+    // regarding supported protocol features. This is used to indicate
+    // availability of certain forward-compatible changes which may be optional
+    // in a major protocol version, but cannot be tested for directly.
+    message ServerCapabilities {
+        // The plan_destroy capability signals that a provider expects a call
+        // to PlanResourceChange when a resource is going to be destroyed.
+        bool plan_destroy = 1;
     }
 }
 
@@ -247,14 +259,14 @@ message PlanResourceChange {
         DynamicValue prior_state = 2;
         DynamicValue proposed_new_state = 3;
         DynamicValue config = 4;
-        bytes prior_private = 5; 
+        bytes prior_private = 5;
         DynamicValue provider_meta = 6;
     }
 
     message Response {
         DynamicValue planned_state = 1;
         repeated AttributePath requires_replace = 2;
-        bytes planned_private = 3; 
+        bytes planned_private = 3;
         repeated Diagnostic diagnostics = 4;
 
 
@@ -279,12 +291,12 @@ message ApplyResourceChange {
         DynamicValue prior_state = 2;
         DynamicValue planned_state = 3;
         DynamicValue config = 4;
-        bytes planned_private = 5; 
+        bytes planned_private = 5;
         DynamicValue provider_meta = 6;
     }
     message Response {
         DynamicValue new_state = 1;
-        bytes private = 2; 
+        bytes private = 2;
         repeated Diagnostic diagnostics = 3;
 
         // This may be set only by the helper/schema "SDK" in the main Terraform
@@ -365,5 +377,5 @@ message ProvisionResource {
     message Response {
         string output  = 1;
         repeated Diagnostic diagnostics = 2;
-    }   
+    }
 }
