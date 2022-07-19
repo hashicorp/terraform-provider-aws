@@ -145,7 +145,7 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_tags1(rName, "key1", "value1"),
