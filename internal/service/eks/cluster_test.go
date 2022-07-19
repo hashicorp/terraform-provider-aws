@@ -612,7 +612,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_OutpostConfig(rName, "op-062c383102b6f92a2"),
+				Config: testAccClusterConfig_OutpostConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
@@ -1037,31 +1037,24 @@ resource "aws_eks_cluster" "test" {
 `, rName, ipFamily))
 }
 
-func testAccClusterConfig_OutpostConfig(rName string, outpostID string) string {
+func testAccClusterConfig_OutpostConfig(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
 data "aws_outposts_outpost" "test" {
-  id = %[2]q
-} 
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
+  id = "op-062c383102b6f92a2"
 }
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = "arn:aws:iam::374958015927:role/my-cluster-role"
 
   outpost_config {
 	control_plane_instance_type = "m5d.large"
-    outpost_arns = [data.aws_outposts_outpost.arn]
+    outpost_arns = [data.aws_outposts_outpost.test.arn]
   }
 
   vpc_config {
-    subnet_ids = aws_subnet.test[*].id
+    subnet_ids = ["subnet-0a625ebe4ce3d66aa"]
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
-`, rName, outpostID))
+`, rName))
 }
