@@ -77,5 +77,5 @@ In addition to all arguments above, the following attributes are exported:
 Transcribe Vocabulary can be imported using the `vocabulary_name`, e.g.,
 
 ```
-$ terraform import aws_transcribe_vocabulary.example rft-8012925589
+$ terraform import aws_transcribe_vocabulary.example example-name
 ```
