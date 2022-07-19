@@ -67,7 +67,7 @@ resource "aws_apprunner_service" "example" {
       image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
-    auto_deployment_enabled = false
+    auto_deployments_enabled = false
   }
 
   tags = {
@@ -95,7 +95,7 @@ resource "aws_apprunner_service" "example" {
       image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
-    auto_deployment_enabled = false
+    auto_deployments_enabled = false
   }
 
   tags = {
