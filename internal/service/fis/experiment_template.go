@@ -1,4 +1,4 @@
-package aws
+package fis
 
 import (
 	"errors"
@@ -8,22 +8,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fis"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceAwsFisExperimentTemplate() *schema.Resource {
+func ResourceExperimentTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFisExperimentTemplateCreate,
-		Read:   resourceAwsFisExperimentTemplateRead,
-		Update: resourceAwsFisExperimentTemplateUpdate,
-		Delete: resourceAwsFisExperimentTemplateDelete,
+		Create: resourceExperimentTemplateCreate,
+		Read:   resourceExperimentTemplateRead,
+		Update: resourceExperimentTemplateUpdate,
+		Delete: resourceExperimentTemplateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"action": {
 				Type:     schema.TypeSet,
@@ -84,7 +88,7 @@ func resourceAwsFisExperimentTemplate() *schema.Resource {
 									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateExperimentTemplateActionTargetKey(),
+										ValidateFunc: validExperimentTemplateActionTargetKey(),
 									},
 									"value": {
 										Type:         schema.TypeString,
@@ -105,7 +109,7 @@ func resourceAwsFisExperimentTemplate() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"stop_condition": {
 				Type:     schema.TypeSet,
@@ -115,12 +119,12 @@ func resourceAwsFisExperimentTemplate() *schema.Resource {
 						"source": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateExperimentTemplateStopConditionSource(),
+							ValidateFunc: validExperimentTemplateStopConditionSource(),
 						},
 						"value": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -164,7 +168,7 @@ func resourceAwsFisExperimentTemplate() *schema.Resource {
 							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 						"resource_tag": {
@@ -202,27 +206,27 @@ func resourceAwsFisExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchemaForceNew(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchemaForceNew(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceAwsFisExperimentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fisconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+func resourceExperimentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).FISConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fis.CreateExperimentTemplateInput{
-		Actions:        expandAwsFisExperimentTemplateActions(d.Get("action").(*schema.Set)),
+		Actions:        expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
 		ClientToken:    aws.String(resource.UniqueId()),
 		Description:    aws.String(d.Get("description").(string)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
-		StopConditions: expandAwsFisExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-		Tags:           tags.IgnoreAws().FisTags(),
+		StopConditions: expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
+		Tags:           Tags(tags.IgnoreAWS()),
 	}
 
-	targets, err := expandAwsFisExperimentTemplateTargets(d.Get("target").(*schema.Set))
+	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
 	if err != nil {
 		return fmt.Errorf("create Experiment Template failed: %w", err)
 	}
@@ -235,16 +239,17 @@ func resourceAwsFisExperimentTemplateCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ExperimentTemplate.Id))
 
-	return resourceAwsFisExperimentTemplateRead(d, meta)
+	return resourceExperimentTemplateRead(d, meta)
 }
 
-func resourceAwsFisExperimentTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fisconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+func resourceExperimentTemplateRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).FISConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := conn.GetExperimentTemplate(&fis.GetExperimentTemplateInput{Id: aws.String(d.Id())})
-	if isAWSErrRequestFailureStatusCode(err, 404) {
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Experiment Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -265,19 +270,19 @@ func resourceAwsFisExperimentTemplateRead(d *schema.ResourceData, meta interface
 	d.Set("role_arn", experimentTemplate.RoleArn)
 	d.Set("description", experimentTemplate.Description)
 
-	if err := d.Set("action", flattenAwsFisExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
+	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
 		return fmt.Errorf("error setting action: %w", err)
 	}
 
-	if err := d.Set("stop_condition", flattenAwsFisExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
+	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
 		return fmt.Errorf("error setting stop_condition: %w", err)
 	}
 
-	if err := d.Set("target", flattenAwsFisExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
+	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
 		return fmt.Errorf("error setting target: %w", err)
 	}
 
-	tags := keyvaluetags.FisKeyValueTags(experimentTemplate.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -291,15 +296,15 @@ func resourceAwsFisExperimentTemplateRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsFisExperimentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fisconn
+func resourceExperimentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).FISConn
 
 	input := &fis.UpdateExperimentTemplateInput{
 		Id: aws.String(d.Id()),
 	}
 
 	if d.HasChange("action") {
-		input.Actions = expandAwsFisExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
+		input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
 	}
 
 	if d.HasChange("description") {
@@ -311,11 +316,11 @@ func resourceAwsFisExperimentTemplateUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("stop_condition") {
-		input.StopConditions = expandAwsFisExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
+		input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
 	}
 
 	if d.HasChange("target") {
-		targets, err := expandAwsFisExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+		targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
 		if err != nil {
 			return fmt.Errorf("modify Experiment Template (%s) failed: %w", d.Id(), err)
 		}
@@ -327,16 +332,16 @@ func resourceAwsFisExperimentTemplateUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Updating Experiment Template failed: %w", err)
 	}
 
-	return resourceAwsFisExperimentTemplateRead(d, meta)
+	return resourceExperimentTemplateRead(d, meta)
 }
 
-func resourceAwsFisExperimentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fisconn
+func resourceExperimentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).FISConn
 	_, err := conn.DeleteExperimentTemplate(&fis.DeleteExperimentTemplateInput{
 		Id: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErrRequestFailureStatusCode(err, 404) {
+		if tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
 			log.Printf("[INFO] ExperimentTemplate %s could not be found. skipping delete.", d.Id())
 			return nil
 		}
@@ -347,7 +352,7 @@ func resourceAwsFisExperimentTemplateDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func expandAwsFisExperimentTemplateActions(l *schema.Set) map[string]*fis.CreateExperimentTemplateActionInput {
+func expandExperimentTemplateActions(l *schema.Set) map[string]*fis.CreateExperimentTemplateActionInput {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -367,15 +372,15 @@ func expandAwsFisExperimentTemplateActions(l *schema.Set) map[string]*fis.Create
 		}
 
 		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
-			config.Parameters = expandAwsFisExperimentTemplateActionParameteres(v)
+			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
 		if v, ok := raw["start_after"].(*schema.Set); ok && v.Len() > 0 {
-			config.StartAfter = expandStringSet(v)
+			config.StartAfter = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
-			config.Targets = expandAwsFisExperimentTemplateActionTargets(v)
+			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
 		if v, ok := raw["name"].(string); ok && v != "" {
@@ -386,7 +391,7 @@ func expandAwsFisExperimentTemplateActions(l *schema.Set) map[string]*fis.Create
 	return attrs
 }
 
-func expandAwsFisExperimentTemplateActionsForUpdate(l *schema.Set) map[string]*fis.UpdateExperimentTemplateActionInputItem {
+func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]*fis.UpdateExperimentTemplateActionInputItem {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -406,15 +411,15 @@ func expandAwsFisExperimentTemplateActionsForUpdate(l *schema.Set) map[string]*f
 		}
 
 		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
-			config.Parameters = expandAwsFisExperimentTemplateActionParameteres(v)
+			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
 		if v, ok := raw["start_after"].(*schema.Set); ok && v.Len() > 0 {
-			config.StartAfter = expandStringSet(v)
+			config.StartAfter = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
-			config.Targets = expandAwsFisExperimentTemplateActionTargets(v)
+			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
 		if v, ok := raw["name"].(string); ok && v != "" {
@@ -425,7 +430,7 @@ func expandAwsFisExperimentTemplateActionsForUpdate(l *schema.Set) map[string]*f
 	return attrs
 }
 
-func expandAwsFisExperimentTemplateStopConditions(l *schema.Set) []*fis.CreateExperimentTemplateStopConditionInput {
+func expandExperimentTemplateStopConditions(l *schema.Set) []*fis.CreateExperimentTemplateStopConditionInput {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -450,7 +455,7 @@ func expandAwsFisExperimentTemplateStopConditions(l *schema.Set) []*fis.CreateEx
 	return items
 }
 
-func expandAwsFisExperimentTemplateStopConditionsForUpdate(l *schema.Set) []*fis.UpdateExperimentTemplateStopConditionInput {
+func expandExperimentTemplateStopConditionsForUpdate(l *schema.Set) []*fis.UpdateExperimentTemplateStopConditionInput {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -475,7 +480,7 @@ func expandAwsFisExperimentTemplateStopConditionsForUpdate(l *schema.Set) []*fis
 	return items
 }
 
-func expandAwsFisExperimentTemplateTargets(l *schema.Set) (map[string]*fis.CreateExperimentTemplateTargetInput, error) {
+func expandExperimentTemplateTargets(l *schema.Set) (map[string]*fis.CreateExperimentTemplateTargetInput, error) {
 	if l.Len() == 0 {
 		//Even though a template with no targets is valid (eg. containing just aws:fis:wait) and the API reference states that targets is not required, the key still needs to be present.
 		return map[string]*fis.CreateExperimentTemplateTargetInput{}, nil
@@ -490,11 +495,11 @@ func expandAwsFisExperimentTemplateTargets(l *schema.Set) (map[string]*fis.Creat
 		var hasSeenResourceTag bool
 
 		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
-			config.Filters = expandAwsFisExperimentTemplateTargetFilters(v)
+			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
 		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
-			config.ResourceArns = expandStringSet(v)
+			config.ResourceArns = flex.ExpandStringSet(v)
 			hasSeenResourceArns = true
 		}
 
@@ -504,7 +509,7 @@ func expandAwsFisExperimentTemplateTargets(l *schema.Set) (map[string]*fis.Creat
 			if hasSeenResourceArns {
 				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
 			}
-			config.ResourceTags = expandAwsFisExperimentTemplateTargetResourceTags(v)
+			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 			hasSeenResourceTag = true
 		}
 
@@ -528,7 +533,7 @@ func expandAwsFisExperimentTemplateTargets(l *schema.Set) (map[string]*fis.Creat
 	return attrs, nil
 }
 
-func expandAwsFisExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]*fis.UpdateExperimentTemplateTargetInput, error) {
+func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]*fis.UpdateExperimentTemplateTargetInput, error) {
 	if l.Len() == 0 {
 		return nil, nil
 	}
@@ -542,11 +547,11 @@ func expandAwsFisExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]*
 		var hasSeenResourceTag bool
 
 		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
-			config.Filters = expandAwsFisExperimentTemplateTargetFilters(v)
+			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
 		if v, ok := raw["resource_arns"].(*schema.Set); ok && v.Len() > 0 {
-			config.ResourceArns = expandStringSet(v)
+			config.ResourceArns = flex.ExpandStringSet(v)
 			hasSeenResourceArns = true
 		}
 
@@ -556,7 +561,7 @@ func expandAwsFisExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]*
 			if hasSeenResourceArns {
 				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
 			}
-			config.ResourceTags = expandAwsFisExperimentTemplateTargetResourceTags(v)
+			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 			hasSeenResourceTag = true
 		}
 
@@ -580,7 +585,7 @@ func expandAwsFisExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]*
 	return attrs, nil
 }
 
-func expandAwsFisExperimentTemplateActionParameteres(l *schema.Set) map[string]*string {
+func expandExperimentTemplateActionParameteres(l *schema.Set) map[string]*string {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -589,7 +594,7 @@ func expandAwsFisExperimentTemplateActionParameteres(l *schema.Set) map[string]*
 
 	for _, m := range l.List() {
 		if len(m.(map[string]interface{})) > 0 {
-			attr := expandStringMap(m.(map[string]interface{}))
+			attr := flex.ExpandStringMap(m.(map[string]interface{}))
 			attrs[aws.StringValue(attr["key"])] = attr["value"]
 		}
 	}
@@ -597,7 +602,7 @@ func expandAwsFisExperimentTemplateActionParameteres(l *schema.Set) map[string]*
 	return attrs
 }
 
-func expandAwsFisExperimentTemplateActionTargets(l []interface{}) map[string]*string {
+func expandExperimentTemplateActionTargets(l []interface{}) map[string]*string {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -606,7 +611,7 @@ func expandAwsFisExperimentTemplateActionTargets(l []interface{}) map[string]*st
 
 	for _, m := range l {
 		if len(m.(map[string]interface{})) > 0 {
-			attr := expandStringMap(l[0].(map[string]interface{}))
+			attr := flex.ExpandStringMap(l[0].(map[string]interface{}))
 			attrs[aws.StringValue(attr["key"])] = attr["value"]
 		}
 	}
@@ -614,7 +619,7 @@ func expandAwsFisExperimentTemplateActionTargets(l []interface{}) map[string]*st
 	return attrs
 }
 
-func expandAwsFisExperimentTemplateTargetFilters(l []interface{}) []*fis.ExperimentTemplateTargetInputFilter {
+func expandExperimentTemplateTargetFilters(l []interface{}) []*fis.ExperimentTemplateTargetInputFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -630,7 +635,7 @@ func expandAwsFisExperimentTemplateTargetFilters(l []interface{}) []*fis.Experim
 		}
 
 		if v, ok := raw["values"].(*schema.Set); ok && v.Len() > 0 {
-			config.Values = expandStringSet(v)
+			config.Values = flex.ExpandStringSet(v)
 		}
 
 		items = append(items, config)
@@ -639,7 +644,7 @@ func expandAwsFisExperimentTemplateTargetFilters(l []interface{}) []*fis.Experim
 	return items
 }
 
-func expandAwsFisExperimentTemplateTargetResourceTags(l *schema.Set) map[string]*string {
+func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]*string {
 	if l.Len() == 0 {
 		return nil
 	}
@@ -648,7 +653,7 @@ func expandAwsFisExperimentTemplateTargetResourceTags(l *schema.Set) map[string]
 
 	for _, m := range l.List() {
 		if len(m.(map[string]interface{})) > 0 {
-			attr := expandStringMap(m.(map[string]interface{}))
+			attr := flex.ExpandStringMap(m.(map[string]interface{}))
 			attrs[aws.StringValue(attr["key"])] = attr["value"]
 		}
 	}
@@ -656,16 +661,16 @@ func expandAwsFisExperimentTemplateTargetResourceTags(l *schema.Set) map[string]
 	return attrs
 }
 
-func flattenAwsFisExperimentTemplateActions(configured map[string]*fis.ExperimentTemplateAction) []map[string]interface{} {
+func flattenExperimentTemplateActions(configured map[string]*fis.ExperimentTemplateAction) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
 		item["action_id"] = aws.StringValue(v.ActionId)
 		item["description"] = aws.StringValue(v.Description)
-		item["parameter"] = flattenAwsFisExperimentTemplateActionParameters(v.Parameters)
+		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = aws.StringValueSlice(v.StartAfter)
-		item["target"] = flattenAwsFisExperimentTemplateActionTargets(v.Targets)
+		item["target"] = flattenExperimentTemplateActionTargets(v.Targets)
 
 		item["name"] = k
 
@@ -675,7 +680,7 @@ func flattenAwsFisExperimentTemplateActions(configured map[string]*fis.Experimen
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateStopConditions(configured []*fis.ExperimentTemplateStopCondition) []map[string]interface{} {
+func flattenExperimentTemplateStopConditions(configured []*fis.ExperimentTemplateStopCondition) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for _, v := range configured {
@@ -692,14 +697,14 @@ func flattenAwsFisExperimentTemplateStopConditions(configured []*fis.ExperimentT
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateTargets(configured map[string]*fis.ExperimentTemplateTarget) []map[string]interface{} {
+func flattenExperimentTemplateTargets(configured map[string]*fis.ExperimentTemplateTarget) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["filter"] = flattenAwsFisExperimentTemplateTargetFilters(v.Filters)
+		item["filter"] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = aws.StringValueSlice(v.ResourceArns)
-		item["resource_tag"] = flattenAwsFisExperimentTemplateTargetResourceTags(v.ResourceTags)
+		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
 		item["resource_type"] = aws.StringValue(v.ResourceType)
 		item["selection_mode"] = aws.StringValue(v.SelectionMode)
 
@@ -711,7 +716,7 @@ func flattenAwsFisExperimentTemplateTargets(configured map[string]*fis.Experimen
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateActionParameters(configured map[string]*string) []map[string]interface{} {
+func flattenExperimentTemplateActionParameters(configured map[string]*string) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
@@ -725,7 +730,7 @@ func flattenAwsFisExperimentTemplateActionParameters(configured map[string]*stri
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateActionTargets(configured map[string]*string) []map[string]interface{} {
+func flattenExperimentTemplateActionTargets(configured map[string]*string) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
@@ -738,7 +743,7 @@ func flattenAwsFisExperimentTemplateActionTargets(configured map[string]*string)
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateTargetFilters(configured []*fis.ExperimentTemplateTargetFilter) []map[string]interface{} {
+func flattenExperimentTemplateTargetFilters(configured []*fis.ExperimentTemplateTargetFilter) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for _, v := range configured {
@@ -752,7 +757,7 @@ func flattenAwsFisExperimentTemplateTargetFilters(configured []*fis.ExperimentTe
 	return dataResources
 }
 
-func flattenAwsFisExperimentTemplateTargetResourceTags(configured map[string]*string) []map[string]interface{} {
+func flattenExperimentTemplateTargetResourceTags(configured map[string]*string) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for k, v := range configured {
@@ -766,7 +771,7 @@ func flattenAwsFisExperimentTemplateTargetResourceTags(configured map[string]*st
 	return dataResources
 }
 
-func validateExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
+func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 	allowedStopConditionSources := []string{
 		"aws:cloudwatch:alarm",
 		"none",
@@ -777,7 +782,7 @@ func validateExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 	)
 }
 
-func validateExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
+func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 	allowedStopConditionSources := []string{
 		"Clusters",
 		"DBInstances",

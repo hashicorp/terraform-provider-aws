@@ -1,76 +1,35 @@
-package aws
+package fis_test
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fis"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_fis_experiment_template", &resource.Sweeper{
-		Name: "aws_fis_experiment_template",
-		F:    testSweepFisExperimentTemplates,
-	})
-}
-
-func testSweepFisExperimentTemplates(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*AWSClient).fisconn
-
-	err = conn.ListExperimentTemplatesPages(&fis.ListExperimentTemplatesInput{}, func(page *fis.ListExperimentTemplatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, experimentTemplate := range page.ExperimentTemplates {
-			deleteExperimentTemplateInput := &fis.DeleteExperimentTemplateInput{Id: experimentTemplate.Id}
-
-			log.Printf("[INFO] Deleting FIS Experiment Template: %s", aws.StringValue(experimentTemplate.Id))
-			_, err = conn.DeleteExperimentTemplate(deleteExperimentTemplateInput)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting FIS Experiment Template (%s): %s", aws.StringValue(experimentTemplate.Id), err)
-			}
-
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping FIS Experiment Template sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving FIS Experiment Templates: %s", err)
-	}
-
-	return nil
-}
-
-func TestAccAWSFisExperimentTemplate_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccFISExperimentTemplate_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf fis.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, fis.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAWSFisExperimentTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSFisExperimentTemplateConfigBasic(rName),
+				Config: testAccExperimentTemplateConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSFisExperimentTemplateExists(resourceName, &conf),
+					testAccExperimentTemplateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "An experiment template for testing"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
@@ -105,22 +64,22 @@ func TestAccAWSFisExperimentTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSFisExperimentTemplate_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccFISExperimentTemplate_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf fis.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, fis.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAWSFisExperimentTemplateDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, fis.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSFisExperimentTemplateConfigBasic(rName),
+				Config: testAccExperimentTemplateConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSFisExperimentTemplateExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsFisExperimentTemplate(), resourceName),
+					testAccExperimentTemplateExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tffis.ResourceExperimentTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,14 +87,14 @@ func TestAccAWSFisExperimentTemplate_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSFisExperimentTemplateExists(resourceName string, config *fis.ExperimentTemplate) resource.TestCheckFunc {
+func testAccExperimentTemplateExists(resourceName string, config *fis.ExperimentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).fisconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FISConn
 		out, err := conn.GetExperimentTemplate(&fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
 
 		if err != nil {
@@ -152,16 +111,15 @@ func testAccAWSFisExperimentTemplateExists(resourceName string, config *fis.Expe
 	}
 }
 
-func testAccAWSFisExperimentTemplateDestroy(s *terraform.State) error {
-	meta := testAccProvider.Meta()
-	conn := meta.(*AWSClient).fisconn
+func testAccExperimentTemplateDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FISConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fis_experiment_template" {
 			continue
 		}
 
 		_, err := conn.GetExperimentTemplate(&fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
-		if !isAWSErrRequestFailureStatusCode(err, 404) {
+		if !tfawserr.ErrCodeEquals(err, fis.ErrCodeResourceNotFoundException) {
 			return fmt.Errorf("Experiment Template '%s' was not deleted properly", rs.Primary.ID)
 		}
 	}
@@ -169,7 +127,7 @@ func testAccAWSFisExperimentTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSFisExperimentTemplateConfigBasic(rName string) string {
+func testAccExperimentTemplateConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

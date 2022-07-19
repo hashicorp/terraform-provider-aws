@@ -56,8 +56,8 @@ func UpdateTagsWithContext(ctx context.Context, conn fisiface.FISAPI, identifier
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &fis.UntagResourceInput{
-			ResourceArn:   aws.String(identifier),
-			UntagResource: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -70,7 +70,7 @@ func UpdateTagsWithContext(ctx context.Context, conn fisiface.FISAPI, identifier
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &fis.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagResource: Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
