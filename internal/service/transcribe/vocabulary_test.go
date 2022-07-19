@@ -337,7 +337,7 @@ resource "aws_transcribe_vocabulary" "test" {
 
 func testAccVocabularyConfig_updateFile(rName, fileName string) string {
 	return acctest.ConfigCompose(
-		testAccMedicalVocabularyBaseConfig(rName),
+		testAccVocabularyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_transcribe_vocabulary" "test" {
   vocabulary_name     = %[1]q
