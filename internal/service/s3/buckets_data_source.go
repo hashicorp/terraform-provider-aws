@@ -38,17 +38,17 @@ func dataSourceBucketsRead(d *schema.ResourceData, meta interface{}) error {
 	var results []*s3.Bucket
 
 	output, err := conn.ListBuckets(input)
-    for _, bucket := range output.Buckets {
-        if bucket == nil {
-            continue
-        }
+	for _, bucket := range output.Buckets {
+		if bucket == nil {
+			continue
+		}
 
-        if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(bucket.Name)) {
-            continue
-        }
+		if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(bucket.Name)) {
+			continue
+		}
 
-        results = append(results, bucket)
-    }
+		results = append(results, bucket)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error reading S3 buckets: %w", err)

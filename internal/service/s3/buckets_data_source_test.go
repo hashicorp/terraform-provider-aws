@@ -1,6 +1,5 @@
 package iam_test
 
-
 import (
 	"fmt"
 	"regexp"
