@@ -558,7 +558,11 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
+{{ if .AWSGoSDKV2 }}
+func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- else }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- end }}
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -581,7 +585,11 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 {{- end }}
+{{ if .AWSGoSDKV2 }}
+func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- else }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- end }}
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -602,7 +610,11 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 {{- end }}
+{{ if .AWSGoSDKV2 }}
+func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- else }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- end }}
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
@@ -626,7 +638,11 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
+{{ if .AWSGoSDKV2 }}
+func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) resource.StateRefreshFunc {
+{{- else }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) resource.StateRefreshFunc {
+{{- end }}
 	return func() (interface{}, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -647,7 +663,11 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 {{- end }}
+{{ if .AWSGoSDKV2 }}
+func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- else }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+{{- end }}
 	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
