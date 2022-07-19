@@ -592,7 +592,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			return names.Error(names.DynamoDB, names.ErrActionCreating, "Table", d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(conn, d.Id(), aws.StringValue(output.TableArn), v.List(), nil, tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updateReplicaTags(conn, aws.StringValue(output.TableArn), v.List(), nil, tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return names.Error(names.DynamoDB, names.ErrActionCreating, "Table", d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
@@ -922,7 +922,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.Get("replica").(*schema.Set); ok && v.Len() > 0 {
-			if err := updateReplicaTags(conn, d.Id(), d.Get("arn").(string), v.List(), o, n, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			if err := updateReplicaTags(conn, d.Get("arn").(string), v.List(), o, n, meta.(*conns.AWSClient).TerraformVersion); err != nil {
 				return names.Error(names.DynamoDB, names.ErrActionUpdating, "Table", d.Id(), err)
 			}
 		}
@@ -1067,7 +1067,7 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 	return nil
 }
 
-func updateReplicaTags(conn *dynamodb.DynamoDB, tableID string, rn string, replicas []interface{}, oldTags interface{}, newTags interface{}, terraformVersion string) error {
+func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{}, oldTags interface{}, newTags interface{}, terraformVersion string) error {
 	for _, tfMapRaw := range replicas {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
