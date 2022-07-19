@@ -261,9 +261,7 @@ func resourceExperimentTemplateRead(d *schema.ResourceData, meta interface{}) er
 
 	experimentTemplate := out.ExperimentTemplate
 	if experimentTemplate == nil {
-		log.Printf("[WARN] Experiment Template %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("describe Experiment Template failed: %s", "empty result")
 	}
 
 	d.SetId(aws.StringValue(experimentTemplate.Id))

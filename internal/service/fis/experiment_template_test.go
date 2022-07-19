@@ -27,7 +27,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 		CheckDestroy:      testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfigBasic(rName),
+				Config: testAccExperimentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "An experiment template for testing"),
@@ -76,7 +76,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 		CheckDestroy:      testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfigBasic(rName),
+				Config: testAccExperimentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tffis.ResourceExperimentTemplate(), resourceName),
@@ -127,7 +127,7 @@ func testAccExperimentTemplateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccExperimentTemplateConfigBasic(rName string) string {
+func testAccExperimentTemplateConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
