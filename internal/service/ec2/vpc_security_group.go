@@ -349,16 +349,18 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error deleting Lambda ENIs using Security Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Lambda ENIs using Security Group (%s): %w", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
 	if v := d.Get("revoke_rules_on_delete").(bool); v {
-		if err := forceRevokeSecurityGroupRules(conn, d.Id()); err != nil {
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-				return nil
-			}
+		err := forceRevokeSecurityGroupRules(conn, d.Id())
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
+			return nil
+		}
+
+		if err != nil {
 			return err
 		}
 	}
@@ -379,7 +381,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Security Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Security Group (%s): %w", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
@@ -387,7 +389,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Security Group (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Security Group (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -398,34 +400,33 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string) error {
 	group, err := FindSecurityGroupByID(conn, id)
 
 	if err != nil {
-		return fmt.Errorf("error reading Security Group (%s): %w", id, err)
+		return fmt.Errorf("reading Security Group (%s): %w", id, err)
 	}
 
 	if len(group.IpPermissions) > 0 {
-		req := &ec2.RevokeSecurityGroupIngressInput{
-			GroupId:       group.GroupId,
+		input := &ec2.RevokeSecurityGroupIngressInput{
 			IpPermissions: group.IpPermissions,
 		}
-		if aws.StringValue(group.VpcId) == "" {
-			req.GroupId = nil
-			req.GroupName = group.GroupName
-		}
-		_, err = conn.RevokeSecurityGroupIngress(req)
 
-		if err != nil {
-			return fmt.Errorf("error revoking Security Group (%s) ingress rules: %w", id, err)
+		if aws.StringValue(group.VpcId) == "" {
+			input.GroupName = group.GroupName
+		} else {
+			input.GroupId = group.GroupId
+		}
+
+		if _, err := conn.RevokeSecurityGroupIngress(input); err != nil {
+			return fmt.Errorf("revoking Security Group (%s) ingress rules: %w", id, err)
 		}
 	}
 
 	if len(group.IpPermissionsEgress) > 0 {
-		req := &ec2.RevokeSecurityGroupEgressInput{
+		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId:       group.GroupId,
 			IpPermissions: group.IpPermissionsEgress,
 		}
-		_, err = conn.RevokeSecurityGroupEgress(req)
 
-		if err != nil {
-			return fmt.Errorf("error revoking Security Group (%s) egress rules: %w", id, err)
+		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
+			return fmt.Errorf("revoking Security Group (%s) egress rules: %w", id, err)
 		}
 	}
 
@@ -1252,7 +1253,7 @@ var securityGroupProtocolIntegers = map[string]int{
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceID string, timeout time.Duration) error {
 	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
 	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
@@ -1260,13 +1261,13 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 
 	networkInterfaces, err := FindNetworkInterfaces(conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
-			filterName:    resourceId,
+			filterName:    resourceID,
 			"description": "AWS Lambda VPC ENI*",
 		}),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing EC2 Network Interfaces: %w", err)
+		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
 	}
 
 	for _, v := range networkInterfaces {
@@ -1280,24 +1281,20 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 			}
 
 			if err != nil {
-				return fmt.Errorf("error waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
+				return fmt.Errorf("waiting for Lambda ENI (%s) to become available after use: %w", networkInterfaceID, err)
 			}
 
 			v = networkInterface
 		}
 
 		if v.Attachment != nil {
-			err = DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
-
-			if err != nil {
-				return fmt.Errorf("error detaching Lambda ENI (%s): %w", networkInterfaceID, err)
+			if err := DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout); err != nil {
+				return err
 			}
 		}
 
-		err = DeleteNetworkInterface(conn, networkInterfaceID)
-
-		if err != nil {
-			return fmt.Errorf("error deleting Lambda ENI (%s): %w", networkInterfaceID, err)
+		if err := DeleteNetworkInterface(conn, networkInterfaceID); err != nil {
+			return err
 		}
 	}
 
