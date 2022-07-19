@@ -238,7 +238,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS create function
 	{{- end }}
+	{{- if .AWSGoSDKV2 }}
+	out, err := conn.Create{{ .Resource }}(ctx, in)
+	{{- else }}
 	out, err := conn.Create{{ .Resource }}WithContext(ctx, in)
+	{{- end }}
 	if err != nil {
 		{{- if .IncludeComments }}
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
@@ -435,7 +439,11 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 3. Call the AWS modify/update function
 	{{- end }}
 	log.Printf("[DEBUG] Updating {{ .Service }} {{ .Resource }} (%s): %#v", d.Id(), in)
+	{{- if .AWSGoSDKV2 }}
+	out, err := conn.Update{{ .Resource }}(ctx, in)
+	{{- else }}
 	out, err := conn.Update{{ .Resource }}WithContext(ctx, in)
+	{{- end }}
 	if err != nil {
 		return names.DiagError(names.{{ .Service }}, names.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
 	}
@@ -481,9 +489,15 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS delete function
 	{{- end }}
+	{{- if .AWSGoSDKV2 }}
+	_, err := conn.Delete{{ .Resource }}(ctx, &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
+		Id: aws.String(d.Id()),
+	})
+	{{- else }}
 	_, err := conn.Delete{{ .Resource }}WithContext(ctx, &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
 		Id: aws.String(d.Id()),
 	})
+	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
@@ -638,8 +652,8 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
 	{{- if .AWSGoSDKV2 }}
+	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -652,6 +666,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 		return nil, err
 	}
 	{{- else }}
+	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,

@@ -276,9 +276,17 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
-		resp, err := conn.Describe{{ .Resource }}(&{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+		ctx := context.Background()
+
+		{{- if .AWSGoSDKV2 }}
+		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
 			{{ .Resource }}Id: aws.String(rs.Primary.ID),
 		})
+		{{- else }}
+		resp, err := conn.Describe{{ .Resource }}WithContext(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+			{{ .Resource }}Id: aws.String(rs.Primary.ID),
+		})
+		{{- end }}
 
 		if err != nil {
 			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
@@ -292,10 +300,15 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
+	ctx := context.Background()
 
 	input := &{{ .ServicePackage }}.List{{ .Resource }}sInput{}
 
-	_, err := conn.List{{ .Resource }}s(input)
+	{{- if .AWSGoSDKV2 }}
+	_, err := conn.List{{ .Resource }}s(ctx, input)
+	{{- else }}
+	_, err := conn.List{{ .Resource }}sWithContext(ctx, input)
+	{{- end }}
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
