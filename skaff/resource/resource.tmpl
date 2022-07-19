@@ -368,7 +368,6 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return names.DiagError(names.{{ .Service }}, names.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
 	}
