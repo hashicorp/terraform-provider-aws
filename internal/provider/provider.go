@@ -143,6 +143,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -1826,8 +1827,11 @@ func Provider() *schema.Provider {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
+			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
+			"aws_rolesanywhere_profile":      rolesanywhere.ResourceProfile(),
 			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
@@ -2044,6 +2048,7 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
+			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
 
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),

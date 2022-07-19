@@ -45,7 +45,7 @@ const (
 	//
 	// In the future, it may be possible to include this information directly
 	// in the protocol buffers rather than recreating a constant here.
-	protocolVersionMinor uint = 0
+	protocolVersionMinor uint = 3
 )
 
 // protocolVersion represents the combined major and minor version numbers of

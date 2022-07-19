@@ -48,28 +48,28 @@ func InitTestContext(ctx context.Context, t testing.T) context.Context {
 
 // TestNameContext adds the current test name to loggers.
 func TestNameContext(ctx context.Context, testName string) context.Context {
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestName, testName)
+	ctx = tfsdklog.SubsystemSetField(ctx, SubsystemHelperResource, KeyTestName, testName)
 
 	return ctx
 }
 
 // TestStepNumberContext adds the current test step number to loggers.
 func TestStepNumberContext(ctx context.Context, stepNumber int) context.Context {
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestStepNumber, stepNumber)
+	ctx = tfsdklog.SubsystemSetField(ctx, SubsystemHelperResource, KeyTestStepNumber, stepNumber)
 
 	return ctx
 }
 
 // TestTerraformPathContext adds the current test Terraform CLI path to loggers.
 func TestTerraformPathContext(ctx context.Context, terraformPath string) context.Context {
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestTerraformPath, terraformPath)
+	ctx = tfsdklog.SubsystemSetField(ctx, SubsystemHelperResource, KeyTestTerraformPath, terraformPath)
 
 	return ctx
 }
 
 // TestWorkingDirectoryContext adds the current test working directory to loggers.
 func TestWorkingDirectoryContext(ctx context.Context, workingDirectory string) context.Context {
-	ctx = tfsdklog.SubsystemWith(ctx, SubsystemHelperResource, KeyTestWorkingDirectory, workingDirectory)
+	ctx = tfsdklog.SubsystemSetField(ctx, SubsystemHelperResource, KeyTestWorkingDirectory, workingDirectory)
 
 	return ctx
 }

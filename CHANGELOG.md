@@ -6,7 +6,10 @@ FEATURES:
 * **New Data Source:** `aws_networkfirewall_firewall_policy` ([#24748](https://github.com/hashicorp/terraform-provider-aws/issues/24748))
 * **New Data Source:** `aws_s3_account_public_access_block` ([#25781](https://github.com/hashicorp/terraform-provider-aws/issues/25781))
 * **New Resource:** `aws_location_geofence_collection` ([#25762](https://github.com/hashicorp/terraform-provider-aws/issues/25762))
+* **New Resource:** `aws_redshiftserverless_namespace` ([#25889](https://github.com/hashicorp/terraform-provider-aws/issues/25889))
+* **New Resource:** `aws_rolesanywhere_profile` ([#25850](https://github.com/hashicorp/terraform-provider-aws/issues/25850))
 * **New Resource:** `aws_rolesanywhere_trust_anchor` ([#25779](https://github.com/hashicorp/terraform-provider-aws/issues/25779))
+* **New Resource:** `aws_transcribe_vocabulary` ([#25863](https://github.com/hashicorp/terraform-provider-aws/issues/25863))
 
 ENHANCEMENTS:
 
@@ -16,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_gateway_route: Add `http2_route.action.rewrite`, `http2_route.match.hostname`, `http_route.action.rewrite` and `http_route.match.hostname` arguments ([#25819](https://github.com/hashicorp/terraform-provider-aws/issues/25819))
 * resource/aws_ce_cost_category: Add `tags` argument and `tags_all` attribute to support resource tagging ([#25432](https://github.com/hashicorp/terraform-provider-aws/issues/25432))
 * resource/aws_db_instance_automated_backups_replication: Add support for custom timeouts (create and delete) ([#25796](https://github.com/hashicorp/terraform-provider-aws/issues/25796))
+* resource/aws_dynamodb_table: Add `replica.*.propagate_tags` argument to allow propagating tags to replicas ([#25866](https://github.com/hashicorp/terraform-provider-aws/issues/25866))
 * resource/aws_fsx_openzfs_file_system: Allow in-place update of `storage_capacity`, `throughput_capacity`, and `disk_iops_configuration`. ([#25841](https://github.com/hashicorp/terraform-provider-aws/issues/25841))
 * resource/aws_imagebuilder_container_recipe: Add `throughput` argument to the `block_device_mapping` configuration block ([#25790](https://github.com/hashicorp/terraform-provider-aws/issues/25790))
 * resource/aws_imagebuilder_image_recipe: Add `throughput` argument to the `block_device_mapping` configuration block ([#25790](https://github.com/hashicorp/terraform-provider-aws/issues/25790))

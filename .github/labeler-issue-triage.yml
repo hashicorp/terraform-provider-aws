@@ -491,6 +491,8 @@ service/redshift:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshift_'
 service/redshiftdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshiftdata_'
+service/redshiftserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshiftserverless_'
 service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:

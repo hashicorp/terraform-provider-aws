@@ -29,7 +29,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -69,7 +69,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -108,7 +108,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -156,7 +156,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccMedicalVocabularyPreCheck(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -222,7 +222,7 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccMedicalVocabularyPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
 
 	input := &transcribe.ListMedicalVocabulariesInput{}
@@ -248,13 +248,13 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_object" "object1" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test1.txt"
-  source = "test-fixtures/test1.txt"
+  source = "test-fixtures/medical_vocabulary_test1.txt"
 }
 
 resource "aws_s3_object" "object2" {
   bucket = aws_s3_bucket.test.id
   key    = "transcribe/test2.txt"
-  source = "test-fixtures/test2.txt"
+  source = "test-fixtures/medical_vocabulary_test2.txt"
 }
 
 `, rName)
