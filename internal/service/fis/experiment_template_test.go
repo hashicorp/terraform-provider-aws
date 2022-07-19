@@ -232,7 +232,7 @@ resource "aws_fis_experiment_template" "test" {
 
   action {
     name        = %[3]q
-	description = %[4]q
+    description = %[4]q
     action_id   = %[5]q
 
     target {
