@@ -150,23 +150,6 @@ func testAccCheckEntityRecognizerExists(name string, entityrecognizer *types.Ent
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-	ctx := context.Background()
-
-	input := &comprehend.ListEntityRecognizersInput{}
-
-	_, err := conn.ListEntityRecognizers(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 // func testAccCheckEntityRecognizerNotRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
 // 		if before, after := aws.StringValue(before.EntityRecognizerId), aws.StringValue(after.EntityRecognizerId); before != after {
