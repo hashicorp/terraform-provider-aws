@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_autoscaling_attachment: The `alb_target_group_arn` argument has been deprecated. All configurations using `alb_target_group_arn` should be updated to use the new `lb_target_group_arn` argument instead
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_attachment: Add `lb_target_group_arn` argument
+```

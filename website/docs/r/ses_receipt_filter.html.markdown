@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_filter"
 description: |-
@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES Receipt Filter can be imported using their `name`, e.g.
+SES Receipt Filter can be imported using their `name`, e.g.,
 
 ```
 $ terraform import aws_ses_receipt_filter.test some-filter

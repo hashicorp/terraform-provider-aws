@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_waf_byte_match_set: Additional supported values for `byte_match_tuples.field_to_match.type` argument
+```
+
+```release-note:enhancement
+resource/aws_wafregional_web_acl: Additional supported values for `logging_configuration.redacted_fields.field_to_match.type` argument
+```
+
+```release-note:enhancement
+resource/aws_workspaces_workspace: Additional supported values for `workspace_properties.compute_type_name` argument
+```

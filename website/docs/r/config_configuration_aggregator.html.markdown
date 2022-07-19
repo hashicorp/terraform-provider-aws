@@ -103,7 +103,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Configuration Aggregators can be imported using the name, e.g.
+Configuration Aggregators can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_configuration_aggregator.example foo

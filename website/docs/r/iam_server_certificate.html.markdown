@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
 description: |-
@@ -124,7 +124,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Server Certificates can be imported using the `name`, e.g.
+IAM Server Certificates can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018

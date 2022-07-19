@@ -1,5 +1,5 @@
 ---
-subcategory: "IoT"
+subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_policy"
 description: |-
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT policies can be imported using the `name`, e.g.
+IoT policies can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iot_policy.pubsub PubSubToAnyTopic

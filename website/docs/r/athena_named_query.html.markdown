@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Athena Named Query can be imported using the query ID, e.g.
+Athena Named Query can be imported using the query ID, e.g.,
 
 ```
 $ terraform import aws_athena_named_query.example 0123456789

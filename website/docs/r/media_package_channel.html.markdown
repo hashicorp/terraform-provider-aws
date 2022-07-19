@@ -1,5 +1,5 @@
 ---
-subcategory: "MediaPackage"
+subcategory: "Elemental MediaPackage"
 layout: "aws"
 page_title: "AWS: aws_media_package_channel"
 description: |-
@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Media Package Channels can be imported via the channel ID, e.g.
+Media Package Channels can be imported via the channel ID, e.g.,
 
 ```
 $ terraform import aws_media_package_channel.kittens kittens-channel

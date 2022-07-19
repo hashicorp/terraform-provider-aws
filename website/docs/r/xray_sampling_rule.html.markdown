@@ -1,5 +1,5 @@
 ---
-subcategory: "XRay"
+subcategory: "X-Ray"
 layout: "aws"
 page_title: "AWS: aws_xray_sampling_rule"
 description: |-
@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Sampling Rules can be imported using the name, e.g.
+XRay Sampling Rules can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_xray_sampling_rule.example example

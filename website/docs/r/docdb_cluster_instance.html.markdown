@@ -1,5 +1,5 @@
 ---
-subcategory: "DocumentDB"
+subcategory: "DocDB (DocumentDB)"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
 description: |-
@@ -105,7 +105,7 @@ the time required to take snapshots
 
 ## Import
 
-DocDB Cluster Instances can be imported using the `identifier`, e.g.
+DocDB Cluster Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1

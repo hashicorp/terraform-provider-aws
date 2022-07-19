@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_secretsmanager_secret: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_secretsmanager_secret_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_iam_role: Fix eventual consistency problem with `arn` sometimes being a unique ID instead of the role ARN
+```

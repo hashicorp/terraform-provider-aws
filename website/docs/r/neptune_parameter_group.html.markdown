@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Neptune Parameter Groups can be imported using the `name`, e.g.
+Neptune Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_neptune_parameter_group.some_pg some-pg

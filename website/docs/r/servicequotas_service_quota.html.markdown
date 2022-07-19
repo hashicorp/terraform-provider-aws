@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ~> *NOTE* This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
 
-`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.
+`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.,
 
 ```
 $ terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE

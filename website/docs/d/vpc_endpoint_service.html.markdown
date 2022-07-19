@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
 description: |-
@@ -59,7 +59,7 @@ The arguments of this data source act as filters for querying the available VPC 
 The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `service` - (Optional) The common name of an AWS service (e.g. `s3`).
+* `service` - (Optional) The common name of an AWS service (e.g., `s3`).
 * `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `service_type` - (Optional) The service type, `Gateway` or `Interface`.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
@@ -85,5 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `owner` - The AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - The private DNS name for the service.
 * `service_id` - The ID of the endpoint service.
+* `supported_ip_address_types` - The supported IP address types.
 * `tags` - A map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.

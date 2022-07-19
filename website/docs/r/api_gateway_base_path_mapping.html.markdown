@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_base_path_mapping"
 description: |-
@@ -54,9 +54,9 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.
+`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.,
 
-For empty `base_path` (e.g. root path (`/`)):
+For empty `base_path` (e.g., root path (`/`)):
 
 ```
 $ terraform import aws_api_gateway_base_path_mapping.example example.com/

@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_api_destination"
 description: |-
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge API Destinations can be imported using the `name`, e.g.
+EventBridge API Destinations can be imported using the `name`, e.g.,
 
 ```console
 $ terraform import aws_cloudwatch_event_api_destination.test api-destination

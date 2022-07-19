@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_mskconnect_custom_plugin
+```
+
+```release-note:new-data-source
+aws_mskconnect_custom_plugin
+```

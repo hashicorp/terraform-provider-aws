@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_task: Allow `cdc_start_position` to be computed
+```

@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_integration"
 description: |-
@@ -152,7 +152,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.
+`aws_apigatewayv2_integration` can be imported by using the API identifier and integration identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334

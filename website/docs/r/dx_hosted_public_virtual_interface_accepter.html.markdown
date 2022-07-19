@@ -92,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.
+Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.,
 
 ```
 $ terraform import aws_dx_hosted_public_virtual_interface_accepter.test dxvif-33cc44dd
