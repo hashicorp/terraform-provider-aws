@@ -13,11 +13,11 @@ import (
 )
 
 func TestAccS3BucketsDataSource_basic(t *testing.T) {
-	dataSourceName := "data.aws_iam_buckets.test"
+	dataSourceName := "data.aws_s3_buckets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -33,11 +33,11 @@ func TestAccS3BucketsDataSource_basic(t *testing.T) {
 func TestAccS3BucketsDataSource_nameRegex(t *testing.T) {
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_iam_buckets.test"
+	dataSourceName := "data.aws_s3_buckets.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
