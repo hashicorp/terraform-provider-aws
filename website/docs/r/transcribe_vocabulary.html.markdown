@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_transcribe_medicalvocabulary` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_transcribe_vocabulary` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `30m`)
 * `update` - (Optional, Default: `30m`)
