@@ -69,6 +69,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
