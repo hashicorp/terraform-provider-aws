@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
@@ -29,9 +29,10 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, comprehend.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
 		Steps: []resource.TestStep{
@@ -80,15 +81,16 @@ func TestAccComprehendEntityRecognizer_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, comprehend.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEntityRecognizerConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcomprehend.ResourceEntityRecognizer(), resourceName),
 				),
