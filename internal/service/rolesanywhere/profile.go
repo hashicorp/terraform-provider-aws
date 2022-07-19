@@ -105,7 +105,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SessionPolicy = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating RolesAnywhere Profile (%s): %#v", d.Id(), input)
+	log.Printf("[DEBUG] Creating RolesAnywhere Profile: %#v", input)
 	output, err := conn.CreateProfile(ctx, input)
 
 	if err != nil {
