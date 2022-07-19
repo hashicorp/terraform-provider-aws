@@ -16,16 +16,16 @@ func TestARNForNewRegion(t *testing.T) {
 	}{
 		{
 			TestName:      "basic",
-			ARN:           "arn:aws:dynamodb:us-west-2:786648903940:table/tf-acc-test-7864711876941043153",
-			NewRegion:     "us-east-2",
-			ExpectedARN:   "arn:aws:dynamodb:us-east-2:786648903940:table/tf-acc-test-7864711876941043153",
+			ARN:           "arn:aws:dynamodb:us-west-2:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
+			NewRegion:     "us-east-2",                                                                     //lintignore:AWSAT003
+			ExpectedARN:   "arn:aws:dynamodb:us-east-2:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
 			ErrorExpected: false,
 		},
 		{
 			TestName:      "basic2",
-			ARN:           "arn:aws:dynamodb:us-west-2:786648903940:table/tf-acc-test-7864711876941043153",
-			NewRegion:     "us-east-1",
-			ExpectedARN:   "arn:aws:dynamodb:us-east-1:786648903940:table/tf-acc-test-7864711876941043153",
+			ARN:           "arn:aws:dynamodb:us-west-2:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
+			NewRegion:     "us-east-1",                                                                     //lintignore:AWSAT003
+			ExpectedARN:   "arn:aws:dynamodb:us-east-1:786648903940:table/tf-acc-test-7864711876941043153", //lintignore:AWSAT003,AWSAT005
 			ErrorExpected: false,
 		},
 	}
