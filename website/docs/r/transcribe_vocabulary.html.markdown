@@ -60,8 +60,8 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Name of the MedicalVocabulary.
-* `arn` - ARN of the MedicalVocabulary.
+* `id` - Name of the Vocabulary.
+* `arn` - ARN of the Vocabulary.
 * `download_uri` - Generated download URI.
 
 ## Timeouts
