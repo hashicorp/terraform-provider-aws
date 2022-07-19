@@ -1,4 +1,4 @@
-package iam
+package s3
 
 import (
 	"fmt"

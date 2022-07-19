@@ -1,4 +1,4 @@
-package iam_test
+package s3_test
 
 import (
 	"fmt"
