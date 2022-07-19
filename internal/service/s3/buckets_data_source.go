@@ -56,7 +56,7 @@ func dataSourceBucketsRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	var arns, ids []string
+	var ids []string
 
 	for _, r := range results {
 		ids = append(ids, aws.StringValue(r.Name))
