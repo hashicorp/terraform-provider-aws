@@ -379,7 +379,7 @@ resource "aws_transcribe_vocabulary" "test" {
 
 func testAccVocabularyConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccMedicalVocabularyBaseConfig(rName),
+		testAccVocabularyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_transcribe_vocabulary" "test" {
   vocabulary_name     = %[1]q
