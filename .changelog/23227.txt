@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/iam: Allow usage of other sources than keybase for gpg keys
+```
