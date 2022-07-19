@@ -65,6 +65,9 @@ import (
     // any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -168,10 +171,18 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(names.{{ .Service }}EndpointID, t)
+			{{- else }}
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
+			{{- end }}
 			testAccPreCheck(t)
 		},
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		{{- else }}
 		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
@@ -212,10 +223,18 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(names.{{ .Service }}EndpointID, t)
+			{{- else }}
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
+			{{- end }}
 			testAccPreCheck(t)
 		},
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		{{- else }}
 		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
