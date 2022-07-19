@@ -161,8 +161,6 @@ type TemplateData struct {
 	SkipTypesImp    bool
 	StrConvPkg      bool
 	TfResourcePkg   bool
-
-	AWSSDKVersion int
 }
 
 func main() {
