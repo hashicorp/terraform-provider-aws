@@ -68,7 +68,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
-* `model_policy` - (Optional) Resource-based IAM policy encoded in JSON, used to [share the Entity Recognizer](https://docs.aws.amazon.com/comprehend/latest/dg/custom-copy-sharing.html#custom-copy-sharing-example-policy).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
   Each version must have a unique name within the Entity Recognizer.

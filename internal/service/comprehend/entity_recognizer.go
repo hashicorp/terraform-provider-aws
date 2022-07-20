@@ -179,12 +179,6 @@ func ResourceEntityRecognizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"model_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -240,10 +234,6 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
 		in.ModelKmsKeyId = aws.String(v)
-	}
-
-	if v, ok := d.Get("model_policy").(string); ok && v != "" {
-		in.ModelPolicy = aws.String(v)
 	}
 
 	if v, ok := d.Get("version_name").(string); ok && v != "" {
@@ -320,19 +310,6 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
-
-	// TODO
-	// p, err := verify.SecondJSONUnlessEquivalent(d.Get("model_policy").(string), aws.ToString(out.ModelPolicy))
-	// if err != nil {
-	// 	return diag.Errorf("while setting model_policy (%s), encountered: %s", p, err)
-	// }
-
-	// p, err = structure.NormalizeJsonString(p)
-	// if err != nil {
-	// 	return diag.Errorf("policy (%s) is invalid JSON: %s", p, err)
-	// }
-
-	// d.Set("model_policy", p)
 
 	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
