@@ -74,6 +74,9 @@ The following arguments are optional:
   Each version must have a unique name within the Entity Recognizer.
   Has a maximum length of 63 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+* `volume_kms_key_id` - (Optional) ID or ARN of a KMS Key used to encrypt storage volumes during job processing.
+* `vpc_config` - (Optional) Configuration parameters for VPC to contain Entity Recognizer resources.
+  See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.
 
 ### `input_data_config` Configuration Block
 
@@ -126,6 +129,11 @@ The following arguments are optional:
 
 * `type` - (Required) An entity type to be matched by the Entity Recognizer.
   Cannot contain a newline (`\n`), carriage return (`\r`), or tab (`\t`).
+
+### `vpc_config` Configuration Block
+
+* `security_group_ids` - (Required) List of security group IDs.
+* `subnets` - (Required) List of VPC subnets.
 
 ## Attributes Reference
 
