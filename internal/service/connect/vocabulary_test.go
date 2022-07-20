@@ -48,7 +48,7 @@ func testAccVocabulary_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyBasicConfig(rName, rName2, content, languageCode),
+				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -89,7 +89,7 @@ func testAccVocabulary_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyBasicConfig(rName, rName2, content, languageCode),
+				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
@@ -117,7 +117,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyBasicConfig(rName, rName2, content, languageCode),
+				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -130,7 +130,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVocabularyTagsConfig(rName, rName2, content, languageCode),
+				Config: testAccVocabularyConfig_tags(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -139,7 +139,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVocabularyTagsUpdatedConfig(rName, rName2, content, languageCode),
+				Config: testAccVocabularyConfig_tagsUpdate(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -224,7 +224,7 @@ func testAccCheckVocabularyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVocabularyBaseConfig(rName string) string {
+func testAccVocabularyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -235,9 +235,9 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccVocabularyBasicConfig(rName, rName2, content, languageCode string) string {
+func testAccVocabularyConfig_basic(rName, rName2, content, languageCode string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseConfig(rName),
+		testAccVocabularyConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
@@ -252,9 +252,9 @@ resource "aws_connect_vocabulary" "test" {
 `, rName2, content, languageCode))
 }
 
-func testAccVocabularyTagsConfig(rName, rName2, content, languageCode string) string {
+func testAccVocabularyConfig_tags(rName, rName2, content, languageCode string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseConfig(rName),
+		testAccVocabularyConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
@@ -270,9 +270,9 @@ resource "aws_connect_vocabulary" "test" {
 `, rName2, content, languageCode))
 }
 
-func testAccVocabularyTagsUpdatedConfig(rName, rName2, content, languageCode string) string {
+func testAccVocabularyConfig_tagsUpdate(rName, rName2, content, languageCode string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseConfig(rName),
+		testAccVocabularyConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
