@@ -27,6 +27,11 @@ resource "aws_guardduty_organization_configuration" "example" {
     s3_logs {
       auto_enable = true
     }
+    kubernetes {
+      audit_logs {
+        enable = true
+      }
+    }
   }
 }
 ```
@@ -41,12 +46,27 @@ The following arguments are supported:
 
 `datasources` supports the following:
 
-* `s3_logs` - (Optional) Configuration for the builds to store logs to S3.
+* `s3_logs` - (Optional) Enable S3 Protection automatically for new member accounts.
+* `kubernetes` - (Optional) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts.
 
-`s3_logs` supports the following:
+### S3 Logs
+
+`s3_logs` block supports the following:
 
 * `auto_enable` - (Optional) Set to `true` if you want S3 data event logs to be automatically enabled for new members of the organization. Default: `false`
 
+### Kubernetes
+`kubernetes` block supports the following:
+
+* `audit_logs` - (Required) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts. [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  See [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
+
+#### Kubernetes Audit Logs
+
+The `audit_logs` block supports the following:
+
+* `enable` - (Required) If true, enables Kubernetes audit logs as a data source for [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  Defaults to `true`.
 
 ## Attributes Reference
 
