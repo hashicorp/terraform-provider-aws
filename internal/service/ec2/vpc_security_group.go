@@ -150,6 +150,7 @@ var (
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString, // Required to ensure consistent hashing
 			},
 			"self": {
 				Type:     schema.TypeBool,
