@@ -343,7 +343,6 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
@@ -408,8 +407,8 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{},
-		Target:  enum.Slice(types.ModelStatusSubmitted),
+		Pending: enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
+		Target:  enum.Slice(types.ModelStatusTrained),
 		Refresh: statusEntityRecognizer(ctx, conn, id),
 		Timeout: timeout,
 	}
