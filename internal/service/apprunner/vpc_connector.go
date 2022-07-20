@@ -16,11 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func ResourceVpcConnector() *schema.Resource {
+func ResourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceVpcConnectorCreate,
-		ReadWithoutTimeout:   resourceVpcConnectorRead,
-		DeleteWithoutTimeout: resourceVpcConnectorDelete,
+		CreateWithoutTimeout: resourceVPCConnectorCreate,
+		ReadWithoutTimeout:   resourceVPCConnectorRead,
+		DeleteWithoutTimeout: resourceVPCConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -64,7 +64,7 @@ func ResourceVpcConnector() *schema.Resource {
 	}
 }
 
-func resourceVpcConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -95,14 +95,14 @@ func resourceVpcConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(output.VpcConnector.VpcConnectorArn))
 
-	if err := WaitVpcConnectorActive(ctx, conn, d.Id()); err != nil {
+	if err := waitVPCConnectorActive(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for creating App Runner vpc (%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceVpcConnectorRead(ctx, d, meta)
+	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
-func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -170,7 +170,7 @@ func resourceVpcConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceVpcConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteVpcConnectorInput{
@@ -187,7 +187,7 @@ func resourceVpcConnectorDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error deleting App Runner vpc connector (%s): %w", d.Id(), err))
 	}
 
-	if err := WaitVpcConnectorInactive(ctx, conn, d.Id()); err != nil {
+	if err := waitVPCConnectorInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}

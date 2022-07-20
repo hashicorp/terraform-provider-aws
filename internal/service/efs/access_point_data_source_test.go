@@ -22,7 +22,7 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointDataSourceConfig(rName),
+				Config: testAccAccessPointDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
@@ -35,7 +35,7 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAccessPointDataSourceConfig(rName string) string {
+func testAccAccessPointDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = "%s"

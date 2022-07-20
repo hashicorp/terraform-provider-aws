@@ -28,7 +28,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
@@ -43,7 +43,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 10"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
@@ -68,7 +68,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 5", true, true),
+				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
@@ -84,7 +84,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 10", false, false),
+				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
@@ -110,7 +110,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicTags1Config(rName, "key1", "value1"),
+				Config: testAccGroupConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -123,7 +123,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -132,7 +132,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupBasicTags1Config(rName, "key2", "value2"),
+				Config: testAccGroupConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -154,7 +154,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &Group),
 					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceGroup(), resourceName),
@@ -223,7 +223,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGroupBasicConfig(rName, expression string) string {
+func testAccGroupConfig_basic(rName, expression string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -232,7 +232,7 @@ resource "aws_xray_group" "test" {
 `, rName, expression)
 }
 
-func testAccGroupBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccGroupConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -245,7 +245,7 @@ resource "aws_xray_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccGroupBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGroupConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -259,7 +259,7 @@ resource "aws_xray_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccGroupBasicInsightsConfig(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
+func testAccGroupConfig_basicInsights(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q

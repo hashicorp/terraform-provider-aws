@@ -21,7 +21,7 @@ func TestAccVPCNetworkInterfaceDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceBasicDataSourceConfig(rName),
+				Config: testAccVPCNetworkInterfaceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", "1"),
@@ -51,7 +51,7 @@ func TestAccVPCNetworkInterfaceDataSource_filters(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceFiltersDataSourceConfig(rName),
+				Config: testAccVPCNetworkInterfaceDataSourceConfig_filters(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", "1"),
@@ -76,7 +76,7 @@ func TestAccVPCNetworkInterfaceDataSource_carrierIPAssociation(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceCarrierIPAssociationDataSourceConfig(rName),
+				Config: testAccVPCNetworkInterfaceDataSourceConfig_carrierIPAssociation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
@@ -124,7 +124,7 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfacePublicIPAssociationDataSourceConfig(rName),
+				Config: testAccVPCNetworkInterfaceDataSourceConfig_publicIPAssociation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
@@ -170,7 +170,7 @@ func TestAccVPCNetworkInterfaceDataSource_attachment(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceAttachmentDataSourceConfig(rName),
+				Config: testAccVPCNetworkInterfaceDataSourceConfig_attachment(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "attachment.#", "1"),
@@ -240,7 +240,7 @@ resource "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccNetworkInterfaceBasicDataSourceConfig(rName string) string {
+func testAccVPCNetworkInterfaceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		`
@@ -250,7 +250,7 @@ data "aws_network_interface" "test" {
 `)
 }
 
-func testAccNetworkInterfaceCarrierIPAssociationDataSourceConfig(rName string) string {
+func testAccVPCNetworkInterfaceDataSourceConfig_carrierIPAssociation(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`
@@ -323,7 +323,7 @@ data "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccNetworkInterfacePublicIPAssociationDataSourceConfig(rName string) string {
+func testAccVPCNetworkInterfaceDataSourceConfig_publicIPAssociation(rName string) string {
 	return acctest.ConfigCompose(
 		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
@@ -354,7 +354,7 @@ data "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccNetworkInterfaceFiltersDataSourceConfig(rName string) string {
+func testAccVPCNetworkInterfaceDataSourceConfig_filters(rName string) string {
 	return acctest.ConfigCompose(
 		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		`
@@ -367,10 +367,10 @@ data "aws_network_interface" "test" {
 `)
 }
 
-func testAccNetworkInterfaceAttachmentDataSourceConfig(rName string) string {
+func testAccVPCNetworkInterfaceDataSourceConfig_attachment(rName string) string {
 	return acctest.ConfigCompose(
 		testAccNetworkInterfaceBaseDataSourceConfig(rName),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {

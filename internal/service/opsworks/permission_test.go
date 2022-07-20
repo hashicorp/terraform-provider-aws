@@ -25,7 +25,7 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionCreate(rName, true, true, "iam_only"),
+				Config: testAccPermissionConfig_create(rName, true, true, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					testAccCheckCreatePermissionAttributes(&opsperm, true, true, "iam_only"),
@@ -35,7 +35,7 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, true, false, "iam_only"),
+				Config: testAccPermissionConfig_create(rName, true, false, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					testAccCheckCreatePermissionAttributes(&opsperm, true, false, "iam_only"),
@@ -45,7 +45,7 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, false, false, "deny"),
+				Config: testAccPermissionConfig_create(rName, false, false, "deny"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "deny"),
@@ -55,7 +55,7 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, false, false, "show"),
+				Config: testAccPermissionConfig_create(rName, false, false, "show"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "show"),
@@ -81,7 +81,7 @@ func TestAccOpsWorksPermission_self(t *testing.T) {
 		CheckDestroy:      nil, // Cannot delete own OpsWorks Permission
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSelf(rName, true, true),
+				Config: testAccPermissionConfig_self(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
@@ -89,7 +89,7 @@ func TestAccOpsWorksPermission_self(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPermissionSelf(rName, true, false),
+				Config: testAccPermissionConfig_self(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
@@ -294,9 +294,9 @@ resource "aws_iam_instance_profile" "test" {
 `, rName)
 }
 
-func testAccPermissionCreate(rName string, allowSSH, allowSudo bool, level string) string {
+func testAccPermissionConfig_create(rName string, allowSSH, allowSudo bool, level string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_permission" "test" {
   stack_id = aws_opsworks_stack.test.id
@@ -319,7 +319,7 @@ resource "aws_iam_user" "user" {
 `, allowSSH, allowSudo, level, rName))
 }
 
-func testAccPermissionSelf(rName string, allowSSH bool, allowSudo bool) string {
+func testAccPermissionConfig_self(rName string, allowSSH bool, allowSudo bool) string {
 	return acctest.ConfigCompose(
 		testAccPermissionBase(rName),
 		fmt.Sprintf(`

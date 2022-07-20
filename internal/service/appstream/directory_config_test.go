@@ -34,7 +34,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN),
+				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -47,7 +47,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDirectoryConfigConfig(rName, domain, rUserNameUpdated, rPasswordUpdated, orgUnitDN),
+				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserNameUpdated, rPasswordUpdated, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v2),
 					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
@@ -86,7 +86,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN),
+				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceDirectoryConfig(), resourceName),
@@ -114,7 +114,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN1),
+				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -123,7 +123,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(rName, domain, rUserName, rPassword, orgUnitDN1, orgUnitDN2),
+				Config: testAccDirectoryConfigConfig_organizationalUnitDistinguishedNames(rName, domain, rUserName, rPassword, orgUnitDN1, orgUnitDN2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -133,7 +133,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				),
 			},
 			{
-				Config: testAccDirectoryConfigConfig(rName, domain, rUserName, rPassword, orgUnitDN2),
+				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
@@ -214,9 +214,9 @@ func orgUnitFromDomain(orgUnit, domainName string) string {
 	return sb.String()
 }
 
-func testAccDirectoryConfigConfig(rName, domain, userName, password, orgUnitDN string) string {
+func testAccDirectoryConfigConfig_basic(rName, domain, userName, password, orgUnitDN string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q
@@ -246,9 +246,9 @@ resource "aws_directory_service_directory" "test" {
 `, domain, userName, password, orgUnitDN))
 }
 
-func testAccDirectoryConfig_OrganizationalUnitDistinguishedNamesConfig(rName, domain, userName, password, orgUnitDN1, orgUnitDN2 string) string {
+func testAccDirectoryConfigConfig_organizationalUnitDistinguishedNames(rName, domain, userName, password, orgUnitDN1, orgUnitDN2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_appstream_directory_config" "test" {
   directory_name                          = %[1]q

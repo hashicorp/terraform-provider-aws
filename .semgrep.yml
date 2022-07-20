@@ -270,22 +270,62 @@ rules:
 
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
-    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked
+    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
     paths:
       include:
         - internal/service
       exclude:
         - internal/service/**/*_data_source.go
-        - internal/service/[be-g]*
-        - internal/service/d[a-df-z]*
+        - internal/service/backup
+        - internal/service/batch
+        - internal/service/d[a-d]*
         - internal/service/devicefarm
-        - internal/service/i*
-        - internal/service/[k-r]*
-        - internal/service/s[a-df-z3]*
+        - internal/service/directconnect
+        - internal/service/dlm
+        - internal/service/dms
+        - internal/service/ds
+        - internal/service/dynamodb
+        - internal/service/ec2
+        - internal/service/ecs
+        - internal/service/efs
+        - internal/service/elasticache
+        - internal/service/elasticbeanstalk
+        - internal/service/elastictranscoder
+        - internal/service/elbv2
+        - internal/service/emr
+        - internal/service/g*
+        - internal/service/inspector
+        - internal/service/iot
+        - internal/service/kafka
+        - internal/service/kms
+        - internal/service/lambda
+        - internal/service/lexmodels
+        - internal/service/licensemanager
+        - internal/service/lightsail
+        - internal/service/logs
+        - internal/service/macie
+        - internal/service/macie2
+        - internal/service/mediastore
+        - internal/service/mq
+        - internal/service/neptune
+        - internal/service/opsworks
+        - internal/service/organizations
+        - internal/service/pinpoint
+        - internal/service/rds
+        - internal/service/resourcegroups
+        - internal/service/route53
+        - internal/service/route53resolver
+        - internal/service/s[a-df-rt]*
         - internal/service/se[d-z]*
         - internal/service/sec[a-t]*
         - internal/service/securityhub
-        - internal/service/[t-x]*
+        - internal/service/ssoadmin
+        - internal/service/swf
+        - internal/service/[t-v]*
+        - internal/service/waf
+        - internal/service/wafv2
+        - internal/service/workspaces
+        - internal/service/xray
     patterns:
       - pattern-either:
         - pattern: |
@@ -662,6 +702,23 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Create|Put|Set|Upsert|Enable)$"
+    severity: WARNING
+
+  - id: calling-SetId-with-empty-string-in-resource-update
+    languages: [go]
+    message: Do not call `d.SetId("")` inside a resource update function
+    paths:
+      include:
+        - internal/service/
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            d.SetId("")
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Update)$|^update\\w*$" # Put and Upsert variants are handled in calling-SetId-with-empty-string-in-resource-create above
     severity: WARNING
 
   - id: calling-SetId-in-resource-delete

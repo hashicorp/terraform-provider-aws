@@ -22,7 +22,7 @@ func TestAccImageBuilderContainerRecipesDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipesFilterDataSourceConfig(rName),
+				Config: testAccContainerRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
@@ -32,7 +32,7 @@ func TestAccImageBuilderContainerRecipesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccContainerRecipesFilterDataSourceConfig(rName string) string {
+func testAccContainerRecipesDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

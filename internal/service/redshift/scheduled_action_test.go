@@ -27,7 +27,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionPauseClusterConfig(rName, "cron(00 23 * * ? *)"),
+				Config: testAccScheduledActionConfig_pauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -49,7 +49,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduledActionPauseClusterConfig(rName, "at(2060-03-04T17:27:00)"),
+				Config: testAccScheduledActionConfig_pauseCluster(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -83,7 +83,7 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionPauseClusterWithFullOptionsConfig(rName, "cron(00 * * * ? *)", "This is test action", true, startTime, endTime),
+				Config: testAccScheduledActionConfig_pauseClusterFullOptions(rName, "cron(00 * * * ? *)", "This is test action", true, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is test action"),
@@ -120,7 +120,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionResumeClusterConfig(rName, "cron(00 23 * * ? *)"),
+				Config: testAccScheduledActionConfig_resumeCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -142,7 +142,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduledActionResumeClusterConfig(rName, "at(2060-03-04T17:27:00)"),
+				Config: testAccScheduledActionConfig_resumeCluster(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -174,7 +174,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionResizeClusterBasicConfig(rName, "cron(00 23 * * ? *)"),
+				Config: testAccScheduledActionConfig_resizeClusterBasic(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -196,7 +196,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduledActionResizeClusterBasicConfig(rName, "at(2060-03-04T17:27:00)"),
+				Config: testAccScheduledActionConfig_resizeClusterBasic(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -228,7 +228,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionResizeClusterWithFullOptionsConfig(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
+				Config: testAccScheduledActionConfig_resizeClusterFullOptions(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -269,7 +269,7 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduledActionPauseClusterConfig(rName, "cron(00 23 * * ? *)"),
+				Config: testAccScheduledActionConfig_pauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduledActionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceScheduledAction(), resourceName),
@@ -383,7 +383,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName, rName)
 }
 
-func testAccScheduledActionPauseClusterConfig(rName, schedule string) string {
+func testAccScheduledActionConfig_pauseCluster(rName, schedule string) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshift_scheduled_action" "test" {
   name     = %[1]q
@@ -399,7 +399,7 @@ resource "aws_redshift_scheduled_action" "test" {
 `, rName, schedule))
 }
 
-func testAccScheduledActionPauseClusterWithFullOptionsConfig(rName, schedule, description string, enable bool, startTime, endTime string) string {
+func testAccScheduledActionConfig_pauseClusterFullOptions(rName, schedule, description string, enable bool, startTime, endTime string) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshift_scheduled_action" "test" {
   name        = %[1]q
@@ -419,7 +419,7 @@ resource "aws_redshift_scheduled_action" "test" {
 `, rName, description, enable, startTime, endTime, schedule))
 }
 
-func testAccScheduledActionResumeClusterConfig(rName, schedule string) string {
+func testAccScheduledActionConfig_resumeCluster(rName, schedule string) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshift_scheduled_action" "test" {
   name     = %[1]q
@@ -435,7 +435,7 @@ resource "aws_redshift_scheduled_action" "test" {
 `, rName, schedule))
 }
 
-func testAccScheduledActionResizeClusterBasicConfig(rName, schedule string) string {
+func testAccScheduledActionConfig_resizeClusterBasic(rName, schedule string) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshift_scheduled_action" "test" {
   name     = %[1]q
@@ -451,7 +451,7 @@ resource "aws_redshift_scheduled_action" "test" {
 `, rName, schedule))
 }
 
-func testAccScheduledActionResizeClusterWithFullOptionsConfig(rName, schedule string, classic bool, clusterType, nodeType string, numberOfNodes int) string {
+func testAccScheduledActionConfig_resizeClusterFullOptions(rName, schedule string, classic bool, clusterType, nodeType string, numberOfNodes int) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshift_scheduled_action" "test" {
   name     = %[1]q

@@ -27,7 +27,7 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodResponseConfig(rName),
+				Config: testAccMethodResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodResponseExists(resourceName, &conf),
 					testAccCheckMethodResponseAttributes(&conf),
@@ -39,7 +39,7 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccMethodResponseUpdateConfig(rName),
+				Config: testAccMethodResponseConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodResponseExists(resourceName, &conf),
 					testAccCheckMethodResponseAttributesUpdate(&conf),
@@ -71,7 +71,7 @@ func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMethodResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodResponseConfig(rName),
+				Config: testAccMethodResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodResponseExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethodResponse(), resourceName),
@@ -199,7 +199,7 @@ func testAccMethodResponseImportStateIdFunc(resourceName string) resource.Import
 	}
 }
 
-func testAccMethodResponseConfig(rName string) string {
+func testAccMethodResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -239,7 +239,7 @@ resource "aws_api_gateway_method_response" "error" {
 `, rName)
 }
 
-func testAccMethodResponseUpdateConfig(rName string) string {
+func testAccMethodResponseConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

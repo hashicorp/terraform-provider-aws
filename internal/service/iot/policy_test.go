@@ -27,7 +27,7 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,7 +57,7 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourcePolicy(), resourceName),
@@ -127,7 +127,7 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 	}
 }
 
-func testAccPolicyInitialStateConfig(rName string) string {
+func testAccPolicyConfig_initialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "test" {
   name = "%s"

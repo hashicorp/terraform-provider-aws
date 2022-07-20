@@ -26,7 +26,7 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayConfig(rName),
+				Config: testAccVPCNATGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
@@ -58,7 +58,7 @@ func TestAccVPCNATGateway_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayConfig(rName),
+				Config: testAccVPCNATGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNATGateway(), resourceName),
@@ -81,7 +81,7 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayConfigConnectivityType(rName, "private"),
+				Config: testAccVPCNATGatewayConfig_connectivityType(rName, "private"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
@@ -114,7 +114,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckNATGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayConfigTags1(rName, "key1", "value1"),
+				Config: testAccVPCNATGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNATGatewayConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNATGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +136,7 @@ func TestAccVPCNATGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNATGatewayConfigTags1(rName, "key2", "value2"),
+				Config: testAccVPCNATGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -244,7 +244,7 @@ resource "aws_eip" "test" {
 `, rName)
 }
 
-func testAccNATGatewayConfig(rName string) string {
+func testAccVPCNATGatewayConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfigBase(rName), `
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
@@ -255,7 +255,7 @@ resource "aws_nat_gateway" "test" {
 `)
 }
 
-func testAccNATGatewayConfigConnectivityType(rName, connectivityType string) string {
+func testAccVPCNATGatewayConfig_connectivityType(rName, connectivityType string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -285,7 +285,7 @@ resource "aws_nat_gateway" "test" {
 `, rName, connectivityType)
 }
 
-func testAccNATGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCNATGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfigBase(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
@@ -300,7 +300,7 @@ resource "aws_nat_gateway" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccNATGatewayConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCNATGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfigBase(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id

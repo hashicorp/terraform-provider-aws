@@ -27,7 +27,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -55,7 +55,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig(rName),
+				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
@@ -80,7 +80,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackCompleteConfig(rName, description),
+				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -89,12 +89,15 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackCompleteConfig(rName, descriptionUpdated),
+				Config: testAccStackConfig_complete(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
 				),
 			},
 			{
@@ -120,7 +123,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackCompleteConfig(rName, description),
+				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -129,7 +132,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackWithTagsConfig(rName, descriptionUpdated),
+				Config: testAccStackConfig_tags(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -201,7 +204,7 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 
 }
 
-func testAccStackConfig(name string) string {
+func testAccStackConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name = %[1]q
@@ -209,11 +212,13 @@ resource "aws_appstream_stack" "test" {
 `, name)
 }
 
-func testAccStackCompleteConfig(name, description string) string {
+func testAccStackConfig_complete(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name        = %[1]q
   description = %[2]q
+
+  embed_host_domains = ["example.com", "subdomain.example.com"]
 
   storage_connectors {
     connector_type = "HOMEFOLDERS"
@@ -247,7 +252,7 @@ resource "aws_appstream_stack" "test" {
 `, name, description)
 }
 
-func testAccStackWithTagsConfig(name, description string) string {
+func testAccStackConfig_tags(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name        = %[1]q

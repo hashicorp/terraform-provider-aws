@@ -26,7 +26,7 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
@@ -62,7 +62,7 @@ func TestAccMemoryDBUser_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceUser(), resourceName),
@@ -84,7 +84,7 @@ func TestAccMemoryDBUser_update_accessString(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withAccessString(rName, "on ~* &* +@all"),
+				Config: testAccUserConfig_accessString(rName, "on ~* &* +@all"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
@@ -97,7 +97,7 @@ func TestAccMemoryDBUser_update_accessString(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withAccessString(rName, "off ~* &* +@all"),
+				Config: testAccUserConfig_accessString(rName, "off ~* &* +@all"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "off ~* &* +@all"),
@@ -118,7 +118,7 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withPasswords2(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
+				Config: testAccUserConfig_passwords2(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
@@ -131,7 +131,7 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withPasswords1(rName, "aaaaaaaaaaaaaaaa"),
+				Config: testAccUserConfig_passwords1(rName, "aaaaaaaaaaaaaaaa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
@@ -144,7 +144,7 @@ func TestAccMemoryDBUser_update_passwords(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withPasswords2(rName, "cccccccccccccccc", "dddddddddddddddd"),
+				Config: testAccUserConfig_passwords2(rName, "cccccccccccccccc", "dddddddddddddddd"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
@@ -171,7 +171,7 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_withTags0(rName),
+				Config: testAccUserConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -185,7 +185,7 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccUserConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -203,7 +203,7 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccUserConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -219,7 +219,7 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_withTags0(rName),
+				Config: testAccUserConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -283,7 +283,7 @@ func testAccCheckUserExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccUserConfig(rName string) string {
+func testAccUserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -301,7 +301,7 @@ resource "aws_memorydb_user" "test" {
 `, rName)
 }
 
-func testAccUserConfig_withAccessString(rName, accessString string) string {
+func testAccUserConfig_accessString(rName, accessString string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = %[2]q
@@ -315,7 +315,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, accessString)
 }
 
-func testAccUserConfig_withPasswords1(rName, password1 string) string {
+func testAccUserConfig_passwords1(rName, password1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -329,7 +329,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, password1)
 }
 
-func testAccUserConfig_withPasswords2(rName, password1, password2 string) string {
+func testAccUserConfig_passwords2(rName, password1, password2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -343,7 +343,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, password1, password2)
 }
 
-func testAccUserConfig_withTags0(rName string) string {
+func testAccUserConfig_tags0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -357,7 +357,7 @@ resource "aws_memorydb_user" "test" {
 `, rName)
 }
 
-func testAccUserConfig_withTags1(rName, tagKey1, tagValue1 string) string {
+func testAccUserConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -375,7 +375,7 @@ resource "aws_memorydb_user" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccUserConfig_withTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUserConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"

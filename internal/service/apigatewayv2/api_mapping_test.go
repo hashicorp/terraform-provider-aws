@@ -34,7 +34,7 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
 		"basic":         testAccAPIMapping_basic,
 		"disappears":    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_ApiMappingKey,
+		"ApiMappingKey": testAccAPIMapping_key,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -51,7 +51,7 @@ func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificate
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: "# Dummy config.",
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
@@ -116,7 +116,7 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	})
 }
 
-func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn *string) {
+func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	var domainName string
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
@@ -130,7 +130,7 @@ func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn 
 		CheckDestroy:      testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.domainName"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
@@ -138,7 +138,7 @@ func testAccAPIMapping_ApiMappingKey(t *testing.T, rName string, certificateArn 
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.apiId"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
@@ -281,7 +281,7 @@ resource "aws_apigatewayv2_api_mapping" "test" {
 `
 }
 
-func testAccAPIMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
+func testAccAPIMappingConfig_key(rName, certificateArn, apiMappingKey string) string {
 	return testAccAPIMappingConfig_base(rName, certificateArn) + testAccStageConfig_basicWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = aws_apigatewayv2_api.test.id

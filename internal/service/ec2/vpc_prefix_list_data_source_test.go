@@ -1,31 +1,30 @@
 package ec2_test
 
 import (
-	"fmt"
 	"regexp"
-	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
+	ds1Name := "data.aws_prefix_list.s3_by_id"
+	ds2Name := "data.aws_prefix_list.s3_by_name"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrefixListDataSourceConfig,
+				Config: testAccVPCPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_id"),
-					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_name"),
+					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttrSet(ds2Name, "name"),
 				),
 			},
 		},
@@ -33,16 +32,21 @@ func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
+	ds1Name := "data.aws_prefix_list.s3_by_id"
+	ds2Name := "data.aws_prefix_list.s3_by_name"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrefixListFilterDataSourceConfig,
+				Config: testAccVPCPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_id"),
-					testAccPrefixListCheckDataSource("data.aws_prefix_list.s3_by_name"),
+					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttrSet(ds2Name, "name"),
 				),
 			},
 		},
@@ -56,71 +60,14 @@ func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPrefixListDataSourceConfig_nameDoesNotOverrideFilter,
-				ExpectError: regexp.MustCompile(`no matching prefix list found`),
+				Config:      testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter,
+				ExpectError: regexp.MustCompile(`no matching EC2 Prefix List found`),
 			},
 		},
 	})
 }
 
-func testAccPrefixListCheckDataSource(name string) resource.TestCheckFunc {
-	getPrefixListId := func(name string) (string, error) {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := ec2.DescribePrefixListsInput{
-			Filters: tfec2.BuildAttributeFilterList(map[string]string{
-				"prefix-list-name": name,
-			}),
-		}
-
-		output, err := conn.DescribePrefixLists(&input)
-		if err != nil {
-			return "", err
-		}
-
-		if len(output.PrefixLists) != 1 {
-			return "", fmt.Errorf("prefix list %s not found", name)
-		}
-
-		return aws.StringValue(output.PrefixLists[0].PrefixListId), nil
-	}
-
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		attr := rs.Primary.Attributes
-
-		region := acctest.Region()
-		prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", region)
-		prefixListId, err := getPrefixListId(prefixListName)
-		if err != nil {
-			return err
-		}
-
-		if attr["name"] != prefixListName {
-			return fmt.Errorf("bad name %s", attr["name"])
-		}
-		if attr["id"] != prefixListId {
-			return fmt.Errorf("bad id %s", attr["id"])
-		}
-
-		var cidrBlockSize int
-
-		if cidrBlockSize, err = strconv.Atoi(attr["cidr_blocks.#"]); err != nil {
-			return err
-		}
-		if cidrBlockSize < 1 {
-			return fmt.Errorf("cidr_blocks seem suspiciously low: %d", cidrBlockSize)
-		}
-
-		return nil
-	}
-}
-
-const testAccPrefixListDataSourceConfig = `
+const testAccVPCPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "s3_by_id" {
@@ -132,7 +79,7 @@ data "aws_prefix_list" "s3_by_name" {
 }
 `
 
-const testAccPrefixListFilterDataSourceConfig = `
+const testAccVPCPrefixListDataSourceConfig_filter = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "s3_by_name" {
@@ -150,7 +97,7 @@ data "aws_prefix_list" "s3_by_id" {
 }
 `
 
-const testAccPrefixListDataSourceConfig_nameDoesNotOverrideFilter = `
+const testAccVPCPrefixListDataSourceConfig_nameDoesNotOverrideFilter = `
 data "aws_region" "current" {}
 
 data "aws_prefix_list" "test" {

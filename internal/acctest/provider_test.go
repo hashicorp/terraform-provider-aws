@@ -80,7 +80,7 @@ func TestAccProvider_DefaultTags_emptyBlock(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultTagsEmptyConfigurationBlockConfig(),
+				Config: testAccProviderConfig_defaultTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
 				),
@@ -98,7 +98,7 @@ func TestAccProvider_DefaultTagsTags_none(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags0(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
@@ -117,7 +117,7 @@ func TestAccProvider_DefaultTagsTags_one(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags1("test", "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{"test": "value"}),
@@ -136,7 +136,7 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags2("test1", "value1", "test2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{
@@ -159,7 +159,7 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultAndIgnoreTagsEmptyConfigurationBlockConfig(),
+				Config: testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
 					testAccCheckIgnoreTagsKeys(&providers, []string{}),
@@ -186,7 +186,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointsConfig(endpoints.String()),
+				Config: testAccProviderConfig_endpoints(endpoints.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpoints(&providers),
 				),
@@ -206,7 +206,7 @@ func TestAccProvider_fipsEndpoint(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFIPSEndpointConfig(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
+				Config: testAccProviderConfig_fipsEndpoint(fmt.Sprintf("https://s3-fips.%s.%s", Region(), PartitionDNSSuffix()), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 				),
@@ -229,7 +229,7 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUnusualEndpointsConfig(unusual1, unusual2, unusual3),
+				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUnusualEndpoints(&providers, unusual1, unusual2, unusual3),
 				),
@@ -248,7 +248,7 @@ func TestAccProvider_IgnoreTags_emptyBlock(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsEmptyConfigurationBlockConfig(),
+				Config: testAccProviderConfig_ignoreTagsEmptyConfigurationBlock(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeys(&providers, []string{}),
 					testAccCheckIgnoreTagsKeyPrefixes(&providers, []string{}),
@@ -268,7 +268,7 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_none(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeyPrefixes0Config(),
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes0(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeyPrefixes(&providers, []string{}),
 				),
@@ -287,7 +287,7 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_one(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeyPrefixes3Config("test"),
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes3("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeyPrefixes(&providers, []string{"test"}),
 				),
@@ -306,7 +306,7 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_multiple(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeyPrefixes2Config("test1", "test2"),
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeyPrefixes(&providers, []string{"test1", "test2"}),
 				),
@@ -325,7 +325,7 @@ func TestAccProvider_IgnoreTagsKeys_none(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeys0Config(),
+				Config: testAccProviderConfig_ignoreTagsKeys0(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeys(&providers, []string{}),
 				),
@@ -344,7 +344,7 @@ func TestAccProvider_IgnoreTagsKeys_one(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeys1Config("test"),
+				Config: testAccProviderConfig_ignoreTagsKeys1("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeys(&providers, []string{"test"}),
 				),
@@ -363,7 +363,7 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIgnoreTagsKeys2Config("test1", "test2"),
+				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeys(&providers, []string{"test1", "test2"}),
 				),
@@ -372,7 +372,7 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsC2S(t *testing.T) {
+func TestAccProvider_Region_c2s(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -382,7 +382,7 @@ func TestAccProvider_Region_awsC2S(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig(endpoints.UsIsoEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "c2s.ic.gov"),
 					testAccCheckPartition(&providers, endpoints.AwsIsoPartitionID),
@@ -394,7 +394,7 @@ func TestAccProvider_Region_awsC2S(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsChina(t *testing.T) {
+func TestAccProvider_Region_china(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -404,7 +404,7 @@ func TestAccProvider_Region_awsChina(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig(endpoints.CnNorthwest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckPartition(&providers, endpoints.AwsCnPartitionID),
@@ -416,7 +416,7 @@ func TestAccProvider_Region_awsChina(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsCommercial(t *testing.T) {
+func TestAccProvider_Region_commercial(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -426,7 +426,7 @@ func TestAccProvider_Region_awsCommercial(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig(endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com"),
 					testAccCheckPartition(&providers, endpoints.AwsPartitionID),
@@ -438,7 +438,7 @@ func TestAccProvider_Region_awsCommercial(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
+func TestAccProvider_Region_govCloud(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -448,7 +448,7 @@ func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig(endpoints.UsGovWest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "amazonaws.com"),
 					testAccCheckPartition(&providers, endpoints.AwsUsGovPartitionID),
@@ -460,7 +460,7 @@ func TestAccProvider_Region_awsGovCloudUs(t *testing.T) {
 	})
 }
 
-func TestAccProvider_Region_awsSC2S(t *testing.T) {
+func TestAccProvider_Region_sc2s(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -470,7 +470,7 @@ func TestAccProvider_Region_awsSC2S(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig(endpoints.UsIsobEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(&providers, "sc2s.sgov.gov"),
 					testAccCheckPartition(&providers, endpoints.AwsIsoBPartitionID),
@@ -492,7 +492,7 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSTSRegionConfig(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegion(&providers, endpoints.UsEast1RegionID),
 					testAccCheckSTSRegion(&providers, endpoints.UsWest2RegionID),
@@ -513,7 +513,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
+				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
 					CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),
@@ -944,7 +944,7 @@ func testAccCheckUnusualEndpoints(providers *[]*schema.Provider, unusual1, unusu
 	}
 }
 
-func testAccEndpointsConfig(endpoints string) string {
+func testAccProviderConfig_endpoints(endpoints string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -962,7 +962,7 @@ provider "aws" {
 `, endpoints))
 }
 
-func testAccFIPSEndpointConfig(endpoint, rName string) string {
+func testAccProviderConfig_fipsEndpoint(endpoint, rName string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -985,7 +985,7 @@ resource "aws_s3_bucket_acl" "test" {
 `, endpoint, rName))
 }
 
-func testAccUnusualEndpointsConfig(unusual1, unusual2, unusual3 []string) string {
+func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 []string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1005,7 +1005,7 @@ provider "aws" {
 `, unusual1[0], unusual1[2], unusual2[0], unusual2[2], unusual3[0], unusual3[2]))
 }
 
-func testAccIgnoreTagsKeys0Config() string {
+func testAccProviderConfig_ignoreTagsKeys0() string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1019,7 +1019,7 @@ provider "aws" {
 `)
 }
 
-func testAccIgnoreTagsKeys1Config(tag1 string) string {
+func testAccProviderConfig_ignoreTagsKeys1(tag1 string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1037,7 +1037,7 @@ provider "aws" {
 `, tag1))
 }
 
-func testAccIgnoreTagsKeys2Config(tag1, tag2 string) string {
+func testAccProviderConfig_ignoreTagsKeys2(tag1, tag2 string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1055,7 +1055,7 @@ provider "aws" {
 `, tag1, tag2))
 }
 
-func testAccIgnoreTagsKeyPrefixes0Config() string {
+func testAccProviderConfig_ignoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1069,7 +1069,7 @@ provider "aws" {
 `)
 }
 
-func testAccIgnoreTagsKeyPrefixes3Config(tagPrefix1 string) string {
+func testAccProviderConfig_ignoreTagsKeyPrefixes3(tagPrefix1 string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1087,7 +1087,7 @@ provider "aws" {
 `, tagPrefix1))
 }
 
-func testAccIgnoreTagsKeyPrefixes2Config(tagPrefix1, tagPrefix2 string) string {
+func testAccProviderConfig_ignoreTagsKeyPrefixes2(tagPrefix1, tagPrefix2 string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1105,7 +1105,7 @@ provider "aws" {
 `, tagPrefix1, tagPrefix2))
 }
 
-func testAccDefaultTagsEmptyConfigurationBlockConfig() string {
+func testAccProviderConfig_defaultTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1121,7 +1121,7 @@ provider "aws" {
 `)
 }
 
-func testAccDefaultAndIgnoreTagsEmptyConfigurationBlockConfig() string {
+func testAccProviderConfig_defaultAndIgnoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1138,7 +1138,7 @@ provider "aws" {
 `)
 }
 
-func testAccIgnoreTagsEmptyConfigurationBlockConfig() string {
+func testAccProviderConfig_ignoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1154,7 +1154,7 @@ provider "aws" {
 `)
 }
 
-func testAccRegionConfig(region string) string {
+func testAccProviderConfig_region(region string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,
@@ -1169,7 +1169,7 @@ provider "aws" {
 `, region))
 }
 
-func testAccSTSRegionConfig(region, stsRegion string) string {
+func testAccProviderConfig_stsRegion(region, stsRegion string) string {
 	//lintignore:AT004
 	return ConfigCompose(
 		testAccProviderConfigBase,

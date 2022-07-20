@@ -85,7 +85,7 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkingStorageConfig_Basic(rName),
+				Config: testAccWorkingStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkingStorageExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
@@ -139,8 +139,8 @@ func testAccCheckWorkingStorageExists(resourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccWorkingStorageConfig_Basic(rName string) string {
-	return testAccGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
+func testAccWorkingStorageConfig_basic(rName string) string {
+	return testAccGatewayConfig_typeStored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

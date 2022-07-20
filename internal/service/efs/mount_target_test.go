@@ -31,7 +31,7 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetConfig(ct),
+				Config: testAccMountTargetConfig_basic(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
@@ -50,7 +50,7 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMountTargetModifiedConfig(ct),
+				Config: testAccMountTargetConfig_modified(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTarget(resourceName, &mount),
 					testAccCheckMountTarget(resourceName2, &mount),
@@ -71,10 +71,10 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpnGatewayDestroy,
+		CheckDestroy:      testAccCheckVPNGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetConfig(ct),
+				Config: testAccMountTargetConfig_basic(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTarget(resourceName, &mount),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
@@ -97,7 +97,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 		CheckDestroy:      testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetIPAddressConfig(rName, "10.0.0.100"),
+				Config: testAccMountTargetConfig_ipAddress(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
@@ -125,7 +125,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 		CheckDestroy:      testAccCheckMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetIPAddressConfigNullIP(rName),
+				Config: testAccMountTargetConfig_ipAddressNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTarget(resourceName, &mount),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
@@ -219,7 +219,7 @@ func testAccCheckMountTarget(resourceID string, mount *efs.MountTargetDescriptio
 	}
 }
 
-func testAccMountTargetConfig(ct string) string {
+func testAccMountTargetConfig_basic(ct string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -263,7 +263,7 @@ resource "aws_subnet" "test" {
 `, ct)
 }
 
-func testAccMountTargetModifiedConfig(ct string) string {
+func testAccMountTargetConfig_modified(ct string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -322,7 +322,7 @@ resource "aws_subnet" "test2" {
 `, ct)
 }
 
-func testAccMountTargetIPAddressConfig(rName, ipAddress string) string {
+func testAccMountTargetConfig_ipAddress(rName, ipAddress string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -365,7 +365,7 @@ resource "aws_efs_mount_target" "test" {
 `, rName, ipAddress)
 }
 
-func testAccMountTargetIPAddressConfigNullIP(rName string) string {
+func testAccMountTargetConfig_ipAddressNullIP(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -408,7 +408,7 @@ resource "aws_efs_mount_target" "test" {
 `, rName)
 }
 
-func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
+func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

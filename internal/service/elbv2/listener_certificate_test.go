@@ -31,7 +31,7 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
+				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
@@ -63,7 +63,7 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfigCertificateArnUnderscores(rName, key, certificate),
+				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
@@ -97,7 +97,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfigMultiple(rName, keys, certificates),
+				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -116,7 +116,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLbListenerCertificateConfigMultipleAddNew(rName, keys, certificates),
+				Config: testAccListenerCertificateConfig_multipleAddNew(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -133,7 +133,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLbListenerCertificateConfigMultiple(rName, keys, certificates),
+				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.default"),
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
@@ -164,7 +164,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
+				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelbv2.ResourceListenerCertificate(), resourceName),
@@ -233,7 +233,7 @@ func testAccCheckListenerCertificateNotExists(name string) resource.TestCheckFun
 	}
 }
 
-func testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate string) string {
+func testAccListenerCertificateConfig_base(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -297,8 +297,8 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
+func testAccListenerCertificateConfig_basic(rName, key, certificate string) string {
+	return testAccListenerCertificateConfig_base(rName, key, certificate) + `
 resource "aws_lb_listener_certificate" "test" {
   certificate_arn = aws_iam_server_certificate.test.arn
   listener_arn    = aws_lb_listener.test.arn
@@ -306,7 +306,7 @@ resource "aws_lb_listener_certificate" "test" {
 `
 }
 
-func testAccLbListenerCertificateConfigCertificateArnUnderscores(rName, key, certificate string) string {
+func testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -375,8 +375,8 @@ resource "aws_lb_listener_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {
-	return testAccLbListenerCertificateConfigLbListenerBase(rName, keys[0], certificates[0]) + fmt.Sprintf(`
+func testAccListenerCertificateConfig_multiple(rName string, keys, certificates []string) string {
+	return testAccListenerCertificateConfig_base(rName, keys[0], certificates[0]) + fmt.Sprintf(`
 resource "aws_lb_listener_certificate" "default" {
   listener_arn    = aws_lb_listener.test.arn
   certificate_arn = aws_iam_server_certificate.test.arn
@@ -406,8 +406,8 @@ resource "aws_iam_server_certificate" "additional_2" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificates[1]), acctest.TLSPEMEscapeNewlines(keys[1]), acctest.TLSPEMEscapeNewlines(certificates[2]), acctest.TLSPEMEscapeNewlines(keys[2]))
 }
 
-func testAccLbListenerCertificateConfigMultipleAddNew(rName string, keys, certificates []string) string {
-	return testAccLbListenerCertificateConfigMultiple(rName, keys, certificates) + fmt.Sprintf(`
+func testAccListenerCertificateConfig_multipleAddNew(rName string, keys, certificates []string) string {
+	return testAccListenerCertificateConfig_multiple(rName, keys, certificates) + fmt.Sprintf(`
 resource "aws_iam_server_certificate" "additional_3" {
   name             = "%[1]s-additional-3"
   certificate_body = "%[2]s"

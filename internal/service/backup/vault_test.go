@@ -26,7 +26,7 @@ func TestAccBackupVault_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultConfig(rInt),
+				Config: testAccVaultConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 				),
@@ -52,7 +52,7 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultWithKmsKey(rInt),
+				Config: testAccVaultConfig_kmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
@@ -79,7 +79,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultWithTags(rInt),
+				Config: testAccVaultConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -93,7 +93,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupVaultWithUpdateTags(rInt),
+				Config: testAccVaultConfig_updateTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
@@ -104,7 +104,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBackupVaultWithRemoveTags(rInt),
+				Config: testAccVaultConfig_removeTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -128,7 +128,7 @@ func TestAccBackupVault_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultConfig(rInt),
+				Config: testAccVaultConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
@@ -146,7 +146,7 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+		_, err := tfbackup.FindVaultByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -175,7 +175,7 @@ func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutpu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
-		output, err := tfbackup.FindBackupVaultByName(conn, rs.Primary.ID)
+		output, err := tfbackup.FindVaultByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -203,7 +203,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccBackupVaultConfig(randInt int) string {
+func testAccVaultConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%d"
@@ -211,7 +211,7 @@ resource "aws_backup_vault" "test" {
 `, randInt)
 }
 
-func testAccBackupVaultWithKmsKey(randInt int) string {
+func testAccVaultConfig_kmsKey(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Test KMS Key for AWS Backup Vault"
@@ -225,7 +225,7 @@ resource "aws_backup_vault" "test" {
 `, randInt)
 }
 
-func testAccBackupVaultWithTags(randInt int) string {
+func testAccVaultConfig_tags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%d"
@@ -238,7 +238,7 @@ resource "aws_backup_vault" "test" {
 `, randInt)
 }
 
-func testAccBackupVaultWithUpdateTags(randInt int) string {
+func testAccVaultConfig_updateTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%d"
@@ -253,7 +253,7 @@ resource "aws_backup_vault" "test" {
 `, randInt)
 }
 
-func testAccBackupVaultWithRemoveTags(randInt int) string {
+func testAccVaultConfig_removeTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "tf_acc_test_backup_vault_%d"

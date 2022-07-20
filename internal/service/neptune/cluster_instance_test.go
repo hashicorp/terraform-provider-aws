@@ -34,7 +34,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig(clusterInstanceName, rInt),
+				Config: testAccClusterInstanceConfig_basic(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
@@ -61,7 +61,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterInstanceModifiedConfig(clusterInstanceName, rInt),
+				Config: testAccClusterInstanceConfig_modified(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
@@ -138,7 +138,7 @@ func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_withSubnetGroup(rInt),
+				Config: testAccClusterInstanceConfig_subnetGroup(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
@@ -187,7 +187,7 @@ func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceKMSKeyConfig(rInt),
+				Config: testAccClusterInstanceConfig_kmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
@@ -262,7 +262,7 @@ func testAccCheckClusterAddress(v *neptune.DBInstance, resourceName string, port
 	}
 }
 
-func testAccClusterInstanceConfig(instanceName string, n int) string {
+func testAccClusterInstanceConfig_basic(instanceName string, n int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
@@ -305,7 +305,7 @@ resource "aws_neptune_parameter_group" "test" {
 `, instanceName, n))
 }
 
-func testAccClusterInstanceModifiedConfig(instanceName string, n int) string {
+func testAccClusterInstanceConfig_modified(instanceName string, n int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
@@ -393,7 +393,7 @@ resource "aws_neptune_parameter_group" "test" {
 `, n))
 }
 
-func testAccClusterInstanceConfig_withSubnetGroup(n int) string {
+func testAccClusterInstanceConfig_subnetGroup(n int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(),
 		fmt.Sprintf(`
@@ -572,7 +572,7 @@ resource "aws_neptune_subnet_group" "test" {
 `, n))
 }
 
-func testAccClusterInstanceKMSKeyConfig(n int) string {
+func testAccClusterInstanceConfig_kmsKey(n int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(),
 		fmt.Sprintf(`

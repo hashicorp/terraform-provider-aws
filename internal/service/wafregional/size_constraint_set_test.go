@@ -28,7 +28,7 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
+				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &constraints),
 					resource.TestCheckResourceAttr(
@@ -69,7 +69,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
+				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
@@ -79,7 +79,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSizeConstraintSetChangeNameConfig(sizeConstraintSetNewName),
+				Config: testAccSizeConstraintSetConfig_changeName(sizeConstraintSetNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
@@ -109,7 +109,7 @@ func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSizeConstraintSetConfig(sizeConstraintSet),
+				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &constraints),
 					testAccCheckSizeConstraintSetDisappears(&constraints),
@@ -132,7 +132,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSizeConstraintSetConfig(setName),
+				Config: testAccSizeConstraintSetConfig_basic(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
@@ -152,7 +152,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSizeConstraintSetConfig_changeConstraints(setName),
+				Config: testAccSizeConstraintSetConfig_changes(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
@@ -192,7 +192,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 		CheckDestroy:      testAccCheckSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSizeConstraintSetConfig_noConstraints(setName),
+				Config: testAccSizeConstraintSetConfig_nos(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(resourceName, &constraints),
 					resource.TestCheckResourceAttr(
@@ -310,7 +310,7 @@ func testAccCheckSizeConstraintSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSizeConstraintSetConfig(name string) string {
+func testAccSizeConstraintSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
@@ -328,7 +328,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 `, name)
 }
 
-func testAccSizeConstraintSetChangeNameConfig(name string) string {
+func testAccSizeConstraintSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
@@ -346,7 +346,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 `, name)
 }
 
-func testAccSizeConstraintSetConfig_changeConstraints(name string) string {
+func testAccSizeConstraintSetConfig_changes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
@@ -364,7 +364,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 `, name)
 }
 
-func testAccSizeConstraintSetConfig_noConstraints(name string) string {
+func testAccSizeConstraintSetConfig_nos(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"

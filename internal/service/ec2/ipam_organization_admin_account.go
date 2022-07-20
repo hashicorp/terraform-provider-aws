@@ -13,11 +13,11 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVPCIpamOrganizationAdminAccount() *schema.Resource {
+func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCIpamOrganizationAdminAccountCreate,
-		Read:   resourceVPCIpamOrganizationAdminAccountRead,
-		Delete: resourceVPCIpamOrganizationAdminAccountDelete,
+		Create: resourceIPAMOrganizationAdminAccountCreate,
+		Read:   resourceIPAMOrganizationAdminAccountRead,
+		Delete: resourceIPAMOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -51,10 +51,10 @@ func ResourceVPCIpamOrganizationAdminAccount() *schema.Resource {
 }
 
 const (
-	Ipam_service_principal = "ipam.amazonaws.com"
+	IPAMServicePrincipal = "ipam.amazonaws.com"
 )
 
-func resourceVPCIpamOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	adminAccountID := d.Get("delegated_admin_account_id").(string)
@@ -74,14 +74,14 @@ func resourceVPCIpamOrganizationAdminAccountCreate(d *schema.ResourceData, meta 
 
 	d.SetId(adminAccountID)
 
-	return resourceVPCIpamOrganizationAdminAccountRead(d, meta)
+	return resourceIPAMOrganizationAdminAccountRead(d, meta)
 }
 
-func resourceVPCIpamOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	org_conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedAdministratorsInput{
-		ServicePrincipal: aws.String(Ipam_service_principal),
+		ServicePrincipal: aws.String(IPAMServicePrincipal),
 	}
 
 	output, err := org_conn.ListDelegatedAdministrators(input)
@@ -102,12 +102,12 @@ func resourceVPCIpamOrganizationAdminAccountRead(d *schema.ResourceData, meta in
 	d.Set("delegated_admin_account_id", admin_account.Id)
 	d.Set("email", admin_account.Email)
 	d.Set("name", admin_account.Name)
-	d.Set("service_principal", Ipam_service_principal)
+	d.Set("service_principal", IPAMServicePrincipal)
 
 	return nil
 }
 
-func resourceVPCIpamOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DisableIpamOrganizationAdminAccountInput{

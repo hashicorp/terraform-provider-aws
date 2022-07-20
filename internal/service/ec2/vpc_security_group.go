@@ -256,7 +256,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
@@ -325,7 +325,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if !tfawserr.ErrCodeEquals(err, ErrCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, ErrCodeInvalidParameterValue, "remote-ipv6-range") {
+			if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
 				return fmt.Errorf("Error revoking default IPv6 egress rule for Security Group (%s): %w", d.Id(), err)
 			}
 		}

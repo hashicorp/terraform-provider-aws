@@ -26,7 +26,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineBasicConfig(name),
+				Config: testAccPatchBaselineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
@@ -45,7 +45,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineBasicUpdatedConfig(name),
+				Config: testAccPatchBaselineConfig_basicUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
@@ -79,7 +79,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineBasicTags1Config(name, "key1", "value1"),
+				Config: testAccPatchBaselineConfig_basicTags1(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -92,7 +92,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineBasicTags2Config(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPatchBaselineConfig_basicTags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -101,7 +101,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPatchBaselineBasicTags1Config(name, "key2", "value2"),
+				Config: testAccPatchBaselineConfig_basicTags1(name, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -124,7 +124,7 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineBasicConfig(name),
+				Config: testAccPatchBaselineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &identity),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchBaseline(), resourceName),
@@ -146,7 +146,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineWithOperatingSystemConfig(name),
+				Config: testAccPatchBaselineConfig_operatingSystem(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
@@ -163,7 +163,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineWithOperatingSystemUpdatedConfig(name),
+				Config: testAccPatchBaselineConfig_operatingSystemUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
@@ -190,7 +190,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineWithApproveUntilDateConfig(name),
+				Config: testAccPatchBaselineConfig_approveUntilDate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
@@ -207,7 +207,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineWithApproveUntilDateUpdatedConfig(name),
+				Config: testAccPatchBaselineConfig_approveUntilDateUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
@@ -239,7 +239,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineWithSourceConfig(name),
+				Config: testAccPatchBaselineConfig_source(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -255,7 +255,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineWithSourceUpdatedConfig(name),
+				Config: testAccPatchBaselineConfig_sourceUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "2"),
@@ -291,7 +291,7 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineBasicApprovedPatchesNonSecConfig(name),
+				Config: testAccPatchBaselineConfig_basicApprovedPatchesNonSec(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "true"),
@@ -318,7 +318,7 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineBasicRejectPatchesActionConfig(name),
+				Config: testAccPatchBaselineConfig_basicRejectPatchesAction(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
 					resource.TestCheckResourceAttr(resourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
@@ -410,7 +410,7 @@ func testAccCheckPatchBaselineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPatchBaselineBasicConfig(rName string) string {
+func testAccPatchBaselineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"
@@ -421,7 +421,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccPatchBaselineConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -436,7 +436,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccPatchBaselineBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPatchBaselineConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -452,7 +452,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPatchBaselineBasicUpdatedConfig(rName string) string {
+func testAccPatchBaselineConfig_basicUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "updated-patch-baseline-%s"
@@ -463,7 +463,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithOperatingSystemConfig(rName string) string {
+func testAccPatchBaselineConfig_operatingSystem(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
@@ -493,7 +493,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithOperatingSystemUpdatedConfig(rName string) string {
+func testAccPatchBaselineConfig_operatingSystemUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
@@ -522,7 +522,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithApproveUntilDateConfig(rName string) string {
+func testAccPatchBaselineConfig_approveUntilDate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = %[1]q
@@ -552,7 +552,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithApproveUntilDateUpdatedConfig(rName string) string {
+func testAccPatchBaselineConfig_approveUntilDateUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = %[1]q
@@ -582,7 +582,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithSourceConfig(rName string) string {
+func testAccPatchBaselineConfig_source(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -600,7 +600,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineWithSourceUpdatedConfig(rName string) string {
+func testAccPatchBaselineConfig_sourceUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
@@ -624,7 +624,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineBasicApprovedPatchesNonSecConfig(rName string) string {
+func testAccPatchBaselineConfig_basicApprovedPatchesNonSec(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                                 = %q
@@ -637,7 +637,7 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineBasicRejectPatchesActionConfig(rName string) string {
+func testAccPatchBaselineConfig_basicRejectPatchesAction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"

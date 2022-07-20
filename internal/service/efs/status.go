@@ -61,3 +61,19 @@ func statusFileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefr
 		return output, aws.StringValue(output.LifeCycleState), nil
 	}
 }
+
+func statusReplicationConfiguration(conn *efs.EFS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReplicationConfigurationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Destinations[0].Status), nil
+	}
+}

@@ -18,7 +18,7 @@ func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig,
+				Config: testAccSolutionStackDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSolutionStackIDDataSource("data.aws_elastic_beanstalk_solution_stack.multi_docker"),
 					resource.TestMatchResourceAttr("data.aws_elastic_beanstalk_solution_stack.multi_docker", "name", regexp.MustCompile("^64bit Amazon Linux (.*) Multi-container Docker (.*)$")),
@@ -43,7 +43,7 @@ func testAccCheckSolutionStackIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig = `
+const testAccSolutionStackDataSourceConfig_basic = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
   most_recent = true
   name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"

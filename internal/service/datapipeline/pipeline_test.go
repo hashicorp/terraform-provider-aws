@@ -28,14 +28,14 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineConfig(rName1),
+				Config: testAccPipelineConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
-				Config: testAccPipelineConfig(rName2),
+				Config: testAccPipelineConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
@@ -63,14 +63,14 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineWithDescriptionConfig(rName, "test description"),
+				Config: testAccPipelineConfig_description(rName, "test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 				),
 			},
 			{
-				Config: testAccPipelineWithDescriptionConfig(rName, "update description"),
+				Config: testAccPipelineConfig_description(rName, "update description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
@@ -98,7 +98,7 @@ func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineConfig(rName),
+				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf),
 					testAccCheckPipelineDisappears(&conf),
@@ -121,7 +121,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineWithTagsConfig(rName, "foo", "bar", "fizz", "buzz"),
+				Config: testAccPipelineConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -132,7 +132,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPipelineWithTagsConfig(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Config: testAccPipelineConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -148,7 +148,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipelineConfig(rName),
+				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -252,7 +252,7 @@ func testAccCheckPipelineNotEqual(pipeline1, pipeline2 *datapipeline.PipelineDes
 	}
 }
 
-func testAccPipelineConfig(rName string) string {
+func testAccPipelineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
@@ -260,7 +260,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 }
 
-func testAccPipelineWithDescriptionConfig(rName, description string) string {
+func testAccPipelineConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
@@ -269,7 +269,7 @@ resource "aws_datapipeline_pipeline" "default" {
 
 }
 
-func testAccPipelineWithTagsConfig(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"

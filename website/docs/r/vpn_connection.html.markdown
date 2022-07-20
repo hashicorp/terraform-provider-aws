@@ -62,6 +62,64 @@ resource "aws_vpn_connection" "main" {
 }
 ```
 
+### AWS Site to Site Private VPN
+
+```terraform
+resource "aws_dx_gateway" "example" {
+  name            = "terraform_ipsec_vpn_example"
+  amazon_side_asn = "64512"
+}
+
+resource "aws_ec2_transit_gateway" "example" {
+  amazon_side_asn = "64513"
+  description     = "terraform_ipsec_vpn_example"
+  transit_gateway_cidr_blocks = [
+    "10.0.0.0/24",
+  ]
+}
+
+resource "aws_customer_gateway" "example" {
+  bgp_asn    = 64514
+  ip_address = "10.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "terraform_ipsec_vpn_example"
+  }
+}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id         = aws_dx_gateway.example.id
+  associated_gateway_id = aws_ec2_transit_gateway.example.id
+
+  allowed_prefixes = [
+    "10.0.0.0/8",
+  ]
+}
+
+data "aws_ec2_transit_gateway_dx_gateway_attachment" "example" {
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+  dx_gateway_id      = aws_dx_gateway.example.id
+
+  depends_on = [
+    aws_dx_gateway_association.example
+  ]
+}
+
+resource "aws_vpn_connection" "example" {
+  customer_gateway_id                     = aws_customer_gateway.example.id
+  outside_ip_address_type                 = "PrivateIpv4"
+  transit_gateway_id                      = aws_ec2_transit_gateway.example.id
+  transport_transit_gateway_attachment_id = data.aws_ec2_transit_gateway_dx_gateway_attachment.example.id
+  type                                    = "ipsec.1"
+
+  tags = {
+    Name = "terraform_ipsec_vpn_example"
+  }
+}
+```
+
+
 ## Argument Reference
 
 The following arguments are required:
@@ -81,8 +139,10 @@ Other arguments:
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `local_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `local_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `outside_ip_address_type` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
 * `remote_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
 * `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `transport_transit_gateway_attachment_id` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
 * `tunnel2_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the second VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.

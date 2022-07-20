@@ -21,12 +21,12 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainWithDataSourceConfig(rInt, autoTuneStartAtTime),
+				Config: testAccDomainDataSourceConfig_basic(rInt, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
@@ -63,12 +63,12 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAdvancedWithDataSourceConfig(rInt, autoTuneStartAtTime),
+				Config: testAccDomainDataSourceConfig_advanced(rInt, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
@@ -96,7 +96,7 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 	})
 }
 
-func testAccDomainWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
+func testAccDomainDataSourceConfig_basic(rInt int, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 locals {
   random_name = "test-es-%d"
@@ -178,7 +178,7 @@ data "aws_elasticsearch_domain" "test" {
 		`, rInt, autoTuneStartAtTime)
 }
 
-func testAccDomainAdvancedWithDataSourceConfig(rInt int, autoTuneStartAtTime string) string {
+func testAccDomainDataSourceConfig_advanced(rInt int, autoTuneStartAtTime string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 

@@ -23,28 +23,28 @@ func TestAccELBAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment1Config(),
+				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			{
-				Config: testAccAttachment2Config(),
+				Config: testAccAttachmentConfig_2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAttachment3Config(),
+				Config: testAccAttachmentConfig_3(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAttachment4Config(),
+				Config: testAccAttachmentConfig_4(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 0),
@@ -59,7 +59,7 @@ func TestAccELBAttachment_drift(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
-	deregInstance := func() {
+	testAccAttachmentConfig_deregInstance := func() {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
@@ -83,7 +83,7 @@ func TestAccELBAttachment_drift(t *testing.T) {
 		CheckDestroy:      testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment1Config(),
+				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
@@ -91,8 +91,8 @@ func TestAccELBAttachment_drift(t *testing.T) {
 			},
 			// remove an instance from the ELB, and make sure it gets re-added
 			{
-				Config:    testAccAttachment1Config(),
-				PreConfig: deregInstance,
+				Config:    testAccAttachmentConfig_1(),
+				PreConfig: testAccAttachmentConfig_deregInstance,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
@@ -112,8 +112,8 @@ func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expe
 }
 
 // add one attachment
-func testAccAttachment1Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_1() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -147,8 +147,8 @@ resource "aws_elb_attachment" "foo1" {
 }
 
 // add a second attachment
-func testAccAttachment2Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_2() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -192,8 +192,8 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // swap attachments between resources
-func testAccAttachment3Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_3() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -237,7 +237,7 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // destroy attachments
-func testAccAttachment4Config() string {
+func testAccAttachmentConfig_4() string {
 	return `
 data "aws_availability_zones" "available" {
   state = "available"

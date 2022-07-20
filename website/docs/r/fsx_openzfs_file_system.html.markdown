@@ -51,7 +51,7 @@ The following arguments are supported:
 ### Root Volume Configuration
 
 * `copy_tags_to_snapshots` - (Optional) - A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
-* `data_compression_type` - (Optional) - Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `data_compression_type` - (Optional) - Method used to compress the data on the volume. Valid values are `LZ4`, `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
 * `nfs_exports` - (Optional) - NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `read_only` - (Optional) - specifies whether the volume is read-only. Default is false.
 * `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [User and Group Quotas](#user-and-group-quotas) Below.
@@ -69,7 +69,7 @@ The following arguments are supported:
 
 * `id` - (Required) - The ID of the user or group. Valid values between `0` and `2147483647`
 * `storage_capacity_quota_gib` - (Required) - The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
-* `Type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
+* `type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
 
 ## Attributes Reference
 

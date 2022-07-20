@@ -20,7 +20,7 @@ func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *tes
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPortfolioConstraintDataSourceConfig_basic(rName, rName),
+				Config: testAccPortfolioConstraintsDataSourceConfig_constraintBasic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "accept_language", resourceName, "accept_language"),
 					resource.TestCheckResourceAttr(dataSourceName, "details.#", "1"),
@@ -37,7 +37,7 @@ func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *tes
 	})
 }
 
-func testAccPortfolioConstraintDataSourceConfig_basic(rName, description string) string {
+func testAccPortfolioConstraintsDataSourceConfig_constraintBasic(rName, description string) string {
 	return acctest.ConfigCompose(testAccConstraintConfig_basic(rName, description), `
 data "aws_servicecatalog_portfolio_constraints" "test" {
   portfolio_id = aws_servicecatalog_constraint.test.portfolio_id

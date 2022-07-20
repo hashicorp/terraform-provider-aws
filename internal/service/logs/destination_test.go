@@ -28,7 +28,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig(rstring),
+				Config: testAccDestinationConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
@@ -58,7 +58,7 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig(rstring),
+				Config: testAccDestinationConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
@@ -113,7 +113,7 @@ func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) reso
 	}
 }
 
-func testAccDestinationConfig(rstring string) string {
+func testAccDestinationConfig_basic(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "RootAccess_%[1]s"

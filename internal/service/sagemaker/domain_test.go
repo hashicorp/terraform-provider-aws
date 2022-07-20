@@ -29,7 +29,7 @@ func testAccDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainBasicConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
@@ -67,7 +67,7 @@ func testAccDomain_kms(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKMSConfig(rName),
+				Config: testAccDomainConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
@@ -95,7 +95,7 @@ func testAccDomain_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTags1Config(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -109,7 +109,7 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -118,7 +118,7 @@ func testAccDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainTags1Config(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -141,7 +141,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSecurityGroup1Config(rName),
+				Config: testAccDomainConfig_securityGroup1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -155,7 +155,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainSecurityGroup2Config(rName),
+				Config: testAccDomainConfig_securityGroup2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -178,7 +178,7 @@ func testAccDomain_sharingSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSharingSettingsConfig(rName),
+				Config: testAccDomainConfig_sharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -210,7 +210,7 @@ func testAccDomain_tensorboardAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTensorBoardAppSettingsConfig(rName),
+				Config: testAccDomainConfig_tensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -241,7 +241,7 @@ func testAccDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainTensorBoardAppSettingsWithImageConfig(rName),
+				Config: testAccDomainConfig_tensorBoardAppSettingsImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -273,7 +273,7 @@ func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsConfig(rName),
+				Config: testAccDomainConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -304,7 +304,7 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsLifecycleConfig(rName),
+				Config: testAccDomainConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -343,7 +343,7 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsCustomImageConfig(rName, baseImage),
+				Config: testAccDomainConfig_kernelGatewayAppSettingsCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -382,7 +382,7 @@ func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t 
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainKernelGatewayAppSettingsDefaultResourceSpecAndCustomImageConfig(rName, baseImage),
+				Config: testAccDomainConfig_kernelGatewayAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -416,7 +416,7 @@ func testAccDomain_jupyterServerAppSettings(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainJupyterServerAppSettingsConfig(rName),
+				Config: testAccDomainConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -447,12 +447,67 @@ func testAccDomain_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainBasicConfig(rName),
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_sharingSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -558,7 +613,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccDomainBasicConfig(rName string) string {
+func testAccDomainConfig_basic(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -577,7 +632,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKMSConfig(rName string) string {
+func testAccDomainConfig_kms(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test"
@@ -602,7 +657,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainSecurityGroup1Config(rName string) string {
+func testAccDomainConfig_securityGroup1(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = "%[1]s"
@@ -626,7 +681,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainSecurityGroup2Config(rName string) string {
+func testAccDomainConfig_securityGroup2(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -654,7 +709,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -677,7 +732,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDomainTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -701,7 +756,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainSharingSettingsConfig(rName string) string {
+func testAccDomainConfig_sharingSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -737,7 +792,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTensorBoardAppSettingsConfig(rName string) string {
+func testAccDomainConfig_tensorBoardAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -762,7 +817,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainTensorBoardAppSettingsWithImageConfig(rName string) string {
+func testAccDomainConfig_tensorBoardAppSettingsImage(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
@@ -793,7 +848,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainJupyterServerAppSettingsConfig(rName string) string {
+func testAccDomainConfig_jupyterServerAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -818,7 +873,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsConfig(rName string) string {
+func testAccDomainConfig_kernelGatewayAppSettings(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -843,7 +898,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsLifecycleConfig(rName string) string {
+func testAccDomainConfig_kernelGatewayAppSettingsLifecycle(rName string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
@@ -877,7 +932,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccDomainKernelGatewayAppSettingsCustomImageConfig(rName, baseImage string) string {
+func testAccDomainConfig_kernelGatewayAppSettingsCustomImage(rName, baseImage string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q
@@ -925,7 +980,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, baseImage)
 }
 
-func testAccDomainKernelGatewayAppSettingsDefaultResourceSpecAndCustomImageConfig(rName, baseImage string) string {
+func testAccDomainConfig_kernelGatewayAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage string) string {
 	return testAccDomainBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_image" "test" {
   image_name = %[1]q

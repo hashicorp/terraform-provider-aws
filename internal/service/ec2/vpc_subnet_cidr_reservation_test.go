@@ -26,7 +26,7 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCIDRReservationConfig_ipv4(rName),
+				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.16/28"),
@@ -57,7 +57,7 @@ func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCIDRReservationConfig_ipv6(rName),
+				Config: testAccVPCSubnetCIDRReservationConfig_testIPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "explicit"),
@@ -86,7 +86,7 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetCIDRReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetCIDRReservationConfig_ipv4(rName),
+				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(resourceName, &res),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
@@ -157,7 +157,7 @@ func testAccSubnetCIDRReservationImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testSubnetCIDRReservationConfig_ipv4(rName string) string {
+func testAccVPCSubnetCIDRReservationConfig_testIPv4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -185,7 +185,7 @@ resource "aws_ec2_subnet_cidr_reservation" "test" {
 `, rName)
 }
 
-func testSubnetCIDRReservationConfig_ipv6(rName string) string {
+func testAccVPCSubnetCIDRReservationConfig_testIPv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"

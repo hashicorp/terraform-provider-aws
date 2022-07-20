@@ -27,7 +27,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig(randClusterName),
+				Config: testAccTargetConfig_basic(randClusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "ecs"),
@@ -38,7 +38,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccTargetUpdateConfig(randClusterName),
+				Config: testAccTargetConfig_update(randClusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "2"),
@@ -67,7 +67,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig(rName),
+				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &target),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
@@ -89,7 +89,7 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetSpotFleetRequestConfig(validUntil),
+				Config: testAccTargetConfig_spotFleetRequest(validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.test", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "service_namespace", "ec2"),
@@ -117,7 +117,7 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetEMRClusterConfig(rInt),
+				Config: testAccTargetConfig_emrCluster(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "elasticmapreduce"),
@@ -148,7 +148,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTarget_multipleTargets(tableName),
+				Config: testAccTargetConfig_multiple(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.write", &writeTarget),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.write", "service_namespace", "dynamodb"),
@@ -182,7 +182,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTarget_optionalRoleARN(tableName),
+				Config: testAccTargetConfig_optionalRoleARN(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.read", &readTarget),
 					acctest.CheckResourceAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
@@ -242,7 +242,7 @@ func testAccCheckTargetExists(n string, v *applicationautoscaling.ScalableTarget
 	}
 }
 
-func testAccTargetConfig(
+func testAccTargetConfig_basic(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
@@ -285,7 +285,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, randClusterName)
 }
 
-func testAccTargetUpdateConfig(
+func testAccTargetConfig_update(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
@@ -328,7 +328,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, randClusterName)
 }
 
-func testAccTargetEMRClusterConfig(rInt int) string {
+func testAccTargetConfig_emrCluster(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
@@ -660,7 +660,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccTargetSpotFleetRequestConfig(validUntil string) string {
+func testAccTargetConfig_spotFleetRequest(validUntil string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
@@ -727,7 +727,7 @@ resource "aws_appautoscaling_target" "test" {
 `, validUntil)
 }
 
-func testAccTarget_multipleTargets(tableName string) string {
+func testAccTargetConfig_multiple(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"
@@ -759,7 +759,7 @@ resource "aws_appautoscaling_target" "read" {
 `, tableName)
 }
 
-func testAccTarget_optionalRoleARN(tableName string) string {
+func testAccTargetConfig_optionalRoleARN(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"

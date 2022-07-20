@@ -27,7 +27,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainConfig(rName),
+				Config: testAccTransitGatewayMulticastDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-multicast-domain/.+`)),
@@ -60,7 +60,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainConfig(rName),
+				Config: testAccTransitGatewayMulticastDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
@@ -83,7 +83,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigTags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayMulticastDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayMulticastDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -104,7 +104,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayMulticastDomainConfigTags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayMulticastDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -126,7 +126,7 @@ func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastDomainIGMPv2SupportConfig(rName),
+				Config: testAccTransitGatewayMulticastDomainConfig_igmpv2Support(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_associations", "enable"),
@@ -192,7 +192,7 @@ func testAccCheckTransitGatewayMulticastDomainDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccTransitGatewayMulticastDomainConfig(rName string) string {
+func testAccTransitGatewayMulticastDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -208,7 +208,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayMulticastDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccTransitGatewayMulticastDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -228,7 +228,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccTransitGatewayMulticastDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTransitGatewayMulticastDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"
@@ -248,7 +248,7 @@ resource "aws_ec2_transit_gateway_multicast_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccTransitGatewayMulticastDomainIGMPv2SupportConfig(rName string) string {
+func testAccTransitGatewayMulticastDomainConfig_igmpv2Support(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   multicast_support = "enable"

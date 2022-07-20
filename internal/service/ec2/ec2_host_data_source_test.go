@@ -21,7 +21,7 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostDataSourceConfig(rName),
+				Config: testAccHostDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
@@ -31,6 +31,7 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -52,7 +53,7 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHostFilterDataSourceConfig(rName),
+				Config: testAccHostDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
@@ -62,6 +63,7 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -72,7 +74,7 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccHostDataSourceConfig(rName string) string {
+func testAccHostDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -89,7 +91,7 @@ data "aws_ec2_host" "test" {
 `, rName))
 }
 
-func testAccHostFilterDataSourceConfig(rName string) string {
+func testAccHostDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]

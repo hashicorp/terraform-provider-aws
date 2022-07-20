@@ -28,7 +28,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(suffix),
+				Config: testAccFleetConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
@@ -56,14 +56,14 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDisplayNameConfig(suffix, "display1"),
+				Config: testAccFleetConfig_displayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
 				),
 			},
 			{
-				Config: testAccFleetDisplayNameConfig(suffix, "display2"),
+				Config: testAccFleetConfig_displayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
@@ -89,14 +89,14 @@ func TestAccWorkLinkFleet_optimizeForEndUserLocation(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetOptimizeForEndUserLocationConfig(suffix, false),
+				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "false"),
 				),
 			},
 			{
-				Config: testAccFleetOptimizeForEndUserLocationConfig(suffix, true),
+				Config: testAccFleetConfig_optimizeForEndUserLocation(suffix, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
@@ -122,7 +122,7 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetAuditStreamARNConfig(rName),
+				Config: testAccFleetConfig_auditStreamARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", "arn"),
@@ -148,7 +148,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetNetworkConfig(rName, "192.168.0.0/16"),
+				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
@@ -158,7 +158,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetNetworkConfig(rName, "10.0.0.0/16"),
+				Config: testAccFleetConfig_network(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
@@ -173,7 +173,7 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccFleetConfig(rName),
+				Config:      testAccFleetConfig_basic(rName),
 				ExpectError: regexp.MustCompile(`Company Network Configuration cannot be removed`),
 			},
 		},
@@ -191,7 +191,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetDeviceCaCertificateConfig(rName),
+				Config: testAccFleetConfig_deviceCaCertificate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "device_ca_certificate", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
@@ -203,7 +203,7 @@ func TestAccWorkLinkFleet_deviceCaCertificate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFleetConfig(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "device_ca_certificate", ""),
@@ -225,7 +225,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetIdentityProviderConfig(rName, idpEntityId),
+				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
@@ -238,7 +238,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccFleetConfig(rName),
+				Config:      testAccFleetConfig_basic(rName),
 				ExpectError: regexp.MustCompile(`Identity Provider Configuration cannot be removed`),
 			},
 		},
@@ -256,7 +256,7 @@ func TestAccWorkLinkFleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName),
+				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName),
 					testAccCheckFleetDisappears(resourceName),
@@ -368,7 +368,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccFleetConfig(r string) string {
+func testAccFleetConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%s"
@@ -376,7 +376,7 @@ resource "aws_worklink_fleet" "test" {
 `, r)
 }
 
-func testAccFleetDisplayNameConfig(r, displayName string) string {
+func testAccFleetConfig_displayName(r, displayName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name         = "tf-worklink-fleet-%s"
@@ -385,7 +385,7 @@ resource "aws_worklink_fleet" "test" {
 `, r, displayName)
 }
 
-func testAccFleetOptimizeForEndUserLocationConfig(r string, b bool) string {
+func testAccFleetConfig_optimizeForEndUserLocation(r string, b bool) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name                           = "tf-worklink-fleet-%s"
@@ -440,7 +440,7 @@ resource "aws_subnet" "test" {
 `, cidrBlock, rName, rName)
 }
 
-func testAccFleetNetworkConfig(r, cidrBlock string) string {
+func testAccFleetConfig_network(r, cidrBlock string) string {
 	return acctest.ConfigCompose(
 		testAccFleetNetworkConfig_Base(r, cidrBlock),
 		fmt.Sprintf(`
@@ -456,7 +456,7 @@ resource "aws_worklink_fleet" "test" {
 `, r))
 }
 
-func testAccFleetAuditStreamARNConfig(r string) string {
+func testAccFleetConfig_auditStreamARN(r string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
   name        = "AmazonWorkLink-%[1]s_kinesis_test"
@@ -471,7 +471,7 @@ resource "aws_worklink_fleet" "test" {
 `, r)
 }
 
-func testAccFleetDeviceCaCertificateConfig(rName string) string {
+func testAccFleetConfig_deviceCaCertificate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%[1]s"
@@ -481,7 +481,7 @@ resource "aws_worklink_fleet" "test" {
 `, rName)
 }
 
-func testAccFleetIdentityProviderConfig(rName, idpEntityId string) string {
+func testAccFleetConfig_identityProvider(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_worklink_fleet" "test" {
   name = "tf-worklink-fleet-%[1]s"

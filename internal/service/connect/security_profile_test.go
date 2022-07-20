@@ -44,7 +44,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Created"),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -63,7 +63,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Updated"),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -93,7 +93,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileBasicConfig(rName, rName2, "TestPermissionsUpdate"),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -113,7 +113,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 			},
 			{
 				// Test updating permissions
-				Config: testAccSecurityProfilePermissionsConfig(rName, rName2, "TestPermissionsUpdate"),
+				Config: testAccSecurityProfileConfig_permissions(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -143,7 +143,7 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceSecurityProfile(), resourceName),
@@ -232,7 +232,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccSecurityProfileBasicConfig(rName, rName2, label string) string {
+func testAccSecurityProfileConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseConfig(rName),
 		fmt.Sprintf(`
@@ -248,7 +248,7 @@ resource "aws_connect_security_profile" "test" {
 `, rName2, label))
 }
 
-func testAccSecurityProfilePermissionsConfig(rName, rName2, label string) string {
+func testAccSecurityProfileConfig_permissions(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseConfig(rName),
 		fmt.Sprintf(`

@@ -21,7 +21,7 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivityDataSourceConfig_checkActivityARN(rName),
+				Config: testAccActivityDataSourceConfig_checkARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
@@ -29,7 +29,7 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccActivityDataSourceConfig_checkActivityName(rName),
+				Config: testAccActivityDataSourceConfig_checkName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
@@ -40,7 +40,7 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 	})
 }
 
-func testAccActivityDataSourceConfig_checkActivityARN(rName string) string {
+func testAccActivityDataSourceConfig_checkARN(rName string) string {
 	return fmt.Sprintf(`
 resource aws_sfn_activity "test" {
   name = "%s"
@@ -52,7 +52,7 @@ data aws_sfn_activity "test" {
 `, rName)
 }
 
-func testAccActivityDataSourceConfig_checkActivityName(rName string) string {
+func testAccActivityDataSourceConfig_checkName(rName string) string {
 	return fmt.Sprintf(`
 resource aws_sfn_activity "test" {
   name = "%s"

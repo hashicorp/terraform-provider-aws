@@ -34,7 +34,7 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
@@ -72,7 +72,7 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
@@ -101,7 +101,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 		CheckDestroy:      testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), "aws_sagemaker_image.test"),
@@ -161,7 +161,7 @@ func testAccCheckImageVersionExists(n string, image *sagemaker.DescribeImageVers
 	}
 }
 
-func testAccImageVersionBasicConfig(rName, baseImage string) string {
+func testAccImageVersionConfig_basic(rName, baseImage string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

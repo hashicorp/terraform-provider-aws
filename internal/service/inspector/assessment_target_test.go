@@ -26,7 +26,7 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+`)),
@@ -55,7 +55,7 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					testAccCheckTargetDisappears(&assessmentTarget1),
@@ -79,7 +79,7 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentConfig(rName1),
+				Config: testAccAssessmentTargetConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -91,7 +91,7 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetAssessmentConfig(rName2),
+				Config: testAccAssessmentTargetConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -115,7 +115,7 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 		CheckDestroy:      testAccCheckTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget1),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
@@ -127,21 +127,21 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName2),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget2),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName2, "arn"),
 				),
 			},
 			{
-				Config: testAccTargetAssessmentConfig(rName),
+				Config: testAccAssessmentTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget3),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
 				),
 			},
 			{
-				Config: testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName1),
+				Config: testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &assessmentTarget4),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_group_arn", inspectorResourceGroupResourceName1, "arn"),
@@ -212,7 +212,7 @@ func testAccCheckTargetDisappears(assessmentTarget *inspector.AssessmentTarget) 
 	}
 }
 
-func testAccTargetAssessmentConfig(rName string) string {
+func testAccAssessmentTargetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_assessment_target" "test" {
   name = %q
@@ -220,7 +220,7 @@ resource "aws_inspector_assessment_target" "test" {
 `, rName)
 }
 
-func testAccTargetAssessmentResourceGroupARNConfig(rName, inspectorResourceGroupResourceName string) string {
+func testAccAssessmentTargetConfig_resourceGroupARN(rName, inspectorResourceGroupResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_inspector_resource_group" "test1" {
   tags = {

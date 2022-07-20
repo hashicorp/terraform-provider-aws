@@ -158,7 +158,7 @@ func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNoName(rName),
+				Config: testAccClusterConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -180,7 +180,7 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNamePrefix(rName, "tftest-"),
+				Config: testAccClusterConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
@@ -204,7 +204,7 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNoTLS(rName),
+				Config: testAccClusterConfig_noTLS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "false"),
@@ -230,7 +230,7 @@ func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withKMS(rName),
+				Config: testAccClusterConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
@@ -256,7 +256,7 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withPort(rName, 9999),
+				Config: testAccClusterConfig_port(rName, 9999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "9999"),
@@ -283,7 +283,7 @@ func TestAccMemoryDBCluster_create_fromSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSnapshotFromCluster(rName1, rName2),
+				Config: testAccClusterConfig_snapshotFrom(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists("aws_memorydb_cluster.test1"),
 					testAccCheckClusterExists("aws_memorydb_cluster.test2"),
@@ -304,7 +304,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withFinalSnapshotName(rName, rName+"-1"),
+				Config: testAccClusterConfig_finalSnapshotName(rName, rName+"-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+"-1"),
@@ -317,7 +317,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"final_snapshot_name"},
 			},
 			{
-				Config: testAccClusterConfig_withFinalSnapshotName(rName, rName),
+				Config: testAccClusterConfig_finalSnapshotName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName),
@@ -330,7 +330,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"final_snapshot_name"},
 			},
 			{
-				Config: testAccClusterConfigBaseNetwork(rName), // empty Config not supported
+				Config: testAccClusterConfig_baseNetwork(rName), // empty Config not supported
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExistsByName(rName),
 				),
@@ -339,7 +339,7 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
+func TestAccMemoryDBCluster_Update_aclName(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -350,7 +350,7 @@ func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withACLName(rName, rName),
+				Config: testAccClusterConfig_aclName(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", rName),
@@ -362,7 +362,7 @@ func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withACLName(rName, "open-access"),
+				Config: testAccClusterConfig_aclName(rName, "open-access"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
@@ -377,7 +377,7 @@ func TestAccMemoryDBCluster_update_aclName(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_description(t *testing.T) {
+func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -388,7 +388,7 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withDescription(rName, "Test 1"),
+				Config: testAccClusterConfig_description(rName, "Test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test 1"),
@@ -400,7 +400,7 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withDescription(rName, "Test 2"),
+				Config: testAccClusterConfig_description(rName, "Test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test 2"),
@@ -412,7 +412,7 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withDescription(rName, ""),
+				Config: testAccClusterConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -427,7 +427,7 @@ func TestAccMemoryDBCluster_update_description(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
+func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
 	// As of writing, 6.2 is the one and only MemoryDB engine version available,
 	// so we cannot check upgrade behaviour.
 	//
@@ -444,7 +444,7 @@ func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withEngineVersionNull(rName),
+				Config: testAccClusterConfig_engineVersionNull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
@@ -456,7 +456,7 @@ func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withEngineVersion(rName, "6.2"),
+				Config: testAccClusterConfig_engineVersion(rName, "6.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
@@ -471,7 +471,7 @@ func TestAccMemoryDBCluster_update_engineVersion(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
+func TestAccMemoryDBCluster_Update_maintenanceWindow(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -482,7 +482,7 @@ func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withMaintenanceWindow(rName, "thu:09:00-thu:10:00"),
+				Config: testAccClusterConfig_maintenanceWindow(rName, "thu:09:00-thu:10:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "thu:09:00-thu:10:00"),
@@ -494,7 +494,7 @@ func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withMaintenanceWindow(rName, "fri:09:00-fri:10:00"),
+				Config: testAccClusterConfig_maintenanceWindow(rName, "fri:09:00-fri:10:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "fri:09:00-fri:10:00"),
@@ -509,7 +509,7 @@ func TestAccMemoryDBCluster_update_maintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
+func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -520,7 +520,7 @@ func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNodeType(rName, "db.t4g.small"),
+				Config: testAccClusterConfig_nodeType(rName, "db.t4g.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
@@ -532,7 +532,7 @@ func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withNodeType(rName, "db.t4g.medium"),
+				Config: testAccClusterConfig_nodeType(rName, "db.t4g.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.medium"),
@@ -547,7 +547,7 @@ func TestAccMemoryDBCluster_update_nodeType(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -561,7 +561,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNumShards(rName, 1),
+				Config: testAccClusterConfig_numShards(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
@@ -573,7 +573,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withNumShards(rName, 2),
+				Config: testAccClusterConfig_numShards(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
@@ -583,7 +583,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleUp(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -597,7 +597,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNumShards(rName, 2),
+				Config: testAccClusterConfig_numShards(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
@@ -609,7 +609,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withNumShards(rName, 1),
+				Config: testAccClusterConfig_numShards(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
@@ -619,7 +619,7 @@ func TestAccMemoryDBCluster_update_numShards_scaleDown(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -633,7 +633,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNumReplicasPerShard(rName, 1),
+				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
@@ -645,7 +645,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withNumReplicasPerShard(rName, 2),
+				Config: testAccClusterConfig_numReplicasPerShard(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "2"),
@@ -655,7 +655,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleUp(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
+func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 	// As updating MemoryDB clusters can be slow, scaling up and down have been
 	// split into separate tests for timeout management
 
@@ -669,7 +669,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withNumReplicasPerShard(rName, 1),
+				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
@@ -681,7 +681,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withNumReplicasPerShard(rName, 0),
+				Config: testAccClusterConfig_numReplicasPerShard(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "0"),
@@ -691,7 +691,7 @@ func TestAccMemoryDBCluster_update_numReplicasPerShard_scaleDown(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
+func TestAccMemoryDBCluster_Update_parameterGroup(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -702,7 +702,7 @@ func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withParameterGroup(rName, "default.memorydb-redis6"),
+				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
@@ -714,14 +714,14 @@ func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withParameterGroup(rName, rName),
+				Config: testAccClusterConfig_parameterGroup(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", rName),
 				),
 			},
 			{
-				Config: testAccClusterConfig_withParameterGroup(rName, "default.memorydb-redis6"),
+				Config: testAccClusterConfig_parameterGroup(rName, "default.memorydb-redis6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.memorydb-redis6"),
@@ -736,7 +736,7 @@ func TestAccMemoryDBCluster_update_parameterGroup(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
+func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -747,7 +747,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 1),
+				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -760,7 +760,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 2),
+				Config: testAccClusterConfig_securityGroups(rName, 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
@@ -774,11 +774,11 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:      testAccClusterConfig_withSecurityGroups(rName, 2, 0), // attempt to remove all
+				Config:      testAccClusterConfig_securityGroups(rName, 2, 0), // attempt to remove all
 				ExpectError: regexp.MustCompile(`removing all security groups is not possible`),
 			},
 			{
-				Config: testAccClusterConfig_withSecurityGroups(rName, 2, 1),
+				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // remove one
@@ -794,7 +794,7 @@ func TestAccMemoryDBCluster_update_securityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -805,7 +805,7 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 2),
+				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "2"),
@@ -817,7 +817,7 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 35),
+				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 35),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "35"),
@@ -829,7 +829,7 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnapshotRetentionLimit(rName, 0),
+				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
@@ -844,7 +844,7 @@ func TestAccMemoryDBCluster_update_snapshotRetentionLimit(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snapshotWindow(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -855,7 +855,7 @@ func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSnapshotWindow(rName, "00:30-01:30"),
+				Config: testAccClusterConfig_snapshotWindow(rName, "00:30-01:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "00:30-01:30"),
@@ -867,7 +867,7 @@ func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnapshotWindow(rName, "02:30-03:30"),
+				Config: testAccClusterConfig_snapshotWindow(rName, "02:30-03:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_window", "02:30-03:30"),
@@ -882,7 +882,7 @@ func TestAccMemoryDBCluster_update_snapshotWindow(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
+func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -893,7 +893,7 @@ func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withSnsTopic(rName),
+				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
@@ -905,7 +905,7 @@ func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnsTopicNull(rName),
+				Config: testAccClusterConfig_snsTopicNull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
@@ -917,7 +917,7 @@ func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withSnsTopic(rName),
+				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
@@ -932,7 +932,7 @@ func TestAccMemoryDBCluster_update_snsTopicArn(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBCluster_update_tags(t *testing.T) {
+func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
 
@@ -943,7 +943,7 @@ func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_withTags0(rName),
+				Config: testAccClusterConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -956,7 +956,7 @@ func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -973,7 +973,7 @@ func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -988,7 +988,7 @@ func TestAccMemoryDBCluster_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_withTags0(rName),
+				Config: testAccClusterConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -1069,9 +1069,9 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 	}
 }
 
-func testAccClusterConfigBaseNetwork(rName string) string {
+func testAccClusterConfig_baseNetwork(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id
@@ -1101,7 +1101,7 @@ resource "aws_memorydb_acl" "test" {
 
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -1140,9 +1140,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNoName(rName string) string {
+func testAccClusterConfig_noName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1155,9 +1155,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNamePrefix(rName, prefix string) string {
+func testAccClusterConfig_namePrefix(rName, prefix string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1171,9 +1171,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNoTLS(rName string) string {
+func testAccClusterConfig_noTLS(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1188,9 +1188,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withACLName(rName, aclName string) string {
+func testAccClusterConfig_aclName(rName, aclName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
@@ -1206,9 +1206,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withDescription(rName, description string) string {
+func testAccClusterConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
@@ -1221,9 +1221,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withEngineVersionNull(rName string) string {
+func testAccClusterConfig_engineVersionNull(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1237,9 +1237,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withEngineVersion(rName, engineVersion string) string {
+func testAccClusterConfig_engineVersion(rName, engineVersion string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1254,9 +1254,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withFinalSnapshotName(rName, finalSnapshotName string) string {
+func testAccClusterConfig_finalSnapshotName(rName, finalSnapshotName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1271,9 +1271,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withKMS(rName string) string {
+func testAccClusterConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -1290,9 +1290,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withMaintenanceWindow(rName, maintenanceWindow string) string {
+func testAccClusterConfig_maintenanceWindow(rName, maintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1307,9 +1307,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNodeType(rName, nodeType string) string {
+func testAccClusterConfig_nodeType(rName, nodeType string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1323,9 +1323,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNumReplicasPerShard(rName string, numReplicasPerShard int) string {
+func testAccClusterConfig_numReplicasPerShard(rName string, numReplicasPerShard int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1338,9 +1338,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withNumShards(rName string, numShards int) string {
+func testAccClusterConfig_numShards(rName string, numShards int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
@@ -1353,9 +1353,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withParameterGroup(rName, parameterGroup string) string {
+func testAccClusterConfig_parameterGroup(rName, parameterGroup string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_parameter_group" "test" {
   name   = %[1]q
@@ -1386,9 +1386,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withPort(rName string, port int) string {
+func testAccClusterConfig_port(rName string, port int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1403,9 +1403,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSecurityGroups(rName string, sgCount, sgCountInCluster int) string {
+func testAccClusterConfig_securityGroups(rName string, sgCount, sgCountInCluster int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count  = %[2]d
@@ -1425,9 +1425,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnapshotRetentionLimit(rName string, retentionLimit int) string {
+func testAccClusterConfig_snapshotRetentionLimit(rName string, retentionLimit int) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
@@ -1442,9 +1442,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnapshotFromCluster(rName1, rName2 string) string {
+func testAccClusterConfig_snapshotFrom(rName1, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName1),
+		testAccClusterConfig_baseNetwork(rName1),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test1" {
   acl_name               = "open-access"
@@ -1472,9 +1472,9 @@ resource "aws_memorydb_cluster" "test2" {
 	)
 }
 
-func testAccClusterConfig_withSnapshotWindow(rName, snapshotWindow string) string {
+func testAccClusterConfig_snapshotWindow(rName, snapshotWindow string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
@@ -1490,9 +1490,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnsTopicNull(rName string) string {
+func testAccClusterConfig_snsTopicNull(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1512,9 +1512,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withSnsTopic(rName string) string {
+func testAccClusterConfig_snsTopic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -1535,9 +1535,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withTags0(rName string) string {
+func testAccClusterConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1551,9 +1551,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withTags1(rName, tag1Key, tag1Value string) string {
+func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
@@ -1571,9 +1571,9 @@ resource "aws_memorydb_cluster" "test" {
 	)
 }
 
-func testAccClusterConfig_withTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"

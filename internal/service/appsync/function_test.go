@@ -30,7 +30,7 @@ func testAccFunction_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
@@ -43,7 +43,7 @@ func testAccFunction_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFunctionConfig(rName1, rName3, acctest.Region()),
+				Config: testAccFunctionConfig_basic(rName1, rName3, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
@@ -70,7 +70,7 @@ func testAccFunction_syncConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionSyncConfig(rName, acctest.Region()),
+				Config: testAccFunctionConfig_sync(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
@@ -100,14 +100,14 @@ func testAccFunction_description(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionDescriptionConfig(rName1, rName2, acctest.Region(), "test description 1"),
+				Config: testAccFunctionConfig_description(rName1, rName2, acctest.Region(), "test description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 1"),
 				),
 			},
 			{
-				Config: testAccFunctionDescriptionConfig(rName1, rName2, acctest.Region(), "test description 2"),
+				Config: testAccFunctionConfig_description(rName1, rName2, acctest.Region(), "test description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 2"),
@@ -135,7 +135,7 @@ func testAccFunction_responseMappingTemplate(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionResponseMappingTemplateConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionConfig_responseMappingTemplate(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 				),
@@ -162,7 +162,7 @@ func testAccFunction_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig(rName1, rName2, acctest.Region()),
+				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &config),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceFunction(), resourceName),
@@ -232,7 +232,7 @@ func testAccCheckFunctionExists(name string, config *appsync.FunctionConfigurati
 	}
 }
 
-func testAccFunctionConfig(r1, r2, region string) string {
+func testAccFunctionConfig_basic(r1, r2, region string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -259,10 +259,10 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2)
+`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2)
 }
 
-func testAccFunctionSyncConfig(rName, region string) string {
+func testAccFunctionConfig_sync(rName, region string) string {
 	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -319,7 +319,7 @@ EOF
 `, rName, region)
 }
 
-func testAccFunctionDescriptionConfig(r1, r2, region, description string) string {
+func testAccFunctionConfig_description(r1, r2, region, description string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -347,10 +347,10 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2, description)
+`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2, description)
 }
 
-func testAccFunctionResponseMappingTemplateConfig(r1, r2, region string) string {
+func testAccFunctionConfig_responseMappingTemplate(r1, r2, region string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -377,5 +377,5 @@ EOF
 #end
 EOF
 }
-`, testAccDataSourceConfig_DynamoDBConfig_region(r1, region), r2)
+`, testAccDataSourceConfig_dynamoDBRegion(r1, region), r2)
 }

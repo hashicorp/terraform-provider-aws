@@ -26,7 +26,7 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig(rName),
+				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -64,7 +64,7 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig(rName),
+				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
@@ -87,7 +87,7 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderManagedScalingConfig(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -107,7 +107,7 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderManagedScalingConfig(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -136,7 +136,7 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderManagedScalingPartialConfig(rName),
+				Config: testAccCapacityProviderConfig_managedScalingPartial(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -171,7 +171,7 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderTags1Config(rName, "key1", "value1"),
+				Config: testAccCapacityProviderConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -185,7 +185,7 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCapacityProviderConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -194,7 +194,7 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCapacityProviderTags1Config(rName, "key2", "value2"),
+				Config: testAccCapacityProviderConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -303,7 +303,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName)
 }
 
-func testAccCapacityProviderConfig(rName string) string {
+func testAccCapacityProviderConfig_basic(rName string) string {
 	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %q
@@ -315,7 +315,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccCapacityProviderManagedScalingConfig(rName, status string, warmup, max, min, cap int) string {
+func testAccCapacityProviderConfig_managedScaling(rName, status string, warmup, max, min, cap int) string {
 	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
@@ -335,7 +335,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, warmup, max, min, status, cap)
 }
 
-func testAccCapacityProviderManagedScalingPartialConfig(rName string) string {
+func testAccCapacityProviderConfig_managedScalingPartial(rName string) string {
 	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
@@ -352,7 +352,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccCapacityProviderTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccCapacityProviderConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
@@ -368,7 +368,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccCapacityProviderTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccCapacityProviderConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return testAccCapacityProviderBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q

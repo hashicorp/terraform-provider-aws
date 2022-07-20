@@ -26,7 +26,7 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainWithDataSourceConfig(rName, autoTuneStartAtTime),
+				Config: testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
@@ -68,7 +68,7 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAdvancedWithDataSourceConfig(rName, autoTuneStartAtTime),
+				Config: testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
@@ -96,7 +96,7 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 	})
 }
 
-func testAccDomainWithDataSourceConfig(rName, autoTuneStartAtTime string) string {
+func testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -178,7 +178,7 @@ data "aws_opensearch_domain" "test" {
 `, rName, autoTuneStartAtTime)
 }
 
-func testAccDomainAdvancedWithDataSourceConfig(rName, autoTuneStartAtTime string) string {
+func testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

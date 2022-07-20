@@ -26,7 +26,7 @@ func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codebuild_report_group.test", "arn"),
@@ -54,7 +54,7 @@ func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
@@ -78,7 +78,7 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 		CheckDestroy:      testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
@@ -139,7 +139,7 @@ func testAccCheckResourcePolicyExists(name string, policy *codebuild.GetResource
 	}
 }
 
-func testAccResourcePolicyBasicConfig(rName string) string {
+func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q

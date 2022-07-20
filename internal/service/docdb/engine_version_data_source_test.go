@@ -24,7 +24,7 @@ func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionBasicDataSourceConfig(engine, version),
+				Config: testAccEngineVersionDataSourceConfig_basic(engine, version),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
@@ -50,7 +50,7 @@ func TestAccDocDBEngineVersionDataSource_preferred(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionPreferredDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "3.6.0"),
 				),
@@ -69,7 +69,7 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
@@ -98,7 +98,7 @@ func testAccEngineVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccEngineVersionBasicDataSourceConfig(engine, version string) string {
+func testAccEngineVersionDataSourceConfig_basic(engine, version string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_engine_version" "test" {
   engine  = %q
@@ -107,7 +107,7 @@ data "aws_docdb_engine_version" "test" {
 `, engine, version)
 }
 
-func testAccEngineVersionPreferredDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_docdb_engine_version" "test" {
   preferred_versions = ["34.6.1", "3.6.0", "2.6.0"]
@@ -115,7 +115,7 @@ data "aws_docdb_engine_version" "test" {
 `
 }
 
-func testAccEngineVersionDefaultOnlyDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_defaultOnly() string {
 	return `
 data "aws_docdb_engine_version" "test" {}
 `

@@ -25,7 +25,7 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationConfig(rName),
+				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -54,7 +54,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationDescriptionConfig(rName),
+				Config: testAccWorkerConfigurationConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
@@ -92,7 +92,7 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccWorkerConfigurationConfig(rName string) string {
+func testAccWorkerConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
   name = %[1]q
@@ -105,7 +105,7 @@ EOF
 `, rName)
 }
 
-func testAccWorkerConfigurationDescriptionConfig(rName string) string {
+func testAccWorkerConfigurationConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
   name        = %[1]q

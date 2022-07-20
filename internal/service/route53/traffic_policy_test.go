@@ -27,7 +27,7 @@ func TestAccRoute53TrafficPolicy_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyConfig(rName),
+				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -58,7 +58,7 @@ func TestAccRoute53TrafficPolicy_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyConfig(rName),
+				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceTrafficPolicy(), resourceName),
@@ -83,14 +83,14 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyConfigComplete(rName, comment),
+				Config: testAccTrafficPolicyConfig_complete(rName, comment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 				),
 			},
 			{
-				Config: testAccTrafficPolicyConfigComplete(rName, commentUpdated),
+				Config: testAccTrafficPolicyConfig_complete(rName, commentUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "comment", commentUpdated),
@@ -165,7 +165,7 @@ func testAccTrafficPolicyImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccTrafficPolicyConfig(rName string) string {
+func testAccTrafficPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_traffic_policy" "test" {
   name     = %[1]q
@@ -186,7 +186,7 @@ EOT
 `, rName)
 }
 
-func testAccTrafficPolicyConfigComplete(rName, comment string) string {
+func testAccTrafficPolicyConfig_complete(rName, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_traffic_policy" "test" {
   name     = %[1]q

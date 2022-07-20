@@ -38,7 +38,7 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainIdentityVerification_basic(rootDomain, domain),
+				Config: testAccDomainIdentityVerificationConfig_basic(rootDomain, domain),
 				Check:  testAccCheckDomainIdentityVerificationPassed("aws_ses_domain_identity_verification.test"),
 			},
 		},
@@ -55,7 +55,7 @@ func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDomainIdentityVerification_timeout(domain),
+				Config:      testAccDomainIdentityVerificationConfig_timeout(domain),
 				ExpectError: regexp.MustCompile("Expected domain verification Success, but was in state Pending"),
 			},
 		},
@@ -72,7 +72,7 @@ func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
 		CheckDestroy:      testAccCheckDomainIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDomainIdentityVerification_nonexistent(domain),
+				Config:      testAccDomainIdentityVerificationConfig_nonexistent(domain),
 				ExpectError: regexp.MustCompile(fmt.Sprintf("SES Domain Identity %s not found in AWS", domain)),
 			},
 		},
@@ -128,7 +128,7 @@ func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFu
 	}
 }
 
-func testAccDomainIdentityVerification_basic(rootDomain string, domain string) string {
+func testAccDomainIdentityVerificationConfig_basic(rootDomain string, domain string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = "%s."
@@ -155,7 +155,7 @@ resource "aws_ses_domain_identity_verification" "test" {
 `, rootDomain, domain)
 }
 
-func testAccDomainIdentityVerification_timeout(domain string) string {
+func testAccDomainIdentityVerificationConfig_timeout(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
   domain = "%s"
@@ -171,7 +171,7 @@ resource "aws_ses_domain_identity_verification" "test" {
 `, domain)
 }
 
-func testAccDomainIdentityVerification_nonexistent(domain string) string {
+func testAccDomainIdentityVerificationConfig_nonexistent(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity_verification" "test" {
   domain = "%s"

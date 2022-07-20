@@ -87,7 +87,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 			Igmpv2Support:                aws.String(d.Get("igmpv2_support").(string)),
 			StaticSourcesSupport:         aws.String(d.Get("static_sources_support").(string)),
 		},
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayMulticastDomain),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayMulticastDomain),
 		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
@@ -225,7 +225,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil
 	}
 

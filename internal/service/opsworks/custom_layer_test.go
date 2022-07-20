@@ -30,7 +30,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -73,7 +73,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerTags1Config(rName, "key1", "value1"),
+				Config: testAccCustomLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -86,7 +86,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCustomLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -95,7 +95,7 @@ func TestAccOpsWorksCustomLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCustomLayerTags1Config(rName, "key2", "value2"),
+				Config: testAccCustomLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +118,7 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerNoVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -146,7 +146,7 @@ func TestAccOpsWorksCustomLayer_noVPC(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomLayerUpdateConfig(rName),
+				Config: testAccCustomLayerConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "false"),
@@ -256,7 +256,7 @@ func TestAccOpsWorksCustomLayer_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLayerNoVPCCreateConfig(rName),
+				Config: testAccCustomLayerConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceCustomLayer(), resourceName),
@@ -359,9 +359,9 @@ resource "aws_security_group" "tf-ops-acc-layer2" {
 `, name)
 }
 
-func testAccCustomLayerNoVPCCreateConfig(name string) string {
+func testAccCustomLayerConfig_noVPCCreate(name string) string {
 	return acctest.ConfigCompose(
-		testAccStackNoVPCCreateConfig(name),
+		testAccStackConfig_noVPCCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
@@ -392,9 +392,9 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name))
 }
 
-func testAccCustomLayerVPCCreateConfig(name string) string {
+func testAccCustomLayerConfig_vpcCreate(name string) string {
 	return acctest.ConfigCompose(
-		testAccStackNoVPCCreateConfig(name),
+		testAccStackConfig_noVPCCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
@@ -427,9 +427,9 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name))
 }
 
-func testAccCustomLayerUpdateConfig(name string) string {
+func testAccCustomLayerConfig_update(name string) string {
 	return acctest.ConfigCompose(
-		testAccStackNoVPCCreateConfig(name),
+		testAccStackConfig_noVPCCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-layer3" {
@@ -489,9 +489,9 @@ EOF
 `, name))
 }
 
-func testAccCustomLayerTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccCustomLayerConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(name),
+		testAccStackConfig_vpcCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
@@ -528,9 +528,9 @@ resource "aws_opsworks_custom_layer" "test" {
 `, name, tagKey1, tagValue1))
 }
 
-func testAccCustomLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCustomLayerConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(name),
+		testAccStackConfig_vpcCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "test" {
@@ -570,7 +570,7 @@ resource "aws_opsworks_custom_layer" "test" {
 
 func testAccCustomLayerConfig_cloudWatch(name string, enabled bool) string {
 	return acctest.ConfigCompose(
-		testAccStackNoVPCCreateConfig(name),
+		testAccStackConfig_noVPCCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -600,7 +600,7 @@ resource "aws_opsworks_custom_layer" "test" {
 
 func testAccCustomLayerConfig_cloudWatchFull(name string) string {
 	return acctest.ConfigCompose(
-		testAccStackNoVPCCreateConfig(name),
+		testAccStackConfig_noVPCCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {

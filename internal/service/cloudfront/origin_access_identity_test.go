@@ -25,7 +25,7 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
@@ -56,7 +56,7 @@ func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityNoCommentConfig,
+				Config: testAccOriginAccessIdentityConfig_noComment,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
@@ -86,7 +86,7 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
@@ -145,13 +145,13 @@ func testAccCheckOriginAccessIdentityExistence(r string, origin *cloudfront.GetC
 	}
 }
 
-const testAccOriginAccessIdentityConfig = `
+const testAccOriginAccessIdentityConfig_basic = `
 resource "aws_cloudfront_origin_access_identity" "test" {
   comment = "some comment"
 }
 `
 
-const testAccOriginAccessIdentityNoCommentConfig = `
+const testAccOriginAccessIdentityConfig_noComment = `
 resource "aws_cloudfront_origin_access_identity" "test" {
 }
 `

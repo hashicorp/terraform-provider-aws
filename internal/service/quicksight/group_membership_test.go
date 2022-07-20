@@ -27,7 +27,7 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMembershipConfig(groupName, memberName),
+				Config: testAccGroupMembershipConfig_basic(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(resourceName),
 				),
@@ -53,7 +53,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMembershipConfig(groupName, memberName),
+				Config: testAccGroupMembershipConfig_basic(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceGroupMembership(), resourceName),
@@ -130,10 +130,10 @@ func testAccCheckGroupMembershipExists(resourceName string) resource.TestCheckFu
 	}
 }
 
-func testAccGroupMembershipConfig(groupName string, memberName string) string {
+func testAccGroupMembershipConfig_basic(groupName string, memberName string) string {
 	return acctest.ConfigCompose(
-		testAccGroupConfig(groupName),
-		testAccUserConfig(memberName),
+		testAccGroupConfig_basic(groupName),
+		testAccUserConfig_basic(memberName),
 		fmt.Sprintf(`
 resource "aws_quicksight_group_membership" "default" {
   group_name  = aws_quicksight_group.default.group_name

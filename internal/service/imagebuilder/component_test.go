@@ -27,7 +27,7 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentNameConfig(rName),
+				Config: testAccComponentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("component/%s/1.0.0/[1-9][0-9]*", rName))),
@@ -66,7 +66,7 @@ func TestAccImageBuilderComponent_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentNameConfig(rName),
+				Config: testAccComponentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
@@ -88,7 +88,7 @@ func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentChangeDescriptionConfig(rName, "description1"),
+				Config: testAccComponentConfig_changeDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "change_description", "description1"),
@@ -114,7 +114,7 @@ func TestAccImageBuilderComponent_description(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentDescriptionConfig(rName, "description1"),
+				Config: testAccComponentConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -141,7 +141,7 @@ func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentKMSKeyIDConfig(rName),
+				Config: testAccComponentConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -167,7 +167,7 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentPlatformWindowsConfig(rName),
+				Config: testAccComponentConfig_platformWindows(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformWindows),
@@ -193,7 +193,7 @@ func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentSupportedOsVersionsConfig(rName),
+				Config: testAccComponentConfig_supportedOsVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", "1"),
@@ -219,7 +219,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentTags1Config(rName, "key1", "value1"),
+				Config: testAccComponentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -232,7 +232,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComponentTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccComponentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -241,7 +241,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccComponentTags1Config(rName, "key2", "value2"),
+				Config: testAccComponentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -263,7 +263,7 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 		CheckDestroy:      testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentURIConfig(rName),
+				Config: testAccComponentConfig_uri(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(resourceName),
 				),
@@ -331,7 +331,7 @@ func testAccCheckComponentExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccComponentChangeDescriptionConfig(rName string, changeDescription string) string {
+func testAccComponentConfig_changeDescription(rName string, changeDescription string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   change_description = %[2]q
@@ -356,7 +356,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName, changeDescription)
 }
 
-func testAccComponentDescriptionConfig(rName string, description string) string {
+func testAccComponentConfig_description(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -381,7 +381,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName, description)
 }
 
-func testAccComponentKMSKeyIDConfig(rName string) string {
+func testAccComponentConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -410,7 +410,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccComponentNameConfig(rName string) string {
+func testAccComponentConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -434,7 +434,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccComponentPlatformWindowsConfig(rName string) string {
+func testAccComponentConfig_platformWindows(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -458,7 +458,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccComponentSupportedOsVersionsConfig(rName string) string {
+func testAccComponentConfig_supportedOsVersions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -483,7 +483,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName)
 }
 
-func testAccComponentTags1Config(rName string, tagKey1 string, tagValue1 string) string {
+func testAccComponentConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -511,7 +511,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccComponentTags2Config(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccComponentConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
@@ -540,7 +540,7 @@ resource "aws_imagebuilder_component" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccComponentURIConfig(rName string) string {
+func testAccComponentConfig_uri(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

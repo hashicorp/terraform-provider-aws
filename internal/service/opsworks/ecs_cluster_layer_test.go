@@ -25,7 +25,7 @@ func TestAccOpsWorksECSClusterLayer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccECSClusterLayerBasic(stackName),
+				Config: testAccECSClusterLayerConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
@@ -47,7 +47,7 @@ func TestAccOpsWorksECSClusterLayer_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckECSClusterLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccECSClusterLayerTags1Config(stackName, "key1", "value1"),
+				Config: testAccECSClusterLayerConfig_tags1(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -55,7 +55,7 @@ func TestAccOpsWorksECSClusterLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccECSClusterLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccECSClusterLayerConfig_tags2(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -64,7 +64,7 @@ func TestAccOpsWorksECSClusterLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccECSClusterLayerTags1Config(stackName, "key2", "value2"),
+				Config: testAccECSClusterLayerConfig_tags1(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -79,9 +79,9 @@ func testAccCheckECSClusterLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_ecs_cluster_layer", s)
 }
 
-func testAccECSClusterLayerBasic(name string) string {
+func testAccECSClusterLayerConfig_basic(name string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(name),
+		testAccStackConfig_vpcCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -101,9 +101,9 @@ resource "aws_opsworks_ecs_cluster_layer" "test" {
 `, name))
 }
 
-func testAccECSClusterLayerTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccECSClusterLayerConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(name),
+		testAccStackConfig_vpcCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -127,9 +127,9 @@ resource "aws_opsworks_ecs_cluster_layer" "test" {
 `, name, tagKey1, tagValue1))
 }
 
-func testAccECSClusterLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccECSClusterLayerConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(name),
+		testAccStackConfig_vpcCreate(name),
 		testAccCustomLayerSecurityGroups(name),
 		fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {

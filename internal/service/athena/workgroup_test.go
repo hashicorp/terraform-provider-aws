@@ -27,7 +27,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig(rName),
+				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
@@ -66,7 +66,7 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationAclConfig(rName),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
@@ -98,7 +98,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig(rName),
+				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
@@ -121,7 +121,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 12582912),
+				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 12582912),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -135,7 +135,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 10485760),
+				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 10485760),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -158,7 +158,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, false),
+				Config: testAccWorkGroupConfig_enforce(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -172,7 +172,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, true),
+				Config: testAccWorkGroupConfig_enforce(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -195,7 +195,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationEngineVersion(rName, "Athena engine version 2"),
+				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -211,7 +211,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationEngineVersion(rName, "AUTO"),
+				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "AUTO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -227,7 +227,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfig(rName),
+				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
@@ -250,7 +250,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, false),
+				Config: testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -264,7 +264,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, true),
+				Config: testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -287,7 +287,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -320,7 +320,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption),
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -336,7 +336,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption2),
+				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -363,7 +363,7 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation1),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -378,7 +378,7 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation2),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -402,7 +402,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationRequesterPaysEnabled(rName),
+				Config: testAccWorkGroupConfig_configurationRequesterPaysEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
@@ -417,7 +417,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfig(rName),
+				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
@@ -443,7 +443,7 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation1),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -458,7 +458,7 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation2),
+				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -484,7 +484,7 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigDescription(rName, rDescription),
+				Config: testAccWorkGroupConfig_description(rName, rDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
@@ -497,7 +497,7 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigDescription(rName, rDescriptionUpdate),
+				Config: testAccWorkGroupConfig_description(rName, rDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescriptionUpdate),
@@ -519,7 +519,7 @@ func TestAccAthenaWorkGroup_state(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
+				Config: testAccWorkGroupConfig_state(rName, athena.WorkGroupStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
@@ -532,14 +532,14 @@ func TestAccAthenaWorkGroup_state(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigState(rName, athena.WorkGroupStateEnabled),
+				Config: testAccWorkGroupConfig_state(rName, athena.WorkGroupStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateEnabled),
 				),
 			},
 			{
-				Config: testAccWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
+				Config: testAccWorkGroupConfig_state(rName, athena.WorkGroupStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
@@ -564,7 +564,7 @@ func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigForceDestroy(rName, dbName),
+				Config: testAccWorkGroupConfig_forceDestroy(rName, dbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup),
 					testAccCheckCreateNamedQuery(&workgroup, dbName, queryName1, fmt.Sprintf("SELECT * FROM %s limit 10;", rName)),
@@ -593,7 +593,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccWorkGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -607,7 +607,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccWorkGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWorkGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -616,7 +616,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccWorkGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(resourceName, &workgroup3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -700,7 +700,7 @@ func testAccCheckWorkGroupExists(name string, workgroup *athena.WorkGroup) resou
 	}
 }
 
-func testAccWorkGroupConfig(rName string) string {
+func testAccWorkGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -708,7 +708,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfigDescription(rName string, description string) string {
+func testAccWorkGroupConfig_description(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   description = %[2]q
@@ -717,7 +717,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, description)
 }
 
-func testAccWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName string, bytesScannedCutoffPerQuery int) string {
+func testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName string, bytesScannedCutoffPerQuery int) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -729,7 +729,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, bytesScannedCutoffPerQuery)
 }
 
-func testAccWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName string, enforceWorkgroupConfiguration bool) string {
+func testAccWorkGroupConfig_enforce(rName string, enforceWorkgroupConfiguration bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -741,7 +741,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, enforceWorkgroupConfiguration)
 }
 
-func testAccWorkGroupConfigConfigurationEngineVersion(rName, engineVersion string) string {
+func testAccWorkGroupConfig_configurationEngineVersion(rName, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -755,7 +755,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, engineVersion)
 }
 
-func testAccWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName string, publishCloudwatchMetricsEnabled bool) string {
+func testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName string, publishCloudwatchMetricsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -767,7 +767,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, publishCloudwatchMetricsEnabled)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName string, bucketName string) string {
+func testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName string, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -786,7 +786,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, bucketName)
 }
 
-func testAccWorkGroupConfigConfigurationRequesterPaysEnabled(rName string) string {
+func testAccWorkGroupConfig_configurationRequesterPaysEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -798,7 +798,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName string, bucketName string) string {
+func testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName string, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -819,7 +819,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, bucketName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationAclConfig(rName string) string {
+func testAccWorkGroupConfig_configurationResultConfigurationACL(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -835,7 +835,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {
+func testAccWorkGroupConfig_configurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -851,7 +851,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, encryptionOption string) string {
+func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryptionOption string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -873,7 +873,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, encryptionOption)
 }
 
-func testAccWorkGroupConfigState(rName, state string) string {
+func testAccWorkGroupConfig_state(rName, state string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name  = %[1]q
@@ -882,7 +882,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, state)
 }
 
-func testAccWorkGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccWorkGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -894,7 +894,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccWorkGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWorkGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
@@ -907,7 +907,7 @@ resource "aws_athena_workgroup" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccWorkGroupConfigForceDestroy(rName, dbName string) string {
+func testAccWorkGroupConfig_forceDestroy(rName, dbName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   name          = %[1]q

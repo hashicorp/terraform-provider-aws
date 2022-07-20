@@ -121,7 +121,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleTags1Config(lbName, targetGroupName, "key1", "value1"),
+				Config: testAccListenerRuleConfig_tags1(lbName, targetGroupName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -129,7 +129,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleTags2Config(lbName, targetGroupName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccListenerRuleConfig_tags2(lbName, targetGroupName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -138,7 +138,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleTags1Config(lbName, targetGroupName, "key2", "value2"),
+				Config: testAccListenerRuleConfig_tags1(lbName, targetGroupName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -245,7 +245,7 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleBackwardsCompatibilityConfig(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_backwardsCompatibility(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
@@ -455,7 +455,7 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_updateRulePriority(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_updatePriority(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &after),
 					testAccCheckListenerRuleNotRecreated(t, &before, &after),
@@ -486,7 +486,7 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_changeRuleARN(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_changeARN(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &after),
 					testAccCheckListenerRuleRecreated(t, &before, &after),
@@ -676,7 +676,7 @@ func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_Action_Order(rName, key, certificate),
+				Config: testAccListenerRuleConfig_actionOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -703,7 +703,7 @@ func TestAccELBV2ListenerRule_ActionOrder_recreates(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_Action_Order(rName, key, certificate),
+				Config: testAccListenerRuleConfig_actionOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -727,23 +727,23 @@ func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerRuleConfig_conditionAttributesCount_http_header(),
+				Config:      testAccListenerRuleConfig_conditionAttributesCountHTTPHeader(),
 				ExpectError: err_many,
 			},
 			{
-				Config:      testAccListenerRuleConfig_conditionAttributesCount_http_request_method(),
+				Config:      testAccListenerRuleConfig_conditionAttributesCountHTTPRequestMethod(),
 				ExpectError: err_many,
 			},
 			{
-				Config:      testAccListenerRuleConfig_conditionAttributesCount_path_pattern(),
+				Config:      testAccListenerRuleConfig_conditionAttributesCountPathPattern(),
 				ExpectError: err_many,
 			},
 			{
-				Config:      testAccListenerRuleConfig_conditionAttributesCount_query_string(),
+				Config:      testAccListenerRuleConfig_conditionAttributesCountQueryString(),
 				ExpectError: err_many,
 			},
 			{
-				Config:      testAccListenerRuleConfig_conditionAttributesCount_source_ip(),
+				Config:      testAccListenerRuleConfig_conditionAttributesCountSourceIP(),
 				ExpectError: err_many,
 			},
 		},
@@ -848,7 +848,7 @@ func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
 		CheckDestroy:      testAccCheckListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerRuleConfig_conditionHTTPHeader_invalid(),
+				Config:      testAccListenerRuleConfig_conditionHTTPHeaderInvalid(),
 				ExpectError: regexp.MustCompile(`expected value of condition.0.http_header.0.http_header_name to match regular expression`),
 			},
 		},
@@ -1072,7 +1072,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_conditionMixed_updated(lbName),
+				Config: testAccListenerRuleConfig_conditionMixedUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
@@ -1091,7 +1091,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_conditionMixed_updated2(lbName),
+				Config: testAccListenerRuleConfig_conditionMixedUpdated2(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
@@ -1250,7 +1250,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_conditionMultiple_updated(lbName),
+				Config: testAccListenerRuleConfig_conditionMultipleUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
@@ -1967,7 +1967,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName1, targetGroupName2)
 }
 
-func testAccListenerRuleBackwardsCompatibilityConfig(lbName, targetGroupName string) string {
+func testAccListenerRuleConfig_backwardsCompatibility(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_listener_rule" "static" {
   listener_arn = aws_alb_listener.front_end.arn
@@ -2319,7 +2319,7 @@ resource "aws_security_group" "alb_test" {
 `, response, lbName)
 }
 
-func testAccListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
+func testAccListenerRuleConfig_updatePriority(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end.arn
@@ -2440,7 +2440,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName)
 }
 
-func testAccListenerRuleConfig_changeRuleARN(lbName, targetGroupName string) string {
+func testAccListenerRuleConfig_changeARN(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end_ruleupdate.arn
@@ -3144,7 +3144,7 @@ resource "aws_security_group" "alb_test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccListenerRuleConfig_Action_Order(rName, key, certificate string) string {
+func testAccListenerRuleConfig_actionOrder(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 variable "rName" {
   default = %[1]q
@@ -3308,7 +3308,7 @@ resource "aws_lb_listener_rule" "error" {
 `, condition)
 }
 
-func testAccListenerRuleConfig_conditionAttributesCount_http_header() string {
+func testAccListenerRuleConfig_conditionAttributesCountHTTPHeader() string {
 	return testAccListenerRuleConfig_condition_error(`
 condition {
   host_header {
@@ -3323,7 +3323,7 @@ condition {
 `)
 }
 
-func testAccListenerRuleConfig_conditionAttributesCount_http_request_method() string {
+func testAccListenerRuleConfig_conditionAttributesCountHTTPRequestMethod() string {
 	return testAccListenerRuleConfig_condition_error(`
 condition {
   host_header {
@@ -3337,7 +3337,7 @@ condition {
 `)
 }
 
-func testAccListenerRuleConfig_conditionAttributesCount_path_pattern() string {
+func testAccListenerRuleConfig_conditionAttributesCountPathPattern() string {
 	return testAccListenerRuleConfig_condition_error(`
 condition {
   host_header {
@@ -3351,7 +3351,7 @@ condition {
 `)
 }
 
-func testAccListenerRuleConfig_conditionAttributesCount_query_string() string {
+func testAccListenerRuleConfig_conditionAttributesCountQueryString() string {
 	return testAccListenerRuleConfig_condition_error(`
 condition {
   host_header {
@@ -3366,7 +3366,7 @@ condition {
 `)
 }
 
-func testAccListenerRuleConfig_conditionAttributesCount_source_ip() string {
+func testAccListenerRuleConfig_conditionAttributesCountSourceIP() string {
 	return testAccListenerRuleConfig_condition_error(`
 condition {
   host_header {
@@ -3517,7 +3517,7 @@ condition {
 `, lbName)
 }
 
-func testAccListenerRuleConfig_conditionHTTPHeader_invalid() string {
+func testAccListenerRuleConfig_conditionHTTPHeaderInvalid() string {
 	return `
 data "aws_partition" "current" {}
 
@@ -3626,7 +3626,7 @@ condition {
 }
 
 // Update new style condition without modifying deprecated. Issue GH-11323
-func testAccListenerRuleConfig_conditionMixed_updated(lbName string) string {
+func testAccListenerRuleConfig_conditionMixedUpdated(lbName string) string {
 	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
@@ -3645,7 +3645,7 @@ condition {
 }
 
 // Then update deprecated syntax without touching new. Issue GH-11362
-func testAccListenerRuleConfig_conditionMixed_updated2(lbName string) string {
+func testAccListenerRuleConfig_conditionMixedUpdated2(lbName string) string {
 	return testAccListenerRuleConfig_conditionBase(`
 condition {
   path_pattern {
@@ -3699,7 +3699,7 @@ condition {
 `, lbName)
 }
 
-func testAccListenerRuleConfig_conditionMultiple_updated(lbName string) string {
+func testAccListenerRuleConfig_conditionMultipleUpdated(lbName string) string {
 	return testAccListenerRuleConfig_conditionBase(`
 condition {
   host_header {
@@ -3734,7 +3734,7 @@ condition {
 `, lbName)
 }
 
-func testAccListenerRuleTags1Config(lbName, targetGroupName, tagKey1, tagValue1 string) string {
+func testAccListenerRuleConfig_tags1(lbName, targetGroupName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end.arn
@@ -3859,7 +3859,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName, tagKey1, tagValue1)
 }
 
-func testAccListenerRuleTags2Config(lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccListenerRuleConfig_tags2(lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end.arn

@@ -30,7 +30,7 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanKeyKeyTypeAPIKeyConfig(rName),
+				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
@@ -62,7 +62,7 @@ func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanKeyKeyTypeAPIKeyConfig(rName),
+				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlanKey(), resourceName),
@@ -84,7 +84,7 @@ func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 		CheckDestroy:      testAccCheckUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanKeyKeyIdConcurrencyConfig(rName),
+				Config: testAccUsagePlanKeyConfig_idConcurrency(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.0", &conf),
 					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.1", &conf),
@@ -234,7 +234,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, rName)
 }
 
-func testAccUsagePlanKeyKeyTypeAPIKeyConfig(rName string) string {
+func testAccUsagePlanKeyConfig_typeAPI(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUsagePlanKeyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -259,7 +259,7 @@ resource "aws_api_gateway_usage_plan_key" "test" {
 `, rName))
 }
 
-func testAccUsagePlanKeyKeyIdConcurrencyConfig(rName string) string {
+func testAccUsagePlanKeyConfig_idConcurrency(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUsagePlanKeyBaseConfig(rName),
 		fmt.Sprintf(`

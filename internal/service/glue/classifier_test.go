@@ -28,7 +28,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_CSVClassifier(rName, false, "PRESENT", "|", false),
+				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
@@ -45,7 +45,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_CSVClassifier(rName, false, "PRESENT", ",", false),
+				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", ",", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
@@ -83,7 +83,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierCSVClassifierQuoteSymbolConfig(rName, "\""),
+				Config: testAccClassifierConfig_csvQuoteSymbol(rName, "\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
@@ -91,7 +91,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierCSVClassifierQuoteSymbolConfig(rName, "'"),
+				Config: testAccClassifierConfig_csvQuoteSymbol(rName, "'"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
@@ -120,7 +120,7 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_GrokClassifier(rName, "classification1", "pattern1"),
+				Config: testAccClassifierConfig_grok(rName, "classification1", "pattern1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -134,7 +134,7 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_GrokClassifier(rName, "classification2", "pattern2"),
+				Config: testAccClassifierConfig_grok(rName, "classification2", "pattern2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -169,7 +169,7 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_GrokClassifier_CustomPatterns(rName, "custompattern1"),
+				Config: testAccClassifierConfig_grokCustomPatterns(rName, "custompattern1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -183,7 +183,7 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_GrokClassifier_CustomPatterns(rName, "custompattern2"),
+				Config: testAccClassifierConfig_grokCustomPatterns(rName, "custompattern2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -218,7 +218,7 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_JSONClassifier(rName, "jsonpath1"),
+				Config: testAccClassifierConfig_json(rName, "jsonpath1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -230,7 +230,7 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_JSONClassifier(rName, "jsonpath2"),
+				Config: testAccClassifierConfig_json(rName, "jsonpath2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -263,7 +263,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_GrokClassifier(rName, "classification1", "pattern1"),
+				Config: testAccClassifierConfig_grok(rName, "classification1", "pattern1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -277,7 +277,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_JSONClassifier(rName, "jsonpath1"),
+				Config: testAccClassifierConfig_json(rName, "jsonpath1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -289,7 +289,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_XmlClassifier(rName, "classification1", "rowtag1"),
+				Config: testAccClassifierConfig_xml(rName, "classification1", "rowtag1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -302,7 +302,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_GrokClassifier(rName, "classification1", "pattern1"),
+				Config: testAccClassifierConfig_grok(rName, "classification1", "pattern1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -332,7 +332,7 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_XmlClassifier(rName, "classification1", "rowtag1"),
+				Config: testAccClassifierConfig_xml(rName, "classification1", "rowtag1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -345,7 +345,7 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassifierConfig_XmlClassifier(rName, "classification2", "rowtag2"),
+				Config: testAccClassifierConfig_xml(rName, "classification2", "rowtag2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
@@ -379,7 +379,7 @@ func TestAccGlueClassifier_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassifierConfig_CSVClassifier(rName, false, "PRESENT", "|", false),
+				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(resourceName, &classifier),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceClassifier(), resourceName),
@@ -449,7 +449,7 @@ func testAccCheckClassifierDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccClassifierConfig_CSVClassifier(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool) string {
+func testAccClassifierConfig_csv(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -465,7 +465,7 @@ resource "aws_glue_classifier" "test" {
 `, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
 }
 
-func testAccClassifierCSVClassifierQuoteSymbolConfig(rName, symbol string) string {
+func testAccClassifierConfig_csvQuoteSymbol(rName, symbol string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = %[1]q
@@ -481,7 +481,7 @@ resource "aws_glue_classifier" "test" {
 `, rName, symbol)
 }
 
-func testAccClassifierConfig_GrokClassifier(rName, classification, grokPattern string) string {
+func testAccClassifierConfig_grok(rName, classification, grokPattern string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -494,7 +494,7 @@ resource "aws_glue_classifier" "test" {
 `, rName, classification, grokPattern)
 }
 
-func testAccClassifierConfig_GrokClassifier_CustomPatterns(rName, customPatterns string) string {
+func testAccClassifierConfig_grokCustomPatterns(rName, customPatterns string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -508,7 +508,7 @@ resource "aws_glue_classifier" "test" {
 `, rName, customPatterns)
 }
 
-func testAccClassifierConfig_JSONClassifier(rName, jsonPath string) string {
+func testAccClassifierConfig_json(rName, jsonPath string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -520,7 +520,7 @@ resource "aws_glue_classifier" "test" {
 `, rName, jsonPath)
 }
 
-func testAccClassifierConfig_XmlClassifier(rName, classification, rowTag string) string {
+func testAccClassifierConfig_xml(rName, classification, rowTag string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"

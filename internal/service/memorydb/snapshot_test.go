@@ -93,7 +93,7 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig_withNoName(rName),
+				Config: testAccSnapshotConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -115,7 +115,7 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig_withNamePrefix(rName, "tftest-"),
+				Config: testAccSnapshotConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
@@ -137,7 +137,7 @@ func TestAccMemoryDBSnapshot_create_withKMS(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig_withKMS(rName),
+				Config: testAccSnapshotConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
@@ -163,7 +163,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotConfig_withTags0(rName),
+				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -176,7 +176,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSnapshotConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccSnapshotConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -193,7 +193,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSnapshotConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccSnapshotConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -208,7 +208,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSnapshotConfig_withTags0(rName),
+				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -273,7 +273,7 @@ func testAccCheckSnapshotExists(n string) resource.TestCheckFunc {
 
 func testAccSnapshotConfigBase(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id
@@ -315,7 +315,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withKMS(rName string) string {
+func testAccSnapshotConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
@@ -330,7 +330,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withNoName(rName string) string {
+func testAccSnapshotConfig_noName(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		`
@@ -341,7 +341,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withNamePrefix(rName, prefix string) string {
+func testAccSnapshotConfig_namePrefix(rName, prefix string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
@@ -357,7 +357,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withTags0(rName string) string {
+func testAccSnapshotConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
@@ -369,7 +369,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withTags1(rName, tag1Key, tag1Value string) string {
+func testAccSnapshotConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
@@ -385,7 +385,7 @@ resource "aws_memorydb_snapshot" "test" {
 	)
 }
 
-func testAccSnapshotConfig_withTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccSnapshotConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`

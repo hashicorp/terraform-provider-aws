@@ -87,7 +87,7 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairConfig_encrypted(rName, testLightsailKeyPairPubKey1),
+				Config: testAccKeyPairConfig_encrypted(rName, testKeyPairPubKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -221,7 +221,7 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {
 `
 }
 
-const testLightsailKeyPairPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
+const testKeyPairPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
 rGin1FHvIWOZxujA7oW0O2TUuatqI3aAYDTfRYurh6iKLC+VS+F7H+/mhfFvKmgr0Y5kDCF1j0T/
 063QZ84IRGucR/X43IY7kAtmxGXH0dYOCzOe5UBX1fTn3mXGe2ImCDWBH7gOViynXmb6XNvXkP0f
 sF5St9jhO7mbZU9EFkv9O3t3EaURfHopsCVDOlCkFCw5ArY+DUORHRzoMX0PnkyQb5OzibkChzpg

@@ -22,7 +22,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceNameConfig(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "block_device_mappings.#", dataSourceName, "block_device_mappings.#"),
@@ -31,6 +31,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "credit_specification.#", dataSourceName, "credit_specification.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_version", dataSourceName, "default_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, "disable_api_stop", dataSourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_termination", dataSourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_optimized", dataSourceName, "ebs_optimized"),
 					resource.TestCheckResourceAttrPair(resourceName, "elastic_gpu_specifications.#", dataSourceName, "elastic_gpu_specifications.#"),
@@ -78,7 +79,7 @@ func TestAccEC2LaunchTemplateDataSource_id(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceIDConfig(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -100,7 +101,7 @@ func TestAccEC2LaunchTemplateDataSource_filter(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceFilterConfig(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -122,7 +123,7 @@ func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateDataSourceTagsConfig(rName),
+				Config: testAccLaunchTemplateDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -133,9 +134,9 @@ func TestAccEC2LaunchTemplateDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccLaunchTemplateDataSourceNameConfig(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -177,6 +178,7 @@ resource "aws_launch_template" "test" {
     auto_recovery = "disabled"
   }
 
+  disable_api_stop        = true
   disable_api_termination = true
   ebs_optimized           = false
 
@@ -230,7 +232,7 @@ data "aws_launch_template" "test" {
 `, rName))
 }
 
-func testAccLaunchTemplateDataSourceIDConfig(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
@@ -242,7 +244,7 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccLaunchTemplateDataSourceFilterConfig(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
@@ -257,7 +259,7 @@ data "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccLaunchTemplateDataSourceTagsConfig(rName string) string {
+func testAccLaunchTemplateDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q

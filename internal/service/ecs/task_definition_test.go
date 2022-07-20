@@ -39,14 +39,14 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinition(rName),
+				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionModified(rName),
+				Config: testAccTaskDefinitionConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
@@ -77,7 +77,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionScratchVolume(rName),
+				Config: testAccTaskDefinitionConfig_scratchVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 				),
@@ -106,7 +106,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionDockerVolumes(rName),
+				Config: testAccTaskDefinitionConfig_dockerVolumes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -149,7 +149,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionDockerVolumesMinimalConfig(rName),
+				Config: testAccTaskDefinitionConfig_dockerVolumesMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -184,7 +184,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionRuntimePlatformMinimalConfig(rName),
+				Config: testAccTaskDefinitionConfig_runtimePlatformMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -218,7 +218,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName, true, true),
+				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -252,7 +252,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName, false, true),
+				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", "1"),
@@ -285,7 +285,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionEFSVolumeMinimal(rName),
+				Config: testAccTaskDefinitionConfig_efsVolumeMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -320,7 +320,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionEFSVolume(rName, "/home/test"),
+				Config: testAccTaskDefinitionConfig_efsVolume(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -355,7 +355,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionTransitEncryptionEFSVolume(rName, "ENABLED", 2999),
+				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolume(rName, "ENABLED", 2999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -393,7 +393,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionEFSAccessPoint(rName, "DISABLED"),
+				Config: testAccTaskDefinitionConfig_efsAccessPoint(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -444,7 +444,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionFSxVolume(domainName, rName),
+				Config: testAccTaskDefinitionConfig_fsxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -483,7 +483,7 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionTaskScopedDockerVolume(rName),
+				Config: testAccTaskDefinitionConfig_scopedDockerVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
@@ -516,14 +516,14 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionService(rName),
+				Config: testAccTaskDefinitionConfig_service(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckServiceExists("aws_ecs_service.test", &service),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionServiceModified(rName),
+				Config: testAccTaskDefinitionConfig_serviceModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					testAccCheckServiceExists("aws_ecs_service.test", &service),
@@ -553,7 +553,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionTaskRoleARN(rName),
+				Config: testAccTaskDefinitionConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 				),
@@ -582,7 +582,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionNetworkMode(rName),
+				Config: testAccTaskDefinitionConfig_networkMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
@@ -612,7 +612,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionIPcMode(rName),
+				Config: testAccTaskDefinitionConfig_ipcMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "host"),
@@ -642,7 +642,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionPIDMode(rName),
+				Config: testAccTaskDefinitionConfig_pidMode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "pid_mode", "host"),
@@ -672,7 +672,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinition_constraint(rName),
+				Config: testAccTaskDefinitionConfig_constraint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
@@ -704,13 +704,13 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinition(rName),
+				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionUpdatedVolume(rName),
+				Config: testAccTaskDefinitionConfig_updatedVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &after),
 					testAccCheckTaskDefinitionRecreated(t, &before, &after),
@@ -741,7 +741,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionArrays(rName),
+				Config: testAccTaskDefinitionConfig_arrays(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &conf),
 				),
@@ -770,7 +770,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionFargate(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
+				Config: testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", "1"),
@@ -788,7 +788,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 			{
 				ExpectNonEmptyPlan: false,
 				PlanOnly:           true,
-				Config:             testAccTaskDefinitionFargate(rName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
+				Config:             testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
 			},
 		},
 	})
@@ -807,7 +807,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionFargateEphemeralStorage(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
+				Config: testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", "1"),
@@ -841,7 +841,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionExecutionRole(rName),
+				Config: testAccTaskDefinitionConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &conf),
 				),
@@ -871,7 +871,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinition(rName),
+				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
@@ -879,7 +879,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccTaskDefinition(rName),
+				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check:  resource.TestCheckResourceAttr(resourceName, "revision", "2"), // should get re-created
 			},
 		},
@@ -898,7 +898,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionTags1Config(rName, "key1", "value1"),
+				Config: testAccTaskDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -913,7 +913,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
-				Config: testAccTaskDefinitionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -922,7 +922,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTaskDefinitionTags1Config(rName, "key2", "value2"),
+				Config: testAccTaskDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -955,7 +955,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionProxyConfigurationConfig(rName, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
+				Config: testAccTaskDefinitionConfig_proxyConfiguration(rName, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &taskDefinition),
 					testAccCheckTaskDefinitionProxyConfiguration(&taskDefinition, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
@@ -985,7 +985,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionInferenceAcceleratorConfig(rName),
+				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", "1"),
@@ -1002,7 +1002,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 	})
 }
 
-func testAccTaskDefinitionProxyConfigurationConfig(rName string, containerName string, proxyType string,
+func testAccTaskDefinitionConfig_proxyConfiguration(rName string, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
 	egressIgnoredPorts string, egressIgnoredIPs string) string {
 
@@ -1203,7 +1203,7 @@ func testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def *ec
 	}
 }
 
-func testAccTaskDefinition_constraint(rName string) string {
+func testAccTaskDefinitionConfig_constraint(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1260,7 +1260,7 @@ TASK_DEFINITION
 `, rName))
 }
 
-func testAccTaskDefinition(rName string) string {
+func testAccTaskDefinitionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1312,7 +1312,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionUpdatedVolume(rName string) string {
+func testAccTaskDefinitionConfig_updatedVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1364,7 +1364,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionArrays(rName string) string {
+func testAccTaskDefinitionConfig_arrays(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1475,7 +1475,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionFargate(rName, portMappings string) string {
+func testAccTaskDefinitionConfig_fargate(rName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family                   = %[1]q
@@ -1501,7 +1501,7 @@ TASK_DEFINITION
 `, rName, portMappings)
 }
 
-func testAccTaskDefinitionFargateEphemeralStorage(rName, portMappings string) string {
+func testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, portMappings string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family                   = %[1]q
@@ -1531,7 +1531,7 @@ TASK_DEFINITION
 `, rName, portMappings)
 }
 
-func testAccTaskDefinitionExecutionRole(rName string) string {
+func testAccTaskDefinitionConfig_executionRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1603,7 +1603,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionScratchVolume(rName string) string {
+func testAccTaskDefinitionConfig_scratchVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1628,7 +1628,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionDockerVolumes(rName string) string {
+func testAccTaskDefinitionConfig_dockerVolumes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1670,7 +1670,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionDockerVolumesMinimalConfig(rName string) string {
+func testAccTaskDefinitionConfig_dockerVolumesMinimal(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1699,7 +1699,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionRuntimePlatformMinimalConfig(rName string) string {
+func testAccTaskDefinitionConfig_runtimePlatformMinimal(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family                = %[1]q
@@ -1723,7 +1723,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccFargateTaskDefinitionRuntimePlatformMinimalConfig(rName string, architecture bool, osFamily bool) string {
+func testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName string, architecture bool, osFamily bool) string {
 
 	var arch string
 	if architecture {
@@ -1768,7 +1768,7 @@ TASK_DEFINITION
 `, rName, arch, os)
 }
 
-func testAccTaskDefinitionTaskScopedDockerVolume(rName string) string {
+func testAccTaskDefinitionConfig_scopedDockerVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -1797,7 +1797,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionEFSVolumeMinimal(rName string) string {
+func testAccTaskDefinitionConfig_efsVolumeMinimal(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1830,7 +1830,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionEFSVolume(rName, rDir string) string {
+func testAccTaskDefinitionConfig_efsVolume(rName, rDir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1864,7 +1864,7 @@ TASK_DEFINITION
 `, rName, rDir)
 }
 
-func testAccTaskDefinitionTransitEncryptionEFSVolume(rName, tEnc string, tEncPort int) string {
+func testAccTaskDefinitionConfig_transitEncryptionEFSVolume(rName, tEnc string, tEncPort int) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1900,7 +1900,7 @@ TASK_DEFINITION
 `, rName, tEnc, tEncPort)
 }
 
-func testAccTaskDefinitionEFSAccessPoint(rName, useIam string) string {
+func testAccTaskDefinitionConfig_efsAccessPoint(rName, useIam string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -1947,7 +1947,7 @@ TASK_DEFINITION
 `, rName, useIam)
 }
 
-func testAccTaskDefinitionTaskRoleARN(rName string) string {
+func testAccTaskDefinitionConfig_roleARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2017,7 +2017,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionIPcMode(rName string) string {
+func testAccTaskDefinitionConfig_ipcMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2090,7 +2090,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionPIDMode(rName string) string {
+func testAccTaskDefinitionConfig_pidMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2163,7 +2163,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionNetworkMode(rName string) string {
+func testAccTaskDefinitionConfig_networkMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2235,7 +2235,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionService(rName string) string {
+func testAccTaskDefinitionConfig_service(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2271,7 +2271,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionServiceModified(rName string) string {
+func testAccTaskDefinitionConfig_serviceModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2307,7 +2307,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionModified(rName string) string {
+func testAccTaskDefinitionConfig_modified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -2385,7 +2385,7 @@ var testValidTaskDefinitionInvalidCommandContainerDefinitions = `
 ]
 `
 
-func testAccTaskDefinitionTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccTaskDefinitionConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2413,7 +2413,7 @@ DEFINITION
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccTaskDefinitionTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccTaskDefinitionConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2442,7 +2442,7 @@ DEFINITION
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccTaskDefinitionInferenceAcceleratorConfig(rName string) string {
+func testAccTaskDefinitionConfig_inferenceAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
@@ -2484,7 +2484,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func testAccTaskDefinitionFSxVolume(domain, rName string) string {
+func testAccTaskDefinitionConfig_fsxVolume(domain, rName string) string {
 	return acctest.ConfigCompose(
 		testAccFSxWindowsFileSystemSubnetIds1Config(rName, domain),
 		fmt.Sprintf(`
@@ -2586,7 +2586,7 @@ func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.Import
 
 func testAccFSxWindowsFileSystemBaseConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"

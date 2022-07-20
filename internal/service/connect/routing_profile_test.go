@@ -49,7 +49,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, originalDescription),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -70,7 +70,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, updatedDescription),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -104,7 +104,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, "Disappear"),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
@@ -130,7 +130,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -151,7 +151,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoutingProfileMediaConcurrenciesConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_mediaConcurrencies(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -183,7 +183,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, "first"),
+				Config: testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -204,7 +204,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, "second"),
+				Config: testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, "second"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -240,7 +240,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Routing profile without queue_configs
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -263,7 +263,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 			},
 			{
 				// Routing profile with one queue_configs
-				Config: testAccRoutingProfileQueueConfig1(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_queue1(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -292,7 +292,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 			},
 			{
 				// Routing profile with two queue_configs (one new config and one edited config)
-				Config: testAccRoutingProfileQueueConfig2(rName, rName2, rName3, rName4, description),
+				Config: testAccRoutingProfileConfig_queue2(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -318,7 +318,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 			},
 			{
 				// Routing profile with one queue_configs (remove the created queue config)
-				Config: testAccRoutingProfileQueueConfig1(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_queue1(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -434,7 +434,7 @@ resource "aws_connect_queue" "default_outbound_queue" {
 `, rName, rName2)
 }
 
-func testAccRoutingProfileBasicConfig(rName, rName2, rName3, label string) string {
+func testAccRoutingProfileConfig_basic(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`
@@ -456,7 +456,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, label))
 }
 
-func testAccRoutingProfileMediaConcurrenciesConfig(rName, rName2, rName3, label string) string {
+func testAccRoutingProfileConfig_mediaConcurrencies(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`
@@ -483,7 +483,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, label))
 }
 
-func testAccRoutingProfileDefaultOutboundQueueConfig(rName, rName2, rName3, rName4, selectDefaultOutboundQueue string) string {
+func testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, selectDefaultOutboundQueue string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`
@@ -516,7 +516,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, rName4, selectDefaultOutboundQueue))
 }
 
-func testAccRoutingProfileQueueConfig1(rName, rName2, rName3, label string) string {
+func testAccRoutingProfileConfig_queue1(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`
@@ -545,7 +545,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, label))
 }
 
-func testAccRoutingProfileQueueConfig2(rName, rName2, rName3, rName4, label string) string {
+func testAccRoutingProfileConfig_queue2(rName, rName2, rName3, rName4, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`

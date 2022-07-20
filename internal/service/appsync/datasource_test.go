@@ -27,7 +27,7 @@ func testAccDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_none(rName),
+				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
@@ -94,7 +94,7 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_DynamoDBConfig_region(rName, acctest.Region()),
+				Config: testAccDataSourceConfig_dynamoDBRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
@@ -102,7 +102,7 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_Type_dynamoDB(rName),
+				Config: testAccDataSourceConfig_typeDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
@@ -129,7 +129,7 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_DynamoDBConfig_useCallerCredentials(rName, true),
+				Config: testAccDataSourceConfig_dynamoDBUseCallerCredentials(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
@@ -137,7 +137,7 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_DynamoDBConfig_useCallerCredentials(rName, false),
+				Config: testAccDataSourceConfig_dynamoDBUseCallerCredentials(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
@@ -165,7 +165,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_ElasticSearchConfig_region(rName, acctest.Region()),
+				Config: testAccDataSourceConfig_elasticSearchRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
@@ -173,7 +173,7 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_Type_elasticSearch(rName),
+				Config: testAccDataSourceConfig_typeElasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
@@ -200,7 +200,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_HTTPConfig_endpoint(rName, "http://example.com"),
+				Config: testAccDataSourceConfig_httpEndpoint(rName, "http://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
@@ -209,7 +209,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_HTTPConfig_endpoint(rName, "http://example.org"),
+				Config: testAccDataSourceConfig_httpEndpoint(rName, "http://example.org"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
@@ -237,14 +237,14 @@ func testAccDataSource_type(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_none(rName),
+				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_Type_http(rName),
+				Config: testAccDataSourceConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
@@ -267,7 +267,7 @@ func testAccDataSource_Type_dynamoDB(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_dynamoDB(rName),
+				Config: testAccDataSourceConfig_typeDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
@@ -299,7 +299,7 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_elasticSearch(rName),
+				Config: testAccDataSourceConfig_typeElasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
@@ -329,7 +329,7 @@ func testAccDataSource_Type_http(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_http(rName),
+				Config: testAccDataSourceConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
@@ -357,7 +357,7 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_httpAuth(rName, acctest.Region()),
+				Config: testAccDataSourceConfig_typeHTTPAuth(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
@@ -418,7 +418,7 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_typeRelationalDatabaseWithOptions(rName),
+				Config: testAccDataSourceConfig_typeRelationalDatabaseOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
@@ -450,7 +450,7 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_lambda(rName),
+				Config: testAccDataSourceConfig_typeLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
@@ -479,7 +479,7 @@ func testAccDataSource_Type_none(t *testing.T) {
 		CheckDestroy:      testAccCheckDestroyDataSource,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_Type_none(rName),
+				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
@@ -608,7 +608,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccDataSourceConfig_Base_elasticSearch(rName string) string {
+func testAccDataSourceConfig_Base_elasticsearch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name = %q
@@ -752,7 +752,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, description, rName)
 }
 
-func testAccDataSourceConfig_DynamoDBConfig_region(rName, region string) string {
+func testAccDataSourceConfig_dynamoDBRegion(rName, region string) string {
 	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -773,7 +773,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, region)
 }
 
-func testAccDataSourceConfig_DynamoDBConfig_useCallerCredentials(rName string, useCallerCredentials bool) string {
+func testAccDataSourceConfig_dynamoDBUseCallerCredentials(rName string, useCallerCredentials bool) string {
 	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "AWS_IAM"
@@ -794,8 +794,8 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, useCallerCredentials)
 }
 
-func testAccDataSourceConfig_ElasticSearchConfig_region(rName, region string) string {
-	return testAccDataSourceConfig_Base_elasticSearch(rName) + fmt.Sprintf(`
+func testAccDataSourceConfig_elasticSearchRegion(rName, region string) string {
+	return testAccDataSourceConfig_Base_elasticsearch(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
@@ -815,7 +815,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, region)
 }
 
-func testAccDataSourceConfig_HTTPConfig_endpoint(rName, endpoint string) string {
+func testAccDataSourceConfig_httpEndpoint(rName, endpoint string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -834,7 +834,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, endpoint)
 }
 
-func testAccDataSourceConfig_Type_dynamoDB(rName string) string {
+func testAccDataSourceConfig_typeDynamoDB(rName string) string {
 	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -854,8 +854,8 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName)
 }
 
-func testAccDataSourceConfig_Type_elasticSearch(rName string) string {
-	return testAccDataSourceConfig_Base_elasticSearch(rName) + fmt.Sprintf(`
+func testAccDataSourceConfig_typeElasticsearch(rName string) string {
+	return testAccDataSourceConfig_Base_elasticsearch(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
@@ -874,7 +874,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName)
 }
 
-func testAccDataSourceConfig_Type_http(rName string) string {
+func testAccDataSourceConfig_typeHTTP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -893,7 +893,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName)
 }
 
-func testAccDataSourceConfig_Type_httpAuth(rName, region string) string {
+func testAccDataSourceConfig_typeHTTPAuth(rName, region string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -1046,7 +1046,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName)
 }
 
-func testAccDataSourceConfig_typeRelationalDatabaseWithOptions(rName string) string {
+func testAccDataSourceConfig_typeRelationalDatabaseOptions(rName string) string {
 	return testAccDataSourceConfigBaseRelationalDatabase(rName) + fmt.Sprintf(`
 resource "aws_appsync_datasource" "test" {
   api_id           = aws_appsync_graphql_api.test.id
@@ -1066,7 +1066,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName)
 }
 
-func testAccDataSourceConfig_Type_lambda(rName string) string {
+func testAccDataSourceConfig_typeLambda(rName string) string {
 	return testAccDatasourceConfig_lambdaBase(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
@@ -1086,7 +1086,7 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName)
 }
 
-func testAccDataSourceConfig_Type_none(rName string) string {
+func testAccDataSourceConfig_typeNone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"

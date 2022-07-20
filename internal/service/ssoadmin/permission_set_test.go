@@ -26,7 +26,7 @@ func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetBasicConfig(rName),
+				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -53,7 +53,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetTagsSingleConfig(rName, "key1", "value1"),
+				Config: testAccPermissionSetConfig_tagsSingle(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -66,7 +66,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPermissionSetTagsMultipleConfig(rName, "key1", "updatedvalue1", "key2", "value2"),
+				Config: testAccPermissionSetConfig_tagsMultiple(rName, "key1", "updatedvalue1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -80,7 +80,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPermissionSetTagsSingleConfig(rName, "key2", "value2"),
+				Config: testAccPermissionSetConfig_tagsSingle(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -107,14 +107,14 @@ func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetBasicConfig(rName),
+				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
-				Config: testAccPermissionSetUpdateDescriptionConfig(rName),
+				Config: testAccPermissionSetConfig_updateDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -140,14 +140,14 @@ func TestAccSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetBasicConfig(rName),
+				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", ""),
 				),
 			},
 			{
-				Config: testAccPermissionSetUpdateRelayStateConfig(rName),
+				Config: testAccPermissionSetConfig_updateRelayState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
@@ -173,13 +173,13 @@ func TestAccSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetBasicConfig(rName),
+				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 				),
 			},
 			{
-				Config: testAccPermissionSetUpdateSessionDurationConfig(rName),
+				Config: testAccPermissionSetConfig_updateSessionDuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT2H"),
@@ -208,7 +208,7 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetRelayStateConfig(rName),
+				Config: testAccPermissionSetConfig_relayState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -218,7 +218,7 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 				),
 			},
 			{
-				Config: testAccPermissionSetRelayStateConfig_updateSessionDuration(rName),
+				Config: testAccPermissionSetConfig_relayStateUpdateSessionDuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -247,13 +247,13 @@ func TestAccSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 		CheckDestroy:      testAccCheckPermissionSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSetBasicConfig(rName),
+				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 				),
 			},
 			{
-				Config: testAccPermissionSetMixedPolicyAttachmentsConfig(rName),
+				Config: testAccPermissionSetConfig_mixedPolicyAttachments(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(resourceName),
 				),
@@ -334,7 +334,7 @@ func testAccCheckSOAdminPermissionSetExists(resourceName string) resource.TestCh
 	}
 }
 
-func testAccPermissionSetBasicConfig(rName string) string {
+func testAccPermissionSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -345,7 +345,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetUpdateDescriptionConfig(rName string) string {
+func testAccPermissionSetConfig_updateDescription(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -357,7 +357,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetUpdateRelayStateConfig(rName string) string {
+func testAccPermissionSetConfig_updateRelayState(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -369,7 +369,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetUpdateSessionDurationConfig(rName string) string {
+func testAccPermissionSetConfig_updateSessionDuration(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -381,7 +381,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetRelayStateConfig(rName string) string {
+func testAccPermissionSetConfig_relayState(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -395,7 +395,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetRelayStateConfig_updateSessionDuration(rName string) string {
+func testAccPermissionSetConfig_relayStateUpdateSessionDuration(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -409,7 +409,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccPermissionSetTagsSingleConfig(rName, tagKey1, tagValue1 string) string {
+func testAccPermissionSetConfig_tagsSingle(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -424,7 +424,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccPermissionSetTagsMultipleConfig(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPermissionSetConfig_tagsMultiple(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -440,7 +440,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPermissionSetMixedPolicyAttachmentsConfig(rName string) string {
+func testAccPermissionSetConfig_mixedPolicyAttachments(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

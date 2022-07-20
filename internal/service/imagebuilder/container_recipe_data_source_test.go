@@ -22,7 +22,7 @@ func TestAccImageBuilderContainerRecipeDataSource_arn(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeARNDataSourceConfig(rName),
+				Config: testAccContainerRecipeDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "component.#", resourceName, "component.#"),
@@ -51,7 +51,7 @@ func TestAccImageBuilderContainerRecipeDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccContainerRecipeARNDataSourceConfig(rName string) string {
+func testAccContainerRecipeDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

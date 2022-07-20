@@ -27,7 +27,7 @@ func testAccImageDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageDataSourceConfig(imageID),
+				Config: testAccImageDataSourceConfig_basic(imageID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageExists(dataSourceName, &image),
 					testAccCheckImageAttributes(dataSourceName, &image),
@@ -43,7 +43,7 @@ func testAccImagePreCheck(t *testing.T) {
 	}
 }
 
-func testAccImageDataSourceConfig(imageID string) string {
+func testAccImageDataSourceConfig_basic(imageID string) string {
 	return fmt.Sprintf(`
 # TODO: Create aws_workspaces_image resource when API will be provided
 

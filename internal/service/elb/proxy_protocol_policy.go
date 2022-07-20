@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -56,12 +57,11 @@ func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{})
 		*input.PolicyName, *input.PolicyTypeName)
 
 	if _, err := conn.CreateLoadBalancerPolicy(input); err != nil {
-		return fmt.Errorf("Error creating a policy %s: %s",
+		return fmt.Errorf("Error creating a policy %s: %w",
 			*input.PolicyName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *elbname, *input.PolicyName))
-	log.Printf("[INFO] ELB PolicyName: %s", *input.PolicyName)
 
 	return resourceProxyProtocolPolicyUpdate(d, meta)
 }
@@ -76,12 +76,12 @@ func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) e
 	}
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if IsNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic Proxy Protocol Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ELB attributes: %s", err)
+		return fmt.Errorf("Error retrieving ELB attributes: %w", err)
 	}
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
@@ -106,12 +106,7 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 	}
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if IsNotFound(err) {
-			// The ELB is gone now, so just remove it from the state
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ELB attributes: %s", err)
+		return fmt.Errorf("Error retrieving ELB attributes: %w", err)
 	}
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
@@ -157,13 +152,12 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 	req := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{elbname},
 	}
-	var err error
 	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
-		if IsNotFound(err) {
+		if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ELB attributes: %s", err)
+		return fmt.Errorf("Error retrieving ELB attributes: %w", err)
 	}
 
 	backends := flattenBackendPolicies(resp.LoadBalancerDescriptions[0].BackendServerDescriptions)
@@ -172,12 +166,12 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 
 	inputs, err := resourceProxyProtocolPolicyRemove(policyName, ports, backends)
 	if err != nil {
-		return fmt.Errorf("Error detaching a policy from backend: %s", err)
+		return fmt.Errorf("Error detaching a policy from backend: %w", err)
 	}
 	for _, input := range inputs {
 		input.LoadBalancerName = elbname
 		if _, err := conn.SetLoadBalancerPoliciesForBackendServer(input); err != nil {
-			return fmt.Errorf("Error setting policy for backend: %s", err)
+			return fmt.Errorf("Error setting policy for backend: %w", err)
 		}
 	}
 
@@ -186,7 +180,7 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 		PolicyName:       aws.String(policyName),
 	}
 	if _, err := conn.DeleteLoadBalancerPolicy(pOpt); err != nil {
-		return fmt.Errorf("Error removing a policy from load balancer: %s", err)
+		return fmt.Errorf("Error removing a policy from load balancer: %w", err)
 	}
 
 	return nil

@@ -24,31 +24,31 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment_elb(rInt),
+				Config: testAccAttachmentConfig_elb(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 			{
-				Config: testAccAttachment_elb_associated(rInt),
+				Config: testAccAttachmentConfig_elbAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAttachment_elb_double_associated(rInt),
+				Config: testAccAttachmentConfig_elbDoubleAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 2),
 				),
 			},
 			{
-				Config: testAccAttachment_elb_associated(rInt),
+				Config: testAccAttachmentConfig_elbAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAttachment_elb(rInt),
+				Config: testAccAttachmentConfig_elb(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
@@ -68,31 +68,31 @@ func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment_alb(rInt),
+				Config: testAccAttachmentConfig_alb(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 			{
-				Config: testAccAttachment_alb_associated(rInt),
+				Config: testAccAttachmentConfig_albAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAttachment_alb_double_associated(rInt),
+				Config: testAccAttachmentConfig_albDoubleAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 2),
 				),
 			},
 			{
-				Config: testAccAttachment_alb_associated(rInt),
+				Config: testAccAttachmentConfig_albAssociated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAttachment_alb(rInt),
+				Config: testAccAttachmentConfig_alb(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
@@ -179,8 +179,8 @@ func testAccCheckAutocalingAlbAttachmentExists(asgname string, targetGroupCount 
 	}
 }
 
-func testAccAttachment_alb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+func testAccAttachmentConfig_alb(rInt int) string {
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -285,8 +285,8 @@ resource "aws_vpc" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccAttachment_elb(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
+func testAccAttachmentConfig_elb(rInt int) string {
+	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -347,32 +347,32 @@ resource "aws_autoscaling_group" "asg" {
 `, rInt, rInt)
 }
 
-func testAccAttachment_elb_associated(rInt int) string {
-	return testAccAttachment_elb(rInt) + `
+func testAccAttachmentConfig_elbAssociated(rInt int) string {
+	return testAccAttachmentConfig_elb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   elb                    = aws_elb.foo.id
 }`
 }
 
-func testAccAttachment_alb_associated(rInt int) string {
-	return testAccAttachment_alb(rInt) + `
+func testAccAttachmentConfig_albAssociated(rInt int) string {
+	return testAccAttachmentConfig_alb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   alb_target_group_arn   = aws_lb_target_group.test.arn
 }`
 }
 
-func testAccAttachment_elb_double_associated(rInt int) string {
-	return testAccAttachment_elb_associated(rInt) + `
+func testAccAttachmentConfig_elbDoubleAssociated(rInt int) string {
+	return testAccAttachmentConfig_elbAssociated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   elb                    = aws_elb.bar.id
 }`
 }
 
-func testAccAttachment_alb_double_associated(rInt int) string {
-	return testAccAttachment_alb_associated(rInt) + `
+func testAccAttachmentConfig_albDoubleAssociated(rInt int) string {
+	return testAccAttachmentConfig_albAssociated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   alb_target_group_arn   = aws_lb_target_group.another_test.arn

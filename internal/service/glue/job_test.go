@@ -30,7 +30,7 @@ func TestAccGlueJob_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Required(rName),
+				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
@@ -67,7 +67,7 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_RequiredStreaming(rName),
+				Config: testAccJobConfig_requiredStreaming(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
@@ -103,7 +103,7 @@ func TestAccGlueJob_command(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Command(rName, "testscriptlocation1"),
+				Config: testAccJobConfig_command(rName, "testscriptlocation1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
@@ -111,7 +111,7 @@ func TestAccGlueJob_command(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_Command(rName, "testscriptlocation2"),
+				Config: testAccJobConfig_command(rName, "testscriptlocation2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
@@ -140,7 +140,7 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_DefaultArguments(rName, "job-bookmark-disable", "python"),
+				Config: testAccJobConfig_defaultArguments(rName, "job-bookmark-disable", "python"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "2"),
@@ -149,7 +149,7 @@ func TestAccGlueJob_defaultArguments(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_DefaultArguments(rName, "job-bookmark-enable", "scala"),
+				Config: testAccJobConfig_defaultArguments(rName, "job-bookmark-enable", "scala"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "2"),
@@ -179,7 +179,7 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobnonOverridableArgumentsConfig(rName, "job-bookmark-disable", "python"),
+				Config: testAccJobConfig_nonOverridableArguments(rName, "job-bookmark-disable", "python"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
@@ -188,7 +188,7 @@ func TestAccGlueJob_nonOverridableArguments(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobnonOverridableArgumentsConfig(rName, "job-bookmark-enable", "scala"),
+				Config: testAccJobConfig_nonOverridableArguments(rName, "job-bookmark-enable", "scala"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
@@ -218,14 +218,14 @@ func TestAccGlueJob_description(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Description(rName, "First Description"),
+				Config: testAccJobConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccJobConfig_Description(rName, "Second Description"),
+				Config: testAccJobConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
@@ -253,14 +253,14 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Version_maxCapacity(rName, "0.9"),
+				Config: testAccJobConfig_versionMaxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccJobConfig_Version_maxCapacity(rName, "1.0"),
+				Config: testAccJobConfig_versionMaxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -272,7 +272,7 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobConfig_Version_numberOfWorkers(rName, "2.0"),
+				Config: testAccJobConfig_versionNumberOfWorkers(rName, "2.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
@@ -295,11 +295,11 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobConfig_ExecutionProperty(rName, 0),
+				Config:      testAccJobConfig_executionProperty(rName, 0),
 				ExpectError: regexp.MustCompile(`expected execution_property.0.max_concurrent_runs to be at least`),
 			},
 			{
-				Config: testAccJobConfig_ExecutionProperty(rName, 1),
+				Config: testAccJobConfig_executionProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
@@ -307,7 +307,7 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_ExecutionProperty(rName, 2),
+				Config: testAccJobConfig_executionProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
@@ -336,18 +336,18 @@ func TestAccGlueJob_maxRetries(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobConfig_MaxRetries(rName, 11),
+				Config:      testAccJobConfig_maxRetries(rName, 11),
 				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
-				Config: testAccJobConfig_MaxRetries(rName, 0),
+				Config: testAccJobConfig_maxRetries(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "0"),
 				),
 			},
 			{
-				Config: testAccJobConfig_MaxRetries(rName, 10),
+				Config: testAccJobConfig_maxRetries(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "10"),
@@ -375,11 +375,11 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccJobConfig_NotificationProperty(rName, 0),
+				Config:      testAccJobConfig_notificationProperty(rName, 0),
 				ExpectError: regexp.MustCompile(`expected notification_property.0.notify_delay_after to be at least`),
 			},
 			{
-				Config: testAccJobConfig_NotificationProperty(rName, 1),
+				Config: testAccJobConfig_notificationProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
@@ -387,7 +387,7 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_NotificationProperty(rName, 2),
+				Config: testAccJobConfig_notificationProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
@@ -416,7 +416,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTags1Config(rName, "key1", "value1"),
+				Config: testAccJobConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -429,7 +429,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccJobConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -438,7 +438,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobTags1Config(rName, "key2", "value2"),
+				Config: testAccJobConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -462,14 +462,14 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Timeout(rName, 1),
+				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
 				),
 			},
 			{
-				Config: testAccJobConfig_Timeout(rName, 2),
+				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
@@ -496,14 +496,14 @@ func TestAccGlueJob_timeout(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Timeout(rName, 1),
+				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
 				),
 			},
 			{
-				Config: testAccJobConfig_Timeout(rName, 2),
+				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
@@ -531,14 +531,14 @@ func TestAccGlueJob_security(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_SecurityConfiguration(rName, "default_encryption"),
+				Config: testAccJobConfig_securityConfiguration(rName, "default_encryption"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "default_encryption"),
 				),
 			},
 			{
-				Config: testAccJobConfig_SecurityConfiguration(rName, "custom_encryption2"),
+				Config: testAccJobConfig_securityConfiguration(rName, "custom_encryption2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", "custom_encryption2"),
@@ -566,21 +566,21 @@ func TestAccGlueJob_workerType(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_WorkerType(rName, "Standard"),
+				Config: testAccJobConfig_workerType(rName, "Standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Standard"),
 				),
 			},
 			{
-				Config: testAccJobConfig_WorkerType(rName, "G.1X"),
+				Config: testAccJobConfig_workerType(rName, "G.1X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
 				),
 			},
 			{
-				Config: testAccJobConfig_WorkerType(rName, "G.2X"),
+				Config: testAccJobConfig_workerType(rName, "G.2X"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.2X"),
@@ -608,7 +608,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_PythonShell(rName),
+				Config: testAccJobConfig_pythonShell(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0.0625"),
@@ -623,7 +623,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobConfig_PythonShellWithVersion(rName, "2"),
+				Config: testAccJobConfig_pythonShellVersion(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
@@ -638,7 +638,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobConfig_PythonShellWithVersion(rName, "3"),
+				Config: testAccJobConfig_pythonShellVersion(rName, "3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
@@ -664,7 +664,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_MaxCapacity(rName, 10),
+				Config: testAccJobConfig_maxCapacity(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
@@ -674,7 +674,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_MaxCapacity(rName, 15),
+				Config: testAccJobConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "15"),
@@ -702,7 +702,7 @@ func TestAccGlueJob_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_Required(rName),
+				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(resourceName, &job),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceJob(), resourceName),
@@ -811,7 +811,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccJobConfig_Command(rName, scriptLocation string) string {
+func testAccJobConfig_command(rName, scriptLocation string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -829,7 +829,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, scriptLocation)
 }
 
-func testAccJobConfig_DefaultArguments(rName, jobBookmarkOption, jobLanguage string) string {
+func testAccJobConfig_defaultArguments(rName, jobBookmarkOption, jobLanguage string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -852,7 +852,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
 }
 
-func testAccJobnonOverridableArgumentsConfig(rName, jobBookmarkOption, jobLanguage string) string {
+func testAccJobConfig_nonOverridableArguments(rName, jobBookmarkOption, jobLanguage string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -875,7 +875,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
 }
 
-func testAccJobConfig_Description(rName, description string) string {
+func testAccJobConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -894,7 +894,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), description, rName)
 }
 
-func testAccJobConfig_Version_maxCapacity(rName, glueVersion string) string {
+func testAccJobConfig_versionMaxCapacity(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -913,7 +913,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), glueVersion, rName)
 }
 
-func testAccJobConfig_Version_numberOfWorkers(rName, glueVersion string) string {
+func testAccJobConfig_versionNumberOfWorkers(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -933,7 +933,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), glueVersion, rName)
 }
 
-func testAccJobConfig_ExecutionProperty(rName string, maxConcurrentRuns int) string {
+func testAccJobConfig_executionProperty(rName string, maxConcurrentRuns int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -955,7 +955,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, maxConcurrentRuns)
 }
 
-func testAccJobConfig_MaxRetries(rName string, maxRetries int) string {
+func testAccJobConfig_maxRetries(rName string, maxRetries int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -974,7 +974,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), maxRetries, rName)
 }
 
-func testAccJobConfig_NotificationProperty(rName string, notifyDelayAfter int) string {
+func testAccJobConfig_notificationProperty(rName string, notifyDelayAfter int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -996,7 +996,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, notifyDelayAfter)
 }
 
-func testAccJobConfig_Required(rName string) string {
+func testAccJobConfig_required(rName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1014,7 +1014,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName)
 }
 
-func testAccJobConfig_RequiredStreaming(rName string) string {
+func testAccJobConfig_requiredStreaming(rName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1033,7 +1033,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName)
 }
 
-func testAccJobTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   name              = %[1]q
@@ -1054,7 +1054,7 @@ resource "aws_glue_job" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccJobTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   name              = %[1]q
@@ -1076,7 +1076,7 @@ resource "aws_glue_job" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccJobConfig_Timeout(rName string, timeout int) string {
+func testAccJobConfig_timeout(rName string, timeout int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1095,7 +1095,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, timeout)
 }
 
-func testAccJobConfig_SecurityConfiguration(rName string, securityConfiguration string) string {
+func testAccJobConfig_securityConfiguration(rName string, securityConfiguration string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1114,7 +1114,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, securityConfiguration)
 }
 
-func testAccJobConfig_WorkerType(rName string, workerType string) string {
+func testAccJobConfig_workerType(rName string, workerType string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1133,7 +1133,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, workerType)
 }
 
-func testAccJobConfig_PythonShell(rName string) string {
+func testAccJobConfig_pythonShell(rName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1152,7 +1152,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName)
 }
 
-func testAccJobConfig_PythonShellWithVersion(rName string, pythonVersion string) string {
+func testAccJobConfig_pythonShellVersion(rName string, pythonVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -1172,7 +1172,7 @@ resource "aws_glue_job" "test" {
 `, testAccJobConfig_Base(rName), rName, pythonVersion)
 }
 
-func testAccJobConfig_MaxCapacity(rName string, maxCapacity float64) string {
+func testAccJobConfig_maxCapacity(rName string, maxCapacity float64) string {
 	return fmt.Sprintf(`
 %s
 

@@ -33,7 +33,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing
 		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_sameAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", transitGatewayResourceNamePeer, "owner_id"),
@@ -45,7 +45,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing
 				),
 			},
 			{
-				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_sameAccount(rName),
+				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_sameAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -71,7 +71,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.
 		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags_sameAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsSameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
@@ -82,7 +82,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.
 				),
 			},
 			{
-				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdated_sameAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdatedSameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
@@ -93,7 +93,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.
 				),
 			},
 			{
-				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdated_sameAccount(rName),
+				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdatedSameAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -122,7 +122,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_differentAccount(t *te
 		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_differentAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", transitGatewayResourceNamePeer, "owner_id"),
@@ -134,7 +134,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_differentAccount(t *te
 				),
 			},
 			{
-				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_differentAccount(rName),
+				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -172,7 +172,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_sameAccount(rName string) string {
+func testAccTransitGatewayPeeringAttachmentAccepterConfig_sameAccount(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccTransitGatewayPeeringAttachmentAccepterBaseConfig(rName),
@@ -183,7 +183,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
 `)
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepterConfig_tags_sameAccount(rName string) string {
+func testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsSameAccount(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccTransitGatewayPeeringAttachmentAccepterBaseConfig(rName),
@@ -200,7 +200,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdated_sameAccount(rName string) string {
+func testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsUpdatedSameAccount(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccTransitGatewayPeeringAttachmentAccepterBaseConfig(rName),
@@ -229,7 +229,7 @@ provider "awsalternate" {
 `, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepterConfig_basic_differentAccount(rName string) string {
+func testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAlternateAccountAlternateRegionProviderConfig(),
 		testAccTransitGatewayPeeringAttachmentAccepterBaseConfig(rName),

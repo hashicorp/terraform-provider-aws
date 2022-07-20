@@ -70,7 +70,7 @@ The following arguments are supported:
 
 * `project_name` - (Required) The name of the build project.
 * `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
-* `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. It is recommended to use `filter_group` over `branch_filter`.
+* `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 
 `filter_group` supports the following:

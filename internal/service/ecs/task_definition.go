@@ -518,7 +518,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	out, err := conn.RegisterTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
 		input.Tags = nil
 
@@ -542,7 +542,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
 			return resourceTaskDefinitionRead(d, meta)
 		}
@@ -570,7 +570,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	out, err := conn.DescribeTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
@@ -732,7 +732,7 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
 			return nil
 		}
@@ -941,7 +941,7 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 		}
 
 		if v, ok := data["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFsxWinVolume(v)
+			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFSxWinVolume(v)
 		}
 
 		volumes = append(volumes, l)
@@ -1020,7 +1020,7 @@ func expandVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFS
 	return auth
 }
 
-func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
+func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
@@ -1033,13 +1033,13 @@ func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileSe
 	}
 
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		fsxVol.AuthorizationConfig = expandVolumesFsxWinVolumeAuthorizationConfig(v)
+		fsxVol.AuthorizationConfig = expandVolumesFSxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
 }
 
-func expandVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
 	authconfig := config[0].(map[string]interface{})
 	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
 
@@ -1074,7 +1074,7 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 		}
 
 		if volume.FsxWindowsFileServerVolumeConfiguration != nil {
-			l["fsx_windows_file_server_volume_configuration"] = flattenFsxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
+			l["fsx_windows_file_server_volume_configuration"] = flattenFSxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
 		}
 
 		result = append(result, l)
@@ -1154,7 +1154,7 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 	return items
 }
 
-func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
+func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1167,7 +1167,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 		}
 
 		if v := config.AuthorizationConfig; v != nil {
-			m["authorization_config"] = flattenFsxWinVolumeAuthorizationConfig(v)
+			m["authorization_config"] = flattenFSxWinVolumeAuthorizationConfig(v)
 		}
 	}
 
@@ -1175,7 +1175,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	return items
 }
 
-func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
+func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {

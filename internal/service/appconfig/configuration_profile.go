@@ -69,7 +69,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      ConfigurationProfileTypeAWSFreeform,
+				Default:      configurationProfileTypeFreeform,
 				ValidateFunc: validation.StringInSlice(ConfigurationProfileType_Values(), false),
 			},
 			"validator": {

@@ -27,7 +27,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkteamCognitoConfig(rName),
+				Config: testAccWorkteamConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -49,7 +49,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"workforce_name"},
 			},
 			{
-				Config: testAccWorkteamCognitoUpdatedConfig(rName),
+				Config: testAccWorkteamConfig_cognitoUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -68,7 +68,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkteamCognitoConfig(rName),
+				Config: testAccWorkteamConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -98,7 +98,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkteamOIDCConfig(rName),
+				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -116,7 +116,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"workforce_name"},
 			},
 			{
-				Config: testAccWorkteamOIDC2Config(rName, "test"),
+				Config: testAccWorkteamConfig_oidc2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -129,7 +129,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkteamOIDCConfig(rName),
+				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -155,7 +155,7 @@ func testAccWorkteam_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkteamTags1Config(rName, "key1", "value1"),
+				Config: testAccWorkteamConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -169,7 +169,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"workforce_name"},
 			},
 			{
-				Config: testAccWorkteamTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWorkteamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -178,7 +178,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkteamTags1Config(rName, "key2", "value2"),
+				Config: testAccWorkteamConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -201,7 +201,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkteamNotificationConfig(rName),
+				Config: testAccWorkteamConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -218,7 +218,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"workforce_name"},
 			},
 			{
-				Config: testAccWorkteamOIDCConfig(rName),
+				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -228,7 +228,7 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkteamNotificationConfig(rName),
+				Config: testAccWorkteamConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -254,7 +254,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkteamOIDCConfig(rName),
+				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(resourceName, &workteam),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceWorkteam(), resourceName),
@@ -347,7 +347,7 @@ resource "aws_sagemaker_workforce" "test" {
 `, rName)
 }
 
-func testAccWorkteamCognitoConfig(rName string) string {
+func testAccWorkteamConfig_cognito(rName string) string {
 	return acctest.ConfigCompose(testAccWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
@@ -365,7 +365,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName))
 }
 
-func testAccWorkteamCognitoUpdatedConfig(rName string) string {
+func testAccWorkteamConfig_cognitoUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cognito_user_group" "test2" {
   name         = "%[1]s-2"
@@ -415,7 +415,7 @@ resource "aws_sagemaker_workforce" "test" {
 `, rName)
 }
 
-func testAccWorkteamOIDCConfig(rName string) string {
+func testAccWorkteamConfig_oidc(rName string) string {
 	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
@@ -431,7 +431,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName))
 }
 
-func testAccWorkteamOIDC2Config(rName, group string) string {
+func testAccWorkteamConfig_oidc2(rName, group string) string {
 	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
@@ -447,7 +447,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName, group))
 }
 
-func testAccWorkteamNotificationConfig(rName string) string {
+func testAccWorkteamConfig_notification(rName string) string {
 	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -493,7 +493,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName))
 }
 
-func testAccWorkteamTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccWorkteamConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
@@ -513,7 +513,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccWorkteamTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWorkteamConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q

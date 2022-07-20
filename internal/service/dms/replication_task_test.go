@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccReplicationTask_basic(t *testing.T) {
+func TestAccDMSReplicationTask_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -61,7 +61,7 @@ func TestAccReplicationTask_basic(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
+func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -88,7 +88,7 @@ func TestAccReplicationTask_cdcStartPosition(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_startReplicationTask(t *testing.T) {
+func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -103,7 +103,7 @@ func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 		CheckDestroy:      testAccCheckReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationTaskConfigStartReplicationTask(rName, true, "testrule"),
+				Config: testAccReplicationTaskConfig_start(rName, true, "testrule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
@@ -116,14 +116,14 @@ func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
 			},
 			{
-				Config: testAccReplicationTaskConfigStartReplicationTask(rName, true, "changedtestrule"),
+				Config: testAccReplicationTaskConfig_start(rName, true, "changedtestrule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
 				),
 			},
 			{
-				Config: testAccReplicationTaskConfigStartReplicationTask(rName, false, "changedtestrule"),
+				Config: testAccReplicationTaskConfig_start(rName, false, "changedtestrule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
@@ -133,7 +133,7 @@ func TestAccReplicationTask_startReplicationTask(t *testing.T) {
 	})
 }
 
-func TestAccReplicationTask_disappears(t *testing.T) {
+func TestAccDMSReplicationTask_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 
@@ -321,7 +321,7 @@ resource "aws_dms_replication_task" "test" {
 `, cdcStartPosition, rName))
 }
 
-func testAccReplicationTaskConfigStartReplicationTask(rName string, startTask bool, ruleName string) string {
+func testAccReplicationTaskConfig_start(rName string, startTask bool, ruleName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

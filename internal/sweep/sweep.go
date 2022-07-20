@@ -45,7 +45,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return client, nil
 	}
 
-	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullUri}, "credentials for running sweepers")
+	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}

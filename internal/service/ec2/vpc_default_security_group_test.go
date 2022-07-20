@@ -25,7 +25,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultSecurityGroupConfig_VPC,
+				Config: testAccVPCDefaultSecurityGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
@@ -54,7 +54,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccDefaultSecurityGroupConfig_VPC,
+				Config:   testAccVPCDefaultSecurityGroupConfig_basic,
 				PlanOnly: true,
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultSecurityGroupConfig_VPC_empty,
+				Config: testAccVPCDefaultSecurityGroupConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -106,7 +106,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultSecurityGroupConfig_Classic(),
+				Config: testAccVPCDefaultSecurityGroupConfig_classic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
@@ -128,11 +128,11 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccDefaultSecurityGroupConfig_Classic(),
+				Config:   testAccVPCDefaultSecurityGroupConfig_classic(),
 				PlanOnly: true,
 			},
 			{
-				Config:                  testAccDefaultSecurityGroupConfig_Classic(),
+				Config:                  testAccVPCDefaultSecurityGroupConfig_classic(),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -158,7 +158,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultSecurityGroupConfig_Classic_empty(),
+				Config: testAccVPCDefaultSecurityGroupConfig_classicEmpty(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -234,7 +234,7 @@ func testAccCheckDefaultSecurityGroupARNClassic(resourceName string, group *ec2.
 	}
 }
 
-const testAccDefaultSecurityGroupConfig_VPC = `
+const testAccVPCDefaultSecurityGroupConfig_basic = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -266,7 +266,7 @@ resource "aws_default_security_group" "test" {
 }
 `
 
-const testAccDefaultSecurityGroupConfig_VPC_empty = `
+const testAccVPCDefaultSecurityGroupConfig_empty = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -280,7 +280,7 @@ resource "aws_default_security_group" "test" {
 }
 `
 
-func testAccDefaultSecurityGroupConfig_Classic() string {
+func testAccVPCDefaultSecurityGroupConfig_classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		`
@@ -299,7 +299,7 @@ resource "aws_default_security_group" "test" {
 `)
 }
 
-func testAccDefaultSecurityGroupConfig_Classic_empty() string {
+func testAccVPCDefaultSecurityGroupConfig_classicEmpty() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		`

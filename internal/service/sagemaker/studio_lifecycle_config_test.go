@@ -26,7 +26,7 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStudioLifecycleBasicConfig(rName),
+				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
@@ -57,7 +57,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStudioLifecycleTags1Config(rName, "key1", "value1"),
+				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -70,7 +70,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStudioLifecycleTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStudioLifecycleConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -79,7 +79,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStudioLifecycleTags1Config(rName, "key2", "value2"),
+				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -102,7 +102,7 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckStudioLifecycleDestroyConfig,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStudioLifecycleBasicConfig(rName),
+				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
@@ -163,7 +163,7 @@ func testAccCheckStudioLifecycleExistsConfig(n string, config *sagemaker.Describ
 	}
 }
 
-func testAccStudioLifecycleBasicConfig(rName string) string {
+func testAccStudioLifecycleConfigConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
@@ -173,7 +173,7 @@ resource "aws_sagemaker_studio_lifecycle_config" "test" {
 `, rName)
 }
 
-func testAccStudioLifecycleTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccStudioLifecycleConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
@@ -187,7 +187,7 @@ resource "aws_sagemaker_studio_lifecycle_config" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccStudioLifecycleTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccStudioLifecycleConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q

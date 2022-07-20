@@ -43,7 +43,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Created", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Created", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -66,7 +66,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 			},
 			{
 				// update description
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Updated", "+12345678912"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -89,7 +89,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 			},
 			{
 				// update phone number
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Updated", "+12345678913"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Updated", "+12345678913"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -122,7 +122,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, "Disappear", "+12345678912"),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
@@ -211,7 +211,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccQuickConnectPhoneNumberConfig(rName, rName2, label string, phoneNumber string) string {
+func testAccQuickConnectConfig_phoneNumber(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseConfig(rName),
 		fmt.Sprintf(`

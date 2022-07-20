@@ -33,7 +33,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairConfig(rName, publicKey),
+				Config: testAccKeyPairConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
@@ -70,7 +70,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairTags1Config(rName, publicKey, "key1", "value1"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -84,7 +84,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"public_key"},
 			},
 			{
-				Config: testAccKeyPairTags2Config(rName, publicKey, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyPairConfig_tags2(rName, publicKey, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -93,7 +93,7 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKeyPairTags1Config(rName, publicKey, "key2", "value2"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -120,7 +120,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairNameGeneratedConfig(publicKey),
+				Config: testAccKeyPairConfig_nameGenerated(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "key_name"),
@@ -153,7 +153,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckKeyPairNamePrefixConfig("tf-acc-test-prefix-", publicKey),
+				Config: testAccKeyPairConfig_namePrefix("tf-acc-test-prefix-", publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "key_name", "tf-acc-test-prefix-"),
@@ -187,7 +187,7 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairConfig(rName, publicKey),
+				Config: testAccKeyPairConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceKeyPair(), resourceName),
@@ -247,7 +247,7 @@ func testAccCheckKeyPairExists(n string, v *ec2.KeyPairInfo) resource.TestCheckF
 	}
 }
 
-func testAccKeyPairConfig(rName, publicKey string) string {
+func testAccKeyPairConfig_basic(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -256,7 +256,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey)
 }
 
-func testAccKeyPairTags1Config(rName, publicKey, tagKey1, tagValue1 string) string {
+func testAccKeyPairConfig_tags1(rName, publicKey, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -269,7 +269,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey, tagKey1, tagValue1)
 }
 
-func testAccKeyPairTags2Config(rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccKeyPairConfig_tags2(rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -283,7 +283,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccKeyPairNameGeneratedConfig(publicKey string) string {
+func testAccKeyPairConfig_nameGenerated(publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   public_key = %[1]q
@@ -291,7 +291,7 @@ resource "aws_key_pair" "test" {
 `, publicKey)
 }
 
-func testAccCheckKeyPairNamePrefixConfig(namePrefix, publicKey string) string {
+func testAccKeyPairConfig_namePrefix(namePrefix, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name_prefix = %[1]q

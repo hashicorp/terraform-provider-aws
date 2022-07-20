@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
+func TestAccDSLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -109,7 +109,7 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 
 func testAccLogSubscriptionConfig_basic(rName, domain, logGroupName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_log_subscription" "subscription" {
   directory_id   = aws_directory_service_directory.test.id

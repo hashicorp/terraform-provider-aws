@@ -28,7 +28,7 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig(rName),
+				Config: testAccSpotInstanceRequestConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -60,7 +60,7 @@ func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig(rName),
+				Config: testAccSpotInstanceRequestConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotInstanceRequest(), resourceName),
@@ -83,7 +83,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfigTags1(rName, "key1", "value1"),
+				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,7 +97,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "wait_for_fulfillment"},
 			},
 			{
-				Config: testAccSpotInstanceRequestConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSpotInstanceRequestConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -106,7 +106,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSpotInstanceRequestConfigTags1(rName, "key2", "value2"),
+				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +135,7 @@ func TestAccEC2SpotInstanceRequest_keyName(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_KeyName(rName, publicKey),
+				Config: testAccSpotInstanceRequestConfig_keyName(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", keyPairResourceName, "key_name"),
@@ -163,7 +163,7 @@ func TestAccEC2SpotInstanceRequest_withLaunchGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_withLaunchGroup(rName),
+				Config: testAccSpotInstanceRequestConfig_launchGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -194,7 +194,7 @@ func TestAccEC2SpotInstanceRequest_withBlockDuration(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_withBlockDuration(rName),
+				Config: testAccSpotInstanceRequestConfig_blockDuration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -225,7 +225,7 @@ func TestAccEC2SpotInstanceRequest_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestVPCConfig(rName),
+				Config: testAccSpotInstanceRequestConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -257,7 +257,7 @@ func TestAccEC2SpotInstanceRequest_validUntil(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestValidUntilConfig(rName, validUntil),
+				Config: testAccSpotInstanceRequestConfig_validUntil(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributes(&sir),
@@ -288,7 +288,7 @@ func TestAccEC2SpotInstanceRequest_withoutSpotPrice(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_withoutSpotPrice(rName),
+				Config: testAccSpotInstanceRequestConfig_noPrice(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(&sir),
@@ -318,7 +318,7 @@ func TestAccEC2SpotInstanceRequest_subnetAndSGAndPublicIPAddress(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_SubnetAndSGAndPublicIPAddress(rName),
+				Config: testAccSpotInstanceRequestConfig_subnetAndSGAndPublicIPAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(&sir, rName),
@@ -347,7 +347,7 @@ func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_SubnetAndSGAndPublicIPAddress(rName),
+				Config: testAccSpotInstanceRequestConfig_subnetAndSGAndPublicIPAddress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(&sir, rName),
@@ -410,7 +410,7 @@ func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestInterruptConfig(rName, "stop"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "stop"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -440,7 +440,7 @@ func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestInterruptConfig(rName, "hibernate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -470,14 +470,14 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotInstanceRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestInterruptConfig(rName, "hibernate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
 				),
 			},
 			{
-				Config: testAccSpotInstanceRequestInterruptConfig(rName, "terminate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(resourceName, &sir2),
 					testAccCheckSpotInstanceRequestRecreated(&sir1, &sir2),
@@ -660,9 +660,9 @@ func testAccCheckSpotInstanceRequestRecreated(before, after *ec2.SpotInstanceReq
 	}
 }
 
-func testAccSpotInstanceRequestConfig(rName string) string {
+func testAccSpotInstanceRequestConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -680,9 +680,9 @@ resource "aws_ec2_tag" "test" {
 `, rName))
 }
 
-func testAccSpotInstanceRequestConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccSpotInstanceRequestConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -704,9 +704,9 @@ resource "aws_ec2_tag" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccSpotInstanceRequestConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSpotInstanceRequestConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -729,9 +729,9 @@ resource "aws_ec2_tag" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccSpotInstanceRequestValidUntilConfig(rName string, validUntil string) string {
+func testAccSpotInstanceRequestConfig_validUntil(rName string, validUntil string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -754,9 +754,9 @@ resource "aws_ec2_tag" "test" {
 `, rName, validUntil))
 }
 
-func testAccSpotInstanceRequestConfig_withoutSpotPrice(rName string) string {
+func testAccSpotInstanceRequestConfig_noPrice(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -777,9 +777,9 @@ resource "aws_ec2_tag" "test" {
 `, rName))
 }
 
-func testAccSpotInstanceRequestConfig_KeyName(rName, publicKey string) string {
+func testAccSpotInstanceRequestConfig_keyName(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -810,9 +810,9 @@ resource "aws_ec2_tag" "test" {
 `, rName, publicKey))
 }
 
-func testAccSpotInstanceRequestConfig_withLaunchGroup(rName string) string {
+func testAccSpotInstanceRequestConfig_launchGroup(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -835,9 +835,9 @@ resource "aws_ec2_tag" "test" {
 `, rName))
 }
 
-func testAccSpotInstanceRequestConfig_withBlockDuration(rName string) string {
+func testAccSpotInstanceRequestConfig_blockDuration(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -860,10 +860,10 @@ resource "aws_ec2_tag" "test" {
 `, rName))
 }
 
-func testAccSpotInstanceRequestVPCConfig(rName string) string {
+func testAccSpotInstanceRequestConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -904,10 +904,10 @@ resource "aws_ec2_tag" "test" {
 `, rName))
 }
 
-func testAccSpotInstanceRequestConfig_SubnetAndSGAndPublicIPAddress(rName string) string {
+func testAccSpotInstanceRequestConfig_subnetAndSGAndPublicIPAddress(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -996,9 +996,9 @@ resource "aws_ec2_tag" "test" {
 `, rName, publicKey))
 }
 
-func testAccSpotInstanceRequestInterruptConfig(rName, interruptionBehavior string) string {
+func testAccSpotInstanceRequestConfig_interrupt(rName, interruptionBehavior string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {

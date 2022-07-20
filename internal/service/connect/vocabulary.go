@@ -26,14 +26,18 @@ func ResourceVocabulary() *schema.Resource {
 		ReadContext:   resourceVocabularyRead,
 		UpdateContext: resourceVocabularyUpdate,
 		DeleteContext: resourceVocabularyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectVocabularyCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectVocabularyDeletedTimeout),
+			Create: schema.DefaultTimeout(vocabularyCreatedTimeout),
+			Delete: schema.DefaultTimeout(vocabularyDeletedTimeout),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

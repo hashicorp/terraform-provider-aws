@@ -27,7 +27,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
@@ -61,7 +61,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetDescription(rName, rName),
+				Config: testAccDeviceFleetConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -73,7 +73,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetDescription(rName, "test"),
+				Config: testAccDeviceFleetConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -95,7 +95,7 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetTags1Config(rName, "key1", "value1"),
+				Config: testAccDeviceFleetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -108,7 +108,7 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -117,7 +117,7 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDeviceFleetTags1Config(rName, "key2", "value2"),
+				Config: testAccDeviceFleetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -140,7 +140,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
@@ -267,7 +267,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccDeviceFleetBasicConfig(rName string) string {
+func testAccDeviceFleetConfig_basic(rName string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -280,7 +280,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName)
 }
 
-func testAccDeviceFleetDescription(rName, desc string) string {
+func testAccDeviceFleetConfig_description(rName, desc string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -294,7 +294,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, desc)
 }
 
-func testAccDeviceFleetTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDeviceFleetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
@@ -311,7 +311,7 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFleetTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDeviceFleetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q

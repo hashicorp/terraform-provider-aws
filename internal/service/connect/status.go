@@ -17,8 +17,8 @@ func statusInstance(ctx context.Context, conn *connect.Connect, instanceId strin
 
 		output, err := conn.DescribeInstanceWithContext(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, InstanceStatusStatusNotFound) {
-			return output, InstanceStatusStatusNotFound, nil
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			return output, connect.ErrCodeResourceNotFoundException, nil
 		}
 
 		if err != nil {

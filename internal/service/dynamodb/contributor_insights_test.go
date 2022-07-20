@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccContributorInsights_basic(t *testing.T) {
+func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	indexName := fmt.Sprintf("%s-index", rName)
@@ -30,7 +30,7 @@ func TestAccContributorInsights_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, ""),
+				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
@@ -42,7 +42,7 @@ func TestAccContributorInsights_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, indexName),
+				Config: testAccContributorInsightsConfig_basic(rName, indexName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
@@ -52,7 +52,7 @@ func TestAccContributorInsights_basic(t *testing.T) {
 	})
 }
 
-func TestAccContributorInsights_disappears(t *testing.T) {
+func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	var conf dynamodb.DescribeContributorInsightsOutput
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_dynamodb_contributor_insights.test"
@@ -64,7 +64,7 @@ func TestAccContributorInsights_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, ""),
+				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceContributorInsights(), resourceName),
@@ -99,7 +99,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccContributorInsightsBasicConfig(rName, indexName string) string {
+func testAccContributorInsightsConfig_basic(rName, indexName string) string {
 	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dynamodb_contributor_insights" "test" {
   table_name = aws_dynamodb_table.test.name

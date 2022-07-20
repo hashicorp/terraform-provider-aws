@@ -22,7 +22,7 @@ func TestAccImageBuilderInfrastructureConfigurationDataSource_arn(t *testing.T) 
 		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInfrastructureConfigurationARNDataSourceConfig(rName),
+				Config: testAccInfrastructureConfigurationDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -46,7 +46,7 @@ func TestAccImageBuilderInfrastructureConfigurationDataSource_arn(t *testing.T) 
 	})
 }
 
-func testAccInfrastructureConfigurationARNDataSourceConfig(rName string) string {
+func testAccInfrastructureConfigurationDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

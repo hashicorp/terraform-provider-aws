@@ -27,7 +27,7 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteTablePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablePropagationConfig(),
+				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(resourceName, &transitGatewayRouteTablePropagtion1),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -118,7 +118,7 @@ func testAccCheckTransitGatewayRouteTablePropagationDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccTransitGatewayRouteTablePropagationConfig() string {
+func testAccTransitGatewayRouteTablePropagationConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

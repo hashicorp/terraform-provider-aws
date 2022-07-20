@@ -26,7 +26,7 @@ func TestAccVPCEgressOnlyInternetGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEgressOnlyInternetGatewayConfig(rName),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -53,7 +53,7 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEgressOnlyInternetGatewayTags1Config(rName, "key1", "value1"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -66,7 +66,7 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEgressOnlyInternetGatewayTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -75,7 +75,7 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEgressOnlyInternetGatewayTags1Config(rName, "key2", "value2"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -135,7 +135,7 @@ func testAccCheckEgressOnlyInternetGatewayExists(n string, v *ec2.EgressOnlyInte
 	}
 }
 
-func testAccEgressOnlyInternetGatewayConfig(rName string) string {
+func testAccVPCEgressOnlyInternetGatewayConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -152,7 +152,7 @@ resource "aws_egress_only_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccEgressOnlyInternetGatewayTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -172,7 +172,7 @@ resource "aws_egress_only_internet_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEgressOnlyInternetGatewayTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCEgressOnlyInternetGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

@@ -880,7 +880,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceInstanceCreatePendingStates,
 			Target:     []string{"available", "storage-optimization"},
-			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1379,7 +1379,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceInstanceCreatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1609,7 +1609,7 @@ func waitUntilDBInstanceAvailableAfterUpdate(id string, conn *rds.RDS, timeout t
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceInstanceUpdatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceInstanceStateRefreshFunc(id, conn),
+		Refresh:    resourceDBInstanceStateRefreshFunc(id, conn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1711,7 +1711,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.StorageType = aws.String(d.Get("storage_type").(string))
 		requestUpdate = true
 
-		if aws.StringValue(req.StorageType) == StorageTypeIo1 {
+		if aws.StringValue(req.StorageType) == storageTypeIO1 {
 			req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 	}
@@ -1881,11 +1881,11 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceInstanceRead(d, meta)
 }
 
-// resourceInstanceRetrieve fetches DBInstance information from the AWS
+// resourceDBInstanceRetrieve fetches DBInstance information from the AWS
 // API. It returns an error if there is a communication problem or unexpected
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
-func resourceInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
+func resourceDBInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
 	opts := rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -1917,12 +1917,11 @@ func resourceInstanceImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRefreshFunc {
+func resourceDBInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceInstanceRetrieve(id, conn)
+		v, err := resourceDBInstanceRetrieve(id, conn)
 
 		if err != nil {
-			log.Printf("Error on retrieving DB Instance when waiting: %s", err)
 			return nil, "", err
 		}
 
@@ -1930,11 +1929,7 @@ func resourceInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRe
 			return nil, "", nil
 		}
 
-		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] DB Instance status for instance %s: %s", id, *v.DBInstanceStatus)
-		}
-
-		return v, *v.DBInstanceStatus, nil
+		return v, aws.StringValue(v.DBInstanceStatus), nil
 	}
 }
 

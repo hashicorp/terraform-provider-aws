@@ -25,7 +25,7 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportGroupBasicConfig(rName),
+				Config: testAccReportGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,7 +57,7 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportGroupS3ExportConfig(rName),
+				Config: testAccReportGroupConfig_s3Export(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -78,7 +78,7 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 			{
-				Config: testAccReportGroupS3ExportUpdatedConfig(rName),
+				Config: testAccReportGroupConfig_s3ExportUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -107,7 +107,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportGroupTags1Config(rName, "key1", "value1"),
+				Config: testAccReportGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -121,7 +121,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 			{
-				Config: testAccReportGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReportGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -130,7 +130,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReportGroupTags1Config(rName, "key2", "value2"),
+				Config: testAccReportGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -153,7 +153,7 @@ func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportGroupDeleteReportsConfig(rName),
+				Config: testAccReportGroupConfig_delete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -181,7 +181,7 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportGroupBasicConfig(rName),
+				Config: testAccReportGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(resourceName, &reportGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
@@ -253,7 +253,7 @@ func testAccCheckReportGroupExists(name string, reportGroup *codebuild.ReportGro
 	}
 }
 
-func testAccReportGroupBasicConfig(rName string) string {
+func testAccReportGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
@@ -297,7 +297,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccReportGroupS3ExportConfig(rName string) string {
+func testAccReportGroupConfig_s3Export(rName string) string {
 	return testAccReportGroupBasicS3ExportBaseConfig(rName) +
 		fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
@@ -319,7 +319,7 @@ resource "aws_codebuild_report_group" "test" {
 `, rName)
 }
 
-func testAccReportGroupS3ExportUpdatedConfig(rName string) string {
+func testAccReportGroupConfig_s3ExportUpdated(rName string) string {
 	return testAccReportGroupBasicS3ExportBaseConfig(rName) +
 		fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
@@ -341,7 +341,7 @@ resource "aws_codebuild_report_group" "test" {
 `, rName)
 }
 
-func testAccReportGroupTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccReportGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
@@ -358,7 +358,7 @@ resource "aws_codebuild_report_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccReportGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccReportGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
@@ -376,7 +376,7 @@ resource "aws_codebuild_report_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccReportGroupDeleteReportsConfig(rName string) string {
+func testAccReportGroupConfig_delete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name           = %[1]q

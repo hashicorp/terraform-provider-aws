@@ -27,7 +27,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowBasicConfig(rName),
+				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`workflow/.+`)),
@@ -61,7 +61,7 @@ func TestAccTransferWorkflow_onExecution(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowOnExecConfig(rName),
+				Config: testAccWorkflowConfig_onExec(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`workflow/.+`)),
@@ -99,7 +99,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowDescConfig(rName),
+				Config: testAccWorkflowConfig_desc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -126,7 +126,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowConfigTags1(rName, "key1", "value1"),
+				Config: testAccWorkflowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -139,7 +139,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkflowConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWorkflowConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -148,7 +148,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkflowConfigTags1(rName, "key2", "value2"),
+				Config: testAccWorkflowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -171,7 +171,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWorkflowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowBasicConfig(rName),
+				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceWorkflow(), resourceName),
@@ -231,7 +231,7 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccWorkflowBasicConfig(rName string) string {
+func testAccWorkflowConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   steps {
@@ -245,7 +245,7 @@ resource "aws_transfer_workflow" "test" {
 `, rName)
 }
 
-func testAccWorkflowDescConfig(rName string) string {
+func testAccWorkflowConfig_desc(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   description = %[1]q
@@ -261,7 +261,7 @@ resource "aws_transfer_workflow" "test" {
 `, rName)
 }
 
-func testAccWorkflowOnExecConfig(rName string) string {
+func testAccWorkflowConfig_onExec(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   steps {
@@ -283,7 +283,7 @@ resource "aws_transfer_workflow" "test" {
 `, rName)
 }
 
-func testAccWorkflowConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccWorkflowConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   steps {
@@ -301,7 +301,7 @@ resource "aws_transfer_workflow" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccWorkflowConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWorkflowConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_workflow" "test" {
   steps {

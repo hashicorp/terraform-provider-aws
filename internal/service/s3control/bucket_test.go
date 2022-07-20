@@ -28,7 +28,7 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
@@ -59,7 +59,7 @@ func TestAccS3ControlBucket_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucket(), resourceName),
@@ -83,7 +83,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccBucketConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,7 +105,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccBucketConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -185,7 +185,7 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccBucketConfig_Bucket(rName string) string {
+func testAccBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -200,7 +200,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -219,7 +219,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccBucketConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBucketConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

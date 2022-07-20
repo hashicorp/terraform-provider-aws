@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -101,7 +103,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	createResp, err := conn.CreateUser(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM User (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -119,7 +121,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		err := userUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM User (%s): %s", d.Id(), err)
 			return resourceUserRead(d, meta)
 		}
@@ -215,11 +217,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Println("[DEBUG] Update IAM User request:", request)
 		_, err := conn.UpdateUser(request)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-				log.Printf("[WARN] No IAM user by name (%s) found", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return fmt.Errorf("Error updating IAM User %s: %w", d.Id(), err)
 		}
 
@@ -254,7 +251,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := userUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(err) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM User (%s): %s", d.Id(), err)
 			return resourceUserRead(d, meta)
 		}
@@ -350,7 +347,7 @@ func DeleteUserGroupMemberships(conn *iam.IAM, username string) error {
 	return nil
 }
 
-func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
+func DeleteUserSSHKeys(conn *iam.IAM, username string) error {
 	var publicKeys []string
 	var err error
 
@@ -363,12 +360,12 @@ func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
 		}
 		return !lastPage
 	}
-	err = svc.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
+	err = conn.ListSSHPublicKeysPages(listSSHPublicKeys, pageOfListSSHPublicKeys)
 	if err != nil {
 		return fmt.Errorf("Error removing public SSH keys of user %s: %w", username, err)
 	}
 	for _, k := range publicKeys {
-		_, err := svc.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
+		_, err := conn.DeleteSSHPublicKey(&iam.DeleteSSHPublicKeyInput{
 			UserName:       aws.String(username),
 			SSHPublicKeyId: aws.String(k),
 		})
@@ -380,7 +377,7 @@ func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
+func DeleteUserVirtualMFADevices(conn *iam.IAM, username string) error {
 	var VirtualMFADevices []string
 	var err error
 
@@ -396,19 +393,19 @@ func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 		}
 		return !lastPage
 	}
-	err = svc.ListVirtualMFADevicesPages(listVirtualMFADevices, pageOfVirtualMFADevices)
+	err = conn.ListVirtualMFADevicesPages(listVirtualMFADevices, pageOfVirtualMFADevices)
 	if err != nil {
 		return fmt.Errorf("Error removing Virtual MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range VirtualMFADevices {
-		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
+		_, err := conn.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
 			UserName:     aws.String(username),
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
 			return fmt.Errorf("Error deactivating Virtual MFA device %s: %w", m, err)
 		}
-		_, err = svc.DeleteVirtualMFADevice(&iam.DeleteVirtualMFADeviceInput{
+		_, err = conn.DeleteVirtualMFADevice(&iam.DeleteVirtualMFADeviceInput{
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
@@ -419,7 +416,7 @@ func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
+func DeactivateUserMFADevices(conn *iam.IAM, username string) error {
 	var MFADevices []string
 	var err error
 
@@ -432,12 +429,12 @@ func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
 		}
 		return !lastPage
 	}
-	err = svc.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
+	err = conn.ListMFADevicesPages(listMFADevices, pageOfMFADevices)
 	if err != nil {
 		return fmt.Errorf("Error removing MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range MFADevices {
-		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
+		_, err := conn.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
 			UserName:     aws.String(username),
 			SerialNumber: aws.String(m),
 		})
@@ -449,13 +446,13 @@ func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
+func DeleteUserLoginProfile(conn *iam.IAM, username string) error {
 	var err error
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err = svc.DeleteLoginProfile(input)
+		_, err = conn.DeleteLoginProfile(input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				return nil
@@ -469,7 +466,7 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = svc.DeleteLoginProfile(input)
+		_, err = conn.DeleteLoginProfile(input)
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Account Login Profile: %w", err)
@@ -478,42 +475,32 @@ func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func DeleteUserAccessKeys(svc *iam.IAM, username string) error {
-	var accessKeys []string
-	var err error
-	listAccessKeys := &iam.ListAccessKeysInput{
-		UserName: aws.String(username),
+func DeleteUserAccessKeys(conn *iam.IAM, username string) error {
+	accessKeys, err := FindAccessKeys(context.TODO(), conn, username)
+	if err != nil && !tfresource.NotFound(err) {
+		return fmt.Errorf("error listing access keys for IAM User (%s): %w", username, err)
 	}
-	pageOfAccessKeys := func(page *iam.ListAccessKeysOutput, lastPage bool) (shouldContinue bool) {
-		for _, k := range page.AccessKeyMetadata {
-			accessKeys = append(accessKeys, *k.AccessKeyId)
-		}
-		return !lastPage
-	}
-	err = svc.ListAccessKeysPages(listAccessKeys, pageOfAccessKeys)
-	if err != nil {
-		return fmt.Errorf("Error removing access keys of user %s: %w", username, err)
-	}
+	var errs *multierror.Error
 	for _, k := range accessKeys {
-		_, err := svc.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+		_, err := conn.DeleteAccessKey(&iam.DeleteAccessKeyInput{
 			UserName:    aws.String(username),
-			AccessKeyId: aws.String(k),
+			AccessKeyId: k.AccessKeyId,
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting access key %s: %w", k, err)
+			errs = multierror.Append(errs, fmt.Errorf("error deleting Access Key (%s) from User (%s): %w", aws.StringValue(k.AccessKeyId), username, err))
 		}
 	}
 
-	return nil
+	return errs.ErrorOrNil()
 }
 
-func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
+func deleteUserSigningCertificates(conn *iam.IAM, userName string) error {
 	var certificateIDList []string
 
 	listInput := &iam.ListSigningCertificatesInput{
 		UserName: aws.String(userName),
 	}
-	err := svc.ListSigningCertificatesPages(listInput,
+	err := conn.ListSigningCertificatesPages(listInput,
 		func(page *iam.ListSigningCertificatesOutput, lastPage bool) bool {
 			for _, c := range page.Certificates {
 				certificateIDList = append(certificateIDList, aws.StringValue(c.CertificateId))
@@ -525,7 +512,7 @@ func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
 	}
 
 	for _, c := range certificateIDList {
-		_, err := svc.DeleteSigningCertificate(&iam.DeleteSigningCertificateInput{
+		_, err := conn.DeleteSigningCertificate(&iam.DeleteSigningCertificateInput{
 			CertificateId: aws.String(c),
 			UserName:      aws.String(userName),
 		})
@@ -537,17 +524,17 @@ func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
 	return nil
 }
 
-func DeleteServiceSpecificCredentials(svc *iam.IAM, username string) error {
+func DeleteServiceSpecificCredentials(conn *iam.IAM, username string) error {
 	input := &iam.ListServiceSpecificCredentialsInput{
 		UserName: aws.String(username),
 	}
 
-	output, err := svc.ListServiceSpecificCredentials(input)
+	output, err := conn.ListServiceSpecificCredentials(input)
 	if err != nil {
 		return fmt.Errorf("Error listing Service Specific Credentials of user %s: %w", username, err)
 	}
 	for _, m := range output.ServiceSpecificCredentials {
-		_, err := svc.DeleteServiceSpecificCredential(&iam.DeleteServiceSpecificCredentialInput{
+		_, err := conn.DeleteServiceSpecificCredential(&iam.DeleteServiceSpecificCredentialInput{
 			UserName:                    aws.String(username),
 			ServiceSpecificCredentialId: m.ServiceSpecificCredentialId,
 		})

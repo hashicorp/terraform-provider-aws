@@ -26,7 +26,7 @@ func TestAccBackupSelection_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigBasic(rName),
+				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 				),
@@ -53,7 +53,7 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigBasic(rName),
+				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceSelection(), resourceName),
@@ -77,7 +77,7 @@ func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigBasic(rName),
+				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceSelection(), resourceName),
@@ -101,7 +101,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigWithTags(rName),
+				Config: testAccSelectionConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", "2"),
@@ -129,7 +129,7 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigWithConditionsTags(rName),
+				Config: testAccSelectionConfig_conditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
@@ -161,7 +161,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigWithResources(rName),
+				Config: testAccSelectionConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
@@ -189,7 +189,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigWithNotResources(rName),
+				Config: testAccSelectionConfig_notResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
@@ -217,13 +217,13 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 		CheckDestroy:      testAccCheckSelectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupSelectionConfigBasic(rName),
+				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection1),
 				),
 			},
 			{
-				Config: testAccBackupSelectionConfigUpdateTag(rName),
+				Config: testAccSelectionConfig_updateTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(resourceName, &selection2),
 					testAccCheckSelectionRecreated(t, &selection1, &selection2),
@@ -314,7 +314,7 @@ func testAccSelectionImportStateIDFunc(resourceName string) resource.ImportState
 	}
 }
 
-func testAccBackupSelectionConfigBase(rName string) string {
+func testAccSelectionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -338,9 +338,9 @@ resource "aws_backup_plan" "test" {
 `, rName)
 }
 
-func testAccBackupSelectionConfigBasic(rName string) string {
+func testAccSelectionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
@@ -361,9 +361,9 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
-func testAccBackupSelectionConfigWithTags(rName string) string {
+func testAccSelectionConfig_tags(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
@@ -390,9 +390,9 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
-func testAccBackupSelectionConfigWithConditionsTags(rName string) string {
+func testAccSelectionConfig_conditionsTags(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
@@ -436,9 +436,9 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
-func testAccBackupSelectionConfigWithResources(rName string) string {
+func testAccSelectionConfig_resources(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -477,9 +477,9 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
-func testAccBackupSelectionConfigWithNotResources(rName string) string {
+func testAccSelectionConfig_notResources(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id
@@ -499,9 +499,9 @@ resource "aws_backup_selection" "test" {
 `, rName))
 }
 
-func testAccBackupSelectionConfigUpdateTag(rName string) string {
+func testAccSelectionConfig_updateTag(rName string) string {
 	return acctest.ConfigCompose(
-		testAccBackupSelectionConfigBase(rName),
+		testAccSelectionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_backup_selection" "test" {
   plan_id = aws_backup_plan.test.id

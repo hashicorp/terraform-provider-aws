@@ -25,7 +25,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserProfileCreate(rName),
+				Config: testAccUserProfileConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
@@ -34,7 +34,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserProfileUpdate(rName, rName2),
+				Config: testAccUserProfileConfig_update(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(resourceName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
@@ -120,7 +120,7 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserProfileCreate(rName string) string {
+func testAccUserProfileConfig_create(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "test" {
   user_arn     = aws_iam_user.test.arn
@@ -134,7 +134,7 @@ resource "aws_iam_user" "test" {
 `, rName)
 }
 
-func testAccUserProfileUpdate(rName, rName2 string) string {
+func testAccUserProfileConfig_update(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "test" {
   user_arn     = aws_iam_user.new-test.arn

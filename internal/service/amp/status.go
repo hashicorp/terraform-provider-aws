@@ -34,7 +34,7 @@ func statusAlertManagerDefinition(ctx context.Context, conn *prometheusservice.P
 
 func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRuleGroupNamespaceByArn(ctx, conn, arn)
+		output, err := FindRuleGroupNamespaceByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

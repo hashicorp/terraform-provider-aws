@@ -600,10 +600,7 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("account_recovery_setting"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
+		if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 			params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 		}
 	}
@@ -1043,10 +1040,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
-
-			if ok && config != nil {
+			if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 			}
 		}
@@ -1287,6 +1281,10 @@ func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.Sof
 }
 
 func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
+	if len(config) == 0 {
+		return nil
+	}
+
 	configs := &cognitoidentityprovider.AccountRecoverySettingType{}
 
 	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
@@ -1316,7 +1314,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 }
 
 func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
-	if config == nil {
+	if config == nil || len(config.RecoveryMechanisms) == 0 {
 		return nil
 	}
 

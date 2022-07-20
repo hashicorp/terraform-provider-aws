@@ -26,12 +26,12 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig,
+				Config: testAccCapacityReservationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -65,12 +65,12 @@ func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig,
+				Config: testAccCapacityReservationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCapacityReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,12 +88,12 @@ func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_ebsOptimized(rName, true),
+				Config: testAccCapacityReservationConfig_ebsOptimized(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
 				),
 			},
@@ -117,12 +117,12 @@ func TestAccEC2CapacityReservation_endDate(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate1),
+				Config: testAccCapacityReservationConfig_endDate(rName, endDate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "end_date", endDate1),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
 				),
@@ -133,9 +133,9 @@ func TestAccEC2CapacityReservation_endDate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate2),
+				Config: testAccCapacityReservationConfig_endDate(rName, endDate2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "end_date", endDate2),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
 				),
@@ -154,12 +154,12 @@ func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_endDateType(rName, "unlimited"),
+				Config: testAccCapacityReservationConfig_endDateType(rName, "unlimited"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
 				),
 			},
@@ -169,17 +169,17 @@ func TestAccEC2CapacityReservation_endDateType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_endDate(rName, endDate),
+				Config: testAccCapacityReservationConfig_endDate(rName, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "end_date", endDate),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
 				),
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_endDateType(rName, "unlimited"),
+				Config: testAccCapacityReservationConfig_endDateType(rName, "unlimited"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
 				),
 			},
@@ -196,12 +196,12 @@ func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_ephemeralStorage(rName, true),
+				Config: testAccCapacityReservationConfig_ephemeralStorage(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "true"),
 				),
 			},
@@ -223,12 +223,12 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_instanceCount(rName, 1),
+				Config: testAccCapacityReservationConfig_instanceCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
 				),
 			},
@@ -238,9 +238,9 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_instanceCount(rName, 2),
+				Config: testAccCapacityReservationConfig_instanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "instance_count", "2"),
 				),
 			},
@@ -257,12 +257,12 @@ func TestAccEC2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_instanceMatchCriteria(rName, "targeted"),
+				Config: testAccCapacityReservationConfig_instanceMatchCriteria(rName, "targeted"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "targeted"),
 				),
 			},
@@ -284,12 +284,12 @@ func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_instanceType(rName, "t2.micro"),
+				Config: testAccCapacityReservationConfig_instanceType(rName, "t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 				),
 			},
@@ -299,9 +299,9 @@ func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_instanceType(rName, "t2.small"),
+				Config: testAccCapacityReservationConfig_instanceType(rName, "t2.small"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
 				),
 			},
@@ -317,12 +317,12 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfigTags1("key1", "value1"),
+				Config: testAccCapacityReservationConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -333,18 +333,18 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccCapacityReservationConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccEc2CapacityReservationConfigTags1("key2", "value2"),
+				Config: testAccCapacityReservationConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -364,12 +364,12 @@ func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEc2CapacityReservationDestroy,
+		CheckDestroy:      testAccCheckCapacityReservationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2CapacityReservationConfig_tenancy(rName, "dedicated"),
+				Config: testAccCapacityReservationConfig_tenancy(rName, "dedicated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
+					testAccCheckCapacityReservationExists(resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
 				),
 			},
@@ -382,7 +382,7 @@ func TestAccEC2CapacityReservation_tenancy(t *testing.T) {
 	})
 }
 
-func testAccCheckEc2CapacityReservationExists(n string, v *ec2.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckCapacityReservationExists(n string, v *ec2.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -407,7 +407,7 @@ func testAccCheckEc2CapacityReservationExists(n string, v *ec2.CapacityReservati
 	}
 }
 
-func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
+func testAccCheckCapacityReservationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -450,7 +450,7 @@ func testAccPreCheckCapacityReservation(t *testing.T) {
 	}
 }
 
-var testAccEc2CapacityReservationConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+var testAccCapacityReservationConfig_basic = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
@@ -459,7 +459,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 }
 `)
 
-func testAccEc2CapacityReservationConfig_ebsOptimized(rName string, ebsOptimized bool) string {
+func testAccCapacityReservationConfig_ebsOptimized(rName string, ebsOptimized bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -475,7 +475,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, ebsOptimized))
 }
 
-func testAccEc2CapacityReservationConfig_endDate(rName, endDate string) string {
+func testAccCapacityReservationConfig_endDate(rName, endDate string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -492,7 +492,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, endDate))
 }
 
-func testAccEc2CapacityReservationConfig_endDateType(rName, endDateType string) string {
+func testAccCapacityReservationConfig_endDateType(rName, endDateType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -508,7 +508,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, endDateType))
 }
 
-func testAccEc2CapacityReservationConfig_ephemeralStorage(rName string, ephemeralStorage bool) string {
+func testAccCapacityReservationConfig_ephemeralStorage(rName string, ephemeralStorage bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -524,7 +524,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, ephemeralStorage))
 }
 
-func testAccEc2CapacityReservationConfig_instanceCount(rName string, instanceCount int) string {
+func testAccCapacityReservationConfig_instanceCount(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -539,7 +539,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, instanceCount))
 }
 
-func testAccEc2CapacityReservationConfig_instanceMatchCriteria(rName, instanceMatchCriteria string) string {
+func testAccCapacityReservationConfig_instanceMatchCriteria(rName, instanceMatchCriteria string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone       = data.aws_availability_zones.available.names[0]
@@ -555,7 +555,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, instanceMatchCriteria))
 }
 
-func testAccEc2CapacityReservationConfig_instanceType(rName, instanceType string) string {
+func testAccCapacityReservationConfig_instanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -570,7 +570,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, rName, instanceType))
 }
 
-func testAccEc2CapacityReservationConfigTags1(tag1Key, tag1Value string) string {
+func testAccCapacityReservationConfig_tags1(tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -585,7 +585,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, tag1Key, tag1Value))
 }
 
-func testAccEc2CapacityReservationConfigTags2(tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccCapacityReservationConfig_tags2(tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -601,7 +601,7 @@ resource "aws_ec2_capacity_reservation" "test" {
 `, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccEc2CapacityReservationConfig_tenancy(rName, tenancy string) string {
+func testAccCapacityReservationConfig_tenancy(rName, tenancy string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_capacity_reservation" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]

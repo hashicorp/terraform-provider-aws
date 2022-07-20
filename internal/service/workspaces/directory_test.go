@@ -334,7 +334,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -343,7 +343,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_present(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUPresent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -352,7 +352,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain),
+				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
@@ -380,7 +380,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_IPGroupIds_create(rName, domain),
+				Config: testAccDirectoryConfig_ipGroupIdsCreate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "1"),
@@ -393,7 +393,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDirectoryConfig_IPGroupIds_update(rName, domain),
+				Config: testAccDirectoryConfig_ipGroupIdsUpdate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "2"),
@@ -936,7 +936,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_absent(rName, domain string) string {
+func testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -956,7 +956,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccDirectoryConfig_WorkspaceCreationProperties_CustomSecurityGroupId_DefaultOu_present(rName, domain string) string {
+func testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUPresent(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -983,7 +983,7 @@ resource "aws_workspaces_directory" "main" {
 `, rName))
 }
 
-func testAccDirectoryConfig_IPGroupIds_create(rName, domain string) string {
+func testAccDirectoryConfig_ipGroupIdsCreate(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
@@ -1005,7 +1005,7 @@ resource "aws_workspaces_directory" "test" {
 `, rName))
 }
 
-func testAccDirectoryConfig_IPGroupIds_update(rName, domain string) string {
+func testAccDirectoryConfig_ipGroupIdsUpdate(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`

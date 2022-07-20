@@ -81,7 +81,7 @@ func TestAccEC2AvailabilityZonesDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAvailabilityZonesConfig,
+				Config: testAccAvailabilityZonesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta("data.aws_availability_zones.availability_zones"),
 				),
@@ -99,7 +99,7 @@ func TestAccEC2AvailabilityZonesDataSource_allAvailabilityZones(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesAllAvailabilityZonesConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_all(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
@@ -117,7 +117,7 @@ func TestAccEC2AvailabilityZonesDataSource_filter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesFilterConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
@@ -136,7 +136,7 @@ func TestAccEC2AvailabilityZonesDataSource_excludeNames(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesExcludeNamesConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_excludeNames(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
@@ -155,7 +155,7 @@ func TestAccEC2AvailabilityZonesDataSource_excludeZoneIDs(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAvailabilityZonesExcludeZoneIDsConfig(),
+				Config: testAccAvailabilityZonesDataSourceConfig_excludeZoneIDs(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
@@ -171,7 +171,7 @@ func TestAccEC2AvailabilityZonesDataSource_stateFilter(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSAvailabilityZonesStateConfig,
+				Config: testAccAvailabilityZonesDataSourceConfig_state,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAvailabilityZoneState("data.aws_availability_zones.state_filter"),
 				),
@@ -302,11 +302,11 @@ func testAccCheckAvailabilityZonesBuildAvailable(attrs map[string]string) ([]str
 	return zones, nil
 }
 
-const testAccCheckAWSAvailabilityZonesConfig = `
+const testAccAvailabilityZonesDataSourceConfig_basic = `
 data "aws_availability_zones" "availability_zones" {}
 `
 
-func testAccCheckAvailabilityZonesAllAvailabilityZonesConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_all() string {
 	return `
 data "aws_availability_zones" "test" {
   all_availability_zones = true
@@ -314,7 +314,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesFilterConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_filter() string {
 	return `
 data "aws_availability_zones" "test" {
   filter {
@@ -325,7 +325,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesExcludeNamesConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_excludeNames() string {
 	return `
 data "aws_availability_zones" "all" {}
 
@@ -335,7 +335,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAvailabilityZonesExcludeZoneIDsConfig() string {
+func testAccAvailabilityZonesDataSourceConfig_excludeZoneIDs() string {
 	return `
 data "aws_availability_zones" "all" {}
 
@@ -345,7 +345,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-const testAccCheckAWSAvailabilityZonesStateConfig = `
+const testAccAvailabilityZonesDataSourceConfig_state = `
 data "aws_availability_zones" "state_filter" {
   state = "available"
 }

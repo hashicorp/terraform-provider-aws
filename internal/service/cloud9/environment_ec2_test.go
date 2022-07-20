@@ -28,7 +28,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentEC2Config(rName),
+				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
@@ -66,7 +66,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentEC2AllFieldsConfig(rName, name1, description1),
+				Config: testAccEnvironmentEC2Config_allFields(rName, name1, description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "automatic_stop_time_minutes", "60"),
@@ -87,7 +87,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"automatic_stop_time_minutes", "image_id", "instance_type", "subnet_id"},
 			},
 			{
-				Config: testAccEnvironmentEC2AllFieldsConfig(rName, name2, description2),
+				Config: testAccEnvironmentEC2Config_allFields(rName, name2, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
@@ -111,7 +111,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentEC2Tags1Config(rName, "key1", "value1"),
+				Config: testAccEnvironmentEC2Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -125,7 +125,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
 			},
 			{
-				Config: testAccEnvironmentEC2Tags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -134,7 +134,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvironmentEC2Tags1Config(rName, "key2", "value2"),
+				Config: testAccEnvironmentEC2Config_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -158,7 +158,7 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEnvironmentEC2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentEC2Config(rName),
+				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
@@ -254,7 +254,7 @@ resource "aws_route" "test" {
 `, rName))
 }
 
-func testAccEnvironmentEC2Config(rName string) string {
+func testAccEnvironmentEC2Config_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
@@ -264,7 +264,7 @@ resource "aws_cloud9_environment_ec2" "test" {
 `, rName))
 }
 
-func testAccEnvironmentEC2AllFieldsConfig(rName, name, description string) string {
+func testAccEnvironmentEC2Config_allFields(rName, name, description string) string {
 	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   automatic_stop_time_minutes = 60
@@ -283,7 +283,7 @@ resource "aws_iam_user" "test" {
 `, name, description, rName))
 }
 
-func testAccEnvironmentEC2Tags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccEnvironmentEC2Config_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
@@ -297,7 +297,7 @@ resource "aws_cloud9_environment_ec2" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccEnvironmentEC2Tags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEnvironmentEC2Config_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccEnvironmentEC2BaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"

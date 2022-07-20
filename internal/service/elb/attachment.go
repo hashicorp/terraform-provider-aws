@@ -89,15 +89,15 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
-		if IsNotFound(err) {
-			log.Printf("[ERROR] ELB %s not found", elbName)
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ELB: %s", err)
+		return fmt.Errorf("error retrieving ELB Classic LB (%s): %w", elbName, err)
 	}
-	if len(resp.LoadBalancerDescriptions) != 1 {
-		log.Printf("[ERROR] Unable to find ELB: %s", resp.LoadBalancerDescriptions)
+	if !d.IsNewResource() && len(resp.LoadBalancerDescriptions) != 1 {
+		log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
 		d.SetId("")
 		return nil
 	}
@@ -111,7 +111,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if !found {
+	if !d.IsNewResource() && !found {
 		log.Printf("[WARN] instance %s not found in elb attachments", expected)
 		d.SetId("")
 	}

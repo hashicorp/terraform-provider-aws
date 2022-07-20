@@ -31,7 +31,7 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
@@ -57,7 +57,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					testAccCheckLoadBalancerExists(elbResourceName, &loadBalancer),
@@ -195,7 +195,7 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 }
 
 // Sets the SSL Negotiation policy with attributes.
-func testAccSslNegotiationPolicyConfig(rName, key, certificate string) string {
+func testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

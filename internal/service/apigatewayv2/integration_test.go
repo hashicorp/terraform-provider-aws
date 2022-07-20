@@ -234,7 +234,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 		CheckDestroy:      testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_integrationTypeHTTP(rName),
+				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
@@ -260,7 +260,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_integrationTypeHTTPUpdated(rName),
+				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
@@ -516,7 +516,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
+func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -532,7 +532,7 @@ func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 		CheckDestroy:      testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_sqsIntegration(rName, 0),
+				Config: testAccIntegrationConfig_sqs(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
@@ -558,7 +558,7 @@ func TestAccAPIGatewayV2Integration_awsServiceIntegration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntegrationConfig_sqsIntegration(rName, 1),
+				Config: testAccIntegrationConfig_sqs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
@@ -859,7 +859,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccIntegrationConfig_integrationTypeHTTP(rName string) string {
+func testAccIntegrationConfig_typeHTTP(rName string) string {
 	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -885,7 +885,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `
 }
 
-func testAccIntegrationConfig_integrationTypeHTTPUpdated(rName string) string {
+func testAccIntegrationConfig_typeHTTPUpdated(rName string) string {
 	return testAccIntegrationConfig_apiWebSocket(rName) + `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
@@ -1071,7 +1071,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `, rName))
 }
 
-func testAccIntegrationConfig_sqsIntegration(rName string, queueIndex int) string {
+func testAccIntegrationConfig_sqs(rName string, queueIndex int) string {
 	return acctest.ConfigCompose(
 		testAccIntegrationConfig_apiHTTP(rName),
 		fmt.Sprintf(`

@@ -48,7 +48,7 @@ func TestAccAPIGatewayStage_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfigUpdated(rName),
+				Config: testAccStageConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
@@ -106,7 +106,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfigCacheConfig(rName, "0.5"),
+				Config: testAccStageConfig_cache(rName, "0.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
@@ -115,7 +115,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 			},
 
 			{
-				Config: testAccStageConfigCacheConfig(rName, "1.6"),
+				Config: testAccStageConfig_cache(rName, "1.6"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "1.6"),
@@ -134,7 +134,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22866
-func TestAccAPIGatewayStage_cache_size_cache_disabled(t *testing.T) {
+func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 	var conf apigateway.Stage
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_stage.test"
@@ -159,7 +159,7 @@ func TestAccAPIGatewayStage_cache_size_cache_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfigCacheSizeCacheDisabled(rName, "0.5"),
+				Config: testAccStageConfig_cacheSizeCacheDisabled(rName, "0.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
@@ -167,7 +167,7 @@ func TestAccAPIGatewayStage_cache_size_cache_disabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStageConfigCacheConfig(rName, "0.5"),
+				Config: testAccStageConfig_cache(rName, "0.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
@@ -191,7 +191,7 @@ func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageReferencingDeploymentConfig(rName),
+				Config: testAccStageConfig_referencingDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 				),
@@ -218,7 +218,7 @@ func TestAccAPIGatewayStage_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfigTags1(rName, "key1", "value1"),
+				Config: testAccStageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -232,7 +232,7 @@ func TestAccAPIGatewayStage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -241,7 +241,7 @@ func TestAccAPIGatewayStage_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStageConfigTags1(rName, "key2", "value2"),
+				Config: testAccStageConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -264,7 +264,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageReferencingDeploymentConfig(rName),
+				Config: testAccStageConfig_referencingDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
@@ -276,7 +276,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_disappears_restApi(t *testing.T) {
+func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 	var stage apigateway.Stage
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
@@ -288,7 +288,7 @@ func TestAccAPIGatewayStage_disappears_restApi(t *testing.T) {
 		CheckDestroy:      testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageReferencingDeploymentConfig(rName),
+				Config: testAccStageConfig_referencingDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &stage),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
@@ -688,7 +688,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, rName, stageName)
 }
 
-func testAccStageReferencingDeploymentConfig(rName string) string {
+func testAccStageConfig_referencingDeployment(rName string) string {
 	return acctest.ConfigCompose(
 		testAccStageBaseDeploymentStageNameConfig(rName, ""),
 		`
@@ -723,7 +723,7 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccStageConfigUpdated(rName string) string {
+func testAccStageConfig_updated(rName string) string {
 	return testAccStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id          = aws_api_gateway_rest_api.test.id
@@ -740,7 +740,7 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccStageConfigCacheSizeCacheDisabled(rName, size string) string {
+func testAccStageConfig_cacheSizeCacheDisabled(rName, size string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id        = aws_api_gateway_rest_api.test.id
@@ -751,7 +751,7 @@ resource "aws_api_gateway_stage" "test" {
 `, size)
 }
 
-func testAccStageConfigCacheConfig(rName, size string) string {
+func testAccStageConfig_cache(rName, size string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id           = aws_api_gateway_rest_api.test.id
@@ -836,7 +836,7 @@ resource "aws_api_gateway_stage" "test" {
 `, rName, format)
 }
 
-func testAccStageConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccStageConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
@@ -850,7 +850,7 @@ resource "aws_api_gateway_stage" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccStageConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccStageConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id

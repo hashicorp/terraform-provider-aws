@@ -27,7 +27,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_basic(t *testing.T) 
 		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteTableVPCAssociationConfig(rName),
+				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayRouteTableDataSourceName, "local_gateway_id"),
@@ -56,7 +56,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_disappears(t *testin
 		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteTableVPCAssociationConfig(rName),
+				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
@@ -78,7 +78,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLocalGatewayRouteTableVPCAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteTableVPCAssociationTags1Config(rName, "key1", "value1"),
+				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -91,7 +91,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocalGatewayRouteTableVPCAssociationTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -100,7 +100,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocalGatewayRouteTableVPCAssociationTags1Config(rName, "key2", "value2"),
+				Config: testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteTableVPCAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -182,7 +182,7 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccLocalGatewayRouteTableVPCAssociationConfig(rName string) string {
+func testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLocalGatewayRouteTableVPCAssociationBaseConfig(rName),
 		`
@@ -193,7 +193,7 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 `)
 }
 
-func testAccLocalGatewayRouteTableVPCAssociationTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccLocalGatewayRouteTableVPCAssociationBaseConfig(rName),
 		fmt.Sprintf(`
@@ -208,7 +208,7 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccLocalGatewayRouteTableVPCAssociationTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOutpostsLocalGatewayRouteTableVPCAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccLocalGatewayRouteTableVPCAssociationBaseConfig(rName),
 		fmt.Sprintf(`

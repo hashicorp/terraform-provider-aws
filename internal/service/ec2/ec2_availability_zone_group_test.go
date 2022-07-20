@@ -25,7 +25,7 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2AvailabilityZoneGroupOptInStatusConfig(localZone, ec2.AvailabilityZoneOptInStatusOptedIn),
+				Config: testAccAvailabilityZoneGroupConfig_optInStatus(localZone, ec2.AvailabilityZoneOptInStatusOptedIn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 				),
@@ -38,13 +38,13 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 			// InvalidOptInStatus: Opting out of Local Zones is not currently supported. Contact AWS Support for additional assistance.
 			/*
 				{
-					Config: testAccEc2AvailabilityZoneGroupConfigOptInStatus(ec2.AvailabilityZoneOptInStatusNotOptedIn),
+					Config: testAccAvailabilityZoneGroupConfig_optInStatus(ec2.AvailabilityZoneOptInStatusNotOptedIn),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusNotOptedIn),
 					),
 				},
 				{
-					Config: testAccEc2AvailabilityZoneGroupConfigOptInStatus(ec2.AvailabilityZoneOptInStatusOptedIn),
+					Config: testAccAvailabilityZoneGroupConfig_optInStatus(ec2.AvailabilityZoneOptInStatusOptedIn),
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					),
@@ -54,7 +54,7 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 	})
 }
 
-func testAccEc2AvailabilityZoneGroupOptInStatusConfig(name, optInStatus string) string {
+func testAccAvailabilityZoneGroupConfig_optInStatus(name, optInStatus string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "test" {
   all_availability_zones = true

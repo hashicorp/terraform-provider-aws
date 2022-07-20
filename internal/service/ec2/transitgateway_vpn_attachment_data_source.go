@@ -53,7 +53,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(d *schema.ResourceData, meta inte
 		input.Filters = append(input.Filters, BuildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
-		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
+		input.Filters = append(input.Filters, tagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 	if connectionIdOk {
 		input.Filters = append(input.Filters, &ec2.Filter{

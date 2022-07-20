@@ -23,7 +23,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceDataSourceConfig_dataSourceWorkspacebyWorkspaceID(rName, domain),
+				Config: testAccWorkspaceDataSourceConfig_byID(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -58,7 +58,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceDataSourceConfig_DataSourceWorkspacebyDirectoryID_userName(rName, domain),
+				Config: testAccWorkspaceDataSourceConfig_byDirectoryIDUserName(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -87,14 +87,14 @@ func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) 
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict(),
+				Config:      testAccWorkspaceDataSourceConfig_idAndDirectoryIDConflict(),
 				ExpectError: regexp.MustCompile("\"workspace_id\": conflicts with directory_id"),
 			},
 		},
 	})
 }
 
-func testAccWorkspaceDataSourceConfig_dataSourceWorkspacebyWorkspaceID(rName, domain string) string {
+func testAccWorkspaceDataSourceConfig_byID(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`
@@ -122,7 +122,7 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccWorkspaceDataSourceConfig_DataSourceWorkspacebyDirectoryID_userName(rName, domain string) string {
+func testAccWorkspaceDataSourceConfig_byDirectoryIDUserName(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`
@@ -151,7 +151,7 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict() string {
+func testAccWorkspaceDataSourceConfig_idAndDirectoryIDConflict() string {
 	return `
 data "aws_workspaces_workspace" "test" {
   workspace_id = "ws-cj5xcxsz5"

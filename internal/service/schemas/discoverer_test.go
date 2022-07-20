@@ -26,7 +26,7 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiscovererConfig(rName),
+				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
@@ -55,7 +55,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiscovererConfig(rName),
+				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
@@ -78,7 +78,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 		CheckDestroy:      testAccCheckDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiscovererDescriptionConfig(rName, "description1"),
+				Config: testAccDiscovererConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -90,14 +90,14 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDiscovererDescriptionConfig(rName, "description2"),
+				Config: testAccDiscovererConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 			{
-				Config: testAccDiscovererConfig(rName),
+				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -119,7 +119,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDiscovererDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiscovererTags1Config(rName, "key1", "value1"),
+				Config: testAccDiscovererConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -132,7 +132,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDiscovererTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDiscovererConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -141,7 +141,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDiscovererTags1Config(rName, "key2", "value2"),
+				Config: testAccDiscovererConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -201,7 +201,7 @@ func testAccCheckDiscovererExists(n string, v *schemas.DescribeDiscovererOutput)
 	}
 }
 
-func testAccDiscovererConfig(rName string) string {
+func testAccDiscovererConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -213,7 +213,7 @@ resource "aws_schemas_discoverer" "test" {
 `, rName)
 }
 
-func testAccDiscovererDescriptionConfig(rName, description string) string {
+func testAccDiscovererConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -227,7 +227,7 @@ resource "aws_schemas_discoverer" "test" {
 `, rName, description)
 }
 
-func testAccDiscovererTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccDiscovererConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -243,7 +243,7 @@ resource "aws_schemas_discoverer" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDiscovererTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDiscovererConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q

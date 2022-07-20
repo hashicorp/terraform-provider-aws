@@ -41,12 +41,12 @@ func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig:   func() {},
-				Config:      testAccBucketObjectBasicConfig("", "a key"),
+				Config:      testAccBucketObjectConfig_basic("", "a key"),
 				ExpectError: bucketError,
 			},
 			{
 				PreConfig:   func() {},
-				Config:      testAccBucketObjectBasicConfig("a name", ""),
+				Config:      testAccBucketObjectConfig_basic("a name", ""),
 				ExpectError: keyError,
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccS3BucketObject_empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectEmptyConfig(rName),
+				Config:    testAccBucketObjectConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, ""),
@@ -98,7 +98,7 @@ func TestAccS3BucketObject_source(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectSourceConfig(rName, source),
+				Config: testAccBucketObjectConfig_source(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
@@ -128,7 +128,7 @@ func TestAccS3BucketObject_content(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectContentConfig(rName, "some_bucket_content"),
+				Config:    testAccBucketObjectConfig_content(rName, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "some_bucket_content"),
@@ -160,7 +160,7 @@ func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectEtagEncryption(rName, source),
+				Config:    testAccBucketObjectConfig_etagEncryption(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
@@ -191,7 +191,7 @@ func TestAccS3BucketObject_contentBase64(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectContentBase64Config(rName, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
+				Config:    testAccBucketObjectConfig_contentBase64(rName, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "some_bucket_content"),
@@ -272,7 +272,7 @@ func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_withContentCharacteristics(rName, source),
+				Config: testAccBucketObjectConfig_contentCharacteristics(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "{anything will do }"),
@@ -511,7 +511,7 @@ func TestAccS3BucketObject_kms(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withKMSID(rName, source),
+				Config:    testAccBucketObjectConfig_kmsID(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectSSE(resourceName, "aws:kms"),
@@ -545,7 +545,7 @@ func TestAccS3BucketObject_sse(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withSSE(rName, source),
+				Config:    testAccBucketObjectConfig_sse(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectSSE(resourceName, "AES256"),
@@ -626,7 +626,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_withMetadata(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
@@ -635,7 +635,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withMetadata(rName, "key1", "value1updated", "key3", "value3"),
+				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1updated", "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
@@ -644,7 +644,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectEmptyConfig(rName),
+				Config: testAccBucketObjectConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
@@ -674,7 +674,7 @@ func TestAccS3BucketObject_storageClass(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectContentConfig(rName, "some_bucket_content"),
+				Config:    testAccBucketObjectConfig_content(rName, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
@@ -738,7 +738,7 @@ func TestAccS3BucketObject_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -750,7 +750,7 @@ func TestAccS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withUpdatedTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -764,7 +764,7 @@ func TestAccS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withNoTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
@@ -774,7 +774,7 @@ func TestAccS3BucketObject_tags(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "changed stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj4),
 					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -810,7 +810,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -822,7 +822,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withUpdatedTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -836,7 +836,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withNoTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
@@ -846,7 +846,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "changed stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj4),
 					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -882,7 +882,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -894,7 +894,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withUpdatedTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -908,7 +908,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withNoTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
@@ -918,7 +918,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "changed stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj4),
 					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -947,7 +947,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -959,7 +959,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withUpdatedTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -973,7 +973,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withNoTags(rName, key, "stuff"),
+				Config:    testAccBucketObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
@@ -983,7 +983,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 			},
 			{
 				PreConfig: func() {},
-				Config:    testAccBucketObjectConfig_withTags(rName, key, "changed stuff"),
+				Config:    testAccBucketObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj4),
 					testAccCheckBucketObjectVersionIdDiffers(&obj4, &obj3),
@@ -1010,7 +1010,7 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_noObjectLockLegalHold(rName, "stuff"),
+				Config: testAccBucketObjectConfig_noLockLegalHold(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -1020,7 +1020,7 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withObjectLockLegalHold(rName, "stuff", "ON"),
+				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -1032,7 +1032,7 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 			},
 			// Remove legal hold but create a new object version to test force_destroy
 			{
-				Config: testAccBucketObjectConfig_withObjectLockLegalHold(rName, "changed stuff", "OFF"),
+				Config: testAccBucketObjectConfig_lockLegalHold(rName, "changed stuff", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
@@ -1058,7 +1058,7 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_withObjectLockLegalHold(rName, "stuff", "ON"),
+				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -1068,7 +1068,7 @@ func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withObjectLockLegalHold(rName, "stuff", "OFF"),
+				Config: testAccBucketObjectConfig_lockLegalHold(rName, "stuff", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -1095,7 +1095,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_noObjectLockRetention(rName, "stuff"),
+				Config: testAccBucketObjectConfig_noLockRetention(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -1105,7 +1105,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withObjectLockRetention(rName, "stuff", retainUntilDate),
+				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -1117,7 +1117,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 			},
 			// Remove retention period but create a new object version to test force_destroy
 			{
-				Config: testAccBucketObjectConfig_noObjectLockRetention(rName, "changed stuff"),
+				Config: testAccBucketObjectConfig_noLockRetention(rName, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
@@ -1146,7 +1146,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_withObjectLockRetention(rName, "stuff", retainUntilDate1),
+				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -1156,7 +1156,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withObjectLockRetention(rName, "stuff", retainUntilDate2),
+				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
@@ -1167,7 +1167,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_withObjectLockRetention(rName, "stuff", retainUntilDate3),
+				Config: testAccBucketObjectConfig_lockRetention(rName, "stuff", retainUntilDate3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdEquals(&obj3, &obj2),
@@ -1178,7 +1178,7 @@ func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_noObjectLockRetention(rName, "stuff"),
+				Config: testAccBucketObjectConfig_noLockRetention(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj4),
 					testAccCheckBucketObjectVersionIdEquals(&obj4, &obj3),
@@ -1204,7 +1204,7 @@ func TestAccS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_objectBucketKeyEnabled(rName, "stuff"),
+				Config: testAccBucketObjectConfig_objectKeyEnabled(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -1227,7 +1227,7 @@ func TestAccS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_bucketBucketKeyEnabled(rName, "stuff"),
+				Config: testAccBucketObjectConfig_bucketKeyEnabled(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -1250,7 +1250,7 @@ func TestAccS3BucketObject_defaultBucketSSE(t *testing.T) {
 		CheckDestroy:      testAccCheckBucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_defaultBucketSSE(rName, "stuff"),
+				Config: testAccBucketObjectConfig_defaultSSE(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "stuff"),
@@ -1277,7 +1277,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 				PreConfig: func() {},
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccBucketObjectConfig_withNoTags(rName, key, "stuff")),
+					testAccBucketObjectConfig_noTags(rName, key, "stuff")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -1292,7 +1292,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 				PreConfig: func() {},
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccBucketObjectConfig_withTags(rName, key, "stuff")),
+					testAccBucketObjectConfig_tags(rName, key, "stuff")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(resourceName, &obj),
 					testAccCheckBucketObjectBody(&obj, "stuff"),
@@ -1564,7 +1564,7 @@ func testAccCheckBucketObjectCheckTags(n string, expectedTags map[string]string)
 	}
 }
 
-func testAccBucketObjectBasicConfig(bucket, key string) string {
+func testAccBucketObjectConfig_basic(bucket, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_object" "object" {
   bucket = %[1]q
@@ -1573,7 +1573,7 @@ resource "aws_s3_bucket_object" "object" {
 `, bucket, key)
 }
 
-func testAccBucketObjectEmptyConfig(rName string) string {
+func testAccBucketObjectConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1586,7 +1586,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName)
 }
 
-func testAccBucketObjectSourceConfig(rName string, source string) string {
+func testAccBucketObjectConfig_source(rName string, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1601,7 +1601,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectConfig_withContentCharacteristics(rName string, source string) string {
+func testAccBucketObjectConfig_contentCharacteristics(rName string, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1618,7 +1618,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectContentConfig(rName string, content string) string {
+func testAccBucketObjectConfig_content(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1632,7 +1632,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectEtagEncryption(rName string, source string) string {
+func testAccBucketObjectConfig_etagEncryption(rName string, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1648,7 +1648,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectContentBase64Config(rName string, contentBase64 string) string {
+func testAccBucketObjectConfig_contentBase64(rName string, contentBase64 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1732,7 +1732,7 @@ resource "aws_s3_bucket_object" "test" {
 `, rName, bucketVersioning, source)
 }
 
-func testAccBucketObjectConfig_withKMSID(rName string, source string) string {
+func testAccBucketObjectConfig_kmsID(rName string, source string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "kms_key_1" {}
 
@@ -1749,7 +1749,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectConfig_withSSE(rName string, source string) string {
+func testAccBucketObjectConfig_sse(rName string, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1804,7 +1804,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, storage_class)
 }
 
-func testAccBucketObjectConfig_withTags(rName, key, content string) string {
+func testAccBucketObjectConfig_tags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1834,7 +1834,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, key, content)
 }
 
-func testAccBucketObjectConfig_withUpdatedTags(rName, key, content string) string {
+func testAccBucketObjectConfig_updatedTags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1865,7 +1865,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, key, content)
 }
 
-func testAccBucketObjectConfig_withNoTags(rName, key, content string) string {
+func testAccBucketObjectConfig_noTags(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1889,7 +1889,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, key, content)
 }
 
-func testAccBucketObjectConfig_withMetadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
+func testAccBucketObjectConfig_metadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1907,7 +1907,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, metadataKey1, metadataValue1, metadataKey2, metadataValue2)
 }
 
-func testAccBucketObjectConfig_noObjectLockLegalHold(rName string, content string) string {
+func testAccBucketObjectConfig_noLockLegalHold(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1934,7 +1934,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectConfig_withObjectLockLegalHold(rName string, content, legalHoldStatus string) string {
+func testAccBucketObjectConfig_lockLegalHold(rName string, content, legalHoldStatus string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1962,7 +1962,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content, legalHoldStatus)
 }
 
-func testAccBucketObjectConfig_noObjectLockRetention(rName string, content string) string {
+func testAccBucketObjectConfig_noLockRetention(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1989,7 +1989,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectConfig_withObjectLockRetention(rName string, content, retainUntilDate string) string {
+func testAccBucketObjectConfig_lockRetention(rName string, content, retainUntilDate string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -2054,7 +2054,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectConfig_objectBucketKeyEnabled(rName string, content string) string {
+func testAccBucketObjectConfig_objectKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
@@ -2075,7 +2075,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectConfig_bucketBucketKeyEnabled(rName string, content string) string {
+func testAccBucketObjectConfig_bucketKeyEnabled(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
@@ -2109,7 +2109,7 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, content)
 }
 
-func testAccBucketObjectConfig_defaultBucketSSE(rName string, content string) string {
+func testAccBucketObjectConfig_defaultSSE(rName string, content string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
