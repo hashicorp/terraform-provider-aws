@@ -28,7 +28,7 @@ func testAccTransitGatewayRoute_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName),
+				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
@@ -60,7 +60,7 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName),
+				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "2001:db8::/56"),
@@ -91,7 +91,7 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName),
+				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.1.0.0/16"),
@@ -121,7 +121,7 @@ func testAccTransitGatewayRoute_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName),
+				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRoute(), resourceName),
@@ -145,7 +145,7 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 		CheckDestroy:      testAccCheckTransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName),
+				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), transitGatewayVpcAttachmentResourceName),
@@ -217,7 +217,7 @@ func testAccCheckTransitGatewayRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccTransitGatewayRouteDestinationCIDRBlockConfig(rName string) string {
+func testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

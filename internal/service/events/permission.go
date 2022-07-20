@@ -143,7 +143,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -220,13 +220,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 		StatementId:  aws.String(statementID),
 	}
 
-	log.Printf("[DEBUG] Update EventBridge permission: %s", input)
 	_, err = conn.PutPermission(&input)
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] EventBridge permission %q not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error updating EventBridge permission (%s): %w", d.Id(), err)
 	}

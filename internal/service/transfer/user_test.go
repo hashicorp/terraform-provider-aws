@@ -57,7 +57,7 @@ func testAccUser_posix(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPOSIXConfig(rName),
+				Config: testAccUserConfig_posix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "1"),
@@ -71,7 +71,7 @@ func testAccUser_posix(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPOSIXUpdatedConfig(rName),
+				Config: testAccUserConfig_posixUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "1"),
@@ -164,28 +164,28 @@ func testAccUser_UserName_Validation(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserName_validation("!@#$%^"),
+				Config:      testAccUserConfig_nameValidation("!@#$%^"),
 				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:      testAccUserName_validation(sdkacctest.RandString(2)),
+				Config:      testAccUserConfig_nameValidation(sdkacctest.RandString(2)),
 				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserName_validation(sdkacctest.RandString(33)),
+				Config:             testAccUserConfig_nameValidation(sdkacctest.RandString(33)),
 				ExpectNonEmptyPlan: true,
 				PlanOnly:           true,
 			},
 			{
-				Config:      testAccUserName_validation(sdkacctest.RandString(101)),
+				Config:      testAccUserConfig_nameValidation(sdkacctest.RandString(101)),
 				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:      testAccUserName_validation("-abcdef"),
+				Config:      testAccUserConfig_nameValidation("-abcdef"),
 				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserName_validation("valid_username"),
+				Config:             testAccUserConfig_nameValidation("valid_username"),
 				ExpectNonEmptyPlan: true,
 				PlanOnly:           true,
 			},
@@ -342,7 +342,7 @@ resource "aws_transfer_user" "test" {
 `, rName))
 }
 
-func testAccUserName_validation(rName string) string {
+func testAccUserConfig_nameValidation(rName string) string {
 	return acctest.ConfigCompose(testAccUserConfig_base, fmt.Sprintf(`
 resource "aws_transfer_user" "test" {
   server_id = aws_transfer_server.test.id
@@ -791,7 +791,7 @@ resource "aws_transfer_user" "test" {
 `, rName))
 }
 
-func testAccUserPOSIXConfig(rName string) string {
+func testAccUserConfig_posix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   domain = "EFS"
@@ -852,7 +852,7 @@ resource "aws_transfer_user" "test" {
 `, rName)
 }
 
-func testAccUserPOSIXUpdatedConfig(rName string) string {
+func testAccUserConfig_posixUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   domain = "EFS"

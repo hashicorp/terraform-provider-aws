@@ -26,7 +26,7 @@ func TestAccSFNActivity_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivityBasicConfig(name),
+				Config: testAccActivityConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -53,7 +53,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckActivityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivityBasicTags1Config(name, "key1", "value1"),
+				Config: testAccActivityConfig_basicTags1(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -66,7 +66,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccActivityBasicTags2Config(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccActivityConfig_basicTags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -75,7 +75,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccActivityBasicTags1Config(name, "key2", "value2"),
+				Config: testAccActivityConfig_basicTags1(name, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -142,7 +142,7 @@ func testAccCheckActivityDestroy(s *terraform.State) error {
 	return fmt.Errorf("Default error in Step Function Test")
 }
 
-func testAccActivityBasicConfig(rName string) string {
+func testAccActivityConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
@@ -150,7 +150,7 @@ resource "aws_sfn_activity" "test" {
 `, rName)
 }
 
-func testAccActivityBasicTags1Config(rName, tag1Key, tag1Value string) string {
+func testAccActivityConfig_basicTags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
@@ -162,7 +162,7 @@ resource "aws_sfn_activity" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccActivityBasicTags2Config(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccActivityConfig_basicTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"

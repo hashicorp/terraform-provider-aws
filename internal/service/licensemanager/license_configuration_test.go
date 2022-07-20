@@ -25,7 +25,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
+				Config: testAccLicenseConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
@@ -61,13 +61,13 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 		CheckDestroy:      testAccCheckLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseManagerLicenseConfigurationConfig_basic,
+				Config: testAccLicenseConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 				),
 			},
 			{
-				Config: testAccLicenseManagerLicenseConfigurationConfig_update,
+				Config: testAccLicenseConfigurationConfig_update,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "name", "NewName"),
@@ -142,7 +142,7 @@ func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
 
 }
 
-const testAccLicenseManagerLicenseConfigurationConfig_basic = `
+const testAccLicenseConfigurationConfig_basic = `
 resource "aws_licensemanager_license_configuration" "example" {
   name                     = "Example"
   description              = "Example"
@@ -160,7 +160,7 @@ resource "aws_licensemanager_license_configuration" "example" {
 }
 `
 
-const testAccLicenseManagerLicenseConfigurationConfig_update = `
+const testAccLicenseConfigurationConfig_update = `
 resource "aws_licensemanager_license_configuration" "example" {
   name                  = "NewName"
   license_count         = 123

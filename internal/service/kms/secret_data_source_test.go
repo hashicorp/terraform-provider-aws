@@ -17,14 +17,14 @@ func TestAccKMSSecretDataSource_removed(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretDataSourceConfig,
+				Config:      testAccSecretDataSourceConfig_basic,
 				ExpectError: regexp.MustCompile(tfkms.SecretRemovedMessage),
 			},
 		},
 	})
 }
 
-const testAccSecretDataSourceConfig = `
+const testAccSecretDataSourceConfig_basic = `
 data "aws_kms_secret" "testing" {
   secret {
     name    = "secret_name"

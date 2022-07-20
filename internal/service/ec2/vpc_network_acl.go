@@ -153,7 +153,7 @@ func resourceNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNetworkAclInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkAcl),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkAcl),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -228,10 +228,10 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 			ingressEntries = append(ingressEntries, v)
 		}
 	}
-	if err := d.Set("egress", flattenNetworkAclEntries(egressEntries)); err != nil {
+	if err := d.Set("egress", flattenNetworkACLEntries(egressEntries)); err != nil {
 		return fmt.Errorf("error setting egress: %w", err)
 	}
-	if err := d.Set("ingress", flattenNetworkAclEntries(ingressEntries)); err != nil {
+	if err := d.Set("ingress", flattenNetworkACLEntries(ingressEntries)); err != nil {
 		return fmt.Errorf("error setting ingress: %w", err)
 	}
 
@@ -286,9 +286,9 @@ func resourceNetworkACLDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting EC2 Network ACL: %s", d.Id())
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.DeleteNetworkAcl(input)
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound) {
 		return nil
 	}
 
@@ -407,7 +407,7 @@ func networkACLRuleHash(v interface{}) int {
 }
 
 func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
-	naclEntries := expandNetworkAclEntries(tfList, egress)
+	naclEntries := expandNetworkACLEntries(tfList, egress)
 
 	for _, naclEntry := range naclEntries {
 		if naclEntry == nil {
@@ -447,11 +447,11 @@ func createNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{},
 	return nil
 }
 
-func deleteNetworkACLEntries(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
-	return deleteNetworkAclEntries(conn, naclID, expandNetworkAclEntries(tfList, egress))
+func deleteNetworkACLEntriesList(conn *ec2.EC2, naclID string, tfList []interface{}, egress bool) error {
+	return deleteNetworkACLEntries(conn, naclID, expandNetworkACLEntries(tfList, egress))
 }
 
-func deleteNetworkAclEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.NetworkAclEntry) error {
+func deleteNetworkACLEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.NetworkAclEntry) error {
 	for _, naclEntry := range naclEntries {
 		if naclEntry == nil {
 			continue
@@ -483,7 +483,7 @@ func deleteNetworkAclEntries(conn *ec2.EC2, naclID string, naclEntries []*ec2.Ne
 }
 
 func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, egress bool) error {
-	if err := deleteNetworkACLEntries(conn, naclID, os.Difference(ns).List(), egress); err != nil {
+	if err := deleteNetworkACLEntriesList(conn, naclID, os.Difference(ns).List(), egress); err != nil {
 		return err
 	}
 
@@ -494,7 +494,7 @@ func updateNetworkACLEntries(conn *ec2.EC2, naclID string, os, ns *schema.Set, e
 	return nil
 }
 
-func expandNetworkAclEntry(tfMap map[string]interface{}, egress bool) *ec2.NetworkAclEntry {
+func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.NetworkAclEntry {
 	if tfMap == nil {
 		return nil
 	}
@@ -555,7 +555,7 @@ func expandNetworkAclEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 	return apiObject
 }
 
-func expandNetworkAclEntries(tfList []interface{}, egress bool) []*ec2.NetworkAclEntry {
+func expandNetworkACLEntries(tfList []interface{}, egress bool) []*ec2.NetworkAclEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -569,7 +569,7 @@ func expandNetworkAclEntries(tfList []interface{}, egress bool) []*ec2.NetworkAc
 			continue
 		}
 
-		apiObject := expandNetworkAclEntry(tfMap, egress)
+		apiObject := expandNetworkACLEntry(tfMap, egress)
 
 		if apiObject == nil {
 			continue
@@ -581,7 +581,7 @@ func expandNetworkAclEntries(tfList []interface{}, egress bool) []*ec2.NetworkAc
 	return apiObjects
 }
 
-func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface{} {
+func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -640,7 +640,7 @@ func flattenNetworkAclEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	return tfMap
 }
 
-func flattenNetworkAclEntries(apiObjects []*ec2.NetworkAclEntry) []interface{} {
+func flattenNetworkACLEntries(apiObjects []*ec2.NetworkAclEntry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -652,7 +652,7 @@ func flattenNetworkAclEntries(apiObjects []*ec2.NetworkAclEntry) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenNetworkAclEntry(apiObject))
+		tfList = append(tfList, flattenNetworkACLEntry(apiObject))
 	}
 
 	return tfList

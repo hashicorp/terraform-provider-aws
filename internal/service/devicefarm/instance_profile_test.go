@@ -156,7 +156,7 @@ func testAccCheckInstanceProfileExists(n string, v *devicefarm.InstanceProfile) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindInstanceProfileByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindInstanceProfileByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -179,7 +179,7 @@ func testAccCheckInstanceProfileDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindInstanceProfileByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindInstanceProfileByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

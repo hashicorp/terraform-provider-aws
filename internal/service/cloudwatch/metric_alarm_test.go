@@ -27,7 +27,7 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmConfig(rName),
+				Config: testAccMetricAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
@@ -68,7 +68,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, "reboot"),
+				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -80,21 +80,21 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, "recover"),
+				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "recover"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, "stop"),
+				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "stop"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, "terminate"),
+				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "terminate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -116,7 +116,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmAlarmActionsSNSTopicConfig(rName),
+				Config: testAccMetricAlarmConfig_actionsSNSTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -143,7 +143,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmAlarmActionsSWFActionConfig(rName),
+				Config: testAccMetricAlarmConfig_actionsSWFAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "1"),
@@ -170,7 +170,7 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmDatapointsToAlarmConfig(rName),
+				Config: testAccMetricAlarmConfig_datapointsTo(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "2"),
@@ -192,21 +192,21 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmTreatMissingDataConfig(rName),
+				Config: testAccMetricAlarmConfig_treatMissingData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "missing"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmTreatMissingDataUpdateConfig(rName),
+				Config: testAccMetricAlarmConfig_treatMissingDataUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "breaching"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmTreatMissingDataConfigNoAttr(rName),
+				Config: testAccMetricAlarmConfig_treatMissingDataNoAttr(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "treat_missing_data", "missing"),
@@ -233,14 +233,14 @@ func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmTreatEvaluateLowSampleCountPercentilesConfig(rName),
+				Config: testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentiles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "evaluate_low_sample_count_percentiles", "evaluate"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmTreatEvaluateLowSampleCountPercentilesUpdatedConfig(rName),
+				Config: testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentilesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "evaluate_low_sample_count_percentiles", "ignore"),
@@ -262,137 +262,137 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "IQM(1:2)"), // IQM accepts no args
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "IQM(1:2)"), // IQM accepts no args
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "iqm10"), // IQM accepts no args
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "iqm10"), // IQM accepts no args
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			// {  TODO: more complex regex to reject this
-			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(5%:10%)"),  // PR args must be absolute
+			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "PR(5%:10%)"),  // PR args must be absolute
 			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			// {  TODO: more complex regex to reject this
-			// 	Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:)"),  // at least one arg must be provided
+			// 	Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TC(:)"),  // at least one arg must be provided
 			// 	ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			// },
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "WM"), // missing syntax
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "WM"), // missing syntax
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "p"), // missing arg
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "p"), // missing arg
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "AB(1:2)"), // unknown stat 'AB'
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "AB(1:2)"), // unknown stat 'AB'
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricAlarmExtendedStatisticConfig(rName, "cd42"), // unknown stat 'cd'
+				Config:      testAccMetricAlarmConfig_extendedStatistic(rName, "cd42"), // unknown stat 'cd'
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p88.0"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p88.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p88.0"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p0.0"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p0.0"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p100"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p100"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "p95"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "p95"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "p95"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "tm90"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "tm90"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "tm90"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TM(2%:98%)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TM(2%:98%)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TM(2%:98%)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TM(150:1000)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TM(150:1000)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TM(150:1000)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "IQM"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "IQM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "IQM"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "wm98"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "wm98"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "wm98"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(:300)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "PR(:300)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "PR(:300)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "PR(100:2000)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "PR(100:2000)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "PR(100:2000)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "tc90"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "tc90"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "tc90"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(0.005:0.030)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TC(0.005:0.030)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(0.005:0.030)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TS(80%:)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TS(80%:)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TS(80%:)"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmExtendedStatisticConfig(rName, "TC(:0.5)"),
+				Config: testAccMetricAlarmConfig_extendedStatistic(rName, "TC(:0.5)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "extended_statistic", "TC(:0.5)"),
@@ -414,46 +414,46 @@ func TestAccCloudWatchMetricAlarm_expression(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricAlarmWithBadExpressionConfig(rName),
+				Config:      testAccMetricAlarmConfig_badExpression(rName),
 				ExpectError: regexp.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
-				Config: testAccMetricAlarmWithExpressionConfig(rName),
+				Config: testAccMetricAlarmConfig_expression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmWithCrossAccountMetricConfig(rName),
+				Config: testAccMetricAlarmConfig_crossAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmWithExpressionUpdatedConfig(rName),
+				Config: testAccMetricAlarmConfig_expressionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "3"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmWithExpressionConfig(rName),
+				Config: testAccMetricAlarmConfig_expression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmWithAnomalyDetectionExpressionConfig(rName),
+				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricAlarmWithExpressionWithQueryUpdatedConfig(rName),
+				Config: testAccMetricAlarmConfig_expressionQueryUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
@@ -477,7 +477,7 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricAlarmMissingStatisticConfig(rName),
+				Config:      testAccMetricAlarmConfig_missingStatistic(rName),
 				ExpectError: regexp.MustCompile("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm"),
 			},
 		},
@@ -496,7 +496,7 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmTags1Config(rName, "key1", "value1"),
+				Config: testAccMetricAlarmConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -509,7 +509,7 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricAlarmTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMetricAlarmConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -518,7 +518,7 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMetricAlarmTags1Config(rName, "key2", "value2"),
+				Config: testAccMetricAlarmConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -541,7 +541,7 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMetricAlarmDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmConfig(rName),
+				Config: testAccMetricAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(resourceName, &alarm),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatch.ResourceMetricAlarm(), resourceName),
@@ -592,7 +592,7 @@ func testAccCheckMetricAlarmDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccMetricAlarmConfig(rName string) string {
+func testAccMetricAlarmConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -613,7 +613,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmDatapointsToAlarmConfig(rName string) string {
+func testAccMetricAlarmConfig_datapointsTo(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -635,7 +635,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTreatMissingDataConfig(rName string) string {
+func testAccMetricAlarmConfig_treatMissingData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -657,7 +657,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTreatMissingDataUpdateConfig(rName string) string {
+func testAccMetricAlarmConfig_treatMissingDataUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -679,7 +679,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTreatMissingDataConfigNoAttr(rName string) string {
+func testAccMetricAlarmConfig_treatMissingDataNoAttr(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -700,7 +700,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTreatEvaluateLowSampleCountPercentilesConfig(rName string) string {
+func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentiles(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                            = "%s"
@@ -722,7 +722,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTreatEvaluateLowSampleCountPercentilesUpdatedConfig(rName string) string {
+func testAccMetricAlarmConfig_treatEvaluateLowSampleCountPercentilesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                            = "%s"
@@ -744,7 +744,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmExtendedStatisticConfig(rName string, stat string) string {
+func testAccMetricAlarmConfig_extendedStatistic(rName string, stat string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -765,7 +765,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, stat)
 }
 
-func testAccMetricAlarmMissingStatisticConfig(rName string) string {
+func testAccMetricAlarmConfig_missingStatistic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -785,7 +785,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithExpressionConfig(rName string) string {
+func testAccMetricAlarmConfig_expression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -821,7 +821,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithCrossAccountMetricConfig(rName string) string {
+func testAccMetricAlarmConfig_crossAccount(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -854,7 +854,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithAnomalyDetectionExpressionConfig(rName string) string {
+func testAccMetricAlarmConfig_anomalyDetectionExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -891,7 +891,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithExpressionUpdatedConfig(rName string) string {
+func testAccMetricAlarmConfig_expressionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -933,7 +933,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithExpressionWithQueryUpdatedConfig(rName string) string {
+func testAccMetricAlarmConfig_expressionQueryUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -969,7 +969,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmWithBadExpressionConfig(rName string) string {
+func testAccMetricAlarmConfig_badExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = "%s"
@@ -1002,9 +1002,9 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
 // EC2 Automate requires a valid EC2 instance
 // ValidationError: Invalid use of EC2 'Recover' action. i-abc123 is not a valid EC2 instance.
-func testAccMetricAlarmAlarmActionsEC2AutomateConfig(rName, action string) string {
+func testAccMetricAlarmConfig_actionsEC2Automate(rName, action string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1058,7 +1058,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, action))
 }
 
-func testAccMetricAlarmAlarmActionsSNSTopicConfig(rName string) string {
+func testAccMetricAlarmConfig_actionsSNSTopic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %q
@@ -1084,7 +1084,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, rName)
 }
 
-func testAccMetricAlarmAlarmActionsSWFActionConfig(rName string) string {
+func testAccMetricAlarmConfig_actionsSWFAction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {
 }
@@ -1115,7 +1115,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
-func testAccMetricAlarmTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccMetricAlarmConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
@@ -1140,7 +1140,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccMetricAlarmTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMetricAlarmConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q

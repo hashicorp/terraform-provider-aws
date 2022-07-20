@@ -44,7 +44,7 @@ func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerDataSourceConfig_service_managed(rName),
+				Config: testAccServerDataSourceConfig_serviceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -95,7 +95,7 @@ data "aws_transfer_server" "test" {
 }
 `
 
-func testAccServerDataSourceConfig_service_managed(rName string) string {
+func testAccServerDataSourceConfig_serviceManaged(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "tf-test-transfer-server-iam-role-%[1]s"

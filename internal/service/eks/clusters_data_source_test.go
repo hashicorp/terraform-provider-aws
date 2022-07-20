@@ -20,7 +20,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClustersDataSourceConfig_Basic(rName),
+				Config: testAccClustersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
 				),
@@ -29,9 +29,9 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClustersDataSourceConfig_Basic(rName string) string {
+func testAccClustersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfig_Required(rName), `
+		testAccClusterConfig_required(rName), `
 data "aws_eks_clusters" "test" {
   depends_on = [aws_eks_cluster.test]
 }

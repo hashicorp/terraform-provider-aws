@@ -291,7 +291,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stream_arn", table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
-	if err := d.Set("server_side_encryption", flattenDynamodDbTableServerSideEncryption(table.SSEDescription)); err != nil {
+	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %w", err)
 	}
 

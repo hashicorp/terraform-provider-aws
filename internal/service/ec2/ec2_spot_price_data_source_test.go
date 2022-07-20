@@ -21,7 +21,7 @@ func TestAccEC2SpotPriceDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotPriceDataSourceConfig(),
+				Config: testAccSpotPriceDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
@@ -41,7 +41,7 @@ func TestAccEC2SpotPriceDataSource_filter(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotPriceFilterDataSourceConfig(),
+				Config: testAccSpotPriceDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
@@ -69,7 +69,7 @@ func testAccPreCheckSpotPrice(t *testing.T) {
 	}
 }
 
-func testAccSpotPriceDataSourceConfig() string {
+func testAccSpotPriceDataSourceConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 
@@ -93,7 +93,7 @@ data "aws_ec2_spot_price" "test" {
 `)
 }
 
-func testAccSpotPriceFilterDataSourceConfig() string {
+func testAccSpotPriceDataSourceConfig_filter() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 

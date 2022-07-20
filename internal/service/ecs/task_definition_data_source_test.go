@@ -21,7 +21,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTaskDefinitionDataSourceConfig(rName),
+				Config: testAccTaskDefinitionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ecs_task_definition.mongo", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "family", rName),
@@ -35,7 +35,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 	})
 }
 
-func testAccCheckTaskDefinitionDataSourceConfig(rName string) string {
+func testAccTaskDefinitionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "mongo_role" {
   name = "%[1]s"

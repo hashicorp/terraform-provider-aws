@@ -21,7 +21,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionURLBasicDataSourceConfig(rName),
+				Config: testAccFunctionURLDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "authorization_type", resourceName, "authorization_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.#", resourceName, "cors.#"),
@@ -44,7 +44,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFunctionURLDataSourceBaseConfig(rName string) string {
+func testAccFunctionURLDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -126,8 +126,8 @@ resource "aws_lambda_function_url" "test" {
 `, rName)
 }
 
-func testAccFunctionURLBasicDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionURLDataSourceBaseConfig(rName), `
+func testAccFunctionURLDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionURLDataSourceConfig_base(rName), `
 data "aws_lambda_function_url" "test" {
   function_name = aws_lambda_function_url.test.function_name
 }

@@ -30,7 +30,7 @@ func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableBasicDataSourceConfig(rName),
+				Config: testAccVPCRouteTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By tags.
 					acctest.MatchResourceAttrRegionalARN(datasource1Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -108,7 +108,7 @@ func TestAccVPCRouteTableDataSource_main(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableMainDataSourceConfig(rName),
+				Config: testAccVPCRouteTableDataSourceConfig_main(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
@@ -165,7 +165,7 @@ func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr strin
 	}
 }
 
-func testAccRouteTableBasicDataSourceConfig(rName string) string {
+func testAccVPCRouteTableDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -247,7 +247,7 @@ data "aws_route_table" "by_id" {
 `, rName)
 }
 
-func testAccRouteTableMainDataSourceConfig(rName string) string {
+func testAccVPCRouteTableDataSourceConfig_main(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

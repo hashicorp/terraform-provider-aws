@@ -25,7 +25,7 @@ func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, engineVersion, license),
+				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, license),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
@@ -51,7 +51,7 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableDBInstancePreferredDataSourceConfig(engine, engineVersion, license, preferredOption),
+				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, license, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
@@ -81,7 +81,7 @@ func testAccPreCheckOrderableDBInstance(t *testing.T) {
 	}
 }
 
-func testAccOrderableDBInstanceBasicDataSourceConfig(class, engine, version, license string) string {
+func testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   instance_class = %q
@@ -92,7 +92,7 @@ data "aws_docdb_orderable_db_instance" "test" {
 `, class, engine, version, license)
 }
 
-func testAccOrderableDBInstancePreferredDataSourceConfig(engine, version, license, preferredOption string) string {
+func testAccOrderableDBInstanceDataSourceConfig_preferred(engine, version, license, preferredOption string) string {
 	return fmt.Sprintf(`
 data "aws_docdb_orderable_db_instance" "test" {
   engine         = %q

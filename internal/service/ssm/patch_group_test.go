@@ -24,7 +24,7 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchGroupBasicConfig(rName),
+				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchGroupExists(resourceName),
 				),
@@ -44,7 +44,7 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchGroupBasicConfig(rName),
+				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
@@ -68,7 +68,7 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 		CheckDestroy:      testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchGroupMultipleBaselinesConfig(rName),
+				Config: testAccPatchGroupConfig_multipleBaselines(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchGroupExists(resourceName1),
 					testAccCheckPatchGroupExists(resourceName2),
@@ -138,7 +138,7 @@ func testAccCheckPatchGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPatchGroupBasicConfig(rName string) string {
+func testAccPatchGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "foo" {
   name             = %[1]q
@@ -152,7 +152,7 @@ resource "aws_ssm_patch_group" "patchgroup" {
 `, rName)
 }
 
-func testAccPatchGroupMultipleBaselinesConfig(rName string) string {
+func testAccPatchGroupConfig_multipleBaselines(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test1" {
   approved_patches = ["KB123456"]

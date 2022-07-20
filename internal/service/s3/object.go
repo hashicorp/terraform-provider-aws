@@ -513,7 +513,7 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
@@ -546,9 +546,9 @@ func resourceObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId 
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn
-		keyMetadata, err := kms.FindKeyByID(conn, DefaultKmsKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKmsKeyAlias, err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
 		}
 
 		if aws.StringValue(sseKMSKeyId) != aws.StringValue(keyMetadata.Arn) {

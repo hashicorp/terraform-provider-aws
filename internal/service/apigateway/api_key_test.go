@@ -28,7 +28,7 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyConfig(rName),
+				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apikeys/+.`)),
@@ -61,7 +61,7 @@ func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyTags1Config(rName, "key1", "value1"),
+				Config: testAccAPIKeyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -69,7 +69,7 @@ func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAPIKeyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAPIKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -78,7 +78,7 @@ func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAPIKeyTags1Config(rName, "key2", "value2"),
+				Config: testAccAPIKeyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -106,7 +106,7 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyDescriptionConfig(rName, "description1"),
+				Config: testAccAPIKeyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -118,7 +118,7 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAPIKeyDescriptionConfig(rName, "description2"),
+				Config: testAccAPIKeyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
@@ -141,7 +141,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyEnabledConfig(rName, false),
+				Config: testAccAPIKeyConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -153,7 +153,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAPIKeyEnabledConfig(rName, true),
+				Config: testAccAPIKeyConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
@@ -176,7 +176,7 @@ func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyValueConfig(rName, `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+				Config: testAccAPIKeyConfig_value(rName, `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "value", `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
@@ -203,7 +203,7 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyConfig(rName),
+				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(resourceName, &apiKey1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceAPIKey(), resourceName),
@@ -286,7 +286,7 @@ func testAccCheckAPIKeyNotRecreated(i, j *apigateway.ApiKey) resource.TestCheckF
 	}
 }
 
-func testAccAPIKeyConfig(rName string) string {
+func testAccAPIKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
@@ -294,7 +294,7 @@ resource "aws_api_gateway_api_key" "test" {
 `, rName)
 }
 
-func testAccAPIKeyTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAPIKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
@@ -306,7 +306,7 @@ resource "aws_api_gateway_api_key" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAPIKeyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAPIKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
@@ -319,7 +319,7 @@ resource "aws_api_gateway_api_key" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAPIKeyDescriptionConfig(rName, description string) string {
+func testAccAPIKeyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   description = %[2]q
@@ -328,7 +328,7 @@ resource "aws_api_gateway_api_key" "test" {
 `, rName, description)
 }
 
-func testAccAPIKeyEnabledConfig(rName string, enabled bool) string {
+func testAccAPIKeyConfig_enabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   enabled = %[2]t
@@ -337,7 +337,7 @@ resource "aws_api_gateway_api_key" "test" {
 `, rName, enabled)
 }
 
-func testAccAPIKeyValueConfig(rName, value string) string {
+func testAccAPIKeyConfig_value(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
   name  = %[1]q

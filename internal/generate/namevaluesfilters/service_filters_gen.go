@@ -22,8 +22,8 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 
 // []*SERVICE.Filter handling
 
-// AutoscalingFilters returns autoscaling service filters.
-func (filters NameValuesFilters) AutoscalingFilters() []*autoscaling.Filter {
+// AutoScalingFilters returns autoscaling service filters.
+func (filters NameValuesFilters) AutoScalingFilters() []*autoscaling.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -66,8 +66,8 @@ func (filters NameValuesFilters) DatabasemigrationserviceFilters() []*databasemi
 	return result
 }
 
-// DocdbFilters returns docdb service filters.
-func (filters NameValuesFilters) DocdbFilters() []*docdb.Filter {
+// DocDBFilters returns docdb service filters.
+func (filters NameValuesFilters) DocDBFilters() []*docdb.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -88,8 +88,8 @@ func (filters NameValuesFilters) DocdbFilters() []*docdb.Filter {
 	return result
 }
 
-// Ec2Filters returns ec2 service filters.
-func (filters NameValuesFilters) Ec2Filters() []*ec2.Filter {
+// EC2Filters returns ec2 service filters.
+func (filters NameValuesFilters) EC2Filters() []*ec2.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -154,8 +154,8 @@ func (filters NameValuesFilters) ElasticsearchserviceFilters() []*elasticsearchs
 	return result
 }
 
-// FsxFilters returns fsx service filters.
-func (filters NameValuesFilters) FsxFilters() []*fsx.Filter {
+// FSxFilters returns fsx service filters.
+func (filters NameValuesFilters) FSxFilters() []*fsx.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -242,8 +242,8 @@ func (filters NameValuesFilters) NeptuneFilters() []*neptune.Filter {
 	return result
 }
 
-// RdsFilters returns rds service filters.
-func (filters NameValuesFilters) RdsFilters() []*rds.Filter {
+// RDSFilters returns rds service filters.
+func (filters NameValuesFilters) RDSFilters() []*rds.Filter {
 	m := filters.Map()
 
 	if len(m) == 0 {

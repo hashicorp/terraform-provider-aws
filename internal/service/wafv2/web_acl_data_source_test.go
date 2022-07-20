@@ -22,11 +22,11 @@ func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWebACLDataSource_NonExistent(name),
+				Config:      testAccWebACLDataSourceConfig_nonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 WebACL not found`),
 			},
 			{
-				Config: testAccWebACLDataSource_Name(name),
+				Config: testAccWebACLDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%v/.+$", name))),
@@ -40,7 +40,7 @@ func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWebACLDataSource_Name(name string) string {
+func testAccWebACLDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = "%s"
@@ -64,7 +64,7 @@ data "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLDataSource_NonExistent(name string) string {
+func testAccWebACLDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = "%s"

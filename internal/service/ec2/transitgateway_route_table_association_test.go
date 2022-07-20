@@ -26,7 +26,7 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableAssociationConfig(),
+				Config: testAccTransitGatewayRouteTableAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(resourceName, &transitGatewayRouteTablePropagtion1),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -113,7 +113,7 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccTransitGatewayRouteTableAssociationConfig() string {
+func testAccTransitGatewayRouteTableAssociationConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

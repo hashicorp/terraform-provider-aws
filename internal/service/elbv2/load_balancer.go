@@ -361,7 +361,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.CreateLoadBalancer(elbOpts)
 
 	// Some partitions may not support tag-on-create
-	if elbOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if elbOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		elbOpts.Tags = nil
 		resp, err = conn.CreateLoadBalancer(elbOpts)
@@ -389,7 +389,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 			return resourceLoadBalancerUpdate(d, meta)
 		}
@@ -624,7 +624,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 
 			_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
@@ -692,7 +692,7 @@ func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*e
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -735,7 +735,7 @@ func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -774,7 +774,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 	return nil
 }
 
-func getLbNameFromArn(arn string) (string, error) {
+func getLBNameFromARN(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
@@ -914,7 +914,7 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 		return nil
 	}

@@ -181,7 +181,7 @@ func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, met
 
 	_, err = conn.DeleteTransitGatewayPrefixListReference(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 

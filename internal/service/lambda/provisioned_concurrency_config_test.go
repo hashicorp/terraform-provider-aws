@@ -27,7 +27,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyQualifierFunctionVersionConfig(rName),
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierFunctionVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
@@ -57,7 +57,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 		CheckDestroy:      testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(lambdaFunctionResourceName, rName, &function),
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
@@ -80,7 +80,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaProvisionedConcu
 		CheckDestroy:      testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					testAccCheckProvisionedConcurrencyDisappearsConfig(resourceName),
@@ -106,7 +106,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 		CheckDestroy:      testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 1),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
@@ -120,7 +120,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName, 2),
+				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
@@ -144,7 +144,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Qualifier_aliasName(t *testing.T)
 		CheckDestroy:      testAccCheckProvisionedConcurrencyConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedConcurrencyQualifierAliasNameConfig(rName),
+				Config: testAccProvisionedConcurrencyConfigConfig_qualifierAliasName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, "name"),
@@ -265,7 +265,7 @@ func testAccCheckProvisionedConcurrencyExistsConfig(resourceName string) resourc
 	}
 }
 
-func testAccProvisionedConcurrencyBaseConfig(rName string) string {
+func testAccProvisionedConcurrencyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -307,8 +307,8 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccProvisionedConcurrencyProvisionedConcurrentExecutionsConfig(rName string, provisionedConcurrentExecutions int) string {
-	return testAccProvisionedConcurrencyBaseConfig(rName) + fmt.Sprintf(`
+func testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName string, provisionedConcurrentExecutions int) string {
+	return testAccProvisionedConcurrencyConfig_base(rName) + fmt.Sprintf(`
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
   provisioned_concurrent_executions = %[1]d
@@ -317,8 +317,8 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
 `, provisionedConcurrentExecutions)
 }
 
-func testAccProvisionedConcurrencyQualifierAliasNameConfig(rName string) string {
-	return testAccProvisionedConcurrencyBaseConfig(rName) + `
+func testAccProvisionedConcurrencyConfigConfig_qualifierAliasName(rName string) string {
+	return testAccProvisionedConcurrencyConfig_base(rName) + `
 resource "aws_lambda_alias" "test" {
   function_name    = aws_lambda_function.test.function_name
   function_version = aws_lambda_function.test.version
@@ -333,8 +333,8 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
 `
 }
 
-func testAccProvisionedConcurrencyQualifierFunctionVersionConfig(rName string) string {
-	return testAccProvisionedConcurrencyBaseConfig(rName) + `
+func testAccProvisionedConcurrencyConfigConfig_qualifierFunctionVersion(rName string) string {
+	return testAccProvisionedConcurrencyConfig_base(rName) + `
 resource "aws_lambda_provisioned_concurrency_config" "test" {
   function_name                     = aws_lambda_function.test.function_name
   provisioned_concurrent_executions = 1

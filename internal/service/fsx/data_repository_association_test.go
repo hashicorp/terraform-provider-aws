@@ -293,7 +293,7 @@ func TestAccFSxDataRepositoryAssociation_deleteDataInFilesystem(t *testing.T) {
 		CheckDestroy:      testAccCheckDataRepositoryAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataRepositoryAssociationConfig_deleteDataInFilesystem(bucketName, fileSystemPath, "true"),
+				Config: testAccDataRepositoryAssociationConfig_deleteInFilesystem(bucketName, fileSystemPath, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "delete_data_in_filesystem", "true"),
@@ -615,7 +615,7 @@ resource "aws_fsx_data_repository_association" "test" {
 `, bucketPath, fileSystemPath, fileChunkSize))
 }
 
-func testAccDataRepositoryAssociationConfig_deleteDataInFilesystem(bucketName, fileSystemPath, deleteDataInFilesystem string) string {
+func testAccDataRepositoryAssociationConfig_deleteInFilesystem(bucketName, fileSystemPath, deleteDataInFilesystem string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {

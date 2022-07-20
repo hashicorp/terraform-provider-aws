@@ -19,7 +19,7 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostIDDataSourceConfig(),
+				Config: testAccOutpostDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/op-.+$`).String()),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone", regexp.MustCompile(`^.+$`)),
@@ -45,7 +45,7 @@ func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostNameDataSourceConfig(),
+				Config: testAccOutpostDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -71,7 +71,7 @@ func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostARNDataSourceConfig(),
+				Config: testAccOutpostDataSourceConfig_arn(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -97,7 +97,7 @@ func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostOwnerIDDataSourceConfig(),
+				Config: testAccOutpostDataSourceConfig_ownerID(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", sourceDataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
@@ -112,7 +112,7 @@ func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
 	})
 }
 
-func testAccOutpostIDDataSourceConfig() string {
+func testAccOutpostDataSourceConfig_id() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -122,7 +122,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccOutpostNameDataSourceConfig() string {
+func testAccOutpostDataSourceConfig_name() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -136,7 +136,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccOutpostARNDataSourceConfig() string {
+func testAccOutpostDataSourceConfig_arn() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -150,7 +150,7 @@ data "aws_outposts_outpost" "test" {
 `
 }
 
-func testAccOutpostOwnerIDDataSourceConfig() string {
+func testAccOutpostDataSourceConfig_ownerID() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 

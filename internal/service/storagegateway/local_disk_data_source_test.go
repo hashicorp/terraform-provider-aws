@@ -23,11 +23,11 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLocalDiskDataSourceConfig_DiskNode_NonExistent(rName),
+				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
 				ExpectError: regexp.MustCompile(`no results found`),
 			},
 			{
-				Config: testAccLocalDiskDataSourceConfig_DiskNode(rName),
+				Config: testAccLocalDiskDataSourceConfig_node(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
 					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
@@ -50,11 +50,11 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLocalDiskDataSourceConfig_DiskPath_NonExistent(rName),
+				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),
 				ExpectError: regexp.MustCompile(`no results found`),
 			},
 			{
-				Config: testAccLocalDiskDataSourceConfig_DiskPath(rName),
+				Config: testAccLocalDiskDataSourceConfig_path(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
 					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
@@ -79,7 +79,7 @@ func testAccLocalDiskExistsDataSource(dataSourceName string) resource.TestCheckF
 
 func testAccLocalDiskBaseDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayConfig_GatewayType_FileS3(rName),
+		testAccGatewayConfig_typeFileS3(rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
@@ -100,7 +100,7 @@ resource "aws_volume_attachment" "test" {
 `, rName))
 }
 
-func testAccLocalDiskDataSourceConfig_DiskNode(rName string) string {
+func testAccLocalDiskDataSourceConfig_node(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLocalDiskBaseDataSourceConfig(rName),
 		`
@@ -111,7 +111,7 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskNode_NonExistent(rName string) string {
+func testAccLocalDiskDataSourceConfig_nodeNonExistent(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLocalDiskBaseDataSourceConfig(rName),
 		`
@@ -122,7 +122,7 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskPath(rName string) string {
+func testAccLocalDiskDataSourceConfig_path(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLocalDiskBaseDataSourceConfig(rName),
 		`
@@ -133,7 +133,7 @@ data "aws_storagegateway_local_disk" "test" {
 `)
 }
 
-func testAccLocalDiskDataSourceConfig_DiskPath_NonExistent(rName string) string {
+func testAccLocalDiskDataSourceConfig_pathNonExistent(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLocalDiskBaseDataSourceConfig(rName),
 		`

@@ -26,7 +26,7 @@ const (
 	destinationTypeElasticsearch = "elasticsearch"
 	destinationTypeRedshift      = "redshift"
 	destinationTypeSplunk        = "splunk"
-	destinationTypeHttpEndpoint  = "http_endpoint"
+	destinationTypeHTTPEndpoint  = "http_endpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -227,7 +227,7 @@ func processingConfigurationSchema() *schema.Schema {
 	}
 }
 
-func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
+func flattenCloudWatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
 	if clo == nil {
 		return []interface{}{}
 	}
@@ -248,13 +248,13 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"type_name":                  aws.StringValue(description.TypeName),
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
-		"vpc_config":                 flattenVpcConfiguration(description.VpcConfigurationDescription),
+		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -278,7 +278,7 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 	return []map[string]interface{}{m}
 }
 
-func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
+func flattenVPCConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
 	if description == nil {
 		return []map[string]interface{}{}
 	}
@@ -300,7 +300,7 @@ func flattenExtendedS3Configuration(description *firehose.ExtendedS3DestinationD
 
 	m := map[string]interface{}{
 		"bucket_arn":                           aws.StringValue(description.BucketARN),
-		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options":           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
 		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
@@ -330,7 +330,7 @@ func flattenRedshiftConfiguration(description *firehose.RedshiftDestinationDescr
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.StringValue(description.ClusterJDBCURL),
 		"password":                   configuredPassword,
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
@@ -358,7 +358,7 @@ func flattenSplunkConfiguration(description *firehose.SplunkDestinationDescripti
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"hec_acknowledgment_timeout": int(aws.Int64Value(description.HECAcknowledgmentTimeoutInSeconds)),
 		"hec_endpoint_type":          aws.StringValue(description.HECEndpointType),
 		"hec_endpoint":               aws.StringValue(description.HECEndpoint),
@@ -381,7 +381,7 @@ func flattenS3Configuration(description *firehose.S3DestinationDescription) []ma
 
 	m := map[string]interface{}{
 		"bucket_arn":                 aws.StringValue(description.BucketARN),
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         aws.StringValue(description.CompressionFormat),
 		"error_output_prefix":        aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                     aws.StringValue(description.Prefix),
@@ -784,7 +784,7 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
-			d.Set("destination", destinationTypeHttpEndpoint)
+			d.Set("destination", destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
@@ -820,7 +820,7 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"request_configuration":      flattenRequestConfiguration(description.RequestConfiguration),
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -947,7 +947,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					destinationTypeRedshift,
 					destinationTypeElasticsearch,
 					destinationTypeSplunk,
-					destinationTypeHttpEndpoint,
+					destinationTypeHTTPEndpoint,
 				}, false),
 			},
 
@@ -2601,7 +2601,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			createInput.SplunkDestinationConfiguration = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
+		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err
@@ -2759,7 +2759,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			updateInput.SplunkDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
+		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := updateHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err

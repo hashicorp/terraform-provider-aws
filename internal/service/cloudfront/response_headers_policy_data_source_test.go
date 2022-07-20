@@ -23,7 +23,7 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyDataSourceConfig(rName),
+				Config: testAccResponseHeadersPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.#", resourceName, "cors_config.#"),
@@ -49,6 +49,9 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.referrer_policy.#", resourceName, "security_headers_config.0.referrer_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.strict_transport_security.#", resourceName, "security_headers_config.0.strict_transport_security.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.xss_protection.#", resourceName, "security_headers_config.0.xss_protection.#"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "server_timing_headers_config.#", resourceName, "server_timing_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "server_timing_headers_config.0.enabled", resourceName, "server_timing_headers_config.0.enabled"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "server_timing_headers_config.0.sampling_rate", resourceName, "server_timing_headers_config.0.sampling_rate"),
 
 					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cors_config.#", resourceName, "cors_config.#"),
@@ -74,13 +77,16 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.referrer_policy.#", resourceName, "security_headers_config.0.referrer_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.strict_transport_security.#", resourceName, "security_headers_config.0.strict_transport_security.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.xss_protection.#", resourceName, "security_headers_config.0.xss_protection.#"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "server_timing_headers_config.#", resourceName, "server_timing_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "server_timing_headers_config.0.enabled", resourceName, "server_timing_headers_config.0.enabled"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "server_timing_headers_config.0.sampling_rate", resourceName, "server_timing_headers_config.0.sampling_rate"),
 				),
 			},
 		},
 	})
 }
 
-func testAccResponseHeadersPolicyDataSourceConfig(rName string) string {
+func testAccResponseHeadersPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_response_headers_policy" "by_name" {
   name = aws_cloudfront_response_headers_policy.test.name
@@ -142,6 +148,11 @@ resource "aws_cloudfront_response_headers_policy" "test" {
       override                   = true
       preload                    = true
     }
+  }
+
+  server_timing_headers_config {
+    enabled       = true
+    sampling_rate = 10
   }
 }
 `, rName)

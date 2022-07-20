@@ -28,7 +28,7 @@ func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayAttachmentAttachmentConfig(rName),
+				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, "id"),
@@ -56,7 +56,7 @@ func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayAttachmentAttachmentConfig(rName),
+				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
@@ -128,7 +128,7 @@ func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewa
 	}
 }
 
-func testAccInternetGatewayAttachmentAttachmentConfig(rName string) string {
+func testAccVPCInternetGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

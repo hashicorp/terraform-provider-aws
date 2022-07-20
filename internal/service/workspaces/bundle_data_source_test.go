@@ -20,7 +20,7 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig("wsb-b0s22j3d7"),
+				Config: testAccBundleDataSourceConfig_basic("wsb-b0s22j3d7"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -47,7 +47,7 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
+				Config: testAccBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-df76rqys9"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -72,7 +72,7 @@ func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
+				Config:      testAccBundleDataSourceConfig_idAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
 				ExpectError: regexp.MustCompile("\"bundle_id\": conflicts with owner"),
 			},
 		},
@@ -92,7 +92,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig_privateOwner(bundleName),
+				Config: testAccBundleDataSourceConfig_privateOwner(bundleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", bundleName),
 				),
@@ -107,7 +107,7 @@ func testAccBundlePreCheck(t *testing.T) {
 	}
 }
 
-func testAccWorkspaceBundleDataSourceConfig(bundleID string) string {
+func testAccBundleDataSourceConfig_basic(bundleID string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -115,7 +115,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_byOwnerName(owner, name string) string {
+func testAccBundleDataSourceConfig_byOwnerName(owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   owner = %q
@@ -124,7 +124,7 @@ data "aws_workspaces_bundle" "test" {
 `, owner, name)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict(bundleID, owner, name string) string {
+func testAccBundleDataSourceConfig_idAndOwnerNameConflict(bundleID, owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -134,7 +134,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID, owner, name)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_privateOwner(name string) string {
+func testAccBundleDataSourceConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   name = %q

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRAMResourceAssociation_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccRAMResourceAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAssociationConfig(rName),
+				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
 				),
@@ -52,7 +53,7 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAssociationConfig(rName),
+				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
 					testAccCheckResourceAssociationDisappears(&resourceShareAssociation1),
@@ -98,13 +99,11 @@ func testAccCheckResourceAssociationExists(resourceName string, association *ram
 		}
 
 		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
-
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not found", resourceShareARN, resourceARN)
+		}
 		if err != nil {
 			return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
-		}
-
-		if resourceShareAssociation == nil {
-			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not found", resourceShareARN, resourceARN)
 		}
 
 		if aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociated {
@@ -132,7 +131,9 @@ func testAccCheckResourceAssociationDestroy(s *terraform.State) error {
 		}
 
 		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
-
+		if tfresource.NotFound(err) {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
@@ -145,7 +146,7 @@ func testAccCheckResourceAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccResourceAssociationConfig(rName string) string {
+func testAccResourceAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

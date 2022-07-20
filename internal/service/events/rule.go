@@ -123,7 +123,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	arn, err := retryPutRule(conn, input)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		input.Tags = nil
 		arn, err = retryPutRule(conn, input)
@@ -139,7 +139,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, arn, nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}
@@ -202,7 +202,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	// ISO partitions may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
 		return nil
 	}
@@ -269,7 +269,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := UpdateTags(conn, arn, o, n)
 
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for EventBridge Rule %s: %s", d.Id(), err)
 			return resourceRuleRead(d, meta)
 		}
@@ -404,9 +404,9 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 
 		// Check whether the normalized JSON is within the given length.
-		const maxJsonLength = 2048
-		if len(json) > maxJsonLength {
-			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, maxJsonLength, json))
+		const maxJSONLength = 2048
+		if len(json) > maxJSONLength {
+			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, maxJSONLength, json))
 		}
 		return
 	}

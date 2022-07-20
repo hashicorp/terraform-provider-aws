@@ -26,7 +26,7 @@ func TestAccPinpointApp_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_withGeneratedName,
+				Config: testAccAppConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 				),
@@ -52,7 +52,7 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_CampaignHookLambda(rName),
+				Config: testAccAppConfig_campaignHookLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
@@ -80,7 +80,7 @@ func TestAccPinpointApp_limits(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_Limits(rName),
+				Config: testAccAppConfig_limits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
@@ -108,7 +108,7 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 		CheckDestroy:      testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_QuietTime(rName),
+				Config: testAccAppConfig_quietTime(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
@@ -136,7 +136,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckRAMResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_Tag1(rName, "key1", "value1"),
+				Config: testAccAppConfig_tag1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -149,7 +149,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppConfig_Tag2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tag2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -158,7 +158,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppConfig_Tag1(rName, "key2", "value2"),
+				Config: testAccAppConfig_tag1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -214,11 +214,11 @@ func testAccCheckAppExists(n string, application *pinpoint.ApplicationResponse) 
 	}
 }
 
-const testAccAppConfig_withGeneratedName = `
+const testAccAppConfig_generatedName = `
 resource "aws_pinpoint_app" "test" {}
 `
 
-func testAccAppConfig_CampaignHookLambda(rName string) string {
+func testAccAppConfig_campaignHookLambda(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -276,7 +276,7 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
-func testAccAppConfig_Limits(rName string) string {
+func testAccAppConfig_limits(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -291,7 +291,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName)
 }
 
-func testAccAppConfig_QuietTime(rName string) string {
+func testAccAppConfig_quietTime(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -304,7 +304,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName)
 }
 
-func testAccAppConfig_Tag1(rName, tagKey1, tagValue1 string) string {
+func testAccAppConfig_tag1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -316,7 +316,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAppConfig_Tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q

@@ -26,13 +26,13 @@ func TestAccVPCMainRouteTableAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMainRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMainRouteTableAssociationConfig(rName),
+				Config: testAccVPCMainRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMainRouteTableAssociationExists(resourceName, &rta),
 				),
 			},
 			{
-				Config: testAccMainRouteTableAssociationConfigUpdated(rName),
+				Config: testAccVPCMainRouteTableAssociationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMainRouteTableAssociationExists(resourceName, &rta),
 				),
@@ -119,7 +119,7 @@ resource "aws_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccMainRouteTableAssociationConfig(rName string) string {
+func testAccVPCMainRouteTableAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccMainRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
@@ -141,7 +141,7 @@ resource "aws_main_route_table_association" "test" {
 `, rName))
 }
 
-func testAccMainRouteTableAssociationConfigUpdated(rName string) string {
+func testAccVPCMainRouteTableAssociationConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccMainRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 # Need to keep the old route table around when we update the
 # main_route_table_association, otherwise Terraform will try to destroy the

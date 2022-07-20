@@ -232,7 +232,7 @@ func resourceNetworkACLRuleDelete(d *schema.ResourceData, meta interface{}) erro
 		RuleNumber:   aws.Int64(int64(d.Get("rule_number").(int))),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkAclEntryNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLEntryNotFound) {
 		return nil
 	}
 

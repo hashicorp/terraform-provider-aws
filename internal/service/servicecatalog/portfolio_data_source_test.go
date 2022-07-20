@@ -21,7 +21,7 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceCatlaogPortfolioDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPortfolioBasicDataSourceConfig(rName),
+				Config: testAccPortfolioDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -36,8 +36,8 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPortfolioBasicDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccCheckPortfolioResourceTags1Config(rName, "Chicane", "Nick"), `
+func testAccPortfolioDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccPortfolioConfig_tags1(rName, "Chicane", "Nick"), `
 data "aws_servicecatalog_portfolio" "test" {
   id = aws_servicecatalog_portfolio.test.id
 }

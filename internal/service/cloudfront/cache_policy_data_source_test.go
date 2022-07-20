@@ -23,7 +23,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyDataSourceConfig(rName),
+				Config: testAccCachePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "default_ttl", resourceName, "default_ttl"),
@@ -64,7 +64,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCachePolicyDataSourceConfig(rName string) string {
+func testAccCachePolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_cache_policy" "by_name" {
   name = aws_cloudfront_cache_policy.test.name

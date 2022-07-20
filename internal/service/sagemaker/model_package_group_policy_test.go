@@ -26,7 +26,7 @@ func TestAccSageMakerModelPackageGroupPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelPackageGroupPolicyBasicConfig(rName),
+				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupPolicyExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "model_package_group_name", rName),
@@ -53,7 +53,7 @@ func TestAccSageMakerModelPackageGroupPolicy_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelPackageGroupPolicyBasicConfig(rName),
+				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupPolicyExists(resourceName, &mpg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
@@ -77,7 +77,7 @@ func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *tes
 		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelPackageGroupPolicyBasicConfig(rName),
+				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupPolicyExists(resourceName, &mpg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
@@ -133,7 +133,7 @@ func testAccCheckModelPackageGroupPolicyExists(n string, mpg *sagemaker.GetModel
 	}
 }
 
-func testAccModelPackageGroupPolicyBasicConfig(rName string) string {
+func testAccModelPackageGroupPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}

@@ -25,7 +25,7 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActiveReceiptRuleSetDataSourceConfig(rName),
+				Config: testAccActiveReceiptRuleSetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
@@ -35,7 +35,7 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccActiveReceiptRuleSetDataSourceConfig(name string) string {
+func testAccActiveReceiptRuleSetDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q

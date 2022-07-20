@@ -138,7 +138,7 @@ func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheck
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindUploadByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func testAccCheckUploadDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindUploadByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

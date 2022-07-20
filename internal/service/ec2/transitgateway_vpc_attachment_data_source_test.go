@@ -19,7 +19,7 @@ func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentFilterDataSourceConfig(),
+				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -46,7 +46,7 @@ func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentIDDataSourceConfig(),
+				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_iD(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -62,7 +62,7 @@ func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentFilterDataSourceConfig() string {
+func testAccTransitGatewayVPCAttachmentDataSourceConfig_filter() string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -99,7 +99,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `
 }
 
-func testAccTransitGatewayVPCAttachmentIDDataSourceConfig() string {
+func testAccTransitGatewayVPCAttachmentDataSourceConfig_iD() string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
 # IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
 

@@ -20,7 +20,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "false"),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -31,7 +31,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "true"),
+				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -54,7 +54,7 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "false"),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -67,7 +67,7 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterDataSourceConfig(name string, withDecryption string) string {
+func testAccParameterDataSourceConfig_basic(name string, withDecryption string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = "%s"

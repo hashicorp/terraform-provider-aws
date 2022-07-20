@@ -25,7 +25,7 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyIdentityDomainConfig(domain),
+				Config: testAccIdentityPolicyConfig_domain(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(resourceName),
 				),
@@ -51,7 +51,7 @@ func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 		CheckDestroy:      testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyIdentityEmailConfig(email),
+				Config: testAccIdentityPolicyConfig_email(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(resourceName),
 				),
@@ -76,13 +76,13 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 		CheckDestroy:      testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyPolicy1Config(domain),
+				Config: testAccIdentityPolicyConfig_1(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
-				Config: testAccIdentityPolicyPolicy2Config(domain),
+				Config: testAccIdentityPolicyConfig_2(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(resourceName),
 				),
@@ -108,13 +108,13 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 		CheckDestroy:      testAccCheckIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyEquivalentConfig(rName, domain),
+				Config: testAccIdentityPolicyConfig_equivalent(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityPolicyExists(resourceName),
 				),
 			},
 			{
-				Config:   testAccIdentityPolicyEquivalent2Config(rName, domain),
+				Config:   testAccIdentityPolicyConfig_equivalent2(rName, domain),
 				PlanOnly: true,
 			},
 		},
@@ -190,7 +190,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccIdentityPolicyIdentityDomainConfig(domain string) string {
+func testAccIdentityPolicyConfig_domain(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -216,7 +216,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyIdentityEmailConfig(email string) string {
+func testAccIdentityPolicyConfig_email(email string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -242,7 +242,7 @@ resource "aws_ses_identity_policy" "test" {
 `, email)
 }
 
-func testAccIdentityPolicyPolicy1Config(domain string) string {
+func testAccIdentityPolicyConfig_1(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -268,7 +268,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyPolicy2Config(domain string) string {
+func testAccIdentityPolicyConfig_2(domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -298,7 +298,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyEquivalentConfig(rName, domain string) string {
+func testAccIdentityPolicyConfig_equivalent(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -330,7 +330,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain, rName)
 }
 
-func testAccIdentityPolicyEquivalent2Config(rName, domain string) string {
+func testAccIdentityPolicyConfig_equivalent2(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

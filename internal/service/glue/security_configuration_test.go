@@ -27,7 +27,7 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigurationConfig_Basic(rName),
+				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -66,7 +66,7 @@ func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMo
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigurationConfig_CloudWatchEncryption_CloudWatchEncryptionMode_SSEKMS(rName),
+				Config: testAccSecurityConfigurationConfig_cloudWatchEncryptionModeSSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -98,7 +98,7 @@ func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncrypti
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigurationConfig_JobBookmarksEncryption_JobBookmarksEncryptionMode_CSEKMS(rName),
+				Config: testAccSecurityConfigurationConfig_jobBookmarksEncryptionModeCSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -130,7 +130,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *tes
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSEKMS(rName),
+				Config: testAccSecurityConfigurationConfig_s3EncryptionModeSSEKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -161,7 +161,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSES3(rName),
+				Config: testAccSecurityConfigurationConfig_s3EncryptionModeSSES3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName, &securityConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -241,7 +241,7 @@ func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSecurityConfigurationConfig_Basic(rName string) string {
+func testAccSecurityConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_security_configuration" "test" {
   name = %q
@@ -263,7 +263,7 @@ resource "aws_glue_security_configuration" "test" {
 `, rName)
 }
 
-func testAccSecurityConfigurationConfig_CloudWatchEncryption_CloudWatchEncryptionMode_SSEKMS(rName string) string {
+func testAccSecurityConfigurationConfig_cloudWatchEncryptionModeSSEKMS(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -290,7 +290,7 @@ resource "aws_glue_security_configuration" "test" {
 `, rName)
 }
 
-func testAccSecurityConfigurationConfig_JobBookmarksEncryption_JobBookmarksEncryptionMode_CSEKMS(rName string) string {
+func testAccSecurityConfigurationConfig_jobBookmarksEncryptionModeCSEKMS(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -317,7 +317,7 @@ resource "aws_glue_security_configuration" "test" {
 `, rName)
 }
 
-func testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSEKMS(rName string) string {
+func testAccSecurityConfigurationConfig_s3EncryptionModeSSEKMS(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -344,7 +344,7 @@ resource "aws_glue_security_configuration" "test" {
 `, rName)
 }
 
-func testAccSecurityConfigurationConfig_S3Encryption_S3EncryptionMode_SSES3(rName string) string {
+func testAccSecurityConfigurationConfig_s3EncryptionModeSSES3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_security_configuration" "test" {
   name = %q

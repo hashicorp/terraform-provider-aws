@@ -50,7 +50,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildBasicConfig(rName, bucketName, key, roleArn),
+				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -70,7 +70,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"storage_location"},
 			},
 			{
-				Config: testAccBuildBasicConfig(rNameUpdated, bucketName, key, roleArn),
+				Config: testAccBuildConfig_basic(rNameUpdated, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
@@ -120,7 +120,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildBasicTags1Config(rName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -134,7 +134,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"storage_location"},
 			},
 			{
-				Config: testAccBuildBasicTags2Config(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -143,7 +143,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBuildBasicTags1Config(rName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -187,7 +187,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBuildDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildBasicConfig(rName, bucketName, key, roleArn),
+				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
@@ -265,7 +265,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccBuildBasicConfig(buildName, bucketName, key, roleArn string) string {
+func testAccBuildConfig_basic(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = "%s"
@@ -280,7 +280,7 @@ resource "aws_gamelift_build" "test" {
 `, buildName, bucketName, key, roleArn)
 }
 
-func testAccBuildBasicTags1Config(buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+func testAccBuildConfig_basicTags1(buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q
@@ -299,7 +299,7 @@ resource "aws_gamelift_build" "test" {
 `, buildName, bucketName, key, roleArn, tagKey1, tagValue1)
 }
 
-func testAccBuildBasicTags2Config(buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBuildConfig_basicTags2(buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q

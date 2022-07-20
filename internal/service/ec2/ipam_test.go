@@ -27,10 +27,10 @@ func TestAccIPAM_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamDestroy,
+		CheckDestroy:      testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamBase,
+				Config: testAccIPAMConfig_base,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
@@ -61,10 +61,10 @@ func TestAccIPAM_modify(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckVPCIpamDestroy,
+		CheckDestroy:      testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamBase,
+				Config: testAccIPAMConfig_base,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
@@ -75,19 +75,19 @@ func TestAccIPAM_modify(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamOperatingRegion(),
+				Config: testAccIPAMConfig_operatingRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 			{
-				Config: testAccVPCIpamBase,
+				Config: testAccIPAMConfig_base,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 			{
-				Config: testAccVPCIpamBaseAlternateDescription,
+				Config: testAccIPAMConfig_baseAlternateDescription,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "test ipam"),
 				),
@@ -103,17 +103,17 @@ func TestAccIPAM_cascade(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamDestroy,
+		CheckDestroy:      testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamCascade(),
+				Config: testAccIPAMConfig_cascade(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexp.MustCompile(`ipam/ipam-[\da-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
-					testAccCheckVPCIpamScopeCreate(resourceName),
+					testAccCheckIPAMScopeCreate(resourceName),
 				),
 			},
 			{
@@ -133,10 +133,10 @@ func TestAccIPAM_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCIpamDestroy,
+		CheckDestroy:      testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamTagsConfig("key1", "value1"),
+				Config: testAccIPAMConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -148,7 +148,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCIpamTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -156,7 +156,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCIpamTagsConfig("key2", "value2"),
+				Config: testAccIPAMConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -166,7 +166,7 @@ func TestAccIPAM_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamDestroy(s *terraform.State) error {
+func testAccCheckIPAMDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -176,7 +176,7 @@ func testAccCheckVPCIpamDestroy(s *terraform.State) error {
 
 		id := aws.String(rs.Primary.ID)
 
-		if _, err := tfec2.WaiterIpamDeleted(conn, *id, tfec2.IpamDeleteTimeout); err != nil {
+		if _, err := tfec2.WaiterIPAMDeleted(conn, *id, tfec2.IPAMDeleteTimeout); err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -187,7 +187,7 @@ func testAccCheckVPCIpamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVPCIpamScopeCreate(resourceName string) resource.TestCheckFunc {
+func testAccCheckIPAMScopeCreate(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam" {
@@ -205,7 +205,7 @@ func testAccCheckVPCIpamScopeCreate(resourceName string) resource.TestCheckFunc 
 	}
 }
 
-const testAccVPCIpamBase = `
+const testAccIPAMConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -216,7 +216,7 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-func testAccVPCIpamCascade() string {
+func testAccIPAMConfig_cascade() string {
 	return `
 data "aws_region" "current" {}
 
@@ -230,7 +230,7 @@ resource "aws_vpc_ipam" "test" {
 	`
 }
 
-const testAccVPCIpamBaseAlternateDescription = `
+const testAccIPAMConfig_baseAlternateDescription = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -241,7 +241,7 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-func testAccVPCIpamOperatingRegion() string {
+func testAccIPAMConfig_operatingRegion() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2), `
 data "aws_region" "current" {}
@@ -263,7 +263,7 @@ resource "aws_vpc_ipam" "test" {
 `)
 }
 
-func testAccVPCIpamTagsConfig(tagKey1, tagValue1 string) string {
+func testAccIPAMConfig_tags(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -279,7 +279,7 @@ resource "aws_vpc_ipam" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccVPCIpamTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccIPAMConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

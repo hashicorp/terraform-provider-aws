@@ -311,7 +311,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting instance_definition: %s", err)
 	}
 
-	if err := d.Set("launch_template", flattenAutoscalingLaunchTemplateSpecification(autoScalingGroup.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
+	if err := d.Set("launch_template", flattenAutoScalingLaunchTemplateSpecification(autoScalingGroup.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification)); err != nil {
 		return fmt.Errorf("error setting launch_template: %s", err)
 	}
 
@@ -536,7 +536,7 @@ func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[strin
 	return tfMap
 }
 
-func flattenAutoscalingLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

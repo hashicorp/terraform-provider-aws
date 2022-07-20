@@ -24,7 +24,7 @@ func TestAccECSTag_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -51,7 +51,7 @@ func TestAccECSTag_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTag(), resourceName),
@@ -74,7 +74,7 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfigResourceArnBatchComputeEnvironment(rName),
+				Config: testAccTagConfig_resourceARNBatchComputeEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 				),
@@ -99,7 +99,7 @@ func TestAccECSTag_value(t *testing.T) {
 		CheckDestroy:      testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -112,7 +112,7 @@ func TestAccECSTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTagConfig(rName, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -123,7 +123,7 @@ func TestAccECSTag_value(t *testing.T) {
 	})
 }
 
-func testAccTagConfig(rName string, key string, value string) string {
+func testAccTagConfig_basic(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -141,7 +141,7 @@ resource "aws_ecs_tag" "test" {
 `, rName, key, value)
 }
 
-func testAccTagConfigResourceArnBatchComputeEnvironment(rName string) string {
+func testAccTagConfig_resourceARNBatchComputeEnvironment(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

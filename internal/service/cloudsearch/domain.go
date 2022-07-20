@@ -111,6 +111,11 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"source_fields": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`score`), "Cannot be set to reserved field score"),
+						},
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -230,6 +235,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
+		log.Printf("[DEBUG] Indexing CloudSearch Domain documents: %s", d.Id())
 		_, err = conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
 			DomainName: aws.String(d.Id()),
 		})
@@ -411,10 +417,13 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			_, err := conn.DeleteIndexField(&cloudsearch.DeleteIndexFieldInput{
+			input := &cloudsearch.DeleteIndexFieldInput{
 				DomainName:     aws.String(d.Id()),
 				IndexFieldName: aws.String(fieldName),
-			})
+			}
+
+			log.Printf("[DEBUG] Deleting CloudSearch Domain index field: %s", input)
+			_, err := conn.DeleteIndexField(input)
 
 			if err != nil {
 				return fmt.Errorf("error deleting CloudSearch Domain (%s) index field (%s): %w", d.Id(), fieldName, err)
@@ -433,6 +442,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requiresIndexDocuments {
+		log.Printf("[DEBUG] Indexing CloudSearch Domain documents: %s", d.Id())
 		_, err := conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
 			DomainName: aws.String(d.Id()),
 		})
@@ -455,7 +465,6 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudSearchConn
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
-
 	_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
@@ -489,30 +498,44 @@ func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 }
 
 func defineIndexFields(conn *cloudsearch.CloudSearch, domainName string, tfList []interface{}) error {
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+	// Define index fields with source fields after those without.
+	for _, defineWhenSourceFieldsConfigured := range []bool{false, true} {
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		if !ok {
-			continue
-		}
+			if !ok {
+				continue
+			}
 
-		apiObject, err := expandIndexField(tfMap)
+			apiObject, sourceFieldsConfigured, err := expandIndexField(tfMap)
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if apiObject == nil {
-			continue
-		}
+			if apiObject == nil {
+				continue
+			}
 
-		_, err = conn.DefineIndexField(&cloudsearch.DefineIndexFieldInput{
-			DomainName: aws.String(domainName),
-			IndexField: apiObject,
-		})
+			if sourceFieldsConfigured && !defineWhenSourceFieldsConfigured {
+				continue
+			}
 
-		if err != nil {
-			return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
+			if !sourceFieldsConfigured && defineWhenSourceFieldsConfigured {
+				continue
+			}
+
+			input := &cloudsearch.DefineIndexFieldInput{
+				DomainName: aws.String(domainName),
+				IndexField: apiObject,
+			}
+
+			log.Printf("[DEBUG] Defining CloudSearch Domain index field: %s", input)
+			_, err = conn.DefineIndexField(input)
+
+			if err != nil {
+				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
+			}
 		}
 	}
 
@@ -746,9 +769,9 @@ func flattenDomainEndpointOptions(apiObject *cloudsearch.DomainEndpointOptions) 
 	return tfMap
 }
 
-func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, error) {
+func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, bool, error) {
 	if tfMap == nil {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	apiObject := &cloudsearch.IndexField{}
@@ -768,6 +791,7 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 	returnEnabled, _ := tfMap["return"].(bool)
 	searchEnabled, _ := tfMap["search"].(bool)
 	sortEnabled, _ := tfMap["sort"].(bool)
+	var sourceFieldsConfigured bool
 
 	switch fieldType {
 	case cloudsearch.IndexFieldTypeDate:
@@ -782,6 +806,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.DefaultValue = aws.String(v)
 		}
 
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
+		}
+
 		apiObject.DateOptions = options
 
 	case cloudsearch.IndexFieldTypeDateArray:
@@ -793,6 +822,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.DateArrayOptions = options
@@ -809,10 +843,15 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
 			options.DefaultValue = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.DoubleOptions = options
@@ -828,10 +867,15 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			v, err := strconv.ParseFloat(v, 64)
 
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
 			options.DefaultValue = aws.Float64(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.DoubleArrayOptions = options
@@ -848,10 +892,15 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
 			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.IntOptions = options
@@ -867,10 +916,15 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			v, err := strconv.Atoi(v)
 
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
 			options.DefaultValue = aws.Int64(int64(v))
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.IntArrayOptions = options
@@ -887,6 +941,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.DefaultValue = aws.String(v)
 		}
 
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
+		}
+
 		apiObject.LatLonOptions = options
 
 	case cloudsearch.IndexFieldTypeLiteral:
@@ -901,6 +960,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.DefaultValue = aws.String(v)
 		}
 
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
+		}
+
 		apiObject.LiteralOptions = options
 
 	case cloudsearch.IndexFieldTypeLiteralArray:
@@ -912,6 +976,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 
 		if v, ok := tfMap["default_value"].(string); ok && v != "" {
 			options.DefaultValue = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
+			sourceFieldsConfigured = true
 		}
 
 		apiObject.LiteralArrayOptions = options
@@ -931,6 +1000,11 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.DefaultValue = aws.String(v)
 		}
 
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceField = aws.String(v)
+			sourceFieldsConfigured = true
+		}
+
 		apiObject.TextOptions = options
 
 	case cloudsearch.IndexFieldTypeTextArray:
@@ -947,13 +1021,18 @@ func expandIndexField(tfMap map[string]interface{}) (*cloudsearch.IndexField, er
 			options.DefaultValue = aws.String(v)
 		}
 
+		if v, ok := tfMap["source_fields"].(string); ok && v != "" {
+			options.SourceFields = aws.String(v)
+			sourceFieldsConfigured = true
+		}
+
 		apiObject.TextArrayOptions = options
 
 	default:
-		return nil, fmt.Errorf("unsupported index_field type: %s", fieldType)
+		return nil, false, fmt.Errorf("unsupported index_field type: %s", fieldType)
 	}
 
-	return apiObject, nil
+	return apiObject, sourceFieldsConfigured, nil
 }
 
 func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[string]interface{}, error) {
@@ -1002,6 +1081,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["analysis_scheme"] = ""
 		tfMap["highlight"] = false
@@ -1023,6 +1106,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SourceFields; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
 		}
 
 		// Defaults not returned via the API.
@@ -1053,6 +1140,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["analysis_scheme"] = ""
 		tfMap["highlight"] = false
@@ -1074,6 +1165,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SourceFields; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
 		}
 
 		// Defaults not returned via the API.
@@ -1104,6 +1199,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["analysis_scheme"] = ""
 		tfMap["highlight"] = false
@@ -1125,6 +1224,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SourceFields; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
 		}
 
 		// Defaults not returned via the API.
@@ -1155,6 +1258,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["analysis_scheme"] = ""
 		tfMap["highlight"] = false
@@ -1182,6 +1289,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["analysis_scheme"] = ""
 		tfMap["highlight"] = false
@@ -1203,6 +1314,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 
 		if v := options.SearchEnabled; v != nil {
 			tfMap["search"] = aws.BoolValue(v)
+		}
+
+		if v := options.SourceFields; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
 		}
 
 		// Defaults not returned via the API.
@@ -1233,6 +1348,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 			tfMap["sort"] = aws.BoolValue(v)
 		}
 
+		if v := options.SourceField; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
+		}
+
 		// Defaults not returned via the API.
 		tfMap["facet"] = false
 		tfMap["search"] = true
@@ -1254,6 +1373,10 @@ func flattenIndexFieldStatus(apiObject *cloudsearch.IndexFieldStatus) (map[strin
 
 		if v := options.ReturnEnabled; v != nil {
 			tfMap["return"] = aws.BoolValue(v)
+		}
+
+		if v := options.SourceFields; v != nil {
+			tfMap["source_fields"] = aws.StringValue(v)
 		}
 
 		// Defaults not returned via the API.

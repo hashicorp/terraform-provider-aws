@@ -21,7 +21,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotDataSourceConfig(rName),
+				Config: testAccSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.description", resourceName, "cluster_configuration.0.description"),
@@ -49,7 +49,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSnapshotDataSourceConfig(rName string) string {
+func testAccSnapshotDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`

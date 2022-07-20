@@ -388,34 +388,6 @@ func StatusProvisionedProduct(conn *servicecatalog.ServiceCatalog, acceptLanguag
 	}
 }
 
-func StatusRecord(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &servicecatalog.DescribeRecordInput{
-			Id: aws.String(id),
-		}
-
-		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		output, err := conn.DescribeRecord(input)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
-		}
-
-		if err != nil {
-			return nil, servicecatalog.StatusFailed, err
-		}
-
-		if output == nil || output.RecordDetail == nil {
-			return nil, StatusNotFound, err
-		}
-
-		return output, aws.StringValue(output.RecordDetail.Status), err
-	}
-}
-
 func StatusPortfolioConstraints(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{

@@ -22,7 +22,7 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectFilterDataSourceConfig(rName),
+				Config: testAccTransitGatewayConnectDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -47,7 +47,7 @@ func testAccTransitGatewayConnectDataSource_ID(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectIDDataSourceConfig(rName),
+				Config: testAccTransitGatewayConnectDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -60,7 +60,7 @@ func testAccTransitGatewayConnectDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayConnectFilterDataSourceConfig(rName string) string {
+func testAccTransitGatewayConnectDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -114,7 +114,7 @@ data "aws_ec2_transit_gateway_connect" "test" {
 `, rName))
 }
 
-func testAccTransitGatewayConnectIDDataSourceConfig(rName string) string {
+func testAccTransitGatewayConnectDataSourceConfig_id(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

@@ -26,7 +26,7 @@ func testAccTransitGatewayMulticastGroupSource_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastGroupSourceConfig(rName),
+				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupSourceExists(resourceName, &v),
 				),
@@ -47,7 +47,7 @@ func testAccTransitGatewayMulticastGroupSource_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastGroupSourceConfig(rName),
+				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupSourceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupSource(), resourceName),
@@ -71,7 +71,7 @@ func testAccTransitGatewayMulticastGroupSource_Disappears_domain(t *testing.T) {
 		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayMulticastGroupSourceConfig(rName),
+				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupSourceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
@@ -143,7 +143,7 @@ func testAccCheckTransitGatewayMulticastGroupSourceDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccTransitGatewayMulticastGroupSourceConfig(rName string) string {
+func testAccTransitGatewayMulticastGroupSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

@@ -13,7 +13,7 @@ import (
 func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 	datasource1Name := "data.aws_autoscaling_groups.group_list"
 	datasource2Name := "data.aws_autoscaling_groups.group_list_tag_lookup"
-	datasource3Name := "data.aws_autoscaling_groups.group_list_multiple_filters"
+	datasource3Name := "data.aws_autoscaling_groups.group_list_by_name"
 	datasource4Name := "data.aws_autoscaling_groups.group_list_multiple_values"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -24,7 +24,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
 					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
 					resource.TestCheckResourceAttr(datasource2Name, "names.#", "3"),
@@ -41,7 +41,7 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 
 func testAccGroupsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -63,13 +63,14 @@ resource "aws_autoscaling_group" "test1" {
   launch_configuration = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "MetaGroup"
+    value               = %[1]q
     propagate_at_launch = true
   }
+
   tag {
-    key                 = "some-arbitrary-tag"
-    value               = "some-arbitrary-value"
+    key                 = "Name"
+    value               = "%[1]s-1"
     propagate_at_launch = true
   }
 }
@@ -86,13 +87,14 @@ resource "aws_autoscaling_group" "test2" {
   launch_configuration = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "MetaGroup"
+    value               = %[1]q
     propagate_at_launch = true
   }
+
   tag {
-    key                 = "some-arbitrary-tag"
-    value               = "some-other-arbitrary-value"
+    key                 = "Name"
+    value               = "%[1]s-2"
     propagate_at_launch = true
   }
 }
@@ -109,13 +111,14 @@ resource "aws_autoscaling_group" "test3" {
   launch_configuration = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "MetaGroup"
+    value               = %[1]q
     propagate_at_launch = true
   }
+
   tag {
-    key                 = "lorem"
-    value               = "ipsum"
+    key                 = "Name"
+    value               = "%[1]s-3"
     propagate_at_launch = true
   }
 }
@@ -123,11 +126,12 @@ resource "aws_autoscaling_group" "test3" {
 data "aws_autoscaling_groups" "group_list" {
   filter {
     name   = "key"
-    values = ["Foo"]
+    values = ["MetaGroup"]
   }
+
   filter {
     name   = "value"
-    values = ["foo-bar"]
+    values = [%[1]q]
   }
 
   depends_on = [aws_autoscaling_group.test1, aws_autoscaling_group.test2, aws_autoscaling_group.test3]
@@ -135,30 +139,23 @@ data "aws_autoscaling_groups" "group_list" {
 
 data "aws_autoscaling_groups" "group_list_tag_lookup" {
   filter {
-    name   = "tag:Foo"
-    values = ["foo-bar"]
+    name   = "tag:MetaGroup"
+    values = [%[1]q]
   }
 
   depends_on = [aws_autoscaling_group.test1, aws_autoscaling_group.test2, aws_autoscaling_group.test3]
 }
 
-data "aws_autoscaling_groups" "group_list_multiple_filters" {
-  filter {
-    name   = "tag:Foo"
-    values = ["foo-bar"]
-  }
-  filter {
-    name   = "key"
-    values = ["lorem"]
-  }
+data "aws_autoscaling_groups" "group_list_by_name" {
+  names = [aws_autoscaling_group.test1.name]
 
   depends_on = [aws_autoscaling_group.test1, aws_autoscaling_group.test2, aws_autoscaling_group.test3]
 }
 
 data "aws_autoscaling_groups" "group_list_multiple_values" {
   filter {
-    name   = "tag:some-arbitrary-tag"
-    values = ["some-arbitrary-value", "some-other-arbitrary-value"]
+    name   = "tag:Name"
+    values = [aws_autoscaling_group.test2.name, aws_autoscaling_group.test3.name]
   }
 
   depends_on = [aws_autoscaling_group.test1, aws_autoscaling_group.test2, aws_autoscaling_group.test3]

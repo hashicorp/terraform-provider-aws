@@ -28,7 +28,7 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigSubnet(rName),
+				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
@@ -60,7 +60,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigSubnet(rName),
+				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
@@ -68,7 +68,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteTableAssociationConfigSubnetChangeRouteTable(rName),
+				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
@@ -93,7 +93,7 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigGateway(rName),
+				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
@@ -125,7 +125,7 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigGateway(rName),
+				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
@@ -133,7 +133,7 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteTableAssociationConfigGatewayChangeRouteTable(rName),
+				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
@@ -156,7 +156,7 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableAssociationConfigSubnet(rName),
+				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(resourceName, &rta),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTableAssociation(), resourceName),
@@ -261,7 +261,7 @@ resource "aws_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccRouteTableAssociationConfigSubnet(rName string) string {
+func testAccVPCRouteTableAssociationConfig_subnet(rName string) string {
 	return acctest.ConfigCompose(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
@@ -283,7 +283,7 @@ resource "aws_route_table_association" "test" {
 `, rName))
 }
 
-func testAccRouteTableAssociationConfigSubnetChangeRouteTable(rName string) string {
+func testAccVPCRouteTableAssociationConfig_subnetChange(rName string) string {
 	return acctest.ConfigCompose(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test2" {
   vpc_id = aws_vpc.test.id
@@ -305,7 +305,7 @@ resource "aws_route_table_association" "test" {
 `, rName))
 }
 
-func testAccRouteTableAssociationConfigGateway(rName string) string {
+func testAccVPCRouteTableAssociationConfig_gateway(rName string) string {
 	return acctest.ConfigCompose(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
@@ -335,7 +335,7 @@ resource "aws_route_table_association" "test" {
 `, rName))
 }
 
-func testAccRouteTableAssociationConfigGatewayChangeRouteTable(rName string) string {
+func testAccVPCRouteTableAssociationConfig_gatewayChange(rName string) string {
 	return acctest.ConfigCompose(testAccRouteTableAssociationConfigBaseVPC(rName), fmt.Sprintf(`
 resource "aws_route_table" "test2" {
   vpc_id = aws_vpc.test.id

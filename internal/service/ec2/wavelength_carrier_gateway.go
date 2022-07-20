@@ -55,7 +55,7 @@ func resourceCarrierGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateCarrierGatewayInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "carrier-gateway"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "carrier-gateway"),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 

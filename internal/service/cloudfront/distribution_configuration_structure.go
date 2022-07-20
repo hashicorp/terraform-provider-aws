@@ -20,14 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
+// route53ZoneID defines the route 53 zone ID for CloudFront. This
 // is used to set the zone_id attribute.
-const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
+const route53ZoneID = "Z2FDTNDATAQYW2"
 
-// cloudFrontCNRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
+// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
 // This is used to set the zone_id attribute.
 // ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cloudFrontCNRoute53ZoneID = "Z3RFFRIM2A3IF5"
+const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
@@ -90,7 +90,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
@@ -1302,20 +1302,20 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+func flattenActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
 	if atkg == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(atkg.Enabled),
-		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+		"items":   flattenKGKeyPairIds(atkg.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
 	result := make([]interface{}, 0, len(keyPairIds))
 
 	for _, keyPairId := range keyPairIds {
@@ -1330,20 +1330,20 @@ func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []inte
 	return result
 }
 
-func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
 	if ats == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(ats.Enabled),
-		"items":   flattenCloudfrontSigners(ats.Items),
+		"items":   flattenSigners(ats.Items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCloudfrontSigners(signers []*cloudfront.Signer) []interface{} {
+func flattenSigners(signers []*cloudfront.Signer) []interface{} {
 	result := make([]interface{}, 0, len(signers))
 
 	for _, signer := range signers {

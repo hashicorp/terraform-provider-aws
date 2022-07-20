@@ -32,7 +32,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName1),
+				Config: testAccUserConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName1, &user),
 					resource.TestCheckResourceAttr(resourceName1, "user_name", rName1),
@@ -40,7 +40,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserConfig(rName2),
+				Config: testAccUserConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName2, &user),
 					resource.TestCheckResourceAttr(resourceName2, "user_name", rName2),
@@ -63,14 +63,14 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks"),
+				Config: testAccUserConfig_email(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks"),
 				),
 			},
 			{
-				Config: testAccUserWithEmailConfig(rName, "nottarealemailbutworks2"),
+				Config: testAccUserConfig_email(rName, "nottarealemailbutworks2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
@@ -98,7 +98,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserWithNamespaceConfig(rName, namespace),
+				Config: testAccUserConfig_namespace(rName, namespace),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "namespace", namespace),
@@ -120,7 +120,7 @@ func TestAccQuickSightUser_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserDisappears(&user),
@@ -223,7 +223,7 @@ func testAccCheckUserDisappears(v *quicksight.User) resource.TestCheckFunc {
 	}
 }
 
-func testAccUserWithEmailConfig(rName, email string) string {
+func testAccUserConfig_email(rName, email string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -237,7 +237,7 @@ resource "aws_quicksight_user" %[1]q {
 `, rName, email)
 }
 
-func testAccUserWithNamespaceConfig(rName, namespace string) string {
+func testAccUserConfig_namespace(rName, namespace string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -252,6 +252,6 @@ resource "aws_quicksight_user" %[1]q {
 `, rName, acctest.DefaultEmailAddress, namespace)
 }
 
-func testAccUserConfig(rName string) string {
-	return testAccUserWithEmailConfig(rName, acctest.DefaultEmailAddress)
+func testAccUserConfig_basic(rName string) string {
+	return testAccUserConfig_email(rName, acctest.DefaultEmailAddress)
 }

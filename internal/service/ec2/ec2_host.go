@@ -61,6 +61,11 @@ func ResourceHost() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"instance_family", "instance_type"},
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,8 +96,12 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 		input.InstanceType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		input.OutpostArn = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Host: %s", input)
@@ -141,6 +150,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 
 	tags := KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -218,7 +228,7 @@ func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeClientInvalidHostIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeClientInvalidHostIDNotFound) {
 		return nil
 	}
 

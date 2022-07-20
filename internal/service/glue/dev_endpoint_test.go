@@ -431,7 +431,7 @@ func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 		CheckDestroy:      testAccCheckDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevEndpointConfig_SubnetID_securityGroupIDs(rName),
+				Config: testAccDevEndpointConfig_subnetIDSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -462,7 +462,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevEndpointConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccDevEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(resourceName, &endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -475,7 +475,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevEndpointConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDevEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(resourceName, &endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -484,7 +484,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccDevEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(resourceName, &endpoint3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -508,7 +508,7 @@ func TestAccGlueDevEndpoint_workerType(t *testing.T) {
 		CheckDestroy:      testAccCheckDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevEndpointConfig_WorkerType_standard(rName),
+				Config: testAccDevEndpointConfig_workerTypeStandard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeStandard),
@@ -790,7 +790,7 @@ resource "aws_glue_security_configuration" "test" {
 `, rName)
 }
 
-func testAccDevEndpointConfig_SubnetID_securityGroupIDs(rName string) string {
+func testAccDevEndpointConfig_subnetIDSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name               = %[1]q
@@ -865,7 +865,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccDevEndpointConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccDevEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
@@ -878,7 +878,7 @@ resource "aws_glue_dev_endpoint" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDevEndpointConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDevEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
@@ -903,7 +903,7 @@ resource "aws_glue_dev_endpoint" "test" {
 `, rName, workerType)
 }
 
-func testAccDevEndpointConfig_WorkerType_standard(rName string) string {
+func testAccDevEndpointConfig_workerTypeStandard(rName string) string {
 	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name              = %[1]q

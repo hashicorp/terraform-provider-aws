@@ -103,7 +103,7 @@ func resourceManagedPrefixListCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("entry"); ok && v.(*schema.Set).Len() > 0 {
-		input.Entries = expandEc2AddPrefixListEntries(v.(*schema.Set).List())
+		input.Entries = expandAddPrefixListEntries(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("max_entries"); ok {
@@ -115,7 +115,7 @@ func resourceManagedPrefixListCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePrefixList)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePrefixList)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Managed Prefix List: %s", input)
@@ -160,7 +160,7 @@ func resourceManagedPrefixListRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("address_family", pl.AddressFamily)
 	d.Set("arn", pl.PrefixListArn)
 
-	if err := d.Set("entry", flattenEc2PrefixListEntries(prefixListEntries)); err != nil {
+	if err := d.Set("entry", flattenPrefixListEntries(prefixListEntries)); err != nil {
 		return fmt.Errorf("error setting entry: %w", err)
 	}
 
@@ -201,13 +201,13 @@ func resourceManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) e
 		ns := newAttr.(*schema.Set)
 
 		if addEntries := ns.Difference(os); addEntries.Len() > 0 {
-			input.AddEntries = expandEc2AddPrefixListEntries(addEntries.List())
+			input.AddEntries = expandAddPrefixListEntries(addEntries.List())
 			input.CurrentVersion = aws.Int64(currentVersion)
 			wait = true
 		}
 
 		if removeEntries := os.Difference(ns); removeEntries.Len() > 0 {
-			input.RemoveEntries = expandEc2RemovePrefixListEntries(removeEntries.List())
+			input.RemoveEntries = expandRemovePrefixListEntries(removeEntries.List())
 			input.CurrentVersion = aws.Int64(currentVersion)
 			wait = true
 		}
@@ -309,7 +309,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 		PrefixListId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidPrefixListIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
 		return nil
 	}
 
@@ -324,7 +324,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandEc2AddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixListEntry {
+func expandAddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixListEntry {
 	if tfMap == nil {
 		return nil
 	}
@@ -342,7 +342,7 @@ func expandEc2AddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixLis
 	return apiObject
 }
 
-func expandEc2AddPrefixListEntries(tfList []interface{}) []*ec2.AddPrefixListEntry {
+func expandAddPrefixListEntries(tfList []interface{}) []*ec2.AddPrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -356,7 +356,7 @@ func expandEc2AddPrefixListEntries(tfList []interface{}) []*ec2.AddPrefixListEnt
 			continue
 		}
 
-		apiObject := expandEc2AddPrefixListEntry(tfMap)
+		apiObject := expandAddPrefixListEntry(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -368,7 +368,7 @@ func expandEc2AddPrefixListEntries(tfList []interface{}) []*ec2.AddPrefixListEnt
 	return apiObjects
 }
 
-func expandEc2RemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePrefixListEntry {
+func expandRemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePrefixListEntry {
 	if tfMap == nil {
 		return nil
 	}
@@ -382,7 +382,7 @@ func expandEc2RemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePre
 	return apiObject
 }
 
-func expandEc2RemovePrefixListEntries(tfList []interface{}) []*ec2.RemovePrefixListEntry {
+func expandRemovePrefixListEntries(tfList []interface{}) []*ec2.RemovePrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -396,7 +396,7 @@ func expandEc2RemovePrefixListEntries(tfList []interface{}) []*ec2.RemovePrefixL
 			continue
 		}
 
-		apiObject := expandEc2RemovePrefixListEntry(tfMap)
+		apiObject := expandRemovePrefixListEntry(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -408,7 +408,7 @@ func expandEc2RemovePrefixListEntries(tfList []interface{}) []*ec2.RemovePrefixL
 	return apiObjects
 }
 
-func flattenEc2PrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interface{} {
+func flattenPrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -426,7 +426,7 @@ func flattenEc2PrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interf
 	return tfMap
 }
 
-func flattenEc2PrefixListEntries(apiObjects []*ec2.PrefixListEntry) []interface{} {
+func flattenPrefixListEntries(apiObjects []*ec2.PrefixListEntry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -438,7 +438,7 @@ func flattenEc2PrefixListEntries(apiObjects []*ec2.PrefixListEntry) []interface{
 			continue
 		}
 
-		tfList = append(tfList, flattenEc2PrefixListEntry(apiObject))
+		tfList = append(tfList, flattenPrefixListEntry(apiObject))
 	}
 
 	return tfList

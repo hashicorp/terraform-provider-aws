@@ -11,21 +11,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDirectoryServiceDirectoryDataSource_nonExistent(t *testing.T) {
+func TestAccDSDirectoryDataSource_nonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDirectoryDataSourceConfig_NonExistent,
+				Config:      testAccDirectoryDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
+func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test-simple-ad"
 	dataSourceName := "data.aws_directory_service_directory.test-simple-ad"
@@ -59,7 +59,7 @@ func TestAccDirectoryServiceDirectoryDataSource_simpleAD(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
+func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test-microsoft-ad"
 	dataSourceName := "data.aws_directory_service_directory.test-microsoft-ad"
@@ -93,7 +93,7 @@ func TestAccDirectoryServiceDirectoryDataSource_microsoftAD(t *testing.T) {
 	})
 }
 
-func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
+func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -118,7 +118,7 @@ func TestAccDirectoryServiceDirectoryDataSource_connector(t *testing.T) {
 	})
 }
 
-const testAccDirectoryDataSourceConfig_NonExistent = `
+const testAccDirectoryDataSourceConfig_nonExistent = `
 data "aws_directory_service_directory" "test" {
   directory_id = "d-abc0123456"
 }
@@ -126,7 +126,7 @@ data "aws_directory_service_directory" "test" {
 
 func testAccDirectoryDataSourceConfig_simpleAD(rName, alias, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test-simple-ad" {
   directory_id = aws_directory_service_directory.test-simple-ad.id
@@ -153,7 +153,7 @@ resource "aws_directory_service_directory" "test-simple-ad" {
 
 func testAccDirectoryDataSourceConfig_microsoftAD(rName, alias, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test-microsoft-ad" {
   directory_id = aws_directory_service_directory.test-microsoft-ad.id
@@ -180,7 +180,7 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
 
 func testAccDirectoryDataSourceConfig_connector(rName, domain string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 data "aws_directory_service_directory" "test" {
   directory_id = aws_directory_service_directory.test.id

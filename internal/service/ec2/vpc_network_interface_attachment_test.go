@@ -22,7 +22,7 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkInterfaceAttachmentConfig(rName),
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists("aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
@@ -36,9 +36,9 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 	})
 }
 
-func testAccNetworkInterfaceAttachmentConfig(rName string) string {
+func testAccVPCNetworkInterfaceAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

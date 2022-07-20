@@ -26,7 +26,7 @@ func TestAccVPCInternetGateway_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayBasicConfig,
+				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`internet-gateway/igw-.+`)),
@@ -55,7 +55,7 @@ func TestAccVPCInternetGateway_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayBasicConfig,
+				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
@@ -80,7 +80,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayAttachmentConfig(rName),
+				Config: testAccVPCInternetGatewayConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc1ResourceName, "id"),
@@ -92,7 +92,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInternetGatewayAttachmentUpdatedConfig(rName),
+				Config: testAccVPCInternetGatewayConfig_attachmentUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc2ResourceName, "id"),
@@ -114,7 +114,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInternetGatewayTags1Config(rName, "key1", "value1"),
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInternetGatewayTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCInternetGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +136,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInternetGatewayTags1Config(rName, "key2", "value2"),
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -196,11 +196,11 @@ func testAccCheckInternetGatewayExists(n string, v *ec2.InternetGateway) resourc
 	}
 }
 
-const testAccInternetGatewayBasicConfig = `
+const testAccVPCInternetGatewayConfig_basic = `
 resource "aws_internet_gateway" "test" {}
 `
 
-func testAccInternetGatewayAttachmentConfig(rName string) string {
+func testAccVPCInternetGatewayConfig_attachment(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -228,7 +228,7 @@ resource "aws_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccInternetGatewayAttachmentUpdatedConfig(rName string) string {
+func testAccVPCInternetGatewayConfig_attachmentUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -256,7 +256,7 @@ resource "aws_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccInternetGatewayTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccVPCInternetGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   tags = {
@@ -266,7 +266,7 @@ resource "aws_internet_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccInternetGatewayTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCInternetGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   tags = {

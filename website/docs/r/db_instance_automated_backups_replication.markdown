@@ -87,6 +87,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the replicated automated backups.
 
+## Timeouts
+
+`aws_db_instance_automated_backups_replication` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
+configuration options:
+
+- `create` - (Default `75m`) How long to wait before RDS successfully starts replication of automated backups to a different AWS Region.
+- `delete` - (Default `75m`) How long to wait before RDS stops automated backup replication for a DB instance.
+
 ## Import
 
 RDS instance automated backups replication can be imported using the `arn`, e.g.,

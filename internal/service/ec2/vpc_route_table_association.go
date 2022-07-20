@@ -66,7 +66,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 		func() (interface{}, error) {
 			return conn.AssociateRouteTable(input)
 		},
-		ErrCodeInvalidRouteTableIDNotFound,
+		errCodeInvalidRouteTableIDNotFound,
 	)
 
 	if err != nil {
@@ -123,7 +123,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 	// This whole thing with the resource ID being changed on update seems unsustainable.
 	// Keeping it here for backwards compatibility...
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		// Not found, so just create a new one
 		return resourceRouteTableAssociationCreate(d, meta)
 	}
@@ -148,7 +148,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 func resourceRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	return ec2RouteTableAssociationDelete(conn, d.Id())
+	return routeTableAssociationDelete(conn, d.Id())
 }
 
 func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -198,14 +198,14 @@ func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{
 	return []*schema.ResourceData{d}, nil
 }
 
-// ec2RouteTableAssociationDelete attempts to delete a route table association.
-func ec2RouteTableAssociationDelete(conn *ec2.EC2, associationID string) error {
+// routeTableAssociationDelete attempts to delete a route table association.
+func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	log.Printf("[INFO] Deleting Route Table Association: %s", associationID)
 	_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
 		AssociationId: aws.String(associationID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return nil
 	}
 

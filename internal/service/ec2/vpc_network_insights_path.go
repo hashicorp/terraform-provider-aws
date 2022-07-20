@@ -80,7 +80,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		Destination:       aws.String(d.Get("destination").(string)),
 		Protocol:          aws.String(d.Get("protocol").(string)),
 		Source:            aws.String(d.Get("source").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInsightsPath),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInsightsPath),
 	}
 
 	if v, ok := d.GetOk("destination_ip"); ok {
@@ -168,7 +168,7 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 		NetworkInsightsPathId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsPathIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
 		return nil
 	}
 

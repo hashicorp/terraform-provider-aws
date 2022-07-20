@@ -32,7 +32,7 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
@@ -64,7 +64,7 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
@@ -72,7 +72,7 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
@@ -127,7 +127,7 @@ func testAccCheckWebACLAssociationExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccWebACLAssociationConfig(name string) string {
+func testAccWebACLAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   stage_name    = "%s"

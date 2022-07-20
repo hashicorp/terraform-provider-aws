@@ -21,7 +21,7 @@ func TestAccKMSKeyDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyDataSourceConfig(rName),
+				Config: testAccKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
@@ -55,7 +55,7 @@ func TestAccKMSKeyDataSource_grantToken(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyDataSourceGrantTokenConfig(rName),
+				Config: testAccKeyDataSourceConfig_grantToken(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
@@ -89,7 +89,7 @@ func TestAccKMSKeyDataSource_multiRegionConfiguration(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyDataSourceMultiRegionConfig(rName),
+				Config: testAccKeyDataSourceConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
@@ -117,7 +117,7 @@ func TestAccKMSKeyDataSource_multiRegionConfiguration(t *testing.T) {
 	})
 }
 
-func testAccKeyDataSourceConfig(rName string) string {
+func testAccKeyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -130,7 +130,7 @@ data "aws_kms_key" "test" {
 `, rName)
 }
 
-func testAccKeyDataSourceGrantTokenConfig(rName string) string {
+func testAccKeyDataSourceConfig_grantToken(rName string) string {
 	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
@@ -146,7 +146,7 @@ data "aws_kms_key" "test" {
 `, rName))
 }
 
-func testAccKeyDataSourceMultiRegionConfig(rName string) string {
+func testAccKeyDataSourceConfig_multiRegion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

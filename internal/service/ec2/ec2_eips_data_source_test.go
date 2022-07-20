@@ -19,7 +19,7 @@ func TestAccEC2EIPsDataSource_vpcDomain(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPsVPCDomainDataSourceConfig(rName),
+				Config: testAccEIPsDataSourceConfig_vpcDomain(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", "1"),
@@ -39,7 +39,7 @@ func TestAccEC2EIPsDataSource_standardDomain(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPsStandardDomainDataSourceConfig(),
+				Config: testAccEIPsDataSourceConfig_standardDomain(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "public_ips.#", "0"),
 				),
@@ -48,7 +48,7 @@ func TestAccEC2EIPsDataSource_standardDomain(t *testing.T) {
 	})
 }
 
-func testAccEIPsVPCDomainDataSourceConfig(rName string) string {
+func testAccEIPsDataSourceConfig_vpcDomain(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test1" {
   vpc = true
@@ -89,7 +89,7 @@ data "aws_eips" "none" {
 `, rName)
 }
 
-func testAccEIPsStandardDomainDataSourceConfig() string {
+func testAccEIPsDataSourceConfig_standardDomain() string {
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), `
 resource "aws_eip" "test" {}
 

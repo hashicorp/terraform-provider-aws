@@ -54,7 +54,7 @@ func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 		CheckDestroy:      nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStandardsControlConfig_disabledControlStatus(),
+				Config: testAccStandardsControlConfig_disabledStatus(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStandardsControlExists(resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "DISABLED"),
@@ -73,7 +73,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 		CheckDestroy:      nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStandardsControlConfig_enabledControlStatus(),
+				Config:      testAccStandardsControlConfig_enabledStatus(),
 				ExpectError: regexp.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
 			},
 		},
@@ -122,7 +122,7 @@ resource aws_securityhub_standards_control test {
 `)
 }
 
-func testAccStandardsControlConfig_disabledControlStatus() string {
+func testAccStandardsControlConfig_disabledStatus() string {
 	return acctest.ConfigCompose(
 		testAccStandardsSubscriptionConfig_basic,
 		`
@@ -134,7 +134,7 @@ resource aws_securityhub_standards_control test {
 `)
 }
 
-func testAccStandardsControlConfig_enabledControlStatus() string {
+func testAccStandardsControlConfig_enabledStatus() string {
 	return acctest.ConfigCompose(
 		testAccStandardsSubscriptionConfig_basic,
 		`

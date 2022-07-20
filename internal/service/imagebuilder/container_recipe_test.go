@@ -27,7 +27,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeNameConfig(rName),
+				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
@@ -73,7 +73,7 @@ func TestAccImageBuilderContainerRecipe_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeNameConfig(rName),
+				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceContainerRecipe(), resourceName),
@@ -95,7 +95,7 @@ func TestAccImageBuilderContainerRecipe_component(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeComponentConfig(rName),
+				Config: testAccContainerRecipeConfig_component(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "component.#", "2"),
@@ -123,7 +123,7 @@ func TestAccImageBuilderContainerRecipe_componentParameter(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeComponentParameterConfig(rName),
+				Config: testAccContainerRecipeConfig_componentParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
@@ -154,7 +154,7 @@ func TestAccImageBuilderContainerRecipe_description(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeDescriptionConfig(rName),
+				Config: testAccContainerRecipeConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
@@ -180,7 +180,7 @@ func TestAccImageBuilderContainerRecipe_dockerfileTemplateURI(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerDockerfileTemplateURIConfig(rName),
+				Config: testAccContainerRecipeConfig_dockerfileTemplateURI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
@@ -207,7 +207,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingDeviceNameConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingDeviceName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -235,7 +235,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSDeleteOnTerminationConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSDeleteOnTermination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -264,7 +264,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSEncryptedConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -293,7 +293,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSIOPSConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -323,7 +323,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSKMSKeyIDConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -353,13 +353,42 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSSnapshotIDConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSSnapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.snapshot_id", ebsSnapshotResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMappingEBS_throughput(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSThroughput(rName, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.throughput", "200"),
 				),
 			},
 			{
@@ -382,7 +411,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSVolumeSizeConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -411,7 +440,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSVolumeTypeConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -440,7 +469,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingNoDeviceConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -468,7 +497,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationBlockDeviceMappingVirtualNameConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingVirtualName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -497,7 +526,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_Image(t *testing.T
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeInstanceConfigurationImageConfig(rName),
+				Config: testAccContainerRecipeConfig_instanceConfigurationImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
@@ -525,7 +554,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeKmsKeyIDConfig(rName),
+				Config: testAccContainerRecipeConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -551,7 +580,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeTags1Config(rName, "key1", "value1"),
+				Config: testAccContainerRecipeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -564,7 +593,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerRecipeTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccContainerRecipeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -573,7 +602,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContainerRecipeTags1Config(rName, "key2", "value2"),
+				Config: testAccContainerRecipeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -595,7 +624,7 @@ func TestAccImageBuilderContainerRecipe_workingDirectory(t *testing.T) {
 		CheckDestroy:      testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipeWorkingDirectoryConfig(rName),
+				Config: testAccContainerRecipeConfig_workingDirectory(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "working_directory", "/tmp"),
@@ -676,7 +705,7 @@ resource "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccContainerRecipeNameConfig(rName string) string {
+func testAccContainerRecipeConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -704,7 +733,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeComponentConfig(rName string) string {
+func testAccContainerRecipeConfig_component(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -736,7 +765,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeComponentParameterConfig(rName string) string {
+func testAccContainerRecipeConfig_componentParameter(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -799,7 +828,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeDescriptionConfig(rName string) string {
+func testAccContainerRecipeConfig_description(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -829,7 +858,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerDockerfileTemplateURIConfig(rName string) string {
+func testAccContainerRecipeConfig_dockerfileTemplateURI(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -873,7 +902,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingDeviceNameConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingDeviceName(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -908,7 +937,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSDeleteOnTerminationConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSDeleteOnTermination(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -945,7 +974,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSEncryptedConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSEncrypted(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -982,7 +1011,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSIOPSConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSIOPS(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1019,7 +1048,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSKMSKeyIDConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1060,7 +1089,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSSnapshotIDConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSSnapshotID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1107,7 +1136,45 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSVolumeSizeConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSThroughput(rName string, throughput int) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  instance_configuration {
+    block_device_mapping {
+      ebs {
+        throughput  = %[2]d
+        volume_type = "gp3"
+      }
+    }
+  }
+}
+`, rName, throughput))
+}
+
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeSize(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1144,7 +1211,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingEBSVolumeTypeConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeType(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1181,7 +1248,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingNoDeviceConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingNoDevice(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1216,7 +1283,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationBlockDeviceMappingVirtualNameConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingVirtualName(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1251,7 +1318,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeInstanceConfigurationImageConfig(rName string) string {
+func testAccContainerRecipeConfig_instanceConfigurationImage(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1294,7 +1361,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeKmsKeyIDConfig(rName string) string {
+func testAccContainerRecipeConfig_kmsKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1329,7 +1396,7 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeTags1Config(rName string, tagKey1 string, tagValue1 string) string {
+func testAccContainerRecipeConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1362,7 +1429,7 @@ EOF
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccContainerRecipeTags2Config(rName string, tagKey1 string, tagValue1, tagKey2 string, tagValue2 string) string {
+func testAccContainerRecipeConfig_tags2(rName string, tagKey1 string, tagValue1, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1396,7 +1463,7 @@ EOF
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccContainerRecipeWorkingDirectoryConfig(rName string) string {
+func testAccContainerRecipeConfig_workingDirectory(rName string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`

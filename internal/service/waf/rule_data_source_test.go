@@ -22,11 +22,11 @@ func TestAccWAFRuleDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRuleDataSourceConfig_NonExistent,
+				Config:      testAccRuleDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`WAF Rules not found`),
 			},
 			{
-				Config: testAccRuleDataSourceConfig_Name(name),
+				Config: testAccRuleDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +36,7 @@ func TestAccWAFRuleDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRuleDataSourceConfig_Name(name string) string {
+func testAccRuleDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "wafrule" {
   name        = %[1]q
@@ -49,7 +49,7 @@ data "aws_waf_rule" "wafrule" {
 `, name)
 }
 
-const testAccRuleDataSourceConfig_NonExistent = `
+const testAccRuleDataSourceConfig_nonExistent = `
 data "aws_waf_rule" "wafrule" {
   name = "tf-acc-test-does-not-exist"
 }

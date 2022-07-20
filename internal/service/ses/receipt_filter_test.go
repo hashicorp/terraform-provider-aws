@@ -25,7 +25,7 @@ func TestAccSESReceiptFilter_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptFilterExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-filter/%s", rName)),
@@ -54,7 +54,7 @@ func TestAccSESReceiptFilter_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckReceiptFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptFilterConfig(rName),
+				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptFilterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
@@ -117,7 +117,7 @@ func testAccCheckReceiptFilterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccReceiptFilterConfig(rName string) string {
+func testAccReceiptFilterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_filter" "test" {
   cidr   = "10.10.10.10"

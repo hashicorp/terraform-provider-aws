@@ -27,7 +27,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRequestValidatorConfig(rName),
+				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(resourceName, &conf),
 					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator"),
@@ -39,7 +39,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRequestValidatorUpdatedConfig(rName),
+				Config: testAccRequestValidatorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(resourceName, &conf),
 					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
@@ -72,7 +72,7 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRequestValidatorConfig(rName),
+				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
@@ -198,7 +198,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
-func testAccRequestValidatorConfig(rName string) string {
+func testAccRequestValidatorConfig_basic(rName string) string {
 	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
   name        = "tf-acc-test-request-validator"
@@ -207,7 +207,7 @@ resource "aws_api_gateway_request_validator" "test" {
 `)
 }
 
-func testAccRequestValidatorUpdatedConfig(rName string) string {
+func testAccRequestValidatorConfig_updated(rName string) string {
 	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
   name                        = "tf-acc-test-request-validator_modified"

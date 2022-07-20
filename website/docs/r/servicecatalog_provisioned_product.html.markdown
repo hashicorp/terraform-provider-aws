@@ -105,6 +105,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ### status Meanings
 
+~> **NOTE:** [Enable logging](https://www.terraform.io/plugin/log/managing) to `WARN` verbosity to further investigate error messages associated with a provisioned product in the `ERROR` or `TAINTED` state which can occur during resource creation or update.
+
 * `AVAILABLE` - Stable state, ready to perform any operation. The most recent operation succeeded and completed.
 * `UNDER_CHANGE` - Transitive state. Operations performed might not have
 valid results. Wait for an `AVAILABLE` status before performing operations.

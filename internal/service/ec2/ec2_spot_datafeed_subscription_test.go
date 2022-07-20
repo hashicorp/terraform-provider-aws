@@ -39,7 +39,7 @@ func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
 				),
@@ -65,7 +65,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
@@ -142,7 +142,7 @@ func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 	}
 }
 
-func testAccSpotDatafeedSubscription(rName string) string {
+func testAccSpotDatafeedSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 

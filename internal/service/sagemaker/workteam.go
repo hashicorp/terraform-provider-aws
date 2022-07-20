@@ -286,7 +286,7 @@ func expandWorkteamMemberDefinition(l []interface{}) []*sagemaker.MemberDefiniti
 		}
 
 		if v, ok := memRaw["oidc_member_definition"].([]interface{}); ok && len(v) > 0 {
-			member.OidcMemberDefinition = expandWorkteamOidcMemberDefinition(v)
+			member.OidcMemberDefinition = expandWorkteamOIDCMemberDefinition(v)
 		}
 
 		members = append(members, member)
@@ -306,7 +306,7 @@ func flattenWorkteamMemberDefinition(config []*sagemaker.MemberDefinition) []map
 		}
 
 		if raw.OidcMemberDefinition != nil {
-			member["oidc_member_definition"] = flattenWorkteamOidcMemberDefinition(raw.OidcMemberDefinition)
+			member["oidc_member_definition"] = flattenWorkteamOIDCMemberDefinition(raw.OidcMemberDefinition)
 		}
 
 		members = append(members, member)
@@ -345,7 +345,7 @@ func flattenWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefin
 	return []map[string]interface{}{m}
 }
 
-func expandWorkteamOidcMemberDefinition(l []interface{}) *sagemaker.OidcMemberDefinition {
+func expandWorkteamOIDCMemberDefinition(l []interface{}) *sagemaker.OidcMemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -359,7 +359,7 @@ func expandWorkteamOidcMemberDefinition(l []interface{}) *sagemaker.OidcMemberDe
 	return config
 }
 
-func flattenWorkteamOidcMemberDefinition(config *sagemaker.OidcMemberDefinition) []map[string]interface{} {
+func flattenWorkteamOIDCMemberDefinition(config *sagemaker.OidcMemberDefinition) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

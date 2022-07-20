@@ -15,7 +15,7 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceInstanceTypeOfferingsConfig(),
+				Config: testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.*", map[string]string{
@@ -45,7 +45,7 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBrokerDataSourceInstanceTypeOfferingsConfig() string {
+func testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic() string {
 	return `
 data "aws_mq_broker_instance_type_offerings" "empty" {}
 

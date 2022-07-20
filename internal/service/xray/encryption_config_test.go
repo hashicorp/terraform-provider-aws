@@ -24,7 +24,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptionBasicConfig(),
+				Config: testAccEncryptionConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
@@ -36,7 +36,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEncryptionWithKeyConfig(),
+				Config: testAccEncryptionConfigConfig_key(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
@@ -44,7 +44,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEncryptionBasicConfig(),
+				Config: testAccEncryptionConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEncryptionConfigExists(resourceName, &EncryptionConfig),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
@@ -78,7 +78,7 @@ func testAccCheckEncryptionConfigExists(n string, EncryptionConfig *xray.Encrypt
 	}
 }
 
-func testAccEncryptionBasicConfig() string {
+func testAccEncryptionConfigConfig_basic() string {
 	return `
 resource "aws_xray_encryption_config" "test" {
   type = "NONE"
@@ -86,7 +86,7 @@ resource "aws_xray_encryption_config" "test" {
 `
 }
 
-func testAccEncryptionWithKeyConfig() string {
+func testAccEncryptionConfigConfig_key() string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test %s"

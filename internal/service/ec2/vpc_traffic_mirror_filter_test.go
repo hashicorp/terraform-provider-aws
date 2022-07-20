@@ -31,7 +31,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			//create
 			{
-				Config: testAccTrafficMirrorFilterConfig(description),
+				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-filter/tmf-.+`)),
@@ -42,7 +42,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 			},
 			// Test Disable DNS service
 			{
-				Config: testAccTrafficMirrorFilterConfigWithoutDNS(description),
+				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "network_services"),
@@ -50,7 +50,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 			},
 			// Test Enable DNS service
 			{
-				Config: testAccTrafficMirrorFilterConfig(description),
+				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -80,7 +80,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorFilterConfigTags1("key1", "value1"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -93,7 +93,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrafficMirrorFilterConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -102,7 +102,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrafficMirrorFilterConfigTags1("key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -128,7 +128,7 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorFilterConfig(description),
+				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorFilter(), resourceName),
@@ -170,7 +170,7 @@ func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirr
 	}
 }
 
-func testAccTrafficMirrorFilterConfig(description string) string {
+func testAccVPCTrafficMirrorFilterConfig_basic(description string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {
   description = "%s"
@@ -180,7 +180,7 @@ resource "aws_ec2_traffic_mirror_filter" "test" {
 `, description)
 }
 
-func testAccTrafficMirrorFilterConfigWithoutDNS(description string) string {
+func testAccVPCTrafficMirrorFilterConfig_noDNS(description string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {
   description = "%s"
@@ -188,7 +188,7 @@ resource "aws_ec2_traffic_mirror_filter" "test" {
 `, description)
 }
 
-func testAccTrafficMirrorFilterConfigTags1(tagKey1, tagValue1 string) string {
+func testAccVPCTrafficMirrorFilterConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {
   tags = {
@@ -198,7 +198,7 @@ resource "aws_ec2_traffic_mirror_filter" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccTrafficMirrorFilterConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCTrafficMirrorFilterConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {
   tags = {

@@ -3,12 +3,8 @@ package synthetics_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,7 +27,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryBasicConfig(rName),
+				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
@@ -60,10 +56,10 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryZipUpdatedConfig(rName),
+				Config: testAccCanaryConfig_zipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
@@ -105,7 +101,7 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryArtifactEncryptionConfig(rName),
+				Config: testAccCanaryConfig_artifactEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
@@ -117,10 +113,10 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryArtifactEncryptionKMSConfig(rName),
+				Config: testAccCanaryConfig_artifactEncryptionKMS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
@@ -145,7 +141,7 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.1"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.1"),
@@ -155,10 +151,10 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryRuntimeVersionConfig(rName, "syn-nodejs-puppeteer-3.2"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.2"),
@@ -180,7 +176,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -191,10 +187,10 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryStartCanaryConfig(rName, false),
+				Config: testAccCanaryConfig_start(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -203,7 +199,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf3),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -228,7 +224,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryStartCanaryConfig(rName, true),
+				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
@@ -240,10 +236,10 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryStartCanaryZipUpdatedConfig(rName, true),
+				Config: testAccCanaryConfig_startZipUpdated(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
@@ -269,7 +265,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryBasicS3CodeConfig(rName),
+				Config: testAccCanaryConfig_basicS3Code(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
@@ -295,7 +291,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary"},
+				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary", "delete_lambda"},
 			},
 		},
 	})
@@ -313,7 +309,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryRun1Config(rName),
+				Config: testAccCanaryConfig_run1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -325,10 +321,10 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryRun2Config(rName),
+				Config: testAccCanaryConfig_run2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
@@ -336,7 +332,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryRun1Config(rName),
+				Config: testAccCanaryConfig_run1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
@@ -359,7 +355,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryRunTracingConfig(rName, true),
+				Config: testAccCanaryConfig_runTracing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
@@ -369,17 +365,17 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryRunTracingConfig(rName, false),
+				Config: testAccCanaryConfig_runTracing(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
 				),
 			},
 			{
-				Config: testAccCanaryRunTracingConfig(rName, true),
+				Config: testAccCanaryConfig_runTracing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
@@ -401,9 +397,10 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryRunEnvVariables1Config(rName),
+				Config: testAccCanaryConfig_runEnvVariables1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 				),
 			},
@@ -411,21 +408,15 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda", "run_config.0.environment_variables"},
 			},
 			{
-				Config: testAccCanaryRunEnvVariables2Config(rName),
+				Config: testAccCanaryConfig_runEnvVariables2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test2", "result2"),
-				),
-			},
-			{
-				Config: testAccCanaryBasicConfig(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCanaryExists(resourceName, &conf),
-					resource.TestCheckNoResourceAttr(resourceName, "run_config.0.environment_variables"),
 				),
 			},
 		},
@@ -448,7 +439,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryVPC1Config(rName),
+				Config: testAccCanaryConfig_vpc1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
@@ -460,10 +451,10 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryVPC2Config(rName),
+				Config: testAccCanaryConfig_vpc2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -472,13 +463,12 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryVPC3Config(rName),
+				Config: testAccCanaryConfig_vpc3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					testAccCheckCanaryDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -497,7 +487,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryTags1Config(rName, "key1", "value1"),
+				Config: testAccCanaryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -508,10 +498,10 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCanaryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -520,7 +510,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryTags1Config(rName, "key2", "value2"),
+				Config: testAccCanaryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -543,7 +533,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryBasicConfig(rName),
+				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
@@ -599,57 +589,6 @@ func testAccCheckCanaryExists(n string, canary *synthetics.Canary) resource.Test
 		}
 
 		*canary = *output
-
-		return nil
-	}
-}
-
-func testAccCheckCanaryDeleteImplicitResources(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("synthetics Canary not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("synthetics Canary name not set")
-		}
-
-		lambdaConn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
-
-		layerArn := rs.Primary.Attributes["source_location_arn"]
-		layerArnObj, err := arn.Parse(layerArn)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda Layer %s incorrect arn format: %w", layerArn, err)
-		}
-
-		layerName := strings.Split(layerArnObj.Resource, ":")
-
-		deleteLayerVersionInput := &lambda.DeleteLayerVersionInput{
-			LayerName:     aws.String(layerName[1]),
-			VersionNumber: aws.Int64(1),
-		}
-
-		_, err = lambdaConn.DeleteLayerVersion(deleteLayerVersionInput)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda Layer %s could not be deleted: %w", layerArn, err)
-		}
-
-		lambdaArn := rs.Primary.Attributes["engine_arn"]
-		lambdaArnObj, err := arn.Parse(layerArn)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda %s incorrect arn format: %w", lambdaArn, err)
-		}
-		lambdaArnParts := strings.Split(lambdaArnObj.Resource, ":")
-
-		deleteLambdaInput := &lambda.DeleteFunctionInput{
-			FunctionName: aws.String(lambdaArnParts[1]),
-		}
-
-		_, err = lambdaConn.DeleteFunction(deleteLambdaInput)
-		if err != nil {
-			return fmt.Errorf("synthetics Canary Lambda %s could not be deleted: %w", lambdaArn, err)
-		}
 
 		return nil
 	}
@@ -789,7 +728,7 @@ EOF
 `, rName)
 }
 
-func testAccCanaryRun1Config(rName string) string {
+func testAccCanaryConfig_run1(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -798,6 +737,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -812,7 +752,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryRun2Config(rName string) string {
+func testAccCanaryConfig_run2(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -821,6 +761,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -836,7 +777,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryRunTracingConfig(rName string, tracing bool) string {
+func testAccCanaryConfig_runTracing(rName string, tracing bool) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -845,6 +786,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -860,7 +802,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, tracing))
 }
 
-func testAccCanaryRunEnvVariables1Config(rName string) string {
+func testAccCanaryConfig_runEnvVariables1(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -869,6 +811,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -885,7 +828,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryRunEnvVariables2Config(rName string) string {
+func testAccCanaryConfig_runEnvVariables2(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -894,6 +837,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -911,7 +855,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryBasicConfig(rName string) string {
+func testAccCanaryConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   # Must have bucket versioning enabled first
@@ -923,6 +867,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -931,7 +876,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryArtifactEncryptionConfig(rName string) string {
+func testAccCanaryConfig_artifactEncryption(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -940,6 +885,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.3"
+  delete_lambda        = true
 
   artifact_config {
     s3_encryption {
@@ -956,7 +902,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryArtifactEncryptionKMSConfig(rName string) string {
+func testAccCanaryConfig_artifactEncryptionKMS(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -970,6 +916,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.3"
+  delete_lambda        = true
 
   artifact_config {
     s3_encryption {
@@ -987,7 +934,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryRuntimeVersionConfig(rName, version string) string {
+func testAccCanaryConfig_runtimeVersion(rName, version string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -996,6 +943,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = %[2]q
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1006,7 +954,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, version))
 }
 
-func testAccCanaryZipUpdatedConfig(rName string) string {
+func testAccCanaryConfig_zipUpdated(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1015,6 +963,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1025,7 +974,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryStartCanaryConfig(rName string, state bool) string {
+func testAccCanaryConfig_start(rName string, state bool) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1035,6 +984,7 @@ resource "aws_synthetics_canary" "test" {
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1045,7 +995,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, state))
 }
 
-func testAccCanaryStartCanaryZipUpdatedConfig(rName string, state bool) string {
+func testAccCanaryConfig_startZipUpdated(rName string, state bool) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1055,6 +1005,7 @@ resource "aws_synthetics_canary" "test" {
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1065,7 +1016,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, state))
 }
 
-func testAccCanaryBasicS3CodeConfig(rName string) string {
+func testAccCanaryConfig_basicS3Code(rName string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1076,6 +1027,7 @@ resource "aws_synthetics_canary" "test" {
   s3_key               = aws_s3_object.test.key
   s3_version           = aws_s3_object.test.version_id
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1150,7 +1102,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName))
 }
 
-func testAccCanaryVPC1Config(rName string) string {
+func testAccCanaryConfig_vpc1(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryBaseConfig(rName),
 		testAccCanaryVPCBaseConfig(rName),
@@ -1162,6 +1114,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1177,7 +1130,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryVPC2Config(rName string) string {
+func testAccCanaryConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryBaseConfig(rName),
 		testAccCanaryVPCBaseConfig(rName),
@@ -1189,6 +1142,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1204,7 +1158,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryVPC3Config(rName string) string {
+func testAccCanaryConfig_vpc3(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryBaseConfig(rName),
 		testAccCanaryVPCBaseConfig(rName),
@@ -1216,6 +1170,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1231,7 +1186,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccCanaryConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1240,6 +1195,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"
@@ -1252,7 +1208,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccCanaryTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCanaryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccCanaryBaseConfig(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1261,6 +1217,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-puppeteer-3.2"
+  delete_lambda        = true
 
   schedule {
     expression = "rate(0 minute)"

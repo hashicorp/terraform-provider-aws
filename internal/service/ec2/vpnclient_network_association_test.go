@@ -33,7 +33,7 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc),
 					resource.TestMatchResourceAttr(resourceName, "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
@@ -73,7 +73,7 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_multipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceNames[0], &assoc),
 					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
@@ -116,7 +116,7 @@ func testAccClientVPNNetworkAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
@@ -142,7 +142,7 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroups(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_twoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc1),
 					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group11),
@@ -159,7 +159,7 @@ func testAccClientVPNNetworkAssociation_securityGroups(t *testing.T) {
 				ImportStateIdFunc: testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigOneSecurityGroup(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_oneSecurityGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc2),
 					testAccCheckDefaultSecurityGroupExists(securityGroup1ResourceName, &group21),
@@ -183,7 +183,7 @@ func testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint(t *testing.T) {
 		CheckDestroy:      testAccCheckClientVPNNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroupsOnEndpoint(rName),
+				Config: testAccClientVPNNetworkAssociationConfig_twoSecurityGroupsOnEndpoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(resourceName, &assoc),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
@@ -266,9 +266,9 @@ func testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigBase(rName string) string {
+func testAccClientVPNNetworkAssociationConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccEc2ClientVpnEndpointConfig(rName),
+		testAccClientVPNEndpointConfig_basic(rName),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -307,8 +307,8 @@ resource "aws_subnet" "test2" {
 `, rName))
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationConfigBase(rName), `
+func testAccClientVPNNetworkAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNNetworkAssociationConfig_base(rName), `
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
@@ -316,8 +316,8 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 `)
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigMultipleSubnets(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationConfigBase(rName), `
+func testAccClientVPNNetworkAssociationConfig_multipleSubnets(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNNetworkAssociationConfig_base(rName), `
 resource "aws_ec2_client_vpn_network_association" "test1" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
@@ -330,8 +330,8 @@ resource "aws_ec2_client_vpn_network_association" "test2" {
 `)
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroups(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationConfigBase(rName), fmt.Sprintf(`
+func testAccClientVPNNetworkAssociationConfig_twoSecurityGroups(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNNetworkAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
@@ -358,8 +358,8 @@ resource "aws_security_group" "test2" {
 `, rName))
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigOneSecurityGroup(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnNetworkAssociationConfigBase(rName), fmt.Sprintf(`
+func testAccClientVPNNetworkAssociationConfig_oneSecurityGroup(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNNetworkAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test1.id
@@ -386,8 +386,8 @@ resource "aws_security_group" "test2" {
 `, rName))
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigTwoSecurityGroupsOnEndpoint(rName string) string {
-	return acctest.ConfigCompose(testAccEc2ClientVpnEndpointConfigSecurityGroups(rName, 2), `
+func testAccClientVPNNetworkAssociationConfig_twoSecurityGroupsOnEndpoint(rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_securityGroups(rName, 2), `
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test[0].id

@@ -37,7 +37,7 @@ func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "subnetgroup/"+rName),
@@ -71,7 +71,7 @@ func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceSubnetGroup(), resourceName),
@@ -93,7 +93,7 @@ func TestAccMemoryDBSubnetGroup_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_withNoName(rName),
+				Config: testAccSubnetGroupConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -115,7 +115,7 @@ func TestAccMemoryDBSubnetGroup_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_withNamePrefix(rName, "tftest-"),
+				Config: testAccSubnetGroupConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
@@ -137,7 +137,7 @@ func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -149,7 +149,7 @@ func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withDescription(rName, "Updated Description"),
+				Config: testAccSubnetGroupConfig_description(rName, "Updated Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated Description"),
@@ -175,7 +175,7 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_withSubnetCount(rName, 1),
+				Config: testAccSubnetGroupConfig_count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -188,7 +188,7 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withSubnetCount(rName, 3),
+				Config: testAccSubnetGroupConfig_count(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
@@ -203,7 +203,7 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withSubnetCount(rName, 2),
+				Config: testAccSubnetGroupConfig_count(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -231,7 +231,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_withTags0(rName),
+				Config: testAccSubnetGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -244,7 +244,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccSubnetGroupConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -261,7 +261,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccSubnetGroupConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -276,7 +276,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_withTags0(rName),
+				Config: testAccSubnetGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -339,9 +339,9 @@ func testAccCheckSubnetGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q
@@ -355,9 +355,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withNoName(rName string) string {
+func testAccSubnetGroupConfig_noName(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test.*.id
@@ -366,9 +366,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withNamePrefix(rName, rNamePrefix string) string {
+func testAccSubnetGroupConfig_namePrefix(rName, rNamePrefix string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name_prefix = %[1]q
@@ -378,9 +378,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withDescription(rName, description string) string {
+func testAccSubnetGroupConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name        = %[1]q
@@ -391,9 +391,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withSubnetCount(rName string, subnetCount int) string {
+func testAccSubnetGroupConfig_count(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, subnetCount),
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q
@@ -403,9 +403,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withTags0(rName string) string {
+func testAccSubnetGroupConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q
@@ -415,9 +415,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withTags1(rName, tag1Key, tag1Value string) string {
+func testAccSubnetGroupConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q
@@ -431,9 +431,9 @@ resource "aws_memorydb_subnet_group" "test" {
 	)
 }
 
-func testAccSubnetGroupConfig_withTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccSubnetGroupConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q

@@ -80,6 +80,7 @@ The following arguments are optional:
 * `iops` - (Optional) Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
 * `snapshot_id` - (Optional) Identifier of the EC2 Volume Snapshot.
+* `throughput` - (Optional) For GP3 volumes only. The throughput in MiB/s that the volume supports.
 * `volume_size` - (Optional) Size of the volume, in GiB.
 * `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
 

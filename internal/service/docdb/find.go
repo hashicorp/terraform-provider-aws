@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findGlobalClusterByArn(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
+func findGlobalClusterByARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN string) (*docdb.GlobalCluster, error) {
 	var globalCluster *docdb.GlobalCluster
 
 	input := &docdb.DescribeGlobalClustersInput{
@@ -78,7 +78,7 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 	return globalCluster, err
 }
 
-func findGlobalClusterIdByArn(ctx context.Context, conn *docdb.DocDB, arn string) string {
+func findGlobalClusterIDByARN(ctx context.Context, conn *docdb.DocDB, arn string) string {
 	result, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{})
 	if err != nil {
 		return ""

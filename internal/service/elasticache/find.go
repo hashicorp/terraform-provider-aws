@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindReplicationGroupByID retrieves an ElastiCache Replication Group by id.
@@ -213,16 +214,38 @@ func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elastica
 		return nil, err
 	}
 
-	switch len(out.UserGroups) {
+	switch count := len(out.UserGroups); count {
 	case 0:
-		return nil, &resource.NotFoundError{
-			Message: "empty result",
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	case 1:
 		return out.UserGroups[0], nil
 	default:
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+}
+
+func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
+	input := elasticache.DescribeCacheParameterGroupsInput{
+		CacheParameterGroupName: aws.String(name),
+	}
+	out, err := conn.DescribeCacheParameterGroups(&input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
-			Message: "too many results",
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	switch count := len(out.CacheParameterGroups); count {
+	case 0:
+		return nil, tfresource.NewEmptyResultError(input)
+	case 1:
+		return out.CacheParameterGroups[0], nil
+	default:
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 }

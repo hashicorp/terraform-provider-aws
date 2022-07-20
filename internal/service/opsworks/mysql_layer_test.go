@@ -25,7 +25,7 @@ func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMySQLLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMySQLLayerVPCCreateConfig(rName),
+				Config: testAccMySQLLayerConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName)),
@@ -45,7 +45,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckMySQLLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMySQLLayerTags1Config(rName, "key1", "value1"),
+				Config: testAccMySQLLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -53,7 +53,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMySQLLayerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMySQLLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -62,7 +62,7 @@ func TestAccOpsWorksMySQLLayer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMySQLLayerTags1Config(rName, "key2", "value2"),
+				Config: testAccMySQLLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -77,9 +77,9 @@ func testAccCheckMySQLLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_mysql_layer", s)
 }
 
-func testAccMySQLLayerVPCCreateConfig(rName string) string {
+func testAccMySQLLayerConfig_vpcCreate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {
@@ -94,9 +94,9 @@ resource "aws_opsworks_mysql_layer" "test" {
 `, rName))
 }
 
-func testAccMySQLLayerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccMySQLLayerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {
@@ -115,9 +115,9 @@ resource "aws_opsworks_mysql_layer" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccMySQLLayerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMySQLLayerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		testAccCustomLayerSecurityGroups(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_mysql_layer" "test" {

@@ -17,7 +17,7 @@ import (
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
-func TestAccAppRunnerVpcConnector_basic(t *testing.T) {
+func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_connector.test"
 
@@ -25,12 +25,12 @@ func TestAccAppRunnerVpcConnector_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcConnectorDestroy,
+		CheckDestroy:      testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcConnectorExists(resourceName),
+					testAccCheckVPCConnectorExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcconnector/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connector_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
@@ -47,7 +47,7 @@ func TestAccAppRunnerVpcConnector_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerVpcConnector_disappears(t *testing.T) {
+func TestAccAppRunnerVPCConnector_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_connector.test"
 
@@ -55,13 +55,13 @@ func TestAccAppRunnerVpcConnector_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcConnectorDestroy,
+		CheckDestroy:      testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcConnectorExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVpcConnector(), resourceName),
+					testAccCheckVPCConnectorExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVPCConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +69,7 @@ func TestAccAppRunnerVpcConnector_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerVpcConnector_tags(t *testing.T) {
+func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_connector.test"
 
@@ -77,12 +77,12 @@ func TestAccAppRunnerVpcConnector_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcConnectorDestroy,
+		CheckDestroy:      testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcConnectorExists(resourceName),
+					testAccCheckVPCConnectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -96,7 +96,7 @@ func TestAccAppRunnerVpcConnector_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcConnectorDestroy(s *terraform.State) error {
+func testAccCheckVPCConnectorDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apprunner_vpc_connector" {
 			continue
@@ -126,7 +126,7 @@ func testAccCheckVpcConnectorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVpcConnectorExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

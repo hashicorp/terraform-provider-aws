@@ -295,8 +295,14 @@ func sweepVaults(region string) error {
 		for _, vault := range page.BackupVaultList {
 			failedToDeleteRecoveryPoint := false
 			name := aws.StringValue(vault.BackupVaultName)
+
+			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
+			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
+				log.Printf("[INFO] Skipping Backup Vault: %s", name)
+				continue
+			}
 			input := &backup.ListRecoveryPointsByBackupVaultInput{
-				BackupVaultName: aws.String(name),
+				BackupVaultName: vault.BackupVaultName,
 			}
 
 			err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
@@ -305,17 +311,15 @@ func sweepVaults(region string) error {
 				}
 
 				for _, recoveryPoint := range page.RecoveryPoints {
-					arn := aws.StringValue(recoveryPoint.RecoveryPointArn)
-
-					log.Printf("[INFO] Deleting Recovery Point (%s) in Backup Vault (%s)", arn, name)
 					_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
-						BackupVaultName:  aws.String(name),
-						RecoveryPointArn: aws.String(arn),
+						BackupVaultName:  vault.BackupVaultName,
+						RecoveryPointArn: recoveryPoint.RecoveryPointArn,
 					})
 
 					if err != nil {
-						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", arn, name, err)
+						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", aws.StringValue(recoveryPoint.RecoveryPointArn), name, err)
 						failedToDeleteRecoveryPoint = true
+						return true
 					}
 				}
 
@@ -324,12 +328,6 @@ func sweepVaults(region string) error {
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Reovery Points in Backup Vault (%s) for %s: %w", name, region, err))
-			}
-
-			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
-			if name == "Default" || name == "aws/efs/automatic-backup-vault" {
-				log.Printf("[INFO] Skipping Backup Vault: %s", name)
-				continue
 			}
 
 			// Backup Vault deletion only supported when empty

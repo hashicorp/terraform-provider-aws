@@ -33,7 +33,7 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
+				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
@@ -87,7 +87,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
+				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
@@ -164,7 +164,7 @@ func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resou
 	}
 }
 
-func testAccEventDestinationConfig(rName1, rName2, rName3 string) string {
+func testAccEventDestinationConfig_basic(rName1, rName2, rName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[2]q

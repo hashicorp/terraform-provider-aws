@@ -84,7 +84,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCacheConfig_FileGateway(rName),
+				Config: testAccCacheConfig_fileGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
@@ -114,7 +114,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCacheConfig_TapeAndVolumeGateway(rName),
+				Config: testAccCacheConfig_tapeAndVolumeGateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
@@ -168,8 +168,8 @@ func testAccCheckCacheExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCacheConfig_FileGateway(rName string) string {
-	return testAccGatewayConfig_GatewayType_FileS3(rName) + fmt.Sprintf(`
+func testAccCacheConfig_fileGateway(rName string) string {
+	return testAccGatewayConfig_typeFileS3(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"
@@ -209,8 +209,8 @@ resource "aws_storagegateway_cache" "test" {
 `, rName)
 }
 
-func testAccCacheConfig_TapeAndVolumeGateway(rName string) string {
-	return testAccGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+func testAccCacheConfig_tapeAndVolumeGateway(rName string) string {
+	return testAccGatewayConfig_typeCached(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

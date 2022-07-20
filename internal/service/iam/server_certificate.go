@@ -139,7 +139,7 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	resp, err := conn.UploadServerCertificate(createOpts)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Server Certificate (%s) with tags: %s. Trying create without tags.", sslCertName, err)
 		createOpts.Tags = nil
 
@@ -158,7 +158,7 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		err := serverCertificateUpdateTags(conn, d.Get("name").(string), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
 			return resourceServerCertificateRead(d, meta)
 		}
@@ -180,7 +180,7 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -233,7 +233,7 @@ func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 		err := serverCertificateUpdateTags(conn, d.Get("name").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
 			return resourceServerCertificateRead(d, meta)
 		}

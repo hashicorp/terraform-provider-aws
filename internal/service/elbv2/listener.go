@@ -435,7 +435,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := retryListenerCreate(conn, params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
 		params.Tags = nil
 		output, err = retryListenerCreate(conn, params)
@@ -451,7 +451,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	if params.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for ELBv2 Listener (%s): %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
@@ -534,7 +534,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
 		return nil
 	}
@@ -643,7 +643,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Listener %s: %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
 		}
@@ -759,7 +759,7 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 
 		case elbv2.ActionTypeEnumAuthenticateOidc:
 			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
-				action.AuthenticateOidcConfig = expandLbListenerAuthenticateOidcConfig(v)
+				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 			} else {
 				err = errors.New("for actions of type 'authenticate-oidc', you must specify a 'authenticate_oidc' block")
 			}
@@ -808,7 +808,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 	return config
 }
 
-func expandLbListenerAuthenticateOidcConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -989,7 +989,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 				clientSecret = v.(string)
 			}
 
-			m["authenticate_oidc"] = flattenLbListenerActionAuthenticateOidcConfig(action.AuthenticateOidcConfig, clientSecret)
+			m["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
 		}
 
 		vActions = append(vActions, m)
@@ -998,7 +998,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 	return vActions
 }
 
-func flattenLbListenerActionAuthenticateOidcConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenAuthenticateOIDCActionConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}

@@ -245,7 +245,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -322,7 +322,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerEBSConfig(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_ebs(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -405,7 +405,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -476,7 +476,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -487,7 +487,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsDefaultVpc(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
+				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -533,7 +533,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -604,7 +604,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -619,7 +619,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsCustomVpc(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
+				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -653,7 +653,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigEncryptionOptionsKmsKeyId(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -842,7 +842,7 @@ func TestAccMQBroker_Update_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigTags1(rName, testAccBrokerVersionNewer, "key1", "value1"),
+				Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -856,7 +856,7 @@ func TestAccMQBroker_Update_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccBrokerConfigTags2(rName, testAccBrokerVersionNewer, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBrokerConfig_tags2(rName, testAccBrokerVersionNewer, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -865,7 +865,7 @@ func TestAccMQBroker_Update_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBrokerConfigTags1(rName, testAccBrokerVersionNewer, "key2", "value2"),
+				Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -896,7 +896,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -953,7 +953,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig(rName, testAccBrokerVersionOlder),
+				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionOlder),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionOlder),
@@ -966,7 +966,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccBrokerEngineVersionUpdateConfig(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
@@ -996,14 +996,14 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigInstanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
+				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker1),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 				),
 			},
 			{
-				Config: testAccBrokerConfigInstanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
+				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker2),
 					testAccCheckBrokerNotRecreated(&broker1, &broker2),
@@ -1034,7 +1034,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig(rName, testAccBrokerVersionNewer),
+				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmq.ResourceBroker(), resourceName),
@@ -1065,7 +1065,7 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigRabbit(rName, testAccRabbitVersion),
+				Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
@@ -1110,7 +1110,7 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfigRabbitLogs(rName, testAccRabbitVersion),
+				Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
@@ -1155,13 +1155,13 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBrokerConfigRabbitAuditLog(rName, testAccRabbitVersion, true),
+				Config:      testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, true),
 				ExpectError: regexp.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
 			},
 			{
 				// Special case: allow explicitly setting logs.0.audit to false,
 				// though the AWS API does not accept the parameter.
-				Config: testAccBrokerConfigRabbitAuditLog(rName, testAccRabbitVersion, false),
+				Config: testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
@@ -1193,7 +1193,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 		CheckDestroy:      testAccCheckBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRabbitClusterBrokerConfig(rName, testAccRabbitVersion),
+				Config: testAccBrokerConfig_rabbitCluster(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -1361,7 +1361,7 @@ func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerResponse) re
 	}
 }
 
-func testAccBrokerConfig(rName, version string) string {
+func testAccBrokerConfig_basic(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1388,7 +1388,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerEBSConfig(rName, version string) string {
+func testAccBrokerConfig_ebs(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1414,7 +1414,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerEngineVersionUpdateConfig(rName, version string) string {
+func testAccBrokerConfig_engineVersionUpdate(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1440,7 +1440,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfig_allFieldsDefaultVpc(rName, version, cfgName, cfgBody string) string {
+func testAccBrokerConfig_allFieldsDefaultVPC(rName, version, cfgName, cfgBody string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "mq1" {
   name = %[1]q
@@ -1500,7 +1500,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody)
 }
 
-func testAccBrokerConfig_allFieldsCustomVpc(rName, version, cfgName, cfgBody, tz string) string {
+func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1633,7 +1633,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody, tz)
 }
 
-func testAccBrokerConfigEncryptionOptionsKmsKeyId(rName, version string) string {
+func testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -1770,7 +1770,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfigTags1(rName, version, tagKey1, tagValue1 string) string {
+func testAccBrokerConfig_tags1(rName, version, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1796,7 +1796,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, tagKey1, tagValue1)
 }
 
-func testAccBrokerConfigTags2(rName, version, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBrokerConfig_tags2(rName, version, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1883,7 +1883,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfigRabbit(rName, version string) string {
+func testAccBrokerConfig_rabbit(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1904,7 +1904,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfigRabbitLogs(rName, version string) string {
+func testAccBrokerConfig_rabbitLogs(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
@@ -1929,7 +1929,7 @@ resource "aws_security_group" "test" {
 `, rName, version)
 }
 
-func testAccBrokerConfigRabbitAuditLog(rName, version string, enabled bool) string {
+func testAccBrokerConfig_rabbitAuditLog(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
   broker_name        = %[1]q
@@ -1955,7 +1955,7 @@ resource "aws_security_group" "test" {
 `, rName, version, enabled)
 }
 
-func testAccRabbitClusterBrokerConfig(rName, version string) string {
+func testAccBrokerConfig_rabbitCluster(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -2019,7 +2019,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, ldapUsername)
 }
 
-func testAccBrokerConfigInstanceType(rName, version, instanceType string) string {
+func testAccBrokerConfig_instanceType(rName, version, instanceType string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q

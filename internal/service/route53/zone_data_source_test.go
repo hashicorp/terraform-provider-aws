@@ -23,7 +23,7 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 		CheckDestroy:      testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneIDDataSourceConfig(fqdn),
+				Config: testAccZoneDataSourceConfig_id(fqdn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
@@ -49,7 +49,7 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 		CheckDestroy:      testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneNameDataSourceConfig(fqdn),
+				Config: testAccZoneDataSourceConfig_name(fqdn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -75,7 +75,7 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneTagsPrivateDataSourceConfig(fqdn, rInt),
+				Config: testAccZoneDataSourceConfig_tagsPrivate(fqdn, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -99,7 +99,7 @@ func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 		CheckDestroy:      testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneVPCDataSourceConfig(rInt),
+				Config: testAccZoneDataSourceConfig_vpc(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -123,7 +123,7 @@ func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 		CheckDestroy:      testAccCheckZoneDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneServiceDiscoveryDataSourceConfig(rInt),
+				Config: testAccZoneDataSourceConfig_serviceDiscovery(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "linked_service_principal", "servicediscovery.amazonaws.com"),
@@ -134,7 +134,7 @@ func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	})
 }
 
-func testAccZoneIDDataSourceConfig(fqdn string) string {
+func testAccZoneDataSourceConfig_id(fqdn string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = %[1]q
@@ -146,7 +146,7 @@ data "aws_route53_zone" "test" {
 `, fqdn)
 }
 
-func testAccZoneNameDataSourceConfig(fqdn string) string {
+func testAccZoneDataSourceConfig_name(fqdn string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = %[1]q
@@ -158,7 +158,7 @@ data "aws_route53_zone" "test" {
 `, fqdn)
 }
 
-func testAccZoneTagsPrivateDataSourceConfig(fqdn string, rInt int) string {
+func testAccZoneDataSourceConfig_tagsPrivate(fqdn string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -189,7 +189,7 @@ data "aws_route53_zone" "test" {
 `, fqdn, rInt)
 }
 
-func testAccZoneVPCDataSourceConfig(rInt int) string {
+func testAccZoneDataSourceConfig_vpc(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -219,7 +219,7 @@ data "aws_route53_zone" "test" {
 `, rInt)
 }
 
-func testAccZoneServiceDiscoveryDataSourceConfig(rInt int) string {
+func testAccZoneDataSourceConfig_serviceDiscovery(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

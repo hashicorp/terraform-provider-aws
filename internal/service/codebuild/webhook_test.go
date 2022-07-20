@@ -29,7 +29,7 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_Bitbucket(rName, sourceLocation),
+				Config: testAccWebhookConfig_bitbucket(rName, sourceLocation),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
@@ -61,7 +61,7 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_GitHub(rName),
+				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
@@ -93,7 +93,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_GitHubEnterprise(rName, "dev"),
+				Config: testAccWebhookConfig_gitHubEnterprise(rName, "dev"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
@@ -110,7 +110,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"secret"},
 			},
 			{
-				Config: testAccWebhookConfig_GitHubEnterprise(rName, "master"),
+				Config: testAccWebhookConfig_gitHubEnterprise(rName, "master"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
@@ -142,21 +142,21 @@ func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_BuildType(rName, "BUILD"),
+				Config: testAccWebhookConfig_buildType(rName, "BUILD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD"),
 				),
 			},
 			{
-				Config: testAccWebhookConfig_GitHub(rName),
+				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccWebhookConfig_BuildType(rName, "BUILD_BATCH"),
+				Config: testAccWebhookConfig_buildType(rName, "BUILD_BATCH"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD_BATCH"),
@@ -184,14 +184,14 @@ func TestAccCodeBuildWebhook_branchFilter(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_BranchFilter(rName, "master"),
+				Config: testAccWebhookConfig_branchFilter(rName, "master"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "master"),
 				),
 			},
 			{
-				Config: testAccWebhookConfig_BranchFilter(rName, "dev"),
+				Config: testAccWebhookConfig_branchFilter(rName, "dev"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", "dev"),
@@ -219,7 +219,7 @@ func TestAccCodeBuildWebhook_filterGroup(t *testing.T) {
 		CheckDestroy:      testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_FilterGroup(rName),
+				Config: testAccWebhookConfig_filterGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(resourceName, &webhook),
 					testAccCheckWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
@@ -333,9 +333,9 @@ func testAccCheckWebhookExists(name string, webhook *codebuild.Webhook) resource
 	}
 }
 
-func testAccWebhookConfig_Bitbucket(rName, sourceLocation string) string {
+func testAccWebhookConfig_bitbucket(rName, sourceLocation string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
+		testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation),
 		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
@@ -343,7 +343,7 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccWebhookConfig_GitHub(rName string) string {
+func testAccWebhookConfig_gitHub(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_basic(rName),
 		`
@@ -353,7 +353,7 @@ resource "aws_codebuild_webhook" "test" {
 `)
 }
 
-func testAccWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
+func testAccWebhookConfig_gitHubEnterprise(rName string, branchFilter string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -382,7 +382,7 @@ resource "aws_codebuild_webhook" "test" {
 `, rName, branchFilter))
 }
 
-func testAccWebhookConfig_BuildType(rName, branchFilter string) string {
+func testAccWebhookConfig_buildType(rName, branchFilter string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   build_type   = %[1]q
@@ -391,7 +391,7 @@ resource "aws_codebuild_webhook" "test" {
 `, branchFilter))
 }
 
-func testAccWebhookConfig_BranchFilter(rName, branchFilter string) string {
+func testAccWebhookConfig_branchFilter(rName, branchFilter string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   branch_filter = %[1]q
@@ -400,7 +400,7 @@ resource "aws_codebuild_webhook" "test" {
 `, branchFilter))
 }
 
-func testAccWebhookConfig_FilterGroup(rName string) string {
+func testAccWebhookConfig_filterGroup(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_basic(rName),
 		`

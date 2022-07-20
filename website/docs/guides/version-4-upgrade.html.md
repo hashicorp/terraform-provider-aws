@@ -491,6 +491,8 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 ### Migrating to `aws_s3_bucket_lifecycle_configuration`
 
+~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was optional, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required. Use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html) to get the source bucket's lifecycle configuration to determine the ID.
+
 #### For Lifecycle Rules with no `prefix` previously configured
 
 ~> **Note:** When configuring the `rule.filter` configuration block in the new `aws_s3_bucket_lifecycle_configuration` resource, use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html)
@@ -3295,7 +3297,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
 
 ## Data Source: aws_subnet_ids
 
-The `aws_subnet_ids` data source has been deprecated and will be removed removed in a future version. Use the `aws_subnets` data source instead.
+The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the `aws_subnets` data source instead.
 
 For example, change a configuration such as
 

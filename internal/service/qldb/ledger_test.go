@@ -28,7 +28,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerConfig(rName),
+				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
@@ -60,7 +60,7 @@ func TestAccQLDBLedger_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerConfig(rName),
+				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceLedger(), resourceName),
@@ -82,7 +82,7 @@ func TestAccQLDBLedger_nameGenerated(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerNameGeneratedConfig(),
+				Config: testAccLedgerConfig_nameGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(`tf\d+`)),
@@ -109,7 +109,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerConfig(rName),
+				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -122,7 +122,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLedgerUpdatedConfig(rName),
+				Config: testAccLedgerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
@@ -130,7 +130,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLedgerConfig(rName),
+				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -154,7 +154,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerKMSKeyConfig(rName),
+				Config: testAccLedgerConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key", kmsKeyResourceName, "arn"),
@@ -166,7 +166,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLedgerKMSKeyUpdatedConfig(rName),
+				Config: testAccLedgerConfig_kmsKeyUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "kms_key", "AWS_OWNED_KMS_KEY"),
@@ -188,7 +188,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLedgerConfigTags1(rName, "key1", "value1"),
+				Config: testAccLedgerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -201,7 +201,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLedgerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLedgerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -210,7 +210,7 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLedgerConfigTags1(rName, "key2", "value2"),
+				Config: testAccLedgerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLedgerExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -270,7 +270,7 @@ func testAccCheckLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.T
 	}
 }
 
-func testAccLedgerConfig(rName string) string {
+func testAccLedgerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
@@ -280,7 +280,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName)
 }
 
-func testAccLedgerUpdatedConfig(rName string) string {
+func testAccLedgerConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
@@ -290,7 +290,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName)
 }
 
-func testAccLedgerNameGeneratedConfig() string {
+func testAccLedgerConfig_nameGenerated() string {
 	return `
 resource "aws_qldb_ledger" "test" {
   permissions_mode    = "ALLOW_ALL"
@@ -299,7 +299,7 @@ resource "aws_qldb_ledger" "test" {
 `
 }
 
-func testAccLedgerKMSKeyConfig(rName string) string {
+func testAccLedgerConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -315,7 +315,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName)
 }
 
-func testAccLedgerKMSKeyUpdatedConfig(rName string) string {
+func testAccLedgerConfig_kmsKeyUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -331,7 +331,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName)
 }
 
-func testAccLedgerConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccLedgerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
@@ -345,7 +345,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccLedgerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccLedgerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q

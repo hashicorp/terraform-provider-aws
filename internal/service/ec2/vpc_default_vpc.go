@@ -180,7 +180,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			vpcInfo.enableClassicLink = v
 		}
 
-		if v, err := FindVPCClassicLinkDnsSupported(conn, d.Id()); err != nil {
+		if v, err := FindVPCClassicLinkDNSSupported(conn, d.Id()); err != nil {
 			if tfresource.NotFound(err) {
 				vpcInfo.enableClassicLinkDNSSupport = false
 			} else {

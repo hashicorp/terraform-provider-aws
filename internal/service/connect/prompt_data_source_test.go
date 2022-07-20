@@ -20,7 +20,7 @@ func TestAccConnectPromptDataSource_name(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPromptDataSourceConfig_Name(rName),
+				Config: testAccPromptDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", "aws_connect_instance.test", "id"),
@@ -43,7 +43,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccPromptDataSourceConfig_Name(rName string) string {
+func testAccPromptDataSourceConfig_name(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPromptBaseDataSourceConfig(rName),
 		`

@@ -79,7 +79,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 		CheckDestroy:      testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayAssociationConfig_multiVPNGatewaysSingleAccount(rName, rBgpAsn),
+				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),

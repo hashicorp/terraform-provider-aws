@@ -55,10 +55,25 @@ Terraform Providers, see the [Extending Terraform documentation](https://www.ter
 
 ## Acceptance Tests Often Cost Money to Run
 
-Because acceptance tests create real resources, they often cost money to run.
+Our acceptance test suite creates real resources, and as a result they cost real money to run.
 Because the resources only exist for a short period of time, the total amount
-of money required is usually a relatively small. Nevertheless, we don't want
-financial limitations to be a barrier to contribution, so if you are unable to
+of money required is usually a relatively small amount. That said there are particular services
+which are very expensive to run and its important to be prepared for those costs.
+
+Some services which can be cost prohibitive include (among others):
+
+- WorkSpaces
+- Glue
+- OpenSearch
+- RDS
+- ACM (Amazon Certificate Manager)
+- FSx
+- Kinesis Analytics
+- EC2
+- ElastiCache
+- Storage Gateway
+
+We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your
 pull request. We will happily accept "best effort" implementations of
 acceptance tests and run them for you on our side. This might mean that your PR
@@ -433,7 +448,7 @@ resource "aws_example_thing" "test" {
 These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
 
 - `acctest.AvailableEC2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `acctest.AvailableEC2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
-- `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
+- `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
 
 #### Randomized Naming
 
@@ -1432,18 +1447,18 @@ resource "aws_backup_selection" "test" {
 #### Hardcoded AMI IDs
 
 - [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. The package `internal/acctest` includes test configuration helper functions to simplify these lookups:
-    - `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
+    - `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
     - `testAccLatestAmazonLinuxHVMInstanceStoreAMIConfig()` (EC2): AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
     - `testAccLatestAmazonLinuxPVEBSAMIConfig()` (EC2): AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
     - `configLatestAmazonLinuxPvInstanceStoreAmi` (EC2): AMI lookup using Amazon Linux, Paravirtual virtualization, and Instance Store storage. Should only be used in testing that requires Paravirtual virtualization over HVM and Instance Store storage over EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-instance-store.id`.
     - `testAccLatestWindowsServer2016CoreAMIConfig()` (EC2): AMI lookup using Windows Server 2016 Core, HVM virtualization, and EBS storage. Should only be used in testing that requires Windows. To reference the AMI ID in the test configuration: `data.aws_ami.win2016core-ami.id`.
 
-Here's an example of using `acctest.ConfigLatestAmazonLinuxHvmEbsAmi()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
+Here's an example of using `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
 
 ```go
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q

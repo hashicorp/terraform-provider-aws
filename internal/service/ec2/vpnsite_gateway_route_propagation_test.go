@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPNSiteGatewayRoutePropagation_basic(t *testing.T) {
+func TestAccSiteVPNGatewayRoutePropagation_basic(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,7 +25,7 @@ func TestAccVPNSiteGatewayRoutePropagation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),
+				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayRoutePropagationExists(resourceName),
 				),
@@ -34,7 +34,7 @@ func TestAccVPNSiteGatewayRoutePropagation_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGatewayRoutePropagation_disappears(t *testing.T) {
+func TestAccSiteVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -45,7 +45,7 @@ func TestAccVPNSiteGatewayRoutePropagation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),
+				Config: testAccSiteVPNGatewayRoutePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayRoutePropagationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
@@ -115,7 +115,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVPNGatewayRoutePropagationBasicConfig(rName string) string {
+func testAccSiteVPNGatewayRoutePropagationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

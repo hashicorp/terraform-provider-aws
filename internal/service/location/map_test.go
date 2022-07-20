@@ -26,7 +26,7 @@ func TestAccLocationMap_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMap_basic(rName),
+				Config: testAccMapConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -59,7 +59,7 @@ func TestAccLocationMap_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMap_basic(rName),
+				Config: testAccMapConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceMap(), resourceName),
@@ -81,7 +81,7 @@ func TestAccLocationMap_description(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMap_description(rName, "description1"),
+				Config: testAccMapConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -93,7 +93,7 @@ func TestAccLocationMap_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigMap_description(rName, "description2"),
+				Config: testAccMapConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -114,7 +114,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 		CheckDestroy:      testAccCheckMapDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMap_tags1(rName, "key1", "value1"),
+				Config: testAccMapConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigMap_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMapConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +136,7 @@ func TestAccLocationMap_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigMap_tags1(rName, "key2", "value2"),
+				Config: testAccMapConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -201,7 +201,7 @@ func testAccCheckMapExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccConfigMap_basic(rName string) string {
+func testAccMapConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {
@@ -213,7 +213,7 @@ resource "aws_location_map" "test" {
 `, rName)
 }
 
-func testAccConfigMap_description(rName, description string) string {
+func testAccMapConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {
@@ -226,7 +226,7 @@ resource "aws_location_map" "test" {
 `, rName, description)
 }
 
-func testAccConfigMap_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccMapConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {
@@ -242,7 +242,7 @@ resource "aws_location_map" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccConfigMap_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccMapConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {
