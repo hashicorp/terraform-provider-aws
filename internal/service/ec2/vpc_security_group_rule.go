@@ -34,6 +34,10 @@ func ResourceSecurityGroupRule() *schema.Resource {
 			StateContext: resourceSecurityGroupRuleImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		SchemaVersion: 2,
 		MigrateState:  SecurityGroupRuleMigrateState,
 
@@ -188,7 +192,7 @@ information and instructions for recovery. Error: %w`, securityGroupID, err)
 		return fmt.Errorf("authorizing Security Group (%s) Rule (%s): %w", securityGroupID, id, err)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		sg, err := FindSecurityGroupByID(conn, securityGroupID)
 
 		if err != nil {
