@@ -2532,12 +2532,12 @@ resource "aws_ec2_managed_prefix_list" "test" {
 }
 
 resource "aws_security_group_rule" "test" {
-  type             = "ingress"
-  protocol         = "6"
-  from_port        = 80
-  to_port          = 8000
-  prefix_list_ids  = [aws_ec2_managed_prefix_list.test.id]
-  self             = true
+  type            = "ingress"
+  protocol        = "6"
+  from_port       = 80
+  to_port         = 8000
+  prefix_list_ids = [aws_ec2_managed_prefix_list.test.id]
+  self            = true
 
   security_group_id = aws_security_group.test.id
 }
@@ -2572,11 +2572,11 @@ resource "aws_ec2_managed_prefix_list" "test" {
 }
 
 resource "aws_security_group_rule" "test" {
-  type             = "ingress"
-  protocol         = "6"
-  from_port        = 80
-  to_port          = 8000
-  prefix_list_ids  = [aws_ec2_managed_prefix_list.test.id]
+  type            = "ingress"
+  protocol        = "6"
+  from_port       = 80
+  to_port         = 8000
+  prefix_list_ids = [aws_ec2_managed_prefix_list.test.id]
 
   source_security_group_id = aws_security_group.test[1].id
 
