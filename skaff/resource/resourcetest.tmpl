@@ -39,6 +39,7 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -50,8 +51,8 @@ import (
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+{{- end }}
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,6 +66,9 @@ import (
     // any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -168,10 +172,18 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(names.{{ .Service }}EndpointID, t)
+			{{- else }}
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
+			{{- end }}
 			testAccPreCheck(t)
 		},
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		{{- else }}
 		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
@@ -212,10 +224,18 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(names.{{ .Service }}EndpointID, t)
+			{{- else }}
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
+			{{- end }}
 			testAccPreCheck(t)
 		},
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		{{- else }}
 		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
@@ -233,6 +253,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 
 func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
@@ -243,11 +264,26 @@ func testAccCheck{{ .Resource }}Destroy(s *terraform.State) error {
 			{{ .Resource }}Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.Describe{{ .Resource }}(input)
+		{{- if .AWSGoSDKV2 }}
+		_, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+			{{ .Resource }}Id: aws.String(rs.Primary.ID),
+		})
+		{{- else }}
+		_, err := conn.Describe{{ .Resource }}WithContext(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+			{{ .Resource }}Id: aws.String(rs.Primary.ID),
+		})
+		{{- end }}
 		if err != nil {
+			{{- if .AWSGoSDKV2 }}
+			var nfe *types.ResourceNotFoundException
+			if errors.As(err, &nfe) {
+				return nil
+			}
+			{{- else }}
 			if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
 				return nil
 			}
+			{{- end }}
 			return err
 		}
 
@@ -269,9 +305,17 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
-		resp, err := conn.Describe{{ .Resource }}(&{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+		ctx := context.Background()
+
+		{{- if .AWSGoSDKV2 }}
+		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
 			{{ .Resource }}Id: aws.String(rs.Primary.ID),
 		})
+		{{- else }}
+		resp, err := conn.Describe{{ .Resource }}WithContext(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
+			{{ .Resource }}Id: aws.String(rs.Primary.ID),
+		})
+		{{- end }}
 
 		if err != nil {
 			return names.Error(names.{{ .Service }}, names.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
@@ -285,10 +329,15 @@ func testAccCheck{{ .Resource }}Exists(name string, {{ .ResourceLower }} *{{ .Se
 
 func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Conn
+	ctx := context.Background()
 
 	input := &{{ .ServicePackage }}.List{{ .Resource }}sInput{}
 
-	_, err := conn.List{{ .Resource }}s(input)
+	{{- if .AWSGoSDKV2 }}
+	_, err := conn.List{{ .Resource }}s(ctx, input)
+	{{- else }}
+	_, err := conn.List{{ .Resource }}sWithContext(ctx, input)
+	{{- end }}
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

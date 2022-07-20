@@ -32,7 +32,7 @@ func TestAccConnectBotAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBotAssociationDataSource_BaseConfig(rName string, rName2 string) string {
+func testAccBotAssociationDataSourceConfig_base(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -88,7 +88,7 @@ resource "aws_connect_bot_association" "test" {
 }
 
 func testAccBotAssociationDataSourceConfig_basic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccBotAssociationDataSource_BaseConfig(rName, rName2) + `
+	return fmt.Sprintf(testAccBotAssociationDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {
