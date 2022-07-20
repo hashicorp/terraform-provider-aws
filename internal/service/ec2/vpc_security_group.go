@@ -321,19 +321,22 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	group, err := FindSecurityGroupByID(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Security Group (%s): %w", d.Id(), err)
 	}
 
-	err = resourceSecurityGroupUpdateRules(d, "ingress", meta, group)
+	err = updateSecurityGroupRules(conn, d, securityGroupRuleTypeIngress, group)
+
 	if err != nil {
-		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Security Group (%s) %s rules: %w", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
 	if d.Get("vpc_id") != nil {
-		err = resourceSecurityGroupUpdateRules(d, "egress", meta, group)
+		err = updateSecurityGroupRules(conn, d, securityGroupRuleTypeEgress, group)
+
 		if err != nil {
-			return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Security Group (%s) %s rules: %w", d.Id(), securityGroupRuleTypeEgress, err)
 		}
 	}
 
@@ -341,7 +344,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Security Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -590,100 +593,99 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 	return rules
 }
 
-func resourceSecurityGroupUpdateRules(
-	d *schema.ResourceData, ruleset string,
-	meta interface{}, group *ec2.SecurityGroup) error {
+func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType string, group *ec2.SecurityGroup) error {
+	if !d.HasChange(ruleType) {
+		return nil
+	}
 
-	if d.HasChange(ruleset) {
-		o, n := d.GetChange(ruleset)
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
+	o, n := d.GetChange(ruleType)
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
 
-		os := SecurityGroupExpandRules(o.(*schema.Set))
-		ns := SecurityGroupExpandRules(n.(*schema.Set))
+	os := SecurityGroupExpandRules(o.(*schema.Set))
+	ns := SecurityGroupExpandRules(n.(*schema.Set))
 
-		remove, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleset, os.Difference(ns).List()))
-		if err != nil {
-			return err
-		}
-		add, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleset, ns.Difference(os).List()))
-		if err != nil {
-			return err
-		}
+	del, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, os.Difference(ns).List()))
 
-		// TODO: We need to handle partial state better in the in-between
-		// in this update.
+	if err != nil {
+		return err
+	}
 
-		// TODO: It'd be nicer to authorize before removing, but then we have
-		// to deal with complicated unrolling to get individual CIDR blocks
-		// to avoid authorizing already authorized sources. Removing before
-		// adding is easier here, and Terraform should be fast enough to
-		// not have service issues.
+	add, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, ns.Difference(os).List()))
 
-		if len(remove) > 0 || len(add) > 0 {
-			conn := meta.(*conns.AWSClient).EC2Conn
+	if err != nil {
+		return err
+	}
 
-			var err error
-			if len(remove) > 0 {
-				log.Printf("[DEBUG] Revoking security group %#v %s rule: %#v",
-					group, ruleset, remove)
+	// TODO: We need to handle partial state better in the in-between
+	// in this update.
 
-				if ruleset == "egress" {
-					req := &ec2.RevokeSecurityGroupEgressInput{
-						GroupId:       group.GroupId,
-						IpPermissions: remove,
-					}
-					_, err = conn.RevokeSecurityGroupEgress(req)
-				} else {
-					req := &ec2.RevokeSecurityGroupIngressInput{
-						GroupId:       group.GroupId,
-						IpPermissions: remove,
-					}
-					if aws.StringValue(group.VpcId) == "" {
-						req.GroupId = nil
-						req.GroupName = group.GroupName
-					}
-					_, err = conn.RevokeSecurityGroupIngress(req)
-				}
+	// TODO: It'd be nicer to authorize before removing, but then we have
+	// to deal with complicated unrolling to get individual CIDR blocks
+	// to avoid authorizing already authorized sources. Removing before
+	// adding is easier here, and Terraform should be fast enough to
+	// not have service issues.
 
-				if err != nil {
-					return fmt.Errorf("error revoking Security Group (%s) rules: %w", ruleset, err)
-				}
+	isVPC := aws.StringValue(group.VpcId) != ""
+
+	if len(del) > 0 {
+		if ruleType == securityGroupRuleTypeEgress {
+			input := &ec2.RevokeSecurityGroupEgressInput{
+				GroupId:       group.GroupId,
+				IpPermissions: del,
 			}
 
-			if len(add) > 0 {
-				log.Printf("[DEBUG] Authorizing security group %#v %s rule: %#v",
-					group, ruleset, add)
-				// Authorize the new rules
-				if ruleset == "egress" {
-					req := &ec2.AuthorizeSecurityGroupEgressInput{
-						GroupId:       group.GroupId,
-						IpPermissions: add,
-					}
-					_, err = conn.AuthorizeSecurityGroupEgress(req)
-				} else {
-					req := &ec2.AuthorizeSecurityGroupIngressInput{
-						GroupId:       group.GroupId,
-						IpPermissions: add,
-					}
-					if aws.StringValue(group.VpcId) == "" {
-						req.GroupId = nil
-						req.GroupName = group.GroupName
-					}
-
-					_, err = conn.AuthorizeSecurityGroupIngress(req)
-				}
-
-				if err != nil {
-					return fmt.Errorf("error authorizing Security Group (%s) rules: %w", ruleset, err)
-				}
+			_, err = conn.RevokeSecurityGroupEgress(input)
+		} else {
+			input := &ec2.RevokeSecurityGroupIngressInput{
+				IpPermissions: del,
 			}
+
+			if isVPC {
+				input.GroupId = group.GroupId
+			} else {
+				input.GroupName = group.GroupName
+			}
+
+			_, err = conn.RevokeSecurityGroupIngress(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("revoking Security Group (%s) rules: %w", ruleType, err)
 		}
 	}
+
+	if len(add) > 0 {
+		if ruleType == securityGroupRuleTypeEgress {
+			input := &ec2.AuthorizeSecurityGroupEgressInput{
+				GroupId:       group.GroupId,
+				IpPermissions: add,
+			}
+
+			_, err = conn.AuthorizeSecurityGroupEgress(input)
+		} else {
+			input := &ec2.AuthorizeSecurityGroupIngressInput{
+				IpPermissions: add,
+			}
+
+			if isVPC {
+				input.GroupId = group.GroupId
+			} else {
+				input.GroupName = group.GroupName
+			}
+
+			_, err = conn.AuthorizeSecurityGroupIngress(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("authorizing Security Group (%s) rules: %w", ruleType, err)
+		}
+	}
+
 	return nil
 }
 
