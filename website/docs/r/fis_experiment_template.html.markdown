@@ -50,13 +50,16 @@ resource "aws_fis_experiment_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `action` - (Required) Action to be performed during an experiment. See below.
 * `description` - (Required) Description for the experiment template.
 * `role_arn` - (Required) ARN of an IAM role that grants the AWS FIS service permission to perform service actions on your behalf.
 * `stop_condition` - (Required) When an ongoing experiment should be stopped. See below.
-* `tags` - Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+The following arguments are optional:
+
+* `tags` - (Optional) Key-value mapping of tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Target of an action. See below.
 
 ### `action`
