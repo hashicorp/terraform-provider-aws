@@ -18,12 +18,12 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectRoutingProfile_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                         testAccRoutingProfile_basic,
-		"disappears":                    testAccRoutingProfile_disappears,
-		"update_concurrency":            testAccRoutingProfile_updateConcurrency,
-		"update_default_outbound_queue": testAccRoutingProfile_updateDefaultOutboundQueue,
-		"update_queues":                 testAccRoutingProfile_updateQueues,
-		"update_tags":                   testAccRoutingProfile_updateTags,
+		"basic":                      testAccRoutingProfile_basic,
+		"disappears":                 testAccRoutingProfile_disappears,
+		"updateConcurrency":          testAccRoutingProfile_updateConcurrency,
+		"updateDefaultOutboundQueue": testAccRoutingProfile_updateDefaultOutboundQueue,
+		"updateQueues":               testAccRoutingProfile_updateQueues,
+		"updateTags":                 testAccRoutingProfile_updateTags,
 	}
 
 	for name, tc := range testCases {

@@ -18,14 +18,14 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectQueue_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                         testAccQueue_basic,
-		"disappears":                    testAccQueue_disappears,
-		"update_hours_of_operation_id":  testAccQueue_updateHoursOfOperationId,
-		"update_max_contacts":           testAccQueue_updateMaxContacts,
-		"update_outbound_caller_config": testAccQueue_updateOutboundCallerConfig,
-		"update_status":                 testAccQueue_updateStatus,
-		"update_quick_connect_ids":      testAccQueue_updateQuickConnectIds,
-		"update_tags":                   testAccQueue_updateTags,
+		"basic":                      testAccQueue_basic,
+		"disappears":                 testAccQueue_disappears,
+		"updateHoursOfOperationID":   testAccQueue_updateHoursOfOperationId,
+		"updateMaxContacts":          testAccQueue_updateMaxContacts,
+		"updateOutboundCallerConfig": testAccQueue_updateOutboundCallerConfig,
+		"updateStatus":               testAccQueue_updateStatus,
+		"updateQuickConnectIDs":      testAccQueue_updateQuickConnectIds,
+		"updateTags":                 testAccQueue_updateTags,
 	}
 
 	for name, tc := range testCases {

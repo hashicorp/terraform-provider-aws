@@ -19,14 +19,14 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectUser_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                       testAccUser_basic,
-		"disappears":                  testAccUser_disappears,
-		"update_hierarchy_group_id":   testAccUser_updateHierarchyGroupId,
-		"update_identity_info":        testAccUser_updateIdentityInfo,
-		"update_phone_config":         testAccUser_updatePhoneConfig,
-		"update_routing_profile_id":   testAccUser_updateRoutingProfileId,
-		"update_security_profile_ids": testAccUser_updateSecurityProfileIds,
-		"update_tags":                 testAccUser_updateTags,
+		"basic":                    testAccUser_basic,
+		"disappears":               testAccUser_disappears,
+		"updateHierarchyGroupID":   testAccUser_updateHierarchyGroupId,
+		"updateIdentityInfo":       testAccUser_updateIdentityInfo,
+		"updatePhoneConfig":        testAccUser_updatePhoneConfig,
+		"updateRoutingProfileID":   testAccUser_updateRoutingProfileId,
+		"updateSecurityProfileIDs": testAccUser_updateSecurityProfileIds,
+		"updateTags":               testAccUser_updateTags,
 	}
 
 	for name, tc := range testCases {

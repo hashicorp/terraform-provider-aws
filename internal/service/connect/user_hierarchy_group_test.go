@@ -18,10 +18,10 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectUserHierarchyGroup_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":               testAccUserHierarchyGroup_basic,
-		"disappears":          testAccUserHierarchyGroup_disappears,
-		"set_parent_group_id": testAccUserHierarchyGroup_parentGroupId,
-		"update_tags":         testAccUserHierarchyGroup_updateTags,
+		"basic":            testAccUserHierarchyGroup_basic,
+		"disappears":       testAccUserHierarchyGroup_disappears,
+		"setParentGroupID": testAccUserHierarchyGroup_parentGroupId,
+		"updateTags":       testAccUserHierarchyGroup_updateTags,
 	}
 
 	for name, tc := range testCases {

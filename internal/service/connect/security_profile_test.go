@@ -18,10 +18,10 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectSecurityProfile_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":              testAccSecurityProfile_basic,
-		"disappears":         testAccSecurityProfile_disappears,
-		"update_permissions": testAccSecurityProfile_updatePermissions,
-		"update_tags":        testAccSecurityProfile_updateTags,
+		"basic":             testAccSecurityProfile_basic,
+		"disappears":        testAccSecurityProfile_disappears,
+		"updatePermissions": testAccSecurityProfile_updatePermissions,
+		"updateTags":        testAccSecurityProfile_updateTags,
 	}
 
 	for name, tc := range testCases {

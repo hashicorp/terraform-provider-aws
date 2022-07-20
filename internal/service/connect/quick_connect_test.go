@@ -18,9 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectQuickConnect_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":       testAccQuickConnect_phoneNumber,
-		"disappears":  testAccQuickConnect_disappears,
-		"update_tags": testAccQuickConnect_updateTags,
+		"basic":      testAccQuickConnect_phoneNumber,
+		"disappears": testAccQuickConnect_disappears,
+		"updateTags": testAccQuickConnect_updateTags,
 	}
 
 	for name, tc := range testCases {
