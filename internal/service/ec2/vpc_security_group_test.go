@@ -23,8 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// add sweeper to delete known test sgs
-
 func TestProtocolStateFunc(t *testing.T) {
 	cases := []struct {
 		input    interface{}
