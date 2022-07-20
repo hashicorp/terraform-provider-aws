@@ -14,7 +14,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}"
+	{{- if not .SkipTypesImp }}
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}/types"
+	{{- end }}
 	{{- end }}
 	{{- if .HelperSchemaPkg }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
