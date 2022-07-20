@@ -101,6 +101,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 
 func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,7 +111,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 		CheckDestroy:      acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDefaultSecurityGroupConfig_classic(),
+				Config: testAccVPCDefaultSecurityGroupConfig_classic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
@@ -128,15 +129,15 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 					testAccCheckDefaultSecurityGroupARNClassic(resourceName, &group),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
-				Config:   testAccVPCDefaultSecurityGroupConfig_classic(),
+				Config:   testAccVPCDefaultSecurityGroupConfig_classic(rName),
 				PlanOnly: true,
 			},
 			{
-				Config:                  testAccVPCDefaultSecurityGroupConfig_classic(),
+				Config:                  testAccVPCDefaultSecurityGroupConfig_classic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -285,10 +286,8 @@ resource "aws_default_security_group" "test" {
 `, rName)
 }
 
-func testAccVPCDefaultSecurityGroupConfig_classic() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		`
+func testAccVPCDefaultSecurityGroupConfig_classic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_default_security_group" "test" {
   ingress {
     protocol    = "6"
@@ -298,10 +297,10 @@ resource "aws_default_security_group" "test" {
   }
 
   tags = {
-    Name = "tf-acc-test"
+    Name = %[1]q
   }
 }
-`)
+`, rName))
 }
 
 func testAccVPCDefaultSecurityGroupConfig_classicEmpty() string {
