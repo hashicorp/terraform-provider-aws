@@ -4,11 +4,13 @@
 package fis
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fis"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -29,30 +31,27 @@ func sweepExperimentTemplates(region string) error {
 	conn := client.(*conns.AWSClient).FISConn
 	input := &fis.ListExperimentTemplatesInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
+	var sweeperErrs *multierror.Error
 
-	err = conn.ListExperimentTemplatesPages(input, func(page *fis.ListExperimentTemplatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pg := fis.NewListExperimentTemplatesPaginator(conn, input)
+
+	for pg.HasMorePages() {
+		page, err := pg.NextPage(context.Background())
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error listing FIS Experiment Templates: %w", err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
 		}
 
 		for _, experimentTemplate := range page.ExperimentTemplates {
 			r := ResourceExperimentTemplate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(experimentTemplate.Id))
+			d.SetId(aws.ToString(experimentTemplate.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping FIS Experiment Template sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing FIS Experiment Templates (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(sweepResources)
