@@ -1,5 +1,5 @@
 ---
-subcategory: "Fault Injection Simulator (FIS)"
+subcategory: "FIS (Fault Injection Simulator)"
 layout: "aws"
 page_title: "AWS: aws_fis_experiment_template"
 description: |-
