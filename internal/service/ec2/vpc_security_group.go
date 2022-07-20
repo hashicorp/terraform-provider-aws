@@ -116,7 +116,7 @@ var (
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
+					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
 			},
 			"description": {
@@ -133,7 +133,7 @@ var (
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidCIDRNetworkAddress,
+					ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 				},
 			},
 			"prefix_list_ids": {
