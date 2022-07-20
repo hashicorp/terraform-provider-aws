@@ -126,7 +126,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckQuickConnectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectPhoneNumberConfig(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, description, phone_number),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -139,7 +139,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQuickConnectTagsConfig(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_tags(rName, rName2, description, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -148,7 +148,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccQuickConnectTagsUpdatedConfig(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_tagsUpdated(rName, rName2, description, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -287,7 +287,7 @@ resource "aws_connect_quick_connect" "test" {
 `, rName2, label, phoneNumber))
 }
 
-func testAccQuickConnectTagsConfig(rName, rName2, label string, phoneNumber string) string {
+func testAccQuickConnectConfig_tags(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseConfig(rName),
 		fmt.Sprintf(`
@@ -312,7 +312,7 @@ resource "aws_connect_quick_connect" "test" {
 `, rName2, label, phoneNumber))
 }
 
-func testAccQuickConnectTagsUpdatedConfig(rName, rName2, label string, phoneNumber string) string {
+func testAccQuickConnectConfig_tagsUpdated(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
 		testAccQuickConnectBaseConfig(rName),
 		fmt.Sprintf(`

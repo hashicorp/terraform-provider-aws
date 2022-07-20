@@ -185,7 +185,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHoursOfOperationBasicConfig(rName, rName2, description),
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -198,7 +198,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHoursOfOperationTagsConfig(rName, rName2, description),
+				Config: testAccHoursOfOperationConfig_tags(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -207,7 +207,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccHoursOfOperationTagsUpdatedConfig(rName, rName2, description),
+				Config: testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHoursOfOperationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -398,7 +398,7 @@ resource "aws_connect_hours_of_operation" "test" {
 `, rName2, label))
 }
 
-func testAccHoursOfOperationTagsConfig(rName, rName2, label string) string {
+func testAccHoursOfOperationConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccHoursOfOperationBaseConfig(rName),
 		fmt.Sprintf(`
@@ -430,7 +430,7 @@ resource "aws_connect_hours_of_operation" "test" {
 `, rName2, label))
 }
 
-func testAccHoursOfOperationTagsUpdatedConfig(rName, rName2, label string) string {
+func testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccHoursOfOperationBaseConfig(rName),
 		fmt.Sprintf(`

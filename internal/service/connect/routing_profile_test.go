@@ -361,7 +361,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileBasicConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -374,7 +374,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoutingProfileTagsConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_tags(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -383,7 +383,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoutingProfileTagsUpdatedConfig(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -640,7 +640,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, rName4, label))
 }
 
-func testAccRoutingProfileTagsConfig(rName, rName2, rName3, label string) string {
+func testAccRoutingProfileConfig_tags(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`
@@ -663,7 +663,7 @@ resource "aws_connect_routing_profile" "test" {
 `, rName3, label))
 }
 
-func testAccRoutingProfileTagsUpdatedConfig(rName, rName2, rName3, label string) string {
+func testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
 		testAccRoutingProfileBaseConfig(rName, rName2),
 		fmt.Sprintf(`

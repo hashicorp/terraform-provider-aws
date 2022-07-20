@@ -466,7 +466,7 @@ func testAccQueue_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueBasicConfig(rName, rName2, description),
+				Config: testAccQueueConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -479,7 +479,7 @@ func testAccQueue_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueTagsConfig(rName, rName2, description),
+				Config: testAccQueueConfig_tags(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -488,7 +488,7 @@ func testAccQueue_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccQueueTagsUpdatedConfig(rName, rName2, description),
+				Config: testAccQueueConfig_tagsUpdated(rName, rName2, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -793,7 +793,7 @@ resource "aws_connect_queue" "test" {
 `, rName4, label))
 }
 
-func testAccQueueTagsConfig(rName, rName2, label string) string {
+func testAccQueueConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccQueueBaseConfig(rName),
 		fmt.Sprintf(`
@@ -811,7 +811,7 @@ resource "aws_connect_queue" "test" {
 `, rName2, label))
 }
 
-func testAccQueueTagsUpdatedConfig(rName, rName2, label string) string {
+func testAccQueueConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccQueueBaseConfig(rName),
 		fmt.Sprintf(`

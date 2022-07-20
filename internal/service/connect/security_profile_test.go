@@ -146,7 +146,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileBasicConfig(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -159,7 +159,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecurityProfileTagsConfig(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_tags(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -168,7 +168,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSecurityProfileTagsUpdatedConfig(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -320,7 +320,7 @@ resource "aws_connect_security_profile" "test" {
 `, rName2, label))
 }
 
-func testAccSecurityProfileTagsConfig(rName, rName2, label string) string {
+func testAccSecurityProfileConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseConfig(rName),
 		fmt.Sprintf(`
@@ -337,7 +337,7 @@ resource "aws_connect_security_profile" "test" {
 `, rName2, label))
 }
 
-func testAccSecurityProfileTagsUpdatedConfig(rName, rName2, label string) string {
+func testAccSecurityProfileConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
 		testAccSecurityProfileBaseConfig(rName),
 		fmt.Sprintf(`

@@ -134,13 +134,13 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUserHierarchyGroupDestroy,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserHierarchyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupBasicConfig(rName, rName2),
+				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -153,7 +153,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyGroupTagsConfig(rName, rName2),
+				Config: testAccUserHierarchyGroupConfig_tags(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -162,7 +162,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserHierarchyGroupTagsUpdatedConfig(rName, rName2),
+				Config: testAccUserHierarchyGroupConfig_tagsUpdated(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -350,7 +350,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 `, rName2, rName3))
 }
 
-func testAccUserHierarchyGroupTagsConfig(rName, rName2 string) string {
+func testAccUserHierarchyGroupConfig_tags(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseConfig(rName),
 		fmt.Sprintf(`
@@ -370,7 +370,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 `, rName2))
 }
 
-func testAccUserHierarchyGroupTagsUpdatedConfig(rName, rName2 string) string {
+func testAccUserHierarchyGroupConfig_tagsUpdated(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseConfig(rName),
 		fmt.Sprintf(`
