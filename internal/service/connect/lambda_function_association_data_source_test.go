@@ -32,7 +32,7 @@ func TestAccConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLambdaFunctionAssociationDataSource_BaseConfig(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationDataSourceConfig_base(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -79,7 +79,7 @@ resource "aws_connect_lambda_function_association" "test" {
 }
 
 func testAccLambdaFunctionAssociationDataSourceConfig_basic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSource_BaseConfig(rName, rName2) + `
+	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id
