@@ -19,14 +19,14 @@ import (
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectUser_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                       testAccUser_basic,
-		"disappears":                  testAccUser_disappears,
-		"update_hierarchy_group_id":   testAccUser_updateHierarchyGroupId,
-		"update_identity_info":        testAccUser_updateIdentityInfo,
-		"update_phone_config":         testAccUser_updatePhoneConfig,
-		"update_routing_profile_id":   testAccUser_updateRoutingProfileId,
-		"update_security_profile_ids": testAccUser_updateSecurityProfileIds,
-		"update_tags":                 testAccUser_updateTags,
+		"basic":                    testAccUser_basic,
+		"disappears":               testAccUser_disappears,
+		"updateHierarchyGroupID":   testAccUser_updateHierarchyGroupId,
+		"updateIdentityInfo":       testAccUser_updateIdentityInfo,
+		"updatePhoneConfig":        testAccUser_updatePhoneConfig,
+		"updateRoutingProfileID":   testAccUser_updateRoutingProfileId,
+		"updateSecurityProfileIDs": testAccUser_updateSecurityProfileIds,
+		"updateTags":               testAccUser_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -54,7 +54,7 @@ func testAccUser_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -97,7 +97,7 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, "first"),
+				Config: testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.parent", "hierarchy_group_id"),
@@ -110,7 +110,7 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, "second"),
+				Config: testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.child", "hierarchy_group_id"),
@@ -127,12 +127,13 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	email_original := "exampleoriginal@example.com"
-	first_name_original := "example-first-name-original"
-	last_name_original := "example-last-name-original"
-	email_updated := "exampleupdated@example.com"
-	first_name_updated := "example-first-name-updated"
-	last_name_updated := "example-last-name-updated"
+	domain := acctest.RandomDomainName()
+	emailOriginal := acctest.RandomEmailAddress(domain)
+	firstNameOriginal := "example-first-name-original"
+	lastNameOriginal := "example-last-name-original"
+	emailUpdated := acctest.RandomEmailAddress(domain)
+	firstNameUpdated := "example-first-name-updated"
+	lastNameUpdated := "example-last-name-updated"
 
 	resourceName := "aws_connect_user.test"
 
@@ -143,13 +144,13 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email_original, first_name_original, last_name_original),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", email_original),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", first_name_original),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", last_name_original),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailOriginal),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameOriginal),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameOriginal),
 				),
 			},
 			{
@@ -159,13 +160,13 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email_updated, first_name_updated, last_name_updated),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", email_updated),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", first_name_updated),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", last_name_updated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailUpdated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameUpdated),
 				),
 			},
 		},
@@ -195,7 +196,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
@@ -210,7 +211,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_original, auto_accept_original, desk_phone_number_original),
+				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_original, auto_accept_original, desk_phone_number_original),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
@@ -227,7 +228,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_updated, auto_accept_updated, desk_phone_number_updated),
+				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_updated, auto_accept_updated, desk_phone_number_updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
@@ -258,7 +259,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserSecurityProfileIdsConfig(rName, rName2, rName3, rName4, rName5, "first"),
+				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
@@ -272,7 +273,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserSecurityProfileIdsConfig(rName, rName2, rName3, rName4, rName5, "second"),
+				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "2"),
@@ -287,7 +288,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserSecurityProfileIdsConfig(rName, rName2, rName3, rName4, rName5, "third"),
+				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "third"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "3"),
@@ -317,7 +318,7 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, "first"),
+				Config: testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "aws_connect_routing_profile.test", "routing_profile_id"),
@@ -330,7 +331,7 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, "second"),
+				Config: testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
@@ -357,7 +358,7 @@ func testAccUser_updateTags(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -371,7 +372,7 @@ func testAccUser_updateTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: testAccUserTagsConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_tags(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -380,7 +381,7 @@ func testAccUser_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserTagsUpdatedConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -409,7 +410,7 @@ func testAccUser_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUser(), resourceName),
@@ -487,7 +488,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserBaseConfig(rName, rName2, rName3, rName4 string) string {
+func testAccUserConfig_base(rName, rName2, rName3, rName4 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -572,9 +573,9 @@ resource "aws_connect_user_hierarchy_group" "child" {
 `, rName, rName2, rName3, rName4)
 }
 
-func testAccUserBasicConfig(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -603,9 +604,9 @@ resource "aws_connect_user" "test" {
 `, rName5))
 }
 
-func testAccUserHierarchyGroupIdConfig(rName, rName2, rName3, rName4, rName5, selectHierarchyGroupId string) string {
+func testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, selectHierarchyGroupId string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   select_hierarchy_group_id = %[2]q
@@ -635,9 +636,9 @@ resource "aws_connect_user" "test" {
 `, rName5, selectHierarchyGroupId))
 }
 
-func testAccUserIdentityInfoConfig(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
+func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -663,9 +664,9 @@ resource "aws_connect_user" "test" {
 `, rName5, email, first_name, last_name))
 }
 
-func testAccUserPhoneConfigDeskPhoneConfig(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {
+func testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -696,9 +697,9 @@ resource "aws_connect_user" "test" {
 `, rName5, after_contact_work_time_limit, auto_accept, desk_phone_number))
 }
 
-func testAccUserRoutingProfileIdConfig(rName, rName2, rName3, rName4, rName5, selectRoutingProfileId string) string {
+func testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, selectRoutingProfileId string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   selectRoutingProfileId = %[2]q
@@ -727,9 +728,9 @@ resource "aws_connect_user" "test" {
 `, rName5, selectRoutingProfileId))
 }
 
-func testAccUserSecurityProfileIdsConfig(rName, rName2, rName3, rName4, rName5, selectSecurityProfileIds string) string {
+func testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, selectSecurityProfileIds string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   security_profile_ids_map = {
@@ -767,9 +768,9 @@ resource "aws_connect_user" "test" {
 `, rName5, selectSecurityProfileIds))
 }
 
-func testAccUserTagsConfig(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccUserConfig_tags(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -799,9 +800,9 @@ resource "aws_connect_user" "test" {
 `, rName5))
 }
 
-func testAccUserTagsUpdatedConfig(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id

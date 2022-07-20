@@ -19,12 +19,12 @@ func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupDataSourceConfig_UserHierarchyGroupID(rName, rName2, rName3),
+				Config: testAccUserHierarchyGroupDataSourceConfig_groupID(rName, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
@@ -55,12 +55,12 @@ func TestAccConnectUserHierarchyGroupDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_user_hierarchy_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyGroupDataSourceConfig_Name(rName, rName2, rName3),
+				Config: testAccUserHierarchyGroupDataSourceConfig_name(rName, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
@@ -142,7 +142,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 `, rName, rName2, rName3)
 }
 
-func testAccUserHierarchyGroupDataSourceConfig_UserHierarchyGroupID(rName, rName2, rName3 string) string {
+func testAccUserHierarchyGroupDataSourceConfig_groupID(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseDataSourceConfig(rName, rName2, rName3),
 		`
@@ -153,7 +153,7 @@ data "aws_connect_user_hierarchy_group" "test" {
 `)
 }
 
-func testAccUserHierarchyGroupDataSourceConfig_Name(rName, rName2, rName3 string) string {
+func testAccUserHierarchyGroupDataSourceConfig_name(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccUserHierarchyGroupBaseDataSourceConfig(rName, rName2, rName3),
 		`

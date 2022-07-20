@@ -121,9 +121,9 @@ Elemental MediaStore Data
 Elemental MediaTailor
 EventBridge
 EventBridge Schemas
+FIS (Fault Injection Simulator)
 FMS (Firewall Manager)
 FSx
-Fault Injection Simulator
 FinSpace
 FinSpace Data
 Forecast

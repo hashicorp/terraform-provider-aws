@@ -33,23 +33,23 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"level_one": func() *schema.Schema {
-							schema := connectUserHierarchyPathLevelSchema()
+							schema := userHierarchyPathLevelSchema()
 							return schema
 						}(),
 						"level_two": func() *schema.Schema {
-							schema := connectUserHierarchyPathLevelSchema()
+							schema := userHierarchyPathLevelSchema()
 							return schema
 						}(),
 						"level_three": func() *schema.Schema {
-							schema := connectUserHierarchyPathLevelSchema()
+							schema := userHierarchyPathLevelSchema()
 							return schema
 						}(),
 						"level_four": func() *schema.Schema {
-							schema := connectUserHierarchyPathLevelSchema()
+							schema := userHierarchyPathLevelSchema()
 							return schema
 						}(),
 						"level_five": func() *schema.Schema {
-							schema := connectUserHierarchyPathLevelSchema()
+							schema := userHierarchyPathLevelSchema()
 							return schema
 						}(),
 					},
@@ -94,7 +94,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		input.HierarchyGroupId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		hierarchyGroupSummary, err := dataSourceGetConnectUserHierarchyGroupSummaryByName(ctx, conn, instanceID, name)
+		hierarchyGroupSummary, err := userHierarchyGroupSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Hierarchy Group Summary by name (%s): %w", name, err))
@@ -138,7 +138,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func dataSourceGetConnectUserHierarchyGroupSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HierarchyGroupSummary, error) {
+func userHierarchyGroupSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HierarchyGroupSummary, error) {
 	var result *connect.HierarchyGroupSummary
 
 	input := &connect.ListUserHierarchyGroupsInput{
