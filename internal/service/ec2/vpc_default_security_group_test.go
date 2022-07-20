@@ -10,8 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
@@ -29,7 +27,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
+					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "description", "default VPC security group"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
@@ -82,7 +80,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
+					testAccCheckSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -99,12 +97,26 @@ func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 	})
 }
 
-func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
+func TestAccVPCDefaultSecurityGroup_Classic_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic": testAccVPCDefaultSecurityGroup_Classic_basic,
+		"empty": testAccVPCDefaultSecurityGroup_Classic_empty,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -113,7 +125,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
+					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "description", "default group"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
@@ -147,11 +159,11 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
+func testAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
@@ -160,7 +172,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 			{
 				Config: testAccVPCDefaultSecurityGroupConfig_classicEmpty(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
+					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -168,56 +180,6 @@ func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckDefaultSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Default Security Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckDefaultSecurityGroupClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Default Security Group ID is set")
-		}
-
-		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
-
-		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
 }
 
 func testAccCheckDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
