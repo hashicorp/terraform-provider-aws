@@ -854,6 +854,14 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
 			},
+			{
+				Config: testAccClusterInstanceConfig_performanceInsightsRetentionPeriod(rName, 155),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
+				),
+			},
 		},
 	})
 }

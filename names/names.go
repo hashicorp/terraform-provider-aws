@@ -24,7 +24,9 @@ import (
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
 	KendraEndpointID         = "kendra"
+	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
+	TranscribeEndpointID     = "transcribe"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

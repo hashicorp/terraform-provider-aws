@@ -62,7 +62,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./tools/providerlint/go% ./tools/providerlint/README.md ./tools/providerlint/vendor, $(wildcard ./tools/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -149,7 +149,7 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd providerlint && go install .
+	cd tools/providerlint && go install .
 	cd tools && go install github.com/bflad/tfproviderdocs
 	cd tools && go install github.com/client9/misspell/cmd/misspell
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -209,4 +209,10 @@ semall:
 	@semgrep -c .semgrep-service-name2.yml
 	@semgrep -c .semgrep-service-name3.yml
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+skaff:
+	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
+
+tfsdk2fw:
+	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw

@@ -30,8 +30,8 @@ linter:
   - '.markdownlint.yml'
   - '.semgrep.yml'
   - '.tflint.hcl'
-  - 'providerlint/**/*'
   - 'staticcheck.conf'
+  - 'tools/providerlint/**/*'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'
@@ -806,6 +806,9 @@ service/redshift:
 service/redshiftdata:
   - 'internal/service/redshiftdata/**/*'
   - 'website/**/redshiftdata_*'
+service/redshiftserverless:
+  - 'internal/service/redshiftserverless/**/*'
+  - 'website/**/redshiftserverless_*'
 service/rekognition:
   - 'internal/service/rekognition/**/*'
   - 'website/**/rekognition_*'
@@ -821,6 +824,9 @@ service/resourcegroupstaggingapi:
 service/robomaker:
   - 'internal/service/robomaker/**/*'
   - 'website/**/robomaker_*'
+service/rolesanywhere:
+  - 'internal/service/rolesanywhere/**/*'
+  - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
   - 'website/**/route53_delegation_*'

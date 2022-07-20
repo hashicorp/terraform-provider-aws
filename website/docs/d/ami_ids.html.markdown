@@ -37,7 +37,7 @@ are several valid keys, for a full reference, check out
 * `name_regex` - (Optional) A regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API.
 This filtering is done locally on what AWS returns, and could have a performance
-impact if the result is large. It is recommended to combine this with other
+impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
 
 * `sort_ascending`  - (Defaults to `false`) Used to sort AMIs by creation time.

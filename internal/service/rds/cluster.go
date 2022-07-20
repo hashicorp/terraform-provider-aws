@@ -1501,6 +1501,7 @@ var resourceClusterCreatePendingStates = []string{
 	"preparing-data-migration",
 	"migrating",
 	"resetting-master-credentials",
+	"rebooting",
 }
 
 var resourceClusterDeletePendingStates = []string{

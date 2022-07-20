@@ -58,7 +58,7 @@ The following arguments are supported:
 
 The following arguments are supported for `active_directory_configuration` configuration block:
 
-* `netbios_name` - (Required) The NetBIOS name of the Active Directory computer object that will be created for your SVM. This is often the same as the SVM name but can be different. It is limited to 15 characters because of standard NetBIOS naming limits.
+* `netbios_name` - (Required) The NetBIOS name of the Active Directory computer object that will be created for your SVM. This is often the same as the SVM name but can be different. AWS limits to 15 characters because of standard NetBIOS naming limits.
 * `self_managed_active_directory` - (Optional) Configuration block that Amazon FSx uses to join the SVM to your self-managed (including on-premises) Microsoft Active Directory (AD) directory.
 
 ### self_managed_active_directory

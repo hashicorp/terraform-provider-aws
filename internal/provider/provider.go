@@ -142,8 +142,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
@@ -175,6 +177,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
@@ -194,11 +197,12 @@ func Provider() *schema.Provider {
 
 	// The actual provider
 	provider := &schema.Provider{
+		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
+		// Notably the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The access key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -287,14 +291,12 @@ func Provider() *schema.Provider {
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 					"default value is `false`",
 			},
 			"max_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  25,
 				Description: "The maximum number of times an AWS API request is\n" +
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
@@ -302,7 +304,6 @@ func Provider() *schema.Provider {
 			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The profile for API operations. If not set, the default profile\n" +
 					"created with `aws configure` will be used.",
 			},
@@ -315,7 +316,6 @@ func Provider() *schema.Provider {
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Default:    false,
 				Deprecated: "Use s3_use_path_style instead.",
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
@@ -325,7 +325,6 @@ func Provider() *schema.Provider {
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
@@ -334,7 +333,6 @@ func Provider() *schema.Provider {
 			"secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -347,7 +345,6 @@ func Provider() *schema.Provider {
 			"shared_credentials_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Default:       "",
 				Deprecated:    "Use shared_credentials_files instead.",
 				ConflictsWith: []string{"shared_credentials_files"},
 				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
@@ -362,14 +359,12 @@ func Provider() *schema.Provider {
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
@@ -383,41 +378,35 @@ func Provider() *schema.Provider {
 			"skip_region_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip static validation of region name. " +
 					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 			"skip_requesting_account_id": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 			"sts_region": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The region where AWS STS operations will take place. Examples\n" +
 					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with DualStack capability",
 			},
 			"use_fips_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
 		},
@@ -743,10 +732,11 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map":              location.DataSourceMap(),
-			"aws_location_place_index":      location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator": location.DataSourceRouteCalculator(),
-			"aws_location_tracker":          location.DataSourceTracker(),
+			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
+			"aws_location_map":                 location.DataSourceMap(),
+			"aws_location_place_index":         location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
+			"aws_location_tracker":             location.DataSourceTracker(),
 
 			"aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -769,6 +759,8 @@ func Provider() *schema.Provider {
 
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
+
+			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
 
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
 			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
@@ -844,8 +836,11 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
+			"aws_s3_account_public_access_block": s3control.DataSourceAccountPublicAccessBlock(),
+
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
+			"aws_secretsmanager_random_password": secretsmanager.DataSourceRandomPassword(),
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
@@ -1673,10 +1668,11 @@ func Provider() *schema.Provider {
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map":              location.ResourceMap(),
-			"aws_location_place_index":      location.ResourcePlaceIndex(),
-			"aws_location_route_calculator": location.ResourceRouteCalculator(),
-			"aws_location_tracker":          location.ResourceTracker(),
+			"aws_location_geofence_collection": location.ResourceGeofenceCollection(),
+			"aws_location_map":                 location.ResourceMap(),
+			"aws_location_place_index":         location.ResourcePlaceIndex(),
+			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
+			"aws_location_tracker":             location.ResourceTracker(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
@@ -1828,7 +1824,12 @@ func Provider() *schema.Provider {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
+			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
+
+			"aws_rolesanywhere_profile":      rolesanywhere.ResourceProfile(),
+			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
 			"aws_route53_health_check":                  route53.ResourceHealthCheck(),
@@ -2043,6 +2044,9 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
+			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
+			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
+
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
 			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
@@ -2120,7 +2124,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		HTTPProxy:                      d.Get("http_proxy").(string),
 		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
-		MaxRetries:                     d.Get("max_retries").(int),
+		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
@@ -2136,6 +2140,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if v, ok := d.GetOk("max_retries"); ok {
+		config.MaxRetries = v.(int)
+	}
+
 	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2147,6 +2155,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if v := d.Get("shared_credentials_file").(string); v != "" {
 		config.SharedCredentialsFiles = []string{v}
 	}
+
 	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2165,8 +2174,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
-	endpointsSet := d.Get("endpoints").(*schema.Set)
-	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
+	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
 	}
 
