@@ -70,6 +70,7 @@ func TestAccVPCDefaultSecurityGroup_VPC_basic(t *testing.T) {
 
 func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -79,11 +80,13 @@ func TestAccVPCDefaultSecurityGroup_VPC_empty(t *testing.T) {
 		CheckDestroy:      acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDefaultSecurityGroupConfig_empty,
+				Config: testAccVPCDefaultSecurityGroupConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -262,19 +265,25 @@ resource "aws_default_security_group" "test" {
 `, rName)
 }
 
-const testAccVPCDefaultSecurityGroupConfig_empty = `
+func testAccVPCDefaultSecurityGroupConfig_empty(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-default-security-group"
+    Name = %[1]q
   }
 }
 
 resource "aws_default_security_group" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccVPCDefaultSecurityGroupConfig_classic() string {
 	return acctest.ConfigCompose(
