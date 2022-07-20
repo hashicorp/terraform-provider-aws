@@ -194,7 +194,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -248,9 +249,12 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Default Security Group ID: %s", d.Id())
 
-	if len(tags) > 0 {
-		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error adding EC2 Default Security Group (%s) tags: %w", d.Id(), err)
+	oTagsAll := KeyValueTags(g.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if !nTagsAll.Equal(oTagsAll) {
+		if err := UpdateTags(conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
+			return fmt.Errorf("updating Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 

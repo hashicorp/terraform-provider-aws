@@ -148,11 +148,6 @@ func TestAccVPCDefaultSecurityGroup_Classic_basic(t *testing.T) {
 }
 
 func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
-
-	acctest.Skip(t, "This resource does not currently clear tags when adopting the resource")
-	// Additional references:
-	//  * https://github.com/hashicorp/terraform-provider-aws/issues/14631
-
 	var group ec2.SecurityGroup
 	resourceName := "aws_default_security_group.test"
 
@@ -168,6 +163,7 @@ func TestAccVPCDefaultSecurityGroup_Classic_empty(t *testing.T) {
 					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -304,13 +300,10 @@ resource "aws_default_security_group" "test" {
 }
 
 func testAccVPCDefaultSecurityGroupConfig_classicEmpty() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		`
+	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), `
 resource "aws_default_security_group" "test" {
   # No attributes set.
-}
-`)
+}`)
 }
 
 func TestDefaultSecurityGroupMigrateState(t *testing.T) {
