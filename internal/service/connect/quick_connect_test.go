@@ -252,7 +252,7 @@ func testAccCheckQuickConnectDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccQuickConnectBaseConfig(rName string) string {
+func testAccQuickConnectConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -265,7 +265,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccQuickConnectConfig_phoneNumber(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
-		testAccQuickConnectBaseConfig(rName),
+		testAccQuickConnectConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_quick_connect" "test" {
   instance_id = aws_connect_instance.test.id
@@ -289,7 +289,7 @@ resource "aws_connect_quick_connect" "test" {
 
 func testAccQuickConnectConfig_tags(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
-		testAccQuickConnectBaseConfig(rName),
+		testAccQuickConnectConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_quick_connect" "test" {
   instance_id = aws_connect_instance.test.id
@@ -314,7 +314,7 @@ resource "aws_connect_quick_connect" "test" {
 
 func testAccQuickConnectConfig_tagsUpdated(rName, rName2, label string, phoneNumber string) string {
 	return acctest.ConfigCompose(
-		testAccQuickConnectBaseConfig(rName),
+		testAccQuickConnectConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_quick_connect" "test" {
   instance_id = aws_connect_instance.test.id

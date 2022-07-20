@@ -568,7 +568,7 @@ func testAccCheckQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccQueueBaseConfig(rName string) string {
+func testAccQueueConfig_base(rName string) string {
 	// Use the aws_connect_hours_of_operation data source with the default "Basic Hours" that comes with connect instances.
 	// Because if a resource is used, Terraform will not be able to delete it since queues do not have support for the delete api
 	// yet but still references hours_of_operation_id. However, using the data source will result in the failure of the
@@ -593,7 +593,7 @@ data "aws_connect_hours_of_operation" "test" {
 
 func testAccQueueConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -610,7 +610,7 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_hoursOfOperation(rName, rName2, selectHoursOfOperationId string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 locals {
   select_hours_of_operation_id = %[2]q
@@ -653,7 +653,7 @@ resource "aws_connect_queue" "test" {
 //lint:ignore U1000 Ignore unused function temporarily
 func testAccQueueConfig_maxContacts(rName, rName2, maxContacts string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -671,7 +671,7 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_outboundCaller(rName, rName2, OutboundCallerIdName string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -692,7 +692,7 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_status(rName, rName2, status string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -708,7 +708,7 @@ resource "aws_connect_queue" "test" {
 `, rName2, status))
 }
 
-func testAccQueueQuickConnectBaseConfig(rName, rName2 string) string {
+func testAccQueueQuickConnectConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_quick_connect" "test1" {
   instance_id = aws_connect_instance.test.id
@@ -750,8 +750,8 @@ resource "aws_connect_quick_connect" "test2" {
 
 func testAccQueueConfig_quickConnect1(rName, rName2, rName3, rName4, label string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
-		testAccQueueQuickConnectBaseConfig(rName2, rName3),
+		testAccQueueConfig_base(rName),
+		testAccQueueQuickConnectConfig_base(rName2, rName3),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -772,8 +772,8 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_quickConnect2(rName, rName2, rName3, rName4, label string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
-		testAccQueueQuickConnectBaseConfig(rName2, rName3),
+		testAccQueueConfig_base(rName),
+		testAccQueueQuickConnectConfig_base(rName2, rName3),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -795,7 +795,7 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -813,7 +813,7 @@ resource "aws_connect_queue" "test" {
 
 func testAccQueueConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccQueueBaseConfig(rName),
+		testAccQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id

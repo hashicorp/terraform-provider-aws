@@ -463,7 +463,7 @@ func testAccCheckRoutingProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRoutingProfileBaseConfig(rName, rName2 string) string {
+func testAccRoutingProfileConfig_base(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -488,7 +488,7 @@ resource "aws_connect_queue" "default_outbound_queue" {
 
 func testAccRoutingProfileConfig_basic(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_routing_profile" "test" {
   instance_id               = aws_connect_instance.test.id
@@ -510,7 +510,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_mediaConcurrencies(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_routing_profile" "test" {
   instance_id               = aws_connect_instance.test.id
@@ -537,7 +537,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, selectDefaultOutboundQueue string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 locals {
   select_default_outbound_queue_id = %[3]q
@@ -570,7 +570,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_queue1(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_routing_profile" "test" {
   instance_id               = aws_connect_instance.test.id
@@ -599,7 +599,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_queue2(rName, rName2, rName3, rName4, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_queue" "test" {
   instance_id           = aws_connect_instance.test.id
@@ -642,7 +642,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_tags(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_routing_profile" "test" {
   instance_id               = aws_connect_instance.test.id
@@ -665,7 +665,7 @@ resource "aws_connect_routing_profile" "test" {
 
 func testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, label string) string {
 	return acctest.ConfigCompose(
-		testAccRoutingProfileBaseConfig(rName, rName2),
+		testAccRoutingProfileConfig_base(rName, rName2),
 		fmt.Sprintf(`
 resource "aws_connect_routing_profile" "test" {
   instance_id               = aws_connect_instance.test.id

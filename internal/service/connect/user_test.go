@@ -488,7 +488,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserBaseConfig(rName, rName2, rName3, rName4 string) string {
+func testAccUserConfig_base(rName, rName2, rName3, rName4 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -575,7 +575,7 @@ resource "aws_connect_user_hierarchy_group" "child" {
 
 func testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -606,7 +606,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, selectHierarchyGroupId string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   select_hierarchy_group_id = %[2]q
@@ -638,7 +638,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -666,7 +666,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -699,7 +699,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, selectRoutingProfileId string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   selectRoutingProfileId = %[2]q
@@ -730,7 +730,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, selectSecurityProfileIds string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 locals {
   security_profile_ids_map = {
@@ -770,7 +770,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_tags(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id
@@ -802,7 +802,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseConfig(rName, rName2, rName3, rName4),
+		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
 resource "aws_connect_user" "test" {
   instance_id        = aws_connect_instance.test.id

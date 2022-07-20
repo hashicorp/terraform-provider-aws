@@ -265,7 +265,7 @@ func testAccCheckUserHierarchyGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserHierarchyGroupBaseConfig(rName string) string {
+func testAccUserHierarchyGroupConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -304,7 +304,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyGroupConfig_basic(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyGroupBaseConfig(rName),
+		testAccUserHierarchyGroupConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_group" "test" {
   instance_id = aws_connect_instance.test.id
@@ -323,7 +323,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 
 func testAccUserHierarchyGroupConfig_parentID(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyGroupBaseConfig(rName),
+		testAccUserHierarchyGroupConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_group" "parent" {
   instance_id = aws_connect_instance.test.id
@@ -352,7 +352,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 
 func testAccUserHierarchyGroupConfig_tags(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyGroupBaseConfig(rName),
+		testAccUserHierarchyGroupConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_group" "test" {
   instance_id = aws_connect_instance.test.id
@@ -372,7 +372,7 @@ resource "aws_connect_user_hierarchy_group" "test" {
 
 func testAccUserHierarchyGroupConfig_tagsUpdated(rName, rName2 string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyGroupBaseConfig(rName),
+		testAccUserHierarchyGroupConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_group" "test" {
   instance_id = aws_connect_instance.test.id

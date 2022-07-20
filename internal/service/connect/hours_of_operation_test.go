@@ -311,7 +311,7 @@ func testAccCheckHoursOfOperationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccHoursOfOperationBaseConfig(rName string) string {
+func testAccHoursOfOperationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -324,7 +324,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccHoursOfOperationConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
@@ -355,7 +355,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 func testAccHoursOfOperationConfig_multipleConfig(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
@@ -400,7 +400,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 func testAccHoursOfOperationConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
@@ -432,7 +432,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 func testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id

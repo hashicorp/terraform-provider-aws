@@ -272,7 +272,7 @@ func testAccCheckSecurityProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSecurityProfileBaseConfig(rName string) string {
+func testAccSecurityProfileConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -285,7 +285,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccSecurityProfileConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
@@ -301,7 +301,7 @@ resource "aws_connect_security_profile" "test" {
 
 func testAccSecurityProfileConfig_permissions(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
@@ -322,7 +322,7 @@ resource "aws_connect_security_profile" "test" {
 
 func testAccSecurityProfileConfig_tags(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
@@ -339,7 +339,7 @@ resource "aws_connect_security_profile" "test" {
 
 func testAccSecurityProfileConfig_tagsUpdated(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
