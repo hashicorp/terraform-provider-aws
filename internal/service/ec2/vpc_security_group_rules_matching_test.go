@@ -585,66 +585,6 @@ func TestRulesMixedMatching(t *testing.T) {
 				},
 			},
 		},
-		// ipv6
-		{
-			local: []interface{}{
-				map[string]interface{}{
-					"from_port":        80,
-					"to_port":          8000,
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0db8:85a3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-			remote: []map[string]interface{}{
-				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0db8:85a3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-			saves: []map[string]interface{}{
-				{
-					"from_port":        80,
-					"to_port":          8000,
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0db8:85a3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-		},
-		// ipv6: local/remote differ in capitalization
-		{
-			local: []interface{}{
-				map[string]interface{}{
-					"from_port":        80,
-					"to_port":          8000,
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0DB8:85A3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-			remote: []map[string]interface{}{
-				{
-					"from_port":        int64(80),
-					"to_port":          int64(8000),
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0db8:85a3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-			saves: []map[string]interface{}{
-				{
-					"from_port":        80,
-					"to_port":          8000,
-					"protocol":         "tcp",
-					"cidr_ipv6_blocks": []interface{}{"2001:0db8:85a3:0000::/64"},
-					"security_groups":  schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
-				},
-			},
-		},
 	}
 	for i, c := range cases {
 		saves := tfec2.MatchRules("ingress", c.local, c.remote)
