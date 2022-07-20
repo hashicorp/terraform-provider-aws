@@ -1,20 +1,15 @@
 package ec2
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,9 +17,10 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceDefaultSecurityGroupCreate,
-		Read:   resourceDefaultSecurityGroupRead,
+		Read:   resourceSecurityGroupRead,
 		Update: resourceDefaultSecurityGroupUpdate,
-		Delete: resourceDefaultSecurityGroupDelete,
+		Delete: schema.Noop,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,8 +28,12 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  DefaultSecurityGroupMigrateState,
 
+		// Keep in sync with aws_security_group's schema with the following changes:
+		//   - description is Computed-only
+		//   - name is Computed-only
+		//   - name_prefix is Computed-only
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,135 +41,13 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"egress":  securityGroupRuleSetNestedBlock,
+			"ingress": securityGroupRuleSetNestedBlock,
+			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
-			"ingress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validSecurityGroupRuleDescription,
-						},
-						"from_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"ipv6_cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-						"prefix_list_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"protocol": {
-							Type:      schema.TypeString,
-							Required:  true,
-							StateFunc: ProtocolStateFunc,
-						},
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"self": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"to_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-				Set: resourceDefaultSecurityGroupRuleHash,
-			},
-			"egress": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-						"description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validSecurityGroupRuleDescription,
-						},
-						"from_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"ipv6_cidr_blocks": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidCIDRNetworkAddress,
-							},
-						},
-						"prefix_list_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"protocol": {
-							Type:      schema.TypeString,
-							Required:  true,
-							StateFunc: ProtocolStateFunc,
-						},
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"self": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"to_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-				Set: resourceDefaultSecurityGroupRuleHash,
-			},
-			"arn": {
+			"name_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,13 +55,19 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			// This is not implemented. Added to prevent breaking changes.
+			// Not used.
 			"revoke_rules_on_delete": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 		},
 
@@ -265,68 +149,6 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 	return resourceDefaultSecurityGroupUpdate(d, meta)
 }
 
-func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	group, err := FindSecurityGroupByID(conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), group.IpPermissions, group.OwnerId)
-	remoteEgressRules := SecurityGroupIPPermGather(d.Id(), group.IpPermissionsEgress, group.OwnerId)
-
-	localIngressRules := d.Get("ingress").(*schema.Set).List()
-	localEgressRules := d.Get("egress").(*schema.Set).List()
-
-	// Loop through the local state of rules, doing a match against the remote
-	// ruleSet we built above.
-	ingressRules := MatchRules("ingress", localIngressRules, remoteIngressRules)
-	egressRules := MatchRules("egress", localEgressRules, remoteEgressRules)
-
-	sgArn := arn.ARN{
-		AccountID: aws.StringValue(group.OwnerId),
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)),
-		Service:   ec2.ServiceName,
-	}
-
-	d.Set("arn", sgArn.String())
-	d.Set("description", group.Description)
-	d.Set("name", group.GroupName)
-	d.Set("owner_id", group.OwnerId)
-	d.Set("vpc_id", group.VpcId)
-
-	if err := d.Set("ingress", ingressRules); err != nil {
-		return fmt.Errorf("error setting Ingress rule set for (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("egress", egressRules); err != nil {
-		return fmt.Errorf("error setting Egress rule set for (%s): %w", d.Id(), err)
-	}
-
-	tags := KeyValueTags(group.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
 func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
@@ -355,12 +177,7 @@ func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceDefaultSecurityGroupRead(d, meta)
-}
-
-func resourceDefaultSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Cannot destroy Default Security Group. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return resourceSecurityGroupRead(d, meta)
 }
 
 func revokeDefaultSecurityGroupRules(meta interface{}, g *ec2.SecurityGroup) error {
@@ -401,72 +218,6 @@ func revokeDefaultSecurityGroupRules(meta interface{}, g *ec2.SecurityGroup) err
 	}
 
 	return nil
-}
-
-func resourceDefaultSecurityGroupRuleHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := ProtocolForValue(m["protocol"].(string))
-	buf.WriteString(fmt.Sprintf("%s-", p))
-	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
-
-	// We need to make sure to sort the strings below so that we always
-	// generate the same hash code no matter what is in the set.
-	if v, ok := m["cidr_blocks"]; ok {
-		vs := v.([]interface{})
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		sort.Strings(s)
-
-		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := m["ipv6_cidr_blocks"]; ok {
-		vs := v.([]interface{})
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		sort.Strings(s)
-
-		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := m["prefix_list_ids"]; ok {
-		vs := v.([]interface{})
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		sort.Strings(s)
-
-		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := m["security_groups"]; ok {
-		vs := v.(*schema.Set).List()
-		s := make([]string, len(vs))
-		for i, raw := range vs {
-			s[i] = raw.(string)
-		}
-		sort.Strings(s)
-
-		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if m["description"].(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["description"].(string)))
-	}
-
-	return create.StringHashcode(buf.String())
 }
 
 func DefaultSecurityGroupMigrateState(

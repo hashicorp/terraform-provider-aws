@@ -23,15 +23,6 @@ import (
 )
 
 func ResourceSecurityGroup() *schema.Resource {
-	securityGroupRuleSetNestedBlock := &schema.Schema{
-		Type:       schema.TypeSet,
-		Optional:   true,
-		Computed:   true,
-		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem:       securityGroupRuleNestedBlock,
-		Set:        SecurityGroupRuleHash,
-	}
-
 	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceSecurityGroupCreate,
@@ -51,6 +42,8 @@ func ResourceSecurityGroup() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  SecurityGroupMigrateState,
 
+		// Keep in sync with aws_default_security_group's schema.
+		// See notes in vpc_default_security_group.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -106,60 +99,70 @@ func ResourceSecurityGroup() *schema.Resource {
 
 // Security Group rule nested block definition.
 // Used in aws_security_group and aws_default_security_group ingress and egress rule sets.
-var securityGroupRuleNestedBlock = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"cidr_blocks": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Schema{
+var (
+	securityGroupRuleSetNestedBlock = &schema.Schema{
+		Type:       schema.TypeSet,
+		Optional:   true,
+		Computed:   true,
+		ConfigMode: schema.SchemaConfigModeAttr,
+		Elem:       securityGroupRuleNestedBlock,
+		Set:        SecurityGroupRuleHash,
+	}
+
+	securityGroupRuleNestedBlock = &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"cidr_blocks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+			},
+			"description": {
 				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
+				Optional:     true,
+				ValidateFunc: validSecurityGroupRuleDescription,
+			},
+			"from_port": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"ipv6_cidr_blocks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+			},
+			"prefix_list_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"protocol": {
+				Type:      schema.TypeString,
+				Required:  true,
+				StateFunc: ProtocolStateFunc,
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"self": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"to_port": {
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 		},
-		"description": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validSecurityGroupRuleDescription,
-		},
-		"from_port": {
-			Type:     schema.TypeInt,
-			Required: true,
-		},
-		"ipv6_cidr_blocks": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Schema{
-				Type:         schema.TypeString,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-		},
-		"prefix_list_ids": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"protocol": {
-			Type:      schema.TypeString,
-			Required:  true,
-			StateFunc: ProtocolStateFunc,
-		},
-		"security_groups": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
-		},
-		"self": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-		"to_port": {
-			Type:     schema.TypeInt,
-			Required: true,
-		},
-	},
-}
+	}
+)
 
 func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
