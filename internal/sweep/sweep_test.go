@@ -125,6 +125,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
