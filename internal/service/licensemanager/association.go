@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -44,25 +46,24 @@ func ResourceAssociation() *schema.Resource {
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
-	resourceArn := d.Get("resource_arn").(string)
-	licenseConfigurationArn := d.Get("license_configuration_arn").(string)
+	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
+	resourceARN := d.Get("resource_arn").(string)
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
 		AddLicenseSpecifications: []*licensemanager.LicenseSpecification{{
-			LicenseConfigurationArn: aws.String(licenseConfigurationArn),
+			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
-		ResourceArn: aws.String(resourceArn),
+		ResourceArn: aws.String(resourceARN),
 	}
 
 	log.Printf("[DEBUG] Creating License Manager Association: %s", input)
-
 	_, err := conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating License Manager Association: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", resourceArn, licenseConfigurationArn))
+	d.SetId(AssociationCreateResourceID(resourceARN, licenseConfigurationARN))
 
 	return resourceAssociationRead(ctx, d, meta)
 }
@@ -70,26 +71,26 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
-	resourceArn, licenseConfigurationArn, err := AssociationParseID(d.Id())
+	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	licenseSpecification, err := AssociationFindSpecification(ctx, conn, resourceArn, licenseConfigurationArn)
+	err = FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] License Manager Association %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return diag.Errorf("reading License Manager Association (%s): %s", d.Id(), err)
 	}
 
-	if licenseSpecification == nil {
-		log.Printf("[WARN] License Manager association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("license_configuration_arn", licenseConfigurationArn)
-	d.Set("resource_arn", resourceArn)
+	d.Set("license_configuration_arn", licenseConfigurationARN)
+	d.Set("resource_arn", resourceARN)
 
 	return nil
 }
@@ -97,7 +98,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
-	resourceArn, licenseConfigurationArn, err := AssociationParseID(d.Id())
+	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -105,12 +106,10 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
 		RemoveLicenseSpecifications: []*licensemanager.LicenseSpecification{{
-			LicenseConfigurationArn: aws.String(licenseConfigurationArn),
+			LicenseConfigurationArn: aws.String(licenseConfigurationARN),
 		}},
-		ResourceArn: aws.String(resourceArn),
+		ResourceArn: aws.String(resourceARN),
 	}
-
-	log.Printf("[DEBUG] License Manager association: %s", input)
 
 	_, err = conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
 
@@ -121,36 +120,54 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func AssociationFindSpecification(ctx context.Context, conn *licensemanager.LicenseManager, resourceArn, licenseConfigurationArn string) (*licensemanager.LicenseSpecification, error) {
-	opts := &licensemanager.ListLicenseSpecificationsForResourceInput{
-		ResourceArn: aws.String(resourceArn),
+func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, resourceARN, licenseConfigurationARN string) error {
+	input := &licensemanager.ListLicenseSpecificationsForResourceInput{
+		ResourceArn: aws.String(resourceARN),
 	}
+	var output []*licensemanager.LicenseSpecification
 
-	for {
-		resp, err := conn.ListLicenseSpecificationsForResourceWithContext(ctx, opts)
-
-		if err != nil {
-			return nil, err
+	err := listLicenseSpecificationsForResourcePagesWithContext(ctx, conn, input, func(page *licensemanager.ListLicenseSpecificationsForResourceOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, licenseSpecification := range resp.LicenseSpecifications {
-			if aws.StringValue(licenseSpecification.LicenseConfigurationArn) == licenseConfigurationArn {
-				return licenseSpecification, nil
+		for _, v := range page.LicenseSpecifications {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
-		if len(resp.LicenseSpecifications) == 0 || resp.NextToken == nil {
-			return nil, nil
-		}
+		return !lastPage
+	})
 
-		opts.NextToken = resp.NextToken
+	if err != nil {
+		return err
 	}
+
+	for _, v := range output {
+		if aws.StringValue(v.LicenseConfigurationArn) == licenseConfigurationARN {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{}
 }
 
-func AssociationParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Expected License Manager Association ID in the form resource_arn,license_configuration_arn - received: %s", id)
+const associationResourceIDSeparator = ","
+
+func AssociationCreateResourceID(resourceARN, licenseConfigurationARN string) string {
+	parts := []string{resourceARN, licenseConfigurationARN}
+	id := strings.Join(parts, associationResourceIDSeparator)
+
+	return id
+}
+
+func AssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, associationResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
-	return parts[0], parts[1], nil
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ResourceARN%[2]sLicenseConfigurationARN", id, associationResourceIDSeparator)
 }
