@@ -127,6 +127,55 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 		},
 	})
 }
+
+func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vocabularyFilter transcribe.GetVocabularyFilterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_vocabulary_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccVocabularyFiltersPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyFilterConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVocabularyFilterConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVocabularyFilterConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
