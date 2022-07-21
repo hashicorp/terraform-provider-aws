@@ -149,9 +149,15 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	}.String()
 
 	d.Set("arn", arn)
-	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_filter_name", out.VocabularyFilterName)
 	d.Set("language_code", out.LanguageCode)
+
+	// GovCloud does not set a download URI
+	downloadUri := aws.ToString(out.DownloadUri)
+	if downloadUri == "" {
+		downloadUri = "NONE"
+	}
+	d.Set("download_uri", downloadUri)
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
