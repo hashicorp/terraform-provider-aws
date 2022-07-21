@@ -37,8 +37,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `vocabular_filtery_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary filter. Conflicts with `words`.
-* `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vocabulary_filter_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom VocabularyFilter. Conflicts with `words`.
+* `tags` - (Optional) A map of tags to assign to the VocabularyFilter. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - VocabularyFilter name.
 * `arn` - ARN of the VocabularyFilter.
-* `download_uri` - Concise description.
+* `download_uri` - Generated download URI.
 
 ## Import
 
