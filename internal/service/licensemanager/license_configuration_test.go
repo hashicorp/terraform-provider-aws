@@ -16,6 +16,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(licensemanager.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"You have reached the maximum allowed number of license configurations created in one day",
+	)
+}
+
 func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	var licenseConfiguration licensemanager.GetLicenseConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
