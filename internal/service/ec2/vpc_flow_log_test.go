@@ -1029,9 +1029,9 @@ resource "aws_flow_log" "test" {
 func testAccVPCFlowLogConfig_transitGatewayId(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-	tags = {
-		Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_partition" "current" {}
@@ -1075,7 +1075,7 @@ resource "aws_flow_log" "test" {
 func testAccVPCFlowLogConfig_transitGatewayAttachmentId(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
-	tags = {
+  tags = {
     Name = %[1]q
   }
 }
@@ -1090,11 +1090,11 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-	transit_gateway_id = aws_ec2_transit_gateway.test.id
-	vpc_id             = aws_vpc.test.id
-	subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+  subnet_ids         = [aws_subnet.test.id]
 
-	tags = {
+  tags = {
     Name = %[1]q
   }
 }

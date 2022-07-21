@@ -267,7 +267,9 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
+
 	d.Set("arn", arn)
+
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return fmt.Errorf("error setting destination_options: %w", err)
@@ -275,25 +277,31 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("destination_options", nil)
 	}
+
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	d.Set("traffic_type", fl.TrafficType)
 
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
-	case strings.HasPrefix(resourceID, "tgw-attachment-"):
-		d.Set("transit_gateway_attachment_id", resourceID)
 	case strings.HasPrefix(resourceID, "tgw-"):
-		d.Set("transit_gateway_id", resourceID)
+		if strings.HasPrefix(resourceID, "tgw-attach-") {
+			d.Set("transit_gateway_attachment_id", resourceID)
+		} else {
+			d.Set("transit_gateway_id", resourceID)
+		}
 	case strings.HasPrefix(resourceID, "subnet-"):
 		d.Set("subnet_id", resourceID)
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
+	}
+
+	if !strings.HasPrefix(aws.StringValue(fl.ResourceId), "tgw-") {
+		d.Set("traffic_type", fl.TrafficType)
 	}
 
 	tags := KeyValueTags(fl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
