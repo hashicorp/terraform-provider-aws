@@ -332,7 +332,17 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.AWSClient).ComprehendConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("updating tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceEntityRecognizerRead(ctx, d, meta)
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

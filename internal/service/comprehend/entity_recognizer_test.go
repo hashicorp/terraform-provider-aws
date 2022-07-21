@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -100,6 +101,128 @@ func TestAccComprehendEntityRecognizer_disappears(t *testing.T) {
 	})
 }
 
+func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEntityRecognizerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v2),
+					testAccCheckEntityRecognizerNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEntityRecognizerConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v3),
+					testAccCheckEntityRecognizerNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3 types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccEntityRecognizerConfig_tags0(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+					testAccEntityRecognizerConfig_tags0(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v2),
+					testAccCheckEntityRecognizerNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
+					testAccEntityRecognizerConfig_tags0(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v3),
+					testAccCheckEntityRecognizerNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
+				),
+			},
+		},
+	})
+}
+
 // TODO: test deletion from in-error state. Try insufficient permissions to force error
 
 // TODO: add test for catching, e.g. permission errors in training
@@ -152,19 +275,34 @@ func testAccCheckEntityRecognizerExists(name string, entityrecognizer *types.Ent
 	}
 }
 
-// func testAccCheckEntityRecognizerNotRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
+// func testAccCheckEntityRecognizerRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
-// 		if before, after := aws.StringValue(before.EntityRecognizerId), aws.StringValue(after.EntityRecognizerId); before != after {
-// 			return fmt.Errorf("Comprehend Entity Recognizer (%s/%s) recreated", before, after)
+// 		if entityRecognizerIdentity(before, after) {
+// 			return fmt.Errorf("Comprehend Entity Recognizer not recreated")
 // 		}
 
 // 		return nil
 // 	}
 // }
 
+func testAccCheckEntityRecognizerNotRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !entityRecognizerIdentity(before, after) {
+			return fmt.Errorf("Comprehend Entity Recognizer recreated")
+		}
+
+		return nil
+	}
+}
+
+func entityRecognizerIdentity(before, after *types.EntityRecognizerProperties) bool {
+	return aws.ToTime(before.SubmitTime).Equal(aws.ToTime(after.SubmitTime))
+}
+
 func testAccEntityRecognizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -196,6 +334,180 @@ resource "aws_comprehend_entity_recognizer" "test" {
   ]
 }
 
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  tags = {}
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  tags = {
+	%[2]q = %[3]q
+  }
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccEntityRecognizerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  tags = {
+	%[2]q = %[3]q
+	%[4]q = %[5]q
+}
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccEntityRecognizerS3BucketConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -216,19 +528,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
     object_ownership = "BucketOwnerEnforced"
   }
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
-`, rName))
+`, rName)
 }
 
 func testAccEntityRecognizerBasicRoleConfig(rName string) string {
@@ -255,11 +555,11 @@ EOF
 resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.name
 
-  policy = data.aws_iam_policy_document.test.json
+  policy = data.aws_iam_policy_document.role.json
 }
 
 
-data "aws_iam_policy_document" "test" {
+data "aws_iam_policy_document" "role" {
   statement {
     actions = [
       "s3:GetObject",
