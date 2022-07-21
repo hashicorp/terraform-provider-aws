@@ -31,11 +31,14 @@ resource "aws_transcribe_vocabulary_filter" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description.
+* `language_code` - (Required) The language code you selected for your vocabulary filter. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
+* `vocabulary_filter_name` - (Required) The name of the VocabularyFilter.
+* `words` - (Required) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description.
+* `vocabular_filtery_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary filter. Conflicts with `words`.
+* `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -43,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - VocabularyFilter name.
 * `arn` - ARN of the VocabularyFilter.
-* `example_attribute` - Concise description.
+* `download_uri` - Concise description.
 
 ## Import
 
