@@ -58,7 +58,10 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	input := &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
 		InstanceArn:                    aws.String(instanceArn),
-		CustomerManagedPolicyReference: createCustomerManagedPolicyReference(policyName, policyPath),
+		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
+			Name: aws.String(policyName),
+			Path: aws.String(policyPath),
+		},
 		PermissionSetArn:               aws.String(permissionSetArn),
 	}
 
@@ -68,7 +71,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error attaching Customer Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s,%s", policyName, permissionSetArn, instanceArn))
+	d.SetId(fmt.Sprintf("%s,%s,%s,%s", policyName, policyPath,permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
 	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
@@ -81,32 +84,32 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	customerManagedPolicyReference, permissionSetArn, instanceArn, err := ParseCustomerManagedPolicyAttachmentID(d.Id())
+	policyName, policyPath, permissionSetArn, instanceArn, err := ParseCustomerManagedPolicyAttachmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID: %w", err)
 	}
 
-	policy, err := FindManagedPolicy(conn, customerManagedPolicyReference, permissionSetArn, instanceArn)
+	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", customerManagedPolicyReference, permissionSetArn)
+		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", policyName, permissionSetArn)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Customer Managed Policy (%s) for SSO Permission Set (%s): %w", customerManagedPolicyReference, permissionSetArn, err)
+		return fmt.Errorf("error reading Customer Managed Policy (%s) for SSO Permission Set (%s): %w", policyName, permissionSetArn, err)
 	}
 
 	if policy == nil {
-		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", customerManagedPolicyReference, permissionSetArn)
+		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", policyName, permissionSetArn)
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("instance_arn", instanceArn)
-	d.Set("customer_managed_policy_name", policy.Arn)   // check
-	d.Set("customer_managed_policy_path", policy.Name) //check
+	d.Set("customer_managed_policy_name", policyName)
+	d.Set("customer_managed_policy_path", policyPath)
 	d.Set("permission_set_arn", permissionSetArn)
 
 	return nil
@@ -115,24 +118,27 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	customerManagedPolicyReference, permissionSetArn, instanceArn, err := ParseCustomerManagedPolicyAttachmentID(d.Id())
+	policyName, policyPath, permissionSetArn, instanceArn, err := ParseCustomerManagedPolicyAttachmentID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID: %w", err)
 	}
 
-	input := &ssoadmin.DetachCustomerManagedPolicyFromPermissionSetInput{
+	input := &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
-		CustomerManagedPolicyReference: aws.String(customerManagedPolicyReference),
+		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
+			Name: aws.String(policyName),
+			Path: aws.String(policyPath),
+		},
 	}
 
-	_, err = conn.DetachCustomerManagedPolicyFromPermissionSet(input)
+	_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error detaching Customer Managed Policy (%s) from SSO Permission Set (%s): %w", customerManagedPolicyReference, permissionSetArn, err)
+		return fmt.Errorf("error detaching Customer Managed Policy (%s) from SSO Permission Set (%s): %w", policyName, permissionSetArn, err)
 	}
 
 	// Provision ALL accounts after detaching the managed policy
@@ -143,15 +149,15 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 	return nil
 }
 
-func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, error) { 
+func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, string, error) { 
 	idParts := strings.Split(id, ",")
-	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_REFERENCE,PERMISSION_SET_ARN,INSTANCE_ARN")
+	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
+		return "", "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_NAME, CUSTOMER_MANAGED_POLICY_PATH, PERMISSION_SET_ARN,INSTANCE_ARN")
 	}
-	return idParts[0], idParts[1], idParts[2], nil
+	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
 
-func createCustomerManagedPolicyReference(name string, path string) {
-	customerManagedPolicyReference := map[string]string{"Name": path, "Path": path}
-	return customerManagedPolicyReference
-}
+// func createCustomerManagedPolicyReference(name string, path string) (map[string]string) { // not string type - check
+// 	//customerManagedPolicyReference := map[string]string{"Name": name, "Path": path}
+// 	return customerManagedPolicyReference
+// }

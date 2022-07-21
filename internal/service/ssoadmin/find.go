@@ -69,3 +69,34 @@ func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetA
 
 	return attachedPolicy, err
 }
+
+
+// FindCustomerManagedPolicy returns the customer managed policy attached to a permission set within a specified SSO instance.
+// Returns an error if no customer managed policy is found.
+func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, permissionSetArn, instanceArn string) (*ssoadmin.CustomerManagedPolicyReference, error) {
+	input := &ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
+		PermissionSetArn: aws.String(permissionSetArn),
+		InstanceArn:      aws.String(instanceArn),
+	}
+
+	var attachedPolicy *ssoadmin.CustomerManagedPolicyReference
+	err := conn.ListCustomerManagedPolicyReferencesInPermissionSetPages(input, func(page *ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, policy := range page.CustomerManagedPolicyReferences {
+			if policy == nil {
+				continue
+			}
+
+			if aws.StringValue(policy.Name) == policyName {
+				attachedPolicy = policy
+				return false
+			}
+		}
+		return !lastPage
+	})
+
+	return attachedPolicy, err
+}
