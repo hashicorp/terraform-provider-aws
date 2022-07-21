@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-aws/tools/providerlint
+module github.com/hashicorp/terraform-provider-aws/ci/providerlint
 
 go 1.16
 
