@@ -85,89 +85,95 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_forceNew(t *testing.T) {
 	})
 }
 
-// func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
-// 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccSSOAdminCustomerManagedPolicyAttachment_disappears(t *testing.T) {
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameFoo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameBar := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-// 		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckManagedPolicyAttachmentExists(resourceName),
-// 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName, rNameFoo, rNameBar),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceCustomerManagedPolicyAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.T) {
-// 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
-// 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccSSOAdminCustomerManagedPolicyAttachment_Disappears_permissionSet(t *testing.T) {
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachment.test"
+	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameFoo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameBar := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-// 		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckManagedPolicyAttachmentExists(resourceName),
-// 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName, rNameFoo, rNameBar),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T) {
-// 	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
-// 	otherResourceName := "aws_ssoadmin_managed_policy_attachment.other"
-// 	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccSSOAdminCustomerManagedPolicyAttachment_multipleManagedPolicies(t *testing.T) {
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachment.test"
+	otherResourceName := "aws_ssoadmin_customer_managed_policy_attachment.other"
+	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameFoo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameBar := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameOther := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-// 		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckManagedPolicyAttachmentExists(resourceName),
-// 				),
-// 			},
-// 			{
-// 				Config: testAccCustomerManagedPolicyAttachmentConfig_multiple(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckManagedPolicyAttachmentExists(resourceName),
-// 					testAccCheckManagedPolicyAttachmentExists(otherResourceName),
-// 					//lintignore:AWSAT001
-// 					resource.TestMatchResourceAttr(otherResourceName, "managed_policy_arn", regexp.MustCompile(`policy/AmazonDynamoDBReadOnlyAccess`)),
-// 					resource.TestCheckResourceAttr(otherResourceName, "managed_policy_name", "TestPolicy"),
-// 					resource.TestCheckResourceAttrPair(otherResourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-// 					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, "arn"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      otherResourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckCustomerManagedPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomerManagedPolicyAttachmentConfig_basic(rName, rNameFoo, rNameBar),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
+				),
+			},
+			{
+				Config: testAccCustomerManagedPolicyAttachmentConfig_multiple(rName, rNameFoo, rNameBar, rNameOther),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentExists(otherResourceName),
+					//lintignore:AWSAT001
+					resource.TestCheckResourceAttr(otherResourceName, "customer_managed_policy_name", rNameOther),
+					resource.TestCheckResourceAttrPair(otherResourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
+					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      otherResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func testAccCheckCustomerManagedPolicyAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
@@ -314,14 +320,34 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
 `)
 }
 
-// func testAccCustomerManagedPolicyAttachmentConfig_multiple(rName string) string {
-// 	return acctest.ConfigCompose(
-// 		testAccCustomerManagedPolicyAttachmentConfig_basic(rName),
-// 		`
-// resource "aws_ssoadmin_managed_policy_attachment" "other" {
-//   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-//   managed_policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonDynamoDBReadOnlyAccess"
-//   permission_set_arn = aws_ssoadmin_permission_set.test.arn
-// }
-// `)
-// }
+func testAccCustomerManagedPolicyAttachmentConfig_multiple(rName string, rNameFoo string, rNameBar string, rNameOther string) string {
+	return acctest.ConfigCompose(
+		testAccCustomerManagedPolicyAttachmentConfig_basic(rName, rNameFoo, rNameBar),
+		fmt.Sprintf(`
+resource "aws_ssoadmin_customer_managed_policy_attachment" "other" {
+	instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+	permission_set_arn = aws_ssoadmin_permission_set.test.arn
+	customer_managed_policy_name = aws_iam_policy.other.name
+	customer_managed_policy_path = "/"
+}
+
+resource "aws_iam_policy" "other" {
+	name        = %q
+	path        = "/"
+	description = "My test policy"
+	policy = jsonencode({
+	  Version = "2012-10-17"
+	  Statement = [
+		{
+		  Action = [
+			"ec2:Describe*",
+		  ]
+		  Effect   = "Allow"
+		  Resource = "*"
+		},
+	  ]
+	})
+  }
+`, rNameOther),
+	)
+}
