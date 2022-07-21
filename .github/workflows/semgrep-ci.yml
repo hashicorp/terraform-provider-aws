@@ -31,7 +31,7 @@ jobs:
     if: (github.action != 'dependabot[bot]')
     steps:
     - uses: actions/checkout@v3
-    - run: .github/scripts/semgrep.sh .semgrep-caps-aws-ec2.yml
+    - run: .github/scripts/semgrep.sh ci/.semgrep-caps-aws-ec2.yml
   naming_tests:
     name: Semgrep Test Configs Scan
     runs-on: ubuntu-latest
