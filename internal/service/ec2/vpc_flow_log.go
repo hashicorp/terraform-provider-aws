@@ -66,7 +66,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -114,7 +114,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -124,11 +124,23 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
 			},
+			"transit_gateway_attachment_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+			},
+			"transit_gateway_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+			},
 			"vpc_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 		},
 
@@ -150,6 +162,14 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		{
 			ID:   d.Get("vpc_id").(string),
 			Type: ec2.FlowLogsResourceTypeVpc,
+		},
+		{
+			ID:   d.Get("transit_gateway_id").(string),
+			Type: ec2.FlowLogsResourceTransitGateway,
+		},
+		{
+			ID:   d.Get("transit_gateway_attachment_id").(string),
+			Type: ec2.FlowLogsResourceTransitGatewayAttachment,
 		},
 		{
 			ID:   d.Get("subnet_id").(string),
@@ -261,6 +281,10 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
+	case strings.HasPrefix(resourceID, "tgw-attachment-"):
+		d.Set("transit_gateway_attachment_id", resourceID)
+	case strings.HasPrefix(resourceID, "tgw-"):
+		d.Set("transit_gateway_id", resourceID)
 	case strings.HasPrefix(resourceID, "subnet-"):
 		d.Set("subnet_id", resourceID)
 	case strings.HasPrefix(resourceID, "eni-"):
