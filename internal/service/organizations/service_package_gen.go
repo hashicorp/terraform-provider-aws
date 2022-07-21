@@ -46,6 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_organizations_organizational_units",
 		},
 		{
+			Factory:  DataSourcePolicyAttachments,
+			TypeName: "aws_organizations_policy_attachments",
+		},
+		{
 			Factory:  DataSourceResourceTags,
 			TypeName: "aws_organizations_resource_tags",
 		},
