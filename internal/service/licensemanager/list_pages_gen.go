@@ -29,7 +29,6 @@ func listLicenseConfigurationsPagesWithContext(ctx context.Context, conn *licens
 	}
 	return nil
 }
-
 func listLicenseSpecificationsForResourcePages(conn *licensemanager.LicenseManager, input *licensemanager.ListLicenseSpecificationsForResourceInput, fn func(*licensemanager.ListLicenseSpecificationsForResourceOutput, bool) bool) error {
 	return listLicenseSpecificationsForResourcePagesWithContext(context.Background(), conn, input, fn)
 }
