@@ -57,12 +57,12 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 	policyPath := d.Get("customer_managed_policy_path").(string)
 
 	input := &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
-		InstanceArn:                    aws.String(instanceArn),
+		InstanceArn: aws.String(instanceArn),
 		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
 			Name: aws.String(policyName),
 			Path: aws.String(policyPath),
 		},
-		PermissionSetArn:               aws.String(permissionSetArn),
+		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
 	_, err := conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
@@ -71,7 +71,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error attaching Customer Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s,%s,%s", policyName, policyPath,permissionSetArn, instanceArn))
+	d.SetId(fmt.Sprintf("%s,%s,%s,%s", policyName, policyPath, permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
 	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
@@ -149,7 +149,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 	return nil
 }
 
-func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, string, error) { 
+func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 		return "", "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_NAME, CUSTOMER_MANAGED_POLICY_PATH, PERMISSION_SET_ARN,INSTANCE_ARN")

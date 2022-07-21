@@ -70,7 +70,6 @@ func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetA
 	return attachedPolicy, err
 }
 
-
 // FindCustomerManagedPolicy returns the customer managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no customer managed policy is found.
 func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, permissionSetArn, instanceArn string) (*ssoadmin.CustomerManagedPolicyReference, error) {
