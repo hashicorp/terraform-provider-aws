@@ -1,6 +1,7 @@
 package licensemanager_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -57,7 +58,7 @@ func testAccCheckAssociationExists(resourceName string, licenseSpecification *li
 			return err
 		}
 
-		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
+		specification, err := tflicensemanager.AssociationFindSpecification(context.TODO(), conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
 			return err
 		}
@@ -84,7 +85,7 @@ func testAccCheckAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
+		specification, err := tflicensemanager.AssociationFindSpecification(context.TODO(), conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
 			return err
 		}
