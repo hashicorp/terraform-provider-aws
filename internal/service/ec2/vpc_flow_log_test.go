@@ -147,8 +147,7 @@ func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
@@ -166,7 +165,7 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_flow_log.test"
-	transitGatewayAttachmentResourceName := "aws_ec2_transit_gateway_attachment.test"
+	transitGatewayAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -184,8 +183,7 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayAttachmentResourceName, "id"),
 				),
 			},
@@ -1066,10 +1064,10 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_flow_log" "test" {
-  iam_role_arn       = aws_iam_role.test.arn
-  log_group_name     = aws_cloudwatch_log_group.test.name
-  traffic_type       = "ALL"
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  iam_role_arn             = aws_iam_role.test.arn
+  log_group_name           = aws_cloudwatch_log_group.test.name
+  max_aggregation_interval = 60
+  transit_gateway_id       = aws_ec2_transit_gateway.test.id
 }
 `, rName)
 }
@@ -1133,8 +1131,8 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_flow_log" "test" {
   iam_role_arn                  = aws_iam_role.test.arn
   log_group_name                = aws_cloudwatch_log_group.test.name
-  traffic_type                  = "ALL"
-  transit_gateway_attachment_id = aws_ec2_transit_gateway_attachment.test.id
+  max_aggregation_interval      = 60
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
 }
 `, rName)
 }

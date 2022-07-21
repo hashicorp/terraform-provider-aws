@@ -120,7 +120,7 @@ func ResourceFlowLog() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 			"traffic_type": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
 			},
@@ -165,11 +165,11 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		},
 		{
 			ID:   d.Get("transit_gateway_id").(string),
-			Type: ec2.FlowLogsResourceTransitGateway,
+			Type: ec2.FlowLogsResourceTypeTransitGateway,
 		},
 		{
 			ID:   d.Get("transit_gateway_attachment_id").(string),
-			Type: ec2.FlowLogsResourceTransitGatewayAttachment,
+			Type: ec2.FlowLogsResourceTypeTransitGatewayAttachment,
 		},
 		{
 			ID:   d.Get("subnet_id").(string),
@@ -191,7 +191,12 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		LogDestinationType: aws.String(d.Get("log_destination_type").(string)),
 		ResourceIds:        aws.StringSlice([]string{resourceID}),
 		ResourceType:       aws.String(resourceType),
-		TrafficType:        aws.String(d.Get("traffic_type").(string)),
+	}
+
+	if resourceType != ec2.FlowLogsResourceTypeTransitGateway && resourceType != ec2.FlowLogsResourceTypeTransitGatewayAttachment {
+		if v, ok := d.GetOk("traffic_type"); ok {
+			input.TrafficType = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
