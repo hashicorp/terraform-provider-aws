@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -33,12 +32,6 @@ func ResourceVocabularyFilter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -120,11 +113,11 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 
 	out, err := conn.CreateVocabularyFilter(ctx, in)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("name").(string), err)
+		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), err)
 	}
 
 	if out == nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("name").(string), errors.New("empty output"))
+		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyFilterName))
@@ -229,7 +222,7 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 			return nil
 		}
 
-		return names.DiagError(names.Comprehend, names.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
+		return names.DiagError(names.Transcribe, names.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	return nil

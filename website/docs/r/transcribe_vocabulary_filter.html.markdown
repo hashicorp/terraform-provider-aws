@@ -1,12 +1,12 @@
 ---
 subcategory: "Transcribe"
 layout: "aws"
-page_title: "AWS: aws_transcribe_vocabularyfilter"
+page_title: "AWS: aws_transcribe_vocabulary_filter"
 description: |-
   Terraform resource for managing an AWS Transcribe VocabularyFilter.
 ---
 
-# Resource: aws_transcribe_vocabularyfilter
+# Resource: aws_transcribe_vocabulary_filter
 
 Terraform resource for managing an AWS Transcribe VocabularyFilter.
 
@@ -15,7 +15,15 @@ Terraform resource for managing an AWS Transcribe VocabularyFilter.
 ### Basic Usage
 
 ```terraform
-resource "aws_transcribe_vocabularyfilter" "example" {
+resource "aws_transcribe_vocabulary_filter" "example" {
+  vocabulary_filter_name = "example"
+  language_code          = "en-US"
+  words                  = ["cars", "bucket"]
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
 }
 ```
 
@@ -33,21 +41,14 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - VocabularyFilter name.
 * `arn` - ARN of the VocabularyFilter.
 * `example_attribute` - Concise description.
 
-## Timeouts
-
-`aws_transcribe_vocabularyfilter` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-* `create` - (Optional, Default: `60m`)
-* `update` - (Optional, Default: `180m`)
-* `delete` - (Optional, Default: `90m`)
-
 ## Import
 
-Transcribe VocabularyFilter can be imported using the `example_id_arg`, e.g.,
+Transcribe VocabularyFilter can be imported using the `vocabulary_filter_name`, e.g.,
 
 ```
-$ terraform import aws_transcribe_vocabularyfilter.example rft-8012925589
+$ terraform import aws_transcribe_vocabulary_filter.example example-name
 ```

@@ -55,6 +55,78 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 	})
 }
 
+func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vocabularyFilter transcribe.GetVocabularyFilterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_vocabulary_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccVocabularyFiltersPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyFilterConfig_basicWords(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vocabularyFilter transcribe.GetVocabularyFilterOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_vocabulary_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccVocabularyFiltersPreCheck(t)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyFilterConfig_basicFile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttr(resourceName, "vocabulary_filter_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
+				),
+			},
+			{
+				Config: testAccVocabularyFilterConfig_basicWords(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttr(resourceName, "words.#", "3"),
+				),
+			},
+		},
+	})
+}
 func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -164,13 +236,6 @@ resource "aws_s3_object" "object1" {
   key    = "transcribe/test1.txt"
   source = "test-fixtures/vocabulary_filter_test1.txt"
 }
-
-resource "aws_s3_object" "object2" {
-  bucket = aws_s3_bucket.test.id
-  key    = "transcribe/test2.txt"
-  source = "test-fixtures/vocabulary_filter_test2.txt"
-}
-
 `, rName)
 }
 
@@ -178,10 +243,10 @@ func testAccVocabularyFilterConfig_basicFile(rName string) string {
 	return acctest.ConfigCompose(
 		testAccVocabularyFilterBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_transcribe_filter_vocabulary" "test" {
-  vocabulary_name     = %[1]q
-  language_code       = "en-US"
-  vocabulary_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
+resource "aws_transcribe_vocabulary_filter" "test" {
+  vocabulary_filter_name     = %[1]q
+  language_code              = "en-US"
+  vocabulary_filter_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
 
   tags = {
     tag1 = "value1"
@@ -193,4 +258,62 @@ resource "aws_transcribe_filter_vocabulary" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccVocabularyFilterConfig_basicWords(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_vocabulary_filter" "test" {
+  vocabulary_filter_name = %[1]q
+  language_code          = "en-US"
+  words                  = ["bucket", "cars", "boards"]
+
+  tags = {
+    tag1 = "value1"
+    tag2 = "value3"
+  }
+}
+`, rName))
+}
+
+func testAccVocabularyFilterConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyFilterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_vocabulary_filter" "test" {
+  vocabulary_filter_name     = %[1]q
+  language_code              = "en-US"
+  vocabulary_filter_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [
+    aws_s3_object.object1
+  ]
+}
+`, rName, key1, value1))
+}
+
+func testAccVocabularyFilterConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyFilterBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_vocabulary_filter" "test" {
+  vocabulary_filter_name     = %[1]q
+  language_code              = "en-US"
+  vocabulary_filter_file_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.object1.key}"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [
+    aws_s3_object.object1
+  ]
+}
+`, rName, key1, value1, key2, value2))
 }
