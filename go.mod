@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.6.8
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
@@ -32,7 +31,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
-	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
