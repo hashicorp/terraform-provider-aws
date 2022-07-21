@@ -148,7 +148,7 @@ linter:
   - '.github/workflows/acctest-terraform-lint.yml'
   - '.github/workflows/terraform_provider.yml'
   - '.github/workflows/website.yml'
-  - '.golangci.yml'
+  - 'ci/.golangci.yml'
   - '.markdownlinkcheck.json'
   - '.markdownlint.yml'
   - '.semgrep.yml'
