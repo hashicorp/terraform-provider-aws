@@ -62,7 +62,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./tools/providerlint/go% ./tools/providerlint/README.md ./tools/providerlint/vendor, $(wildcard ./tools/providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -149,15 +149,15 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd tools/providerlint && go install .
-	cd tools && go install github.com/bflad/tfproviderdocs
-	cd tools && go install github.com/client9/misspell/cmd/misspell
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go install github.com/katbyte/terrafmt
-	cd tools && go install github.com/terraform-linters/tflint
-	cd tools && go install github.com/pavius/impi/cmd/impi
-	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/providerlint && go install .
+	cd .ci && go install github.com/bflad/tfproviderdocs
+	cd .ci && go install github.com/client9/misspell/cmd/misspell
+	cd .ci && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci && go install github.com/katbyte/terrafmt
+	cd .ci && go install github.com/terraform-linters/tflint
+	cd .ci && go install github.com/pavius/impi/cmd/impi
+	cd .ci && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

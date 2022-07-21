@@ -576,7 +576,7 @@ rules:
       include:
         - internal/
       exclude:
-        - providerlint/vendor/
+        - .ci/providerlint/vendor/
         - internal/generate/
     patterns:
       - pattern-either:
@@ -655,7 +655,7 @@ rules:
       include:
         - internal/
       exclude:
-        - providerlint/vendor/
+        - .ci/providerlint/vendor/
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.

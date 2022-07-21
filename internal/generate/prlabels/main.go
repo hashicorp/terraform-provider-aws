@@ -154,7 +154,7 @@ linter:
   - '.ci/.semgrep.yml'
   - '.ci/.tflint.hcl'
   - 'staticcheck.conf'
-  - 'tools/providerlint/**/*'
+  - '.ci/providerlint/**/*'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'

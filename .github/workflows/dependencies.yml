@@ -23,7 +23,7 @@ jobs:
         with:
           filters: |
             changed:
-              - tools/providerlint/**
+              - .ci/providerlint/**
               - go.mod
               - go.sum
   comment:

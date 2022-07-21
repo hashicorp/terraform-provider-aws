@@ -143,7 +143,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools/providerlint && go install .
+    - run: cd .ci/providerlint && go install .
     - name: providerlint
       run: .github/scripts/providerlint.sh
 
@@ -294,7 +294,7 @@ jobs:
       shell: bash
     - run: golangci-lint run ./internal/... --timeout 75m
       shell: bash
-    - run: cd tools/providerlint && golangci-lint run ./...
+    - run: cd .ci/providerlint && golangci-lint run ./...
       shell: bash
 
   importlint:
