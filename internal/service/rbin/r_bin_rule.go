@@ -36,12 +36,14 @@ import (
 	// types.<Type Name>.
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -158,14 +160,10 @@ func ResourceRBinRule() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"EBS_SNAPSHOT", "EC2_IMAGE"}, false),
 			},
 			"retention_period": {
-				// TODO(rlizzo): this doesn't seem like it should be a list type...
-				// 				 realistically it should be a MapType, but it doesn't seem
-				// 				 possible to validate the required keys in the map?
-				// 				 https://www.terraform.io/plugin/sdkv2/schemas/schema-types#typemap
 				Type:     schema.TypeSet,
 				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
+				MinItems: 2,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"retention_period_value": {
@@ -344,8 +342,16 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// your resource doesn't need tags, you can remove the tags lines here and
 	// below. Many resources do include tags so this a reminder to include them
 	// where possible.
-	// TODO(rlizzo): this needs to be an ARN.
-	tags, err := ListTags(ctx, conn, d.Id())
+	c := meta.(*conns.AWSClient)
+	ARN := awsarn.ARN{
+		Partition: c.Partition,
+		Service:   rbin.ServiceID,
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  fmt.Sprintf("Rule/%s", d.Id()),
+	}
+
+	tags, err := ListTags(ctx, conn, ARN.String())
 	if err != nil {
 		return names.DiagError(names.RBin, names.ErrActionReading, ResNameRBinRule, d.Id(), err)
 	}

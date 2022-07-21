@@ -140,6 +140,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
@@ -1788,6 +1789,8 @@ func Provider() *schema.Provider {
 			"aws_ram_resource_association":    ram.ResourceResourceAssociation(),
 			"aws_ram_resource_share":          ram.ResourceResourceShare(),
 			"aws_ram_resource_share_accepter": ram.ResourceResourceShareAccepter(),
+
+			"aws_rbin_rbin_rule": rbin.ResourceRBinRule(),
 
 			"aws_db_cluster_snapshot":                       rds.ResourceClusterSnapshot(),
 			"aws_db_event_subscription":                     rds.ResourceEventSubscription(),

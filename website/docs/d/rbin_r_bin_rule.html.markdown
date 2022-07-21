@@ -1,5 +1,5 @@
 ---
-subcategory: "RBin"
+subcategory: "Recycle Bin (RBin)"
 layout: "aws"
 page_title: "AWS: aws_rbin_rbinrule"
 description: |-

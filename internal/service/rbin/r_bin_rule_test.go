@@ -1,4 +1,5 @@
 package rbin_test
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -36,22 +37,20 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/pkg/errors"
 
 	// TIP: You will often need to import the package that this test file lives
-    // in. Since it is in the "test" context, it must import the package to use
-    // any normal context constants, variables, or functions.
+	// in. Since it is in the "test" context, it must import the package to use
+	// any normal context constants, variables, or functions.
 	tfrbin "github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +68,6 @@ import (
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
 
-
 // TIP: ==== UNIT TESTS ====
 // This is an example of a unit test. Its name is not prefixed with
 // "TestAcc" like an acceptance test.
@@ -84,52 +82,51 @@ import (
 // Cut and dry functions using well-used patterns, like typical flatteners and
 // expanders, don't need unit testing. However, if they are complex or
 // intricate, they should be unit tested.
-func TestRBinRuleExampleUnitTest(t *testing.T) {
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfrbin.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
+//func TestRBinRuleExampleUnitTest(t *testing.T) {
+//	testCases := []struct {
+//		TestName string
+//		Input    string
+//		Expected string
+//		Error    bool
+//	}{
+//		{
+//			TestName: "empty",
+//			Input:    "",
+//			Expected: "",
+//			Error:    true,
+//		},
+//		{
+//			TestName: "descriptive name",
+//			Input:    "some input",
+//			Expected: "some output",
+//			Error:    false,
+//		},
+//		{
+//			TestName: "another descriptive name",
+//			Input:    "more input",
+//			Expected: "more output",
+//			Error:    false,
+//		},
+//	}
+//
+//	for _, testCase := range testCases {
+//		t.Run(testCase.TestName, func(t *testing.T) {
+//			got, err := tfrbin.FunctionFromResource(testCase.Input)
+//
+//			if err != nil && !testCase.Error {
+//				t.Errorf("got error (%s), expected no error", err)
+//			}
+//
+//			if err == nil && testCase.Error {
+//				t.Errorf("got (%s) and no error, expected error", got)
+//			}
+//
+//			if got != testCase.Expected {
+//				t.Errorf("got %s, expected %s", got, testCase.Expected)
+//			}
+//		})
+//	}
+//}
 
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
@@ -139,28 +136,29 @@ func TestRBinRuleExampleUnitTest(t *testing.T) {
 //
 // Acceptance test access AWS and cost money to run.
 func TestAccRBinRBinRule_basic(t *testing.T) {
-    // TIP: This is a long-running test guard for tests that run longer than
-    // 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	//if testing.Short() {
+	//	t.Skip("skipping long-running test in short mode")
+	//}
 
-	var rbinrule rbin.DescribeRBinRuleResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rbin_r_bin_rule.test"
+	var rbinrule rbin.GetRuleOutput
+	description := "my test description"
+	resourceType := "EBS_SNAPSHOT"
+	resourceName := "aws_rbin_rbin_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.RBinEndpointID, t)
+			acctest.PreCheckPartitionHasService(rbin.ServiceID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.RBinEndpointID),
+		ErrorCheck:        acctest.ErrorCheck(t, rbin.ServiceID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRBinRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRBinRuleConfig_basic(rName),
+				Config: testAccRBinRuleConfig_basic(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRBinRuleExists(resourceName, &rbinrule),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -185,26 +183,28 @@ func TestAccRBinRBinRule_basic(t *testing.T) {
 }
 
 func TestAccRBinRBinRule_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+	//if testing.Short() {
+	//	t.Skip("skipping long-running test in short mode")
+	//}
 
-	var rbinrule rbin.DescribeRBinRuleResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var rbinrule rbin.GetRuleOutput
+	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := "my test description"
+	resourceType := "EBS_SNAPSHOT"
 	resourceName := "aws_rbin_r_bin_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.RBinEndpointID, t)
+			acctest.PreCheckPartitionHasService(rbin.ServiceID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.RBinEndpointID),
+		ErrorCheck:        acctest.ErrorCheck(t, rbin.ServiceID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRBinRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRBinRuleConfig_basic(rName, testAccRBinRuleVersionNewer),
+				Config: testAccRBinRuleConfig_basic(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRBinRuleExists(resourceName, &rbinrule),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrbin.ResourceRBinRule(), resourceName),
@@ -220,15 +220,12 @@ func testAccCheckRBinRuleDestroy(s *terraform.State) error {
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rbin_r_bin_rule" {
+		if rs.Type != "aws_rbin_rbin_rule" {
 			continue
 		}
 
-		input := &rbin.DescribeRBinRuleInput{
-			RBinRuleId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeRBinRule(ctx, &rbin.DescribeRBinRuleInput{
-			RBinRuleId: aws.String(rs.Primary.ID),
+		_, err := conn.GetRule(ctx, &rbin.GetRuleInput{
+			Identifier: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			var nfe *types.ResourceNotFoundException
@@ -244,7 +241,7 @@ func testAccCheckRBinRuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRBinRuleExists(name string, rbinrule *rbin.DescribeRBinRuleResponse) resource.TestCheckFunc {
+func testAccCheckRBinRuleExists(name string, rbinrule *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -257,8 +254,8 @@ func testAccCheckRBinRuleExists(name string, rbinrule *rbin.DescribeRBinRuleResp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinConn
 		ctx := context.Background()
-		resp, err := conn.DescribeRBinRule(ctx, &rbin.DescribeRBinRuleInput{
-			RBinRuleId: aws.String(rs.Primary.ID),
+		resp, err := conn.GetRule(ctx, &rbin.GetRuleInput{
+			Identifier: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
@@ -275,8 +272,8 @@ func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinConn
 	ctx := context.Background()
 
-	input := &rbin.ListRBinRulesInput{}
-	_, err := conn.ListRBinRules(ctx, input)
+	input := &rbin.ListRulesInput{}
+	_, err := conn.ListRules(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -287,39 +284,36 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckRBinRuleNotRecreated(before, after *rbin.DescribeRBinRuleResponse) resource.TestCheckFunc {
+func testAccCheckRBinRuleNotRecreated(before, after *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.RBinRuleId), aws.StringValue(after.RBinRuleId); before != after {
-			return names.Error(names.RBin, names.ErrActionCheckingNotRecreated, tfrbin.ResNameRBinRule, aws.StringValue(before.RBinRuleId), errors.New("recreated"))
+		if before, after := aws.ToString(before.Identifier), aws.ToString(after.Identifier); before != after {
+			return names.Error(names.RBin, names.ErrActionCheckingNotRecreated, tfrbin.ResNameRBinRule, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccRBinRuleConfig_basic(rName, version string) string {
+func testAccRBinRuleConfig_basic(description, resourceType string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_rbin_r_bin_rule" "test" {
-  r_bin_rule_name             = %[1]q
-  engine_type             = "ActiveRBin"
-  engine_version          = %[2]q
-  host_instance_type      = "rbin.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
+resource "aws_rbin_rbin_rule" "test" {
+  description = %[1]q
+  resource_type = %[2]q
+  resource_tags = [
+    {
+      resource_tag_key = "some_tag"
+	  resource_tag_value = ""
+    },
+  ]
+  retention_period = {
+    retention_period_value = 10
+    retention_period_unit = "DAYS"
   }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  
+  tags = {
+    "test_tag_key" = "test_tag_value"
   }
+	
 }
-`, rName, version)
+`, description, resourceType)
 }

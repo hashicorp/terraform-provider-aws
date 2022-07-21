@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -224,6 +225,14 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	// rbin
+
+	client.RBinConn = rbin.NewFromConfig(cfg, func(o *rbin.Options) {
+		if endpoint := c.Endpoints[rbin.ServiceID]; endpoint != "" {
+			o.EndpointResolver = rbin.EndpointResolverFromURL(endpoint)
 		}
 	})
 
