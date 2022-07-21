@@ -45,7 +45,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -118,10 +117,10 @@ func ResourceRBinRule() *schema.Resource {
 		// For more about schema options, visit
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
-			"arn": { // TIP: Many, but not all, resources have an `arn` attribute.
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			//"arn": { // TIP: Many, but not all, resources have an `arn` attribute.
+			//	Type:     schema.TypeString,
+			//	Computed: true,
+			//},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -155,6 +154,7 @@ func ResourceRBinRule() *schema.Resource {
 			"resource_type": { // TIP: Add all your arguments and attributes.
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"EBS_SNAPSHOT", "EC2_IMAGE"}, false),
 			},
 			"retention_period": {
@@ -162,8 +162,9 @@ func ResourceRBinRule() *schema.Resource {
 				// 				 realistically it should be a MapType, but it doesn't seem
 				// 				 possible to validate the required keys in the map?
 				// 				 https://www.terraform.io/plugin/sdkv2/schemas/schema-types#typemap
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
+				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -184,7 +185,8 @@ func ResourceRBinRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			"tags":     tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -192,7 +194,8 @@ func ResourceRBinRule() *schema.Resource {
 }
 
 const (
-	ResNameRBinRule = "R Bin Rule"
+	ResNameRBinRule  = "Recycle Bin Rule"
+	ResourceNameRBin = "Recycle Bin"
 )
 
 func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -216,19 +219,13 @@ func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &rbin.CreateRuleInput{
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
+		Description:     aws.String(d.Get("description").(string)),
 		ResourceType:    d.Get("resource_type").(types.ResourceType),
-		RetentionPeriod: d.Get("retention_period"),
+		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").(*schema.Set).List()[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("max_size"); ok {
-		// TIP: Optional fields should be set based on whether or not they are
-		// used.
-		in.MaxSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
-		// TIP: Use an expander to assign a complex argument.
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+	if v, ok := d.GetOk("resource_tags"); ok && len(v.([]interface{})) > 0 {
+		in.ResourceTags = expandResourceTags(v.([]interface{}))
 	}
 
 	// TIP: Not all resources support tags and tags don't always make sense. If
@@ -250,13 +247,13 @@ func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("name").(string), err)
 	}
 
-	if out == nil || out.RBinRule == nil {
+	if out == nil || out.Identifier == nil {
 		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
 	// work.
-	d.SetId(aws.ToString(out.RBinRule.RBinRuleID))
+	d.SetId(aws.ToString(out.Identifier))
 
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	if _, err := waitRBinRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -310,30 +307,36 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	//    a JSON. AWS may return the JSON in a slightly different order but it
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set("description", out.Description)
+	d.Set("identifier", out.Identifier)
+	d.Set("resource_type", string(out.ResourceType))
+	d.Set("status", string(out.Status))
 
 	// TIP: Setting a complex type.
 	// For more information, see:
 	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
 	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
 	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
+	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
 		return names.DiagError(names.RBin, names.ErrActionSetting, ResNameRBinRule, d.Id(), err)
 	}
 
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
+	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
 		return names.DiagError(names.RBin, names.ErrActionSetting, ResNameRBinRule, d.Id(), err)
 	}
 
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return names.DiagError(names.RBin, names.ErrActionSetting, ResNameRBinRule, d.Id(), err)
-	}
-
-	d.Set("policy", p)
+	//// TIP: Setting a JSON string to avoid errorneous diffs.
+	//p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	//if err != nil {
+	//	return names.DiagError(names.RBin, names.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+	//}
+	//
+	//p, err = structure.NormalizeJsonString(p)
+	//if err != nil {
+	//	return names.DiagError(names.RBin, names.ErrActionSetting, ResNameRBinRule, d.Id(), err)
+	//}
+	//
+	//d.Set("policy", p)
 
 	// TIP: -- 5. Set the tags
 	//
@@ -341,6 +344,7 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// your resource doesn't need tags, you can remove the tags lines here and
 	// below. Many resources do include tags so this a reminder to include them
 	// where possible.
+	// TODO(rlizzo): this needs to be an ARN.
 	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return names.DiagError(names.RBin, names.ErrActionReading, ResNameRBinRule, d.Id(), err)
@@ -394,12 +398,23 @@ func resourceRBinRuleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// whether to call the AWS update function.
 	update := false
 
-	in := &rbin.UpdateRBinRuleInput{
-		Id: aws.String(d.Id()),
+	in := &rbin.UpdateRuleInput{
+		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
+	if d.HasChanges("description") {
+		in.Description = aws.String(d.Get("description").(string))
+		update = true
+	}
+
+	if d.HasChanges("resource_tags") {
+		in.ResourceTags = expandResourceTags(d.Get("resource_tags").([]interface{}))
+		update = true
+	}
+
+	if d.HasChanges("retention_period") {
+		tfMap := d.Get("retention_period").(*schema.Set).List()[0].(map[string]interface{})
+		in.RetentionPeriod = expandRetentionPeriod(tfMap)
 		update = true
 	}
 
@@ -411,13 +426,13 @@ func resourceRBinRuleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	// TIP: -- 3. Call the AWS modify/update function
 	log.Printf("[DEBUG] Updating RBin RBinRule (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateRBinRule(ctx, in)
+	out, err := conn.UpdateRule(ctx, in)
 	if err != nil {
 		return names.DiagError(names.RBin, names.ErrActionUpdating, ResNameRBinRule, d.Id(), err)
 	}
 
 	// TIP: -- 4. Use a waiter to wait for update to complete
-	if _, err := waitRBinRuleUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitRBinRuleUpdated(ctx, conn, aws.ToString(out.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return names.DiagError(names.RBin, names.ErrActionWaitingForUpdate, ResNameRBinRule, d.Id(), err)
 	}
 
@@ -449,8 +464,8 @@ func resourceRBinRuleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[INFO] Deleting RBin RBinRule %s", d.Id())
 
 	// TIP: -- 3. Call the AWS delete function
-	_, err := conn.DeleteRBinRule(ctx, &rbin.DeleteRBinRuleInput{
-		Id: aws.String(d.Id()),
+	_, err := conn.DeleteRule(ctx, &rbin.DeleteRuleInput{
+		Identifier: aws.String(d.Id()),
 	})
 
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -461,7 +476,7 @@ func resourceRBinRuleDelete(ctx context.Context, d *schema.ResourceData, meta in
 			return nil
 		}
 
-		return names.DiagError(names.Comprehend, names.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+		return names.DiagError(names.Comprehend, names.ErrActionDeleting, ResourceNameRBin, d.Id(), err)
 	}
 
 	// TIP: -- 4. Use a waiter to wait for delete to complete
@@ -498,10 +513,10 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 
-func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.RBinRule, error) {
+func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
+		Pending:                   []string{string(types.RuleStatusPending)},
+		Target:                    []string{string(types.RuleStatusAvailable)},
 		Refresh:                   statusRBinRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -509,7 +524,7 @@ func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, time
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.RBinRule); ok {
+	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
 		return out, err
 	}
 
@@ -521,10 +536,10 @@ func waitRBinRuleCreated(ctx context.Context, conn *rbin.Client, id string, time
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 
-func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.RBinRule, error) {
+func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   []string{string(types.RuleStatusPending)},
+		Target:                    []string{string(types.RuleStatusAvailable)},
 		Refresh:                   statusRBinRule(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -532,7 +547,7 @@ func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, time
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.RBinRule); ok {
+	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
 		return out, err
 	}
 
@@ -542,16 +557,16 @@ func waitRBinRuleUpdated(ctx context.Context, conn *rbin.Client, id string, time
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 
-func waitRBinRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.RBinRule, error) {
+func waitRBinRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: []string{string(types.RuleStatusPending), string(types.RuleStatusAvailable)},
 		Target:  []string{},
 		Refresh: statusRBinRule(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.RBinRule); ok {
+	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
 		return out, err
 	}
 
@@ -577,7 +592,7 @@ func statusRBinRule(ctx context.Context, conn *rbin.Client, id string) resource.
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.Status), nil
 	}
 }
 
@@ -587,11 +602,11 @@ func statusRBinRule(ctx context.Context, conn *rbin.Client, id string) resource.
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 
-func findRBinRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.RBinRule, error) {
-	in := &rbin.GetRBinRuleInput{
-		Id: aws.String(id),
+func findRBinRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetRuleOutput, error) {
+	in := &rbin.GetRuleInput{
+		Identifier: aws.String(id),
 	}
-	out, err := conn.GetRBinRule(ctx, in)
+	out, err := conn.GetRule(ctx, in)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -604,11 +619,11 @@ func findRBinRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.
 		return nil, err
 	}
 
-	if out == nil || out.RBinRule == nil {
+	if out == nil || out.Identifier == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.RBinRule, nil
+	return out, nil
 }
 
 // TIP: ==== FLEX ====
@@ -622,19 +637,15 @@ func findRBinRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.
 //
 // See more:
 // https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-func flattenComplexArgument(apiObject *rbin.ComplexArgument) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenResourceTag(rTag types.ResourceTag) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
+	if v := rTag.ResourceTagKey; v != nil {
+		m["resource_tag_key"] = aws.ToString(v)
 	}
 
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
+	if v := rTag.ResourceTagValue; v != nil {
+		m["resource_tag_value"] = aws.ToString(v)
 	}
 
 	return m
@@ -644,22 +655,43 @@ func flattenComplexArgument(apiObject *rbin.ComplexArgument) map[string]interfac
 // request for information. Sometimes you will have set criteria (e.g., the ID)
 // that means you'll get back a one-length slice. This plural function works
 // brilliantly for that situation too.
-func flattenComplexArguments(apiObjects []*rbin.ComplexArgument) []interface{} {
-	if len(apiObjects) == 0 {
+func flattenResourceTags(rTags []types.ResourceTag) []interface{} {
+	if len(rTags) == 0 {
 		return nil
 	}
 
 	var l []interface{}
 
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
+	for _, rTag := range rTags {
+		l = append(l, flattenResourceTag(rTag))
 	}
 
 	return l
+}
+
+// TIP: ==== FLEX ====
+// Flatteners and expanders ("flex" functions) help handle complex data
+// types. Flatteners take an API data type and return something you can use in
+// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
+//
+// On the other hand, expanders take a Terraform data structure and return
+// something that you can send to the AWS API. In other words, expanders
+// translate from Terraform -> AWS.
+//
+// See more:
+// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
+func flattenRetentionPeriod(retPeriod *types.RetentionPeriod) []interface{} {
+	m := map[string]interface{}{}
+
+	if v := retPeriod.RetentionPeriodUnit; v != "" {
+		m["retention_period_unit"] = string(v)
+	}
+
+	if v := retPeriod.RetentionPeriodValue; v != aws.Int32(0) {
+		m["retention_period_value"] = v
+	}
+
+	return []interface{}{m}
 }
 
 // TIP: Remember, as mentioned above, expanders take a Terraform data structure
@@ -754,50 +786,4 @@ func expandRetentionPeriod(tfMap map[string]interface{}) *types.RetentionPeriod 
 	}
 
 	return a
-}
-
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
-func expandRetentionPeriods(tfList []interface{}) []*types.RetentionPeriod {
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-
-	// TIP: Option 1: Returning nil for zero-length list
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var s []*types.RetentionPeriod
-
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	// s := make([]types.ResourceTag, 0)
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandRetentionPeriod(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, a)
-	}
-
-	return s
 }
