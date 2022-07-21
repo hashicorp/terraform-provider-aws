@@ -68,7 +68,6 @@ func ResourceVocabularyFilter() *schema.Resource {
 			"vocabulary_filter_file_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
 				ValidateFunc: validation.StringLenBetween(1, 2000),
 			},
@@ -86,7 +85,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
 			}),
 			customdiff.ForceNewIfChange("vocabulary_filter_file_uri", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.(string)) > 0 && len(new.(string)) == 0
+				return new.(string) == ""
 			}),
 		),
 	}
@@ -129,10 +128,6 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(aws.ToString(out.VocabularyFilterName))
-
-	if _, err := waitVocabularyFilterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameVocabularyFilter, d.Id(), err)
-	}
 
 	return resourceVocabularyFilterRead(ctx, d, meta)
 }
@@ -194,10 +189,10 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChanges("vocabulary_filter_file_uri", "words") {
-			if d.Get("vocabulary_file_uri").(string) != "" {
+			if d.Get("vocabulary_filter_file_uri").(string) != "" {
 				in.VocabularyFilterFileUri = aws.String(d.Get("vocabulary_filter_file_uri").(string))
 			} else {
-				in.Words = expandPhrases(d.Get("words").([]interface{}))
+				in.Words = flex.ExpandStringValueList(d.Get("words").([]interface{}))
 			}
 		}
 
@@ -205,10 +200,6 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := conn.UpdateVocabularyFilter(ctx, in)
 		if err != nil {
 			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameVocabularyFilter, d.Id(), err)
-		}
-
-		if _, err := waitVocabularyFilterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return names.DiagError(names.Transcribe, names.ErrActionWaitingForUpdate, ResNameVocabularyFilter, d.Id(), err)
 		}
 	}
 
@@ -241,78 +232,7 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 		return names.DiagError(names.Comprehend, names.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
-	if _, err := waitVocabularyFilterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForDeletion, ResNameVocabularyFilter, d.Id(), err)
-	}
-
 	return nil
-}
-
-func waitVocabularyFilterCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyFilterOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{},
-		Refresh:                   statusVocabularyFilter(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*transcribe.GetVocabularyFilterOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVocabularyFilterUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyFilterOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{},
-		Refresh:                   statusVocabularyFilter(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*transcribe.GetVocabularyFilterOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVocabularyFilterDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyFilterOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{},
-		Refresh: statusVocabularyFilter(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*transcribe.GetVocabularyFilterOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusVocabularyFilter(ctx context.Context, conn *transcribe.Client, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindVocabularyFilterByName(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, "", nil
-	}
 }
 
 func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id string) (*transcribe.GetVocabularyFilterOutput, error) {

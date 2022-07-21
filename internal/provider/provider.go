@@ -2051,6 +2051,7 @@ func Provider() *schema.Provider {
 
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
+			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),
 
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
