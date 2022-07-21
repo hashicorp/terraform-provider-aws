@@ -124,6 +124,78 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 	})
 }
 
+func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
+	var flowLog ec2.FlowLog
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_flow_log.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_transitGatewayId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
+	var flowLog ec2.FlowLog
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_flow_log.test"
+	transitGatewayAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_transitGatewayAttachmentId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayAttachmentResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
@@ -519,7 +591,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccVPCFlowLogConfig_destinationTypeCloudWatchLogs(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -556,11 +628,11 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -572,11 +644,11 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3Invalid(rName string) string {
-	return testAccFlowLogConfigBase(rName) + `
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), `
 data "aws_partition" "current" {}
 
 resource "aws_flow_log" "test" {
@@ -585,11 +657,11 @@ resource "aws_flow_log" "test" {
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
 }
-`
+`)
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3DOPlainText(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -604,11 +676,11 @@ resource "aws_flow_log" "test" {
     file_format = "plain-text"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3DOPlainTextHiveCompatiblePerHour(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -625,11 +697,11 @@ resource "aws_flow_log" "test" {
     per_hour_partition         = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3DOParquet(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -644,11 +716,11 @@ resource "aws_flow_log" "test" {
     file_format = "parquet"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatible(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -664,11 +736,11 @@ resource "aws_flow_log" "test" {
     hive_compatible_partitions = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_destinationTypeS3DOParquetHiveCompatiblePerHour(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -685,11 +757,11 @@ resource "aws_flow_log" "test" {
     per_hour_partition         = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_subnetID(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
   vpc_id     = aws_vpc.test.id
@@ -734,11 +806,11 @@ resource "aws_flow_log" "test" {
   subnet_id      = aws_subnet.test.id
   traffic_type   = "ALL"
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_id(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -774,11 +846,11 @@ resource "aws_flow_log" "test" {
   traffic_type   = "ALL"
   vpc_id         = aws_vpc.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_format(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -820,11 +892,11 @@ resource "aws_flow_log" "test" {
   vpc_id               = aws_vpc.test.id
   log_format           = "$${version} $${vpc-id} $${subnet-id}"
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCFlowLogConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -864,11 +936,11 @@ resource "aws_flow_log" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccVPCFlowLogConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -909,11 +981,11 @@ resource "aws_flow_log" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccVPCFlowLogConfig_maxAggregationInterval(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -951,5 +1023,116 @@ resource "aws_flow_log" "test" {
 
   max_aggregation_interval = 60
 }
-`, rName)
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_transitGatewayId(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_flow_log" "test" {
+  iam_role_arn             = aws_iam_role.test.arn
+  log_group_name           = aws_cloudwatch_log_group.test.name
+  max_aggregation_interval = 60
+  transit_gateway_id       = aws_ec2_transit_gateway.test.id
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_transitGatewayAttachmentId(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+  subnet_ids         = [aws_subnet.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_flow_log" "test" {
+  iam_role_arn                  = aws_iam_role.test.arn
+  log_group_name                = aws_cloudwatch_log_group.test.name
+  max_aggregation_interval      = 60
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+}
+`, rName))
 }
