@@ -11,9 +11,9 @@ on:
     paths:
       - .github/workflows/website.yml
       - .go-version
-      - .markdownlinkcheck.json
-      - .markdownlint.yml
-      - .tflint.hcl
+      - .ci/.markdownlinkcheck.json
+      - .ci/.markdownlint.yml
+      - .ci/.tflint.hcl
       - website/docs/**
       - tools/go.mod
 
@@ -27,7 +27,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-prefix: "[a-h]"
           file-extension: ".markdown"
@@ -42,7 +42,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-prefix: "[i-z]"
           file-extension: ".markdown"
@@ -57,7 +57,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".md"
           base-branch: "main"
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: ".markdownlint.yml"
+          config: ".ci/.markdownlint.yml"
           args: "website/docs"
   misspell:
     runs-on: ubuntu-latest
@@ -121,7 +121,7 @@ jobs:
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
       - run: tflint --init
 

@@ -34,9 +34,9 @@ gen:
 	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
-	rm -f ci/.semgrep-caps-aws-ec2.yml
-	rm -f .semgrep-configs.yml
-	rm -f .semgrep-service-name*.yml
+	rm -f .ci/.semgrep-caps-aws-ec2.yml
+	rm -f .ci/.semgrep-configs.yml
+	rm -f .ci/.semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
@@ -197,17 +197,17 @@ website-lint-fix:
 
 semgrep:
 	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .ci/.semgrep.yml
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep -c .semgrep.yml
-	@semgrep -c ci/.semgrep-caps-aws-ec2.yml
-	@semgrep -c .semgrep-configs.yml
-	@semgrep -c .semgrep-service-name0.yml
-	@semgrep -c .semgrep-service-name1.yml
-	@semgrep -c .semgrep-service-name2.yml
-	@semgrep -c .semgrep-service-name3.yml
+	@semgrep -c .ci/.semgrep.yml
+	@semgrep -c .ci/.semgrep-caps-aws-ec2.yml
+	@semgrep -c .ci/.semgrep-configs.yml
+	@semgrep -c .ci/.semgrep-service-name0.yml
+	@semgrep -c .ci/.semgrep-service-name1.yml
+	@semgrep -c .ci/.semgrep-service-name2.yml
+	@semgrep -c .ci/.semgrep-service-name3.yml
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff

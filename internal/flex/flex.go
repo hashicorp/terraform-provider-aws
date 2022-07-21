@@ -71,15 +71,15 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
-	return ExpandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List
+	return ExpandStringList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
 func ExpandStringValueSet(configured *schema.Set) []string {
-	return ExpandStringValueList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List
+	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
 func FlattenStringSet(list []*string) *schema.Set {
-	return schema.NewSet(schema.HashString, FlattenStringList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+	return schema.NewSet(schema.HashString, FlattenStringList(list)) // nosemgrep:ci.helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
 // Takes the result of schema.Set of strings and returns a []*int64

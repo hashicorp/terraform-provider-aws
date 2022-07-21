@@ -8,7 +8,7 @@ on:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
       - .go-version
-      - .tflint.hcl
+      - .ci/.tflint.hcl
       - 'internal/service/**/*_test.go'
       - scripts/validate-terraform.sh
       - tools/go.mod
@@ -57,7 +57,7 @@ jobs:
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
       - run: tflint --init
 

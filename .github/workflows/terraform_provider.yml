@@ -10,7 +10,7 @@ on:
       - .github/workflows/terraform_provider.yml
       - .github/scripts/providerlint.sh
       - .go-version
-      - ci/.golangci.yml
+      - .ci/.golangci.yml
       - internal/**
       - docs/index.md
       - docs/data-sources/**
