@@ -36,7 +36,6 @@ import (
 	// types.<Type Name>.
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -136,12 +135,6 @@ import (
 //
 // Acceptance test access AWS and cost money to run.
 func TestAccRBinRBinRule_basic(t *testing.T) {
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	//if testing.Short() {
-	//	t.Skip("skipping long-running test in short mode")
-	//}
-
 	var rbinrule rbin.GetRuleOutput
 	description := "my test description"
 	resourceType := "EBS_SNAPSHOT"
@@ -161,15 +154,16 @@ func TestAccRBinRBinRule_basic(t *testing.T) {
 				Config: testAccRBinRuleConfig_basic(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRBinRuleExists(resourceName, &rbinrule),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
+						"retention_period_value": "10",
+						"retention_period_unit":  "DAYS",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rbin", regexp.MustCompile(`rbinrule:+.`)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_tags.*", map[string]string{
+						"resource_tag_key":   "some_tag",
+						"resource_tag_value": "",
+					}),
 				),
 			},
 			{
@@ -183,15 +177,10 @@ func TestAccRBinRBinRule_basic(t *testing.T) {
 }
 
 func TestAccRBinRBinRule_disappears(t *testing.T) {
-	//if testing.Short() {
-	//	t.Skip("skipping long-running test in short mode")
-	//}
-
 	var rbinrule rbin.GetRuleOutput
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "my test description"
 	resourceType := "EBS_SNAPSHOT"
-	resourceName := "aws_rbin_r_bin_rule.test"
+	resourceName := "aws_rbin_rbin_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -272,9 +261,18 @@ func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RBinConn
 	ctx := context.Background()
 
-	input := &rbin.ListRulesInput{}
+	input := &rbin.ListRulesInput{
+		ResourceType: types.ResourceTypeEc2Image,
+	}
 	_, err := conn.ListRules(ctx, input)
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
 
+	input = &rbin.ListRulesInput{
+		ResourceType: types.ResourceTypeEbsSnapshot,
+	}
+	_, err = conn.ListRules(ctx, input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -297,17 +295,16 @@ func testAccCheckRBinRuleNotRecreated(before, after *rbin.GetRuleOutput) resourc
 func testAccRBinRuleConfig_basic(description, resourceType string) string {
 	return fmt.Sprintf(`
 resource "aws_rbin_rbin_rule" "test" {
-  description = %[1]q
+  description   = %[1]q
   resource_type = %[2]q
-  resource_tags = [
-    {
-      resource_tag_key = "some_tag"
-	  resource_tag_value = ""
-    },
-  ]
-  retention_period = {
+  resource_tags {
+    resource_tag_key   = "some_tag"
+    resource_tag_value = ""
+  }
+
+  retention_period {
     retention_period_value = 10
-    retention_period_unit = "DAYS"
+    retention_period_unit  = "DAYS"
   }
   
   tags = {

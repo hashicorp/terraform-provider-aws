@@ -134,7 +134,7 @@ func ResourceRBinRule() *schema.Resource {
 				Computed: true,
 			},
 			"resource_tags": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				MaxItems: 50,
@@ -143,12 +143,12 @@ func ResourceRBinRule() *schema.Resource {
 						"resource_tag_key": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 127),
+							ValidateFunc: validation.StringLenBetween(0, 127),
 						},
 						"resource_tag_value": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
 				},
@@ -162,8 +162,8 @@ func ResourceRBinRule() *schema.Resource {
 			"retention_period": {
 				Type:     schema.TypeSet,
 				Required: true,
-				MinItems: 2,
-				MaxItems: 2,
+				MinItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"retention_period_value": {
@@ -218,12 +218,12 @@ func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
 		Description:     aws.String(d.Get("description").(string)),
-		ResourceType:    d.Get("resource_type").(types.ResourceType),
-		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").(*schema.Set).List()[0].(map[string]interface{})),
+		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
+		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").(*schema.Set).List()),
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && len(v.([]interface{})) > 0 {
-		in.ResourceTags = expandResourceTags(v.([]interface{}))
+	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
 	// TIP: Not all resources support tags and tags don't always make sense. If
@@ -242,11 +242,11 @@ func resourceRBinRuleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
 		// in error messages at this point.
-		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("name").(string), err)
+		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("identifier").(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("name").(string), errors.New("empty output"))
+		return names.DiagError(names.RBin, names.ErrActionCreating, ResNameRBinRule, d.Get("identifier").(string), errors.New("empty output"))
 	}
 
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
@@ -348,7 +348,7 @@ func resourceRBinRuleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Service:   rbin.ServiceID,
 		Region:    c.Region,
 		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("Rule/%s", d.Id()),
+		Resource:  fmt.Sprintf("rule/%s", d.Id()),
 	}
 
 	tags, err := ListTags(ctx, conn, ARN.String())
@@ -419,7 +419,7 @@ func resourceRBinRuleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChanges("retention_period") {
-		tfMap := d.Get("retention_period").(*schema.Set).List()[0].(map[string]interface{})
+		tfMap := d.Get("retention_period").(*schema.Set).List()
 		in.RetentionPeriod = expandRetentionPeriod(tfMap)
 		update = true
 	}
@@ -776,20 +776,21 @@ func expandResourceTags(tfList []interface{}) []types.ResourceTag {
 //
 // See more:
 // https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-func expandRetentionPeriod(tfMap map[string]interface{}) *types.RetentionPeriod {
-	if tfMap == nil {
+func expandRetentionPeriod(tfList []interface{}) *types.RetentionPeriod {
+	if tfList == nil {
 		return nil
 	}
+	tfMap := tfList[0].(map[string]interface{})
 
-	a := &types.RetentionPeriod{}
+	a := types.RetentionPeriod{}
 
-	if v, ok := tfMap["retention_period_value"].(int32); ok {
-		a.RetentionPeriodValue = aws.Int32(v)
+	if v, ok := tfMap["retention_period_value"].(int); ok {
+		a.RetentionPeriodValue = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["retention_period_unit"].(types.RetentionPeriodUnit); ok && v != "" {
-		a.RetentionPeriodUnit = v
+	if v, ok := tfMap["retention_period_unit"].(string); ok && v != "" {
+		a.RetentionPeriodUnit = types.RetentionPeriodUnit(v)
 	}
 
-	return a
+	return &a
 }
