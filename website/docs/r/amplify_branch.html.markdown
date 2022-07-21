@@ -43,6 +43,7 @@ resource "aws_amplify_branch" "master" {
 
   enable_basic_auth = true
   basic_auth_credentials = base64encode("username:password")
+}
 ```
 
 ### Notifications
