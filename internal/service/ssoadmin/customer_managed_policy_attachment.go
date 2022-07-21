@@ -25,6 +25,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 			"customer_managed_policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"customer_managed_policy_path": {
 				Type:     schema.TypeString,
