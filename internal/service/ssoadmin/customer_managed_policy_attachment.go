@@ -153,7 +153,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
-		return "", "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_NAME, CUSTOMER_MANAGED_POLICY_PATH, PERMISSION_SET_ARN,INSTANCE_ARN")
+		return "", "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_NAME, CUSTOMER_MANAGED_POLICY_PATH, PERMISSION_SET_ARN, INSTANCE_ARN")
 	}
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
