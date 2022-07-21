@@ -311,7 +311,7 @@ resource "aws_transcribe_vocabulary_filter" "test" {
 
 func testAccVocabularyFilterConfig_basicWords(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVocabularyBaseConfig(rName),
+		testAccVocabularyFilterBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_transcribe_vocabulary_filter" "test" {
   vocabulary_filter_name = %[1]q

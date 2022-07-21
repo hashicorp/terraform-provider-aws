@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,7 +65,7 @@ func sweepMedicalVocabularies(region string) error {
 		}
 
 		for _, vocab := range out.Vocabularies {
-			name := aws.StringValue(vocab.VocabularyName)
+			name := aws.ToString(vocab.VocabularyName)
 			log.Printf("[INFO] Deleting Transcribe Medical Vocabularies: %s", name)
 
 			r := ResourceMedicalVocabulary()
@@ -75,7 +75,7 @@ func sweepMedicalVocabularies(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(out.NextToken) == "" {
+		if aws.ToString(out.NextToken) == "" {
 			break
 		}
 		in.NextToken = out.NextToken
@@ -116,7 +116,7 @@ func sweepVocabularies(region string) error {
 		}
 
 		for _, vocab := range out.Vocabularies {
-			name := aws.StringValue(vocab.VocabularyName)
+			name := aws.ToString(vocab.VocabularyName)
 			log.Printf("[INFO] Deleting Transcribe Vocabularies: %s", name)
 
 			r := ResourceVocabulary()
@@ -126,7 +126,7 @@ func sweepVocabularies(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(out.NextToken) == "" {
+		if aws.ToString(out.NextToken) == "" {
 			break
 		}
 		in.NextToken = out.NextToken
@@ -168,7 +168,7 @@ func sweepVocabularyFilters(region string) error {
 
 		log.Println(out)
 		for _, filter := range out.VocabularyFilters {
-			name := aws.StringValue(filter.VocabularyFilterName)
+			name := aws.ToString(filter.VocabularyFilterName)
 			log.Printf("[INFO] Deleting Transcribe Vocabulary Filter: %s", name)
 
 			r := ResourceVocabularyFilter()
@@ -178,7 +178,7 @@ func sweepVocabularyFilters(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(out.NextToken) == "" {
+		if aws.ToString(out.NextToken) == "" {
 			break
 		}
 		in.NextToken = out.NextToken
