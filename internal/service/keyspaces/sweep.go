@@ -22,7 +22,7 @@ func init() {
 	})
 }
 
-func sweepKeyspaces(region string) error { // nosemgrep:keyspaces-in-func-name
+func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

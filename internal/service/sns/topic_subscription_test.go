@@ -613,8 +613,8 @@ func obfuscateEndpoint(t *testing.T, endpoint string) string {
 func TestObfuscateEndpointPassword(t *testing.T) {
 	checks := map[string]string{
 		"https://example.com/myroute":                   "https://example.com/myroute",
-		"https://username@example.com/myroute":          "https://username@example.com/myroute",      // nosemgrep: email-address
-		"https://username:password@example.com/myroute": "https://username:****@example.com/myroute", // nosemgrep: email-address
+		"https://username@example.com/myroute":          "https://username@example.com/myroute",      // nosemgrep:ci.email-address
+		"https://username:password@example.com/myroute": "https://username:****@example.com/myroute", // nosemgrep:ci.email-address
 	}
 	for endpoint, expected := range checks {
 		out := obfuscateEndpoint(t, endpoint)

@@ -152,7 +152,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed creating ECR Repository (%s): %w", d.Get("name").(string), err)
 	}
 
-	repository := *out.Repository // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	repository := *out.Repository // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 	log.Printf("[DEBUG] ECR repository created: %q", *repository.RepositoryArn)
 

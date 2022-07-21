@@ -200,7 +200,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	})
 }
 
-// nosemgrep: servicequotas-in-func-name
+// nosemgrep:ci.servicequotas-in-func-name
 func testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
