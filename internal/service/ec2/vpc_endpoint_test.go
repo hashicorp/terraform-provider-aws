@@ -825,7 +825,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVPCEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string { // nosemgrep:aws-in-func-name
+func testAccVPCEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string { // nosemgrep:ci.aws-in-func-name
 	return acctest.ConfigCompose(
 		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`

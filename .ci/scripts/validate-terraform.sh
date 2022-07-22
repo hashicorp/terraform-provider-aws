@@ -5,7 +5,7 @@ set -eo pipefail
 # This script works from stdin and expects one filename per line.
 # To call it, e.g.
 # find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) \
-#   | ./scripts/validate-terraform.sh
+#   | ./.ci/scripts/validate-terraform.sh
 
 TERRAFMT_CMD="terrafmt"
 if [ -f ~/developer/terrafmt/terrafmt ]; then TERRAFMT_CMD="$HOME/developer/terrafmt/terrafmt"; fi
@@ -43,7 +43,7 @@ while read -r filename ; do
 
         # We need to capture the output and error code here. We don't want to exit on the first error
         set +e
-        tflint_output=$(tflint "${rules[@]}" "$tf" 2>&1)
+        tflint_output=$(tflint -c .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
         tflint_exitcode=$?
         set -e
 

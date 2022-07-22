@@ -8,7 +8,7 @@ set -eo pipefail
 #   "--enable-rule=terraform_deprecated_interpolation"
 #   "--enable-rule=terraform_deprecated_index"
 # )
-# ./scripts/validate-terraform-file.sh "$filename"  "${rules[@]}"
+# ./.ci/scripts/validate-terraform-file.sh "$filename"  "${rules[@]}"
 
 filename=$1
 shift
@@ -31,7 +31,7 @@ while IFS= read -r block ; do
 
     # We need to capture the output and error code here. We don't want to exit on the first error
     set +e
-    tflint_output=$(tflint "${rules[@]}" "$tf" 2>&1)
+    tflint_output=$(tflint -c .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
     tflint_exitcode=$?
     set -e
 

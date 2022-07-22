@@ -322,13 +322,13 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName, &rObj),
 				),
 			},
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExistsDataSource(dataSourceName1, &dsObj1),
@@ -376,14 +376,14 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 		ProviderFactories:         acctest.ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(resourceName1, &rObj1),
 					testAccCheckObjectExists(resourceName2, &rObj2),
 				),
 			},
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 

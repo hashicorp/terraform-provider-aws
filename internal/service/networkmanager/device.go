@@ -478,7 +478,7 @@ func waitDeviceUpdated(ctx context.Context, conn *networkmanager.NetworkManager,
 	return nil, err
 }
 
-func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation { // nosemgrep:aws-in-func-name
+func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation { // nosemgrep:ci.aws-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -496,7 +496,7 @@ func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation
 	return apiObject
 }
 
-func flattenAWSLocation(apiObject *networkmanager.AWSLocation) map[string]interface{} { // nosemgrep:aws-in-func-name
+func flattenAWSLocation(apiObject *networkmanager.AWSLocation) map[string]interface{} { // nosemgrep:ci.aws-in-func-name
 	if apiObject == nil {
 		return nil
 	}

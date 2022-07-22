@@ -172,7 +172,7 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:aws-in-func-name
+func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	resourceName := "aws_networkmanager_device.test"
 	subnetResourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -443,7 +443,7 @@ resource "aws_networkmanager_device" "test" {
 `, rName))
 }
 
-func testAccDeviceConfig_awsLocationUpdated(rName string) string { // nosemgrep:aws-in-func-name
+func testAccDeviceConfig_awsLocationUpdated(rName string) string { // nosemgrep:ci.aws-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

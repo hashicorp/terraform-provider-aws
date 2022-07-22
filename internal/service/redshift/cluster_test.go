@@ -757,7 +757,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				),
 			},
 			// Apply a configuration without the source cluster to ensure final snapshot creation.
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 			},
 			{

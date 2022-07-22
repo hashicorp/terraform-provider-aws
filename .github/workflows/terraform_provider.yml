@@ -8,9 +8,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
-      - .github/scripts/providerlint.sh
+      - .ci/scripts/providerlint.sh
       - .go-version
-      - .golangci.yml
+      - .ci/.golangci.yml
       - internal/**
       - docs/index.md
       - docs/data-sources/**
@@ -118,34 +118,6 @@ jobs:
       run: |
         mkdir terraform-providers-schema
         terraform providers schema -json > terraform-providers-schema/schema.json
-
-  providerlint:
-    # needs: [go_build]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
-      with:
-          go-version-file: .go-version
-    # See also: https://github.com/actions/setup-go/issues/54
-    - name: go env
-      run: |
-        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v3
-      continue-on-error: true
-      timeout-minutes: 2
-      with:
-        path: ${{ env.GOCACHE }}
-        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-    - uses: actions/cache@v3
-      continue-on-error: true
-      timeout-minutes: 2
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools/providerlint && go install .
-    - name: providerlint
-      run: .github/scripts/providerlint.sh
 
   go_generate:
     name: go generate
@@ -290,11 +262,11 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+    - run: cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
       shell: bash
-    - run: golangci-lint run ./internal/... --timeout 75m
+    - run: golangci-lint -c .ci/.golangci.yml run ./internal/... --timeout 75m
       shell: bash
-    - run: cd tools/providerlint && golangci-lint run ./...
+    - run: cd .ci/providerlint && golangci-lint -c ../.golangci.yml run ./...
       shell: bash
 
   importlint:
@@ -314,14 +286,14 @@ jobs:
       timeout-minutes: 2
       with:
         path: ${{ env.GOCACHE }}
-        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
+        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
     - uses: actions/cache@v3
       continue-on-error: true
       timeout-minutes: 2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/pavius/impi/cmd/impi
+    - run: cd .ci/tools && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
 
   tfproviderdocs:
@@ -338,7 +310,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/bflad/tfproviderdocs
+    - run: cd .ci/tools && go install github.com/bflad/tfproviderdocs
     - uses: actions/cache@v3
       timeout-minutes: 2
       with:

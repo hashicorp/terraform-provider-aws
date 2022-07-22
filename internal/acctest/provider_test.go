@@ -98,7 +98,7 @@ func TestAccProvider_DefaultTagsTags_none(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags0(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
@@ -117,7 +117,7 @@ func TestAccProvider_DefaultTagsTags_one(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags1("test", "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{"test": "value"}),
@@ -136,7 +136,7 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 		ProviderFactories: FactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: ConfigDefaultTags_Tags2("test1", "value1", "test2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{
