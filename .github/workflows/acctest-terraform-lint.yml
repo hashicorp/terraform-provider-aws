@@ -28,7 +28,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
-      - run: cd .ci && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
       - run: |
           find ./internal/service -type f -name '*_test.go' \
@@ -49,9 +49,9 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
-      - run: cd .ci && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
-      - run: cd .ci && go install github.com/terraform-linters/tflint
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - uses: actions/cache@v3
         name: Cache plugin dir
