@@ -150,14 +150,14 @@ importlint:
 
 tools:
 	cd .ci/providerlint && go install .
-	cd .ci && go install github.com/bflad/tfproviderdocs
-	cd .ci && go install github.com/client9/misspell/cmd/misspell
-	cd .ci && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd .ci && go install github.com/katbyte/terrafmt
-	cd .ci && go install github.com/terraform-linters/tflint
-	cd .ci && go install github.com/pavius/impi/cmd/impi
-	cd .ci && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd .ci && go install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && go install github.com/bflad/tfproviderdocs
+	cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
+	cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && go install github.com/katbyte/terrafmt
+	cd .ci/tools && go install github.com/terraform-linters/tflint
+	cd .ci/tools && go install github.com/pavius/impi/cmd/impi
+	cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
