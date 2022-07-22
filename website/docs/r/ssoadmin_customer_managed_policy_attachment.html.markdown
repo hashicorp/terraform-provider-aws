@@ -1,0 +1,71 @@
+---
+subcategory: "SSO Admin"
+layout: "aws"
+page_title: "AWS: aws_ssoadmin_customer_managed_policy_attachment"
+description: |-
+  Manages a customer managed policy for a Single Sign-On (SSO) Permission Set
+---
+
+# Resource: aws_ssoadmin_customer_managed_policy_attachment
+
+Provides a customer managed policy attachment for a Single Sign-On (SSO) Permission Set resource
+
+~> **NOTE:** Creating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
+
+## Example Usage
+
+```terraform
+data "aws_ssoadmin_instances" "example" {}
+
+resource "aws_ssoadmin_permission_set" "example" {
+  name         = "Example"
+  instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+}
+
+resource "aws_iam_policy" "example" {
+	name        = "TestPolicy"
+	description = "My test policy"
+	policy = jsonencode({
+	  Version = "2012-10-17"
+	  Statement = [
+		{
+		  Action = [
+			"ec2:Describe*",
+		  ]
+		  Effect   = "Allow"
+		  Resource = "*"
+		},
+	  ]
+	})
+  }
+
+resource "aws_ssoadmin_customer_managed_policy_attachment" "example" {
+	instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
+	permission_set_arn = aws_ssoadmin_permission_set.example.arn
+	customer_managed_policy_name = aws_iam_policy.example.name
+	customer_managed_policy_path = "/"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
+* `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
+* `customer_managed_policy_name` - (Required, Forces new resource) Name of the customer managed IAM Policy to be attached.
+* `customer_managed_policy_path` - (Optional, Forces new resource) The path to the IAM policy to be attached. The default is `/`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - Policy Name, Policy Path, Permission Set Amazon Resource Name (ARN), and SSO Instance ARN, each separated by a comma (`,`).
+
+## Import
+
+SSO Managed Policy Attachments can be imported using the `customer_managed_policy_name`, `customer_managed_policy_path`, `permission_set_arn`, and `instance_arn` separated by a comma (`,`) e.g.,
+
+```
+$ terraform import TestPolicy,/,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
+```
