@@ -209,7 +209,7 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 		CheckDestroy:      testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskIncludesConfig(rName, "/folder1|/folder2"),
+				Config: testAccTaskConfig_includes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
@@ -223,7 +223,7 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskIncludesConfig(rName, "/test"),
+				Config: testAccTaskConfig_includes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
@@ -1067,6 +1067,24 @@ resource "aws_datasync_task" "test" {
   source_location_arn      = aws_datasync_location_nfs.source.arn
 
   excludes {
+    filter_type = "SIMPLE_PATTERN"
+    value       = %[2]q
+  }
+}
+`, rName, value))
+}
+
+func testAccTaskConfig_includes(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccTaskDestinationLocationS3BaseConfig(rName),
+		testAccTaskSourceLocationNFSBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  includes {
     filter_type = "SIMPLE_PATTERN"
     value       = %[2]q
   }
