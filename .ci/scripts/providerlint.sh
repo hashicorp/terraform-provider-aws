@@ -8,7 +8,10 @@ function do_provider_linting() {
   local paths=""
 
   for (( i=0;i<${#args[@]};i++ )); do
-    paths+="./internal/service/${args[${i}]} "
+    if [ $i -ne 0 ]; then
+      paths+=" "
+    fi
+    paths+="./internal/service/${args[${i}]}/..."
   done
 
   echo "Packages: ${paths}"
