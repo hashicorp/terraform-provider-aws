@@ -59,8 +59,8 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint --init
+      - run: tflint -c .ci/.tflint.hcl --init
 
       - run: |
           find ./internal/service -type f -name '*_test.go' \
-            | ./.ci/scripts/validate-terraform.sh
+            | .ci/scripts/validate-terraform.sh

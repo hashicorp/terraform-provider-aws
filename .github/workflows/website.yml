@@ -123,7 +123,7 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint --init
+      - run: tflint -c .ci/.tflint.hcl --init
 
       - run: |
           exit_code=0
