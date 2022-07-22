@@ -72,4 +72,36 @@ type dataSourceARN struct{}
 // Config values should be read from the ReadDataSourceRequest and new state values set on the ReadDataSourceResponse.
 func (d *dataSourceARN) Read(ctx context.Context, request tfsdk.ReadDataSourceRequest, response *tfsdk.ReadDataSourceResponse) {
 	tflog.Trace(ctx, "dataSourceARN.Read enter")
+
+	var config dataSourceARNData
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	state := config
+	arn := &state.ARN.Value
+	id := arn.String()
+
+	state.Account = &arn.AccountID
+	state.ID = &id
+	state.Partition = &arn.Partition
+	state.Region = &arn.Region
+	state.Resource = &arn.Resource
+	state.Service = &arn.Service
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+// TODO: Generate this structure definition.
+type dataSourceARNData struct {
+	Account   *string `tfsdk:"account"`
+	ARN       ARN     `tfsdk:"arn"`
+	ID        *string `tfsdk:"id"`
+	Partition *string `tfsdk:"partition"`
+	Region    *string `tfsdk:"region"`
+	Resource  *string `tfsdk:"resource"`
+	Service   *string `tfsdk:"service"`
 }
