@@ -740,7 +740,7 @@ func Provider() *schema.Provider {
 			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
 			"aws_location_tracker":             location.DataSourceTracker(),
 
-			"aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(),
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),

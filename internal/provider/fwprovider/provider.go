@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -307,6 +308,16 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	dataSources := make(map[string]tfsdk.DataSourceType)
+
+	// TODO
+	t, err := meta.NewDataSourceARNType(ctx)
+
+	if err != nil {
+		diags.AddError("UhOh", err.Error())
+		return nil, diags
+	}
+
+	dataSources["aws_arn"] = t
 
 	return dataSources, diags
 }
