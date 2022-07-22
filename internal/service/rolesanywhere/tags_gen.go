@@ -73,7 +73,7 @@ func UpdateTags(ctx context.Context, conn *rolesanywhere.Client, identifier stri
 		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -86,7 +86,7 @@ func UpdateTags(ctx context.Context, conn *rolesanywhere.Client, identifier stri
 		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
