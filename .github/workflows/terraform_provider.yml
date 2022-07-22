@@ -8,7 +8,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
-      - .github/scripts/providerlint.sh
+      - .ci/scripts/providerlint.sh
       - .go-version
       - .ci/.golangci.yml
       - internal/**
@@ -145,7 +145,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd .ci/providerlint && go install .
     - name: providerlint
-      run: .github/scripts/providerlint.sh
+      run: .ci/scripts/providerlint.sh
 
   go_generate:
     name: go generate
