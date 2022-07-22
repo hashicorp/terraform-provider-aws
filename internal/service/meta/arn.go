@@ -109,26 +109,15 @@ func (t arnType) Description() string {
 }
 
 type ARN struct {
-	// Unknown will be true if the value is not yet known.
 	Unknown bool
-
-	// Null will be true if the value was not set, or was explicitly set to
-	// null.
-	Null bool
-
-	// Value contains the set value, as long as Unknown and Null are both
-	// false.
-	Value arn.ARN
+	Null    bool
+	Value   arn.ARN
 }
 
-// Type returns an ARNType.
 func (a ARN) Type(_ context.Context) attr.Type {
 	return ARNType
 }
 
-// ToTerraformValue returns the data contained in the *String as a string. If
-// Unknown is true, it returns a tftypes.UnknownValue. If Null is true, it
-// returns nil.
 func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 	t := ARNType.TerraformType(ctx)
 	if a.Null {
@@ -137,10 +126,7 @@ func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 	if a.Unknown {
 		return tftypes.NewValue(t, tftypes.UnknownValue), nil
 	}
-	if err := tftypes.ValidateValue(tftypes.Number, a.Value); err != nil {
-		return tftypes.NewValue(t, tftypes.UnknownValue), err
-	}
-	return tftypes.NewValue(t, a.Value), nil
+	return tftypes.NewValue(t, a.Value.String()), nil
 }
 
 // Equal returns true if `other` is a *ARN and has the same value as `a`.
