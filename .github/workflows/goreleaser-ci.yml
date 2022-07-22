@@ -9,7 +9,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/goreleaser-ci.yml
-      - .goreleaser.yml
+      - .ci/.goreleaser.yml
       - .go-version
       - go.sum
       - main.go
@@ -31,7 +31,7 @@ jobs:
           filters: |
             goreleaser:
               - '.github/workflows/goreleaser-ci.yml'
-              - '.goreleaser.yml'
+              - '.ci/.goreleaser.yml'
   check:
     needs: changes
     if: ${{ needs.changes.outputs.goreleaser == 'true' }}
