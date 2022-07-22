@@ -11,6 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// TODO: Remove
+var NewDataSourceARNType = newDataSourceARNType
+
 func init() {
 	registerDataSourceTypeFactory("aws_arn", newDataSourceARNType)
 }
