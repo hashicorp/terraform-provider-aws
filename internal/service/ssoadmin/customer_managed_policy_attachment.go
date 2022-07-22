@@ -157,8 +157,3 @@ func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, 
 	}
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
-
-// func createCustomerManagedPolicyReference(name string, path string) (map[string]string) { // not string type - check
-// 	//customerManagedPolicyReference := map[string]string{"Name": name, "Path": path}
-// 	return customerManagedPolicyReference
-// }

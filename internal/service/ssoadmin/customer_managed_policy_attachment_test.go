@@ -179,13 +179,13 @@ func testAccCheckCustomerManagedPolicyAttachmentDestroy(s *terraform.State) erro
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
+		if rs.Type != "aws_ssoadmin_customer_managed_policy_attachment" {
 			continue
 		}
 
 		policyName, policyPath, permissionSetArn, instanceArn, err := tfssoadmin.ParseCustomerManagedPolicyAttachmentID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
 		policy, err := tfssoadmin.FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetArn, instanceArn)
