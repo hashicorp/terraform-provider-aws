@@ -151,7 +151,7 @@ func testAccCheckQueryLogDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
 		}
 
 		if out.QueryLoggingConfig != nil {

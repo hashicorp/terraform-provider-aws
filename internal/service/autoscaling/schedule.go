@@ -86,7 +86,7 @@ func ResourceSchedule() *schema.Resource {
 func resourceScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	splitId := strings.Split(d.Id(), "/")
 	if len(splitId) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'asg-name/action-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'asg-name/action-name'", d.Id())
 	}
 
 	asgName := splitId[0]

@@ -211,7 +211,7 @@ func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error describing EC2 Traffic Mirror Session (%s): %w", sessionId, err)
 	}
 
-	if 0 == len(out.TrafficMirrorSessions) {
+	if len(out.TrafficMirrorSessions) == 0 {
 		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

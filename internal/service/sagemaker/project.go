@@ -122,13 +122,13 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateProject(input)
 	}, "ValidationException")
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker project: %w", err)
+		return fmt.Errorf("creating SageMaker project: %w", err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitProjectCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Project (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Project (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceProjectRead(d, meta)
@@ -146,7 +146,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Unable to find SageMaker Project (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker Project (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Project (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(project.ProjectArn)
@@ -156,24 +156,24 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("project_description", project.ProjectDescription)
 
 	if err := d.Set("service_catalog_provisioning_details", flattenProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
-		return fmt.Errorf("error setting service_catalog_provisioning_details: %w", err)
+		return fmt.Errorf("setting service_catalog_provisioning_details: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Project (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Project (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -198,11 +198,11 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateProject(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Project (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Project (%s): %w", d.Id(), err)
 		}
 
 		if _, err := WaitProjectUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for SageMaker Project (%s) to be updated: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker Project (%s) to be updated: %w", d.Id(), err)
 		}
 	}
 
@@ -210,7 +210,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Project (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Project (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -229,11 +229,11 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 			tfawserr.ErrMessageContains(err, "ValidationException", "Cannot delete Project in DeleteCompleted status") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Project (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Project (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitProjectDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Project (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Project (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

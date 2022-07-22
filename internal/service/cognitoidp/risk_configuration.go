@@ -298,7 +298,7 @@ func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) erro
 	_, err := conn.SetRiskConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("error setting risk configuration: %w", err)
+		return fmt.Errorf("setting risk configuration: %w", err)
 	}
 
 	d.SetId(id)
@@ -330,16 +330,16 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 
 	if riskConfig.RiskExceptionConfiguration != nil {
 		if err := d.Set("risk_exception_configuration", flattenRiskExceptionConfiguration(riskConfig.RiskExceptionConfiguration)); err != nil {
-			return fmt.Errorf("error setting risk_exception_configuration: %w", err)
+			return fmt.Errorf("setting risk_exception_configuration: %w", err)
 		}
 	}
 
 	if err := d.Set("compromised_credentials_risk_configuration", flattenCompromisedCredentialsRiskConfiguration(riskConfig.CompromisedCredentialsRiskConfiguration)); err != nil {
-		return fmt.Errorf("error setting compromised_credentials_risk_configuration: %w", err)
+		return fmt.Errorf("setting compromised_credentials_risk_configuration: %w", err)
 	}
 
 	if err := d.Set("account_takeover_risk_configuration", flattenAccountTakeoverRiskConfiguration(riskConfig.AccountTakeoverRiskConfiguration)); err != nil {
-		return fmt.Errorf("error setting account_takeover_risk_configuration: %w", err)
+		return fmt.Errorf("setting account_takeover_risk_configuration: %w", err)
 	}
 
 	return nil
@@ -364,7 +364,7 @@ func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) e
 	_, err = conn.SetRiskConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("error removing risk configuration: %w", err)
+		return fmt.Errorf("removing risk configuration: %w", err)
 	}
 
 	return nil
@@ -686,7 +686,7 @@ func RiskConfigurationParseID(id string) (string, string, error) {
 	parts := strings.Split(id, ":")
 
 	if len(parts) > 2 || len(parts) < 1 {
-		return "", "", fmt.Errorf("Wrong format of resource: %s. Please follow 'userpool-id/client-id' or 'userpool-id'", id)
+		return "", "", fmt.Errorf("wrong format of import ID (%s), use: 'userpool-id/client-id' or 'userpool-id'", id)
 	}
 
 	if len(parts) == 2 {

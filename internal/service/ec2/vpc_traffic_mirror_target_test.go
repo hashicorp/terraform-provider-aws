@@ -181,7 +181,7 @@ func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirro
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorTargets) {
+		if len(out.TrafficMirrorTargets) == 0 {
 			return fmt.Errorf("Traffic mirror target %s not found", rs.Primary.ID)
 		}
 

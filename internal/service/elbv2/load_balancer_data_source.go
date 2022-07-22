@@ -196,7 +196,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error retrieving LB: %w", err)
+		return fmt.Errorf("retrieving LB: %w", err)
 	}
 
 	if len(tagsToMatch) > 0 {
@@ -211,7 +211,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			if err != nil {
-				return fmt.Errorf("error listing tags for (%s): %w", arn, err)
+				return fmt.Errorf("listing tags for (%s): %w", arn, err)
 			}
 
 			if !tags.ContainsAll(tagsToMatch) {
@@ -245,18 +245,18 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnets: %w", err)
+		return fmt.Errorf("setting subnets: %w", err)
 	}
 
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnet_mapping: %w", err)
+		return fmt.Errorf("setting subnet_mapping: %w", err)
 	}
 
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error retrieving LB Attributes: %w", err)
+		return fmt.Errorf("retrieving LB Attributes: %w", err)
 	}
 
 	accessLogMap := map[string]interface{}{
@@ -276,7 +276,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error parsing ALB timeout: %w", err)
+				return fmt.Errorf("parsing ALB timeout: %w", err)
 			}
 			d.Set("idle_timeout", timeout)
 		case "routing.http.drop_invalid_header_fields.enabled":
@@ -301,7 +301,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
-		return fmt.Errorf("error setting access_logs: %w", err)
+		return fmt.Errorf("setting access_logs: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Id())
@@ -312,11 +312,11 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

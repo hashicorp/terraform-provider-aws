@@ -131,14 +131,14 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateEndpointAccess(&createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating Redshift endpoint access: %w", err)
+		return fmt.Errorf("creating Redshift endpoint access: %w", err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.EndpointName))
 	log.Printf("[INFO] Redshift endpoint access ID: %s", d.Id())
 
 	if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
 	}
 
 	return resourceEndpointAccessRead(d, meta)
@@ -156,7 +156,7 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift endpoint access (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift endpoint access (%s): %w", d.Id(), err)
 	}
 
 	d.Set("endpoint_name", endpoint.EndpointName)
@@ -195,11 +195,11 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating Redshift endpoint access (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Redshift endpoint access (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
 		}
 	}
 
@@ -221,7 +221,7 @@ func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if _, err := waitEndpointAccessDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Endpoint Access (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil

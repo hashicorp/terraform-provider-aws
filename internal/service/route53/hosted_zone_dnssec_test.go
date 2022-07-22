@@ -130,7 +130,7 @@ func testAccCheckHostedZoneDNSSECDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
 		}
 
 		if hostedZoneDnssec != nil && hostedZoneDnssec.Status != nil && aws.StringValue(hostedZoneDnssec.Status.ServeSignature) == tfroute53.ServeSignatureSigning {
@@ -158,7 +158,7 @@ func testAccHostedZoneDNSSECExists(resourceName string) resource.TestCheckFunc {
 		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
 		}
 
 		if hostedZoneDnssec == nil {

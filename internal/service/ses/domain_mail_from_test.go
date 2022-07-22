@@ -180,7 +180,7 @@ func testAccCheckDomainMailFromDestroy(s *terraform.State) error {
 
 		out, err := conn.GetIdentityMailFromDomainAttributes(input)
 		if err != nil {
-			return fmt.Errorf("error fetching MAIL FROM domain attributes: %s", err)
+			return fmt.Errorf("fetching MAIL FROM domain attributes: %s", err)
 		}
 		if v, ok := out.MailFromDomainAttributes[rs.Primary.ID]; ok && v.MailFromDomain != nil && *v.MailFromDomain != "" {
 			return fmt.Errorf("MAIL FROM domain was not removed, found: %s", *v.MailFromDomain)

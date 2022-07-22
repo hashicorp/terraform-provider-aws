@@ -825,7 +825,7 @@ func testAccCheckDestroyClusterSnapshot(rName string) resource.TestCheckFunc {
 				})
 
 			if err != nil {
-				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", rName, err)
+				return fmt.Errorf("deleting Redshift Cluster Snapshot (%s): %w", rName, err)
 			}
 
 			_, err = tfredshift.FindClusterByID(conn, rs.Primary.ID)

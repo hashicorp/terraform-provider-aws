@@ -158,7 +158,7 @@ func testAccCheckTrafficMirrorFilterRuleExists(name string) resource.TestCheckFu
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorFilters) {
+		if len(out.TrafficMirrorFilters) == 0 {
 			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
 		}
 
@@ -263,7 +263,7 @@ func testAccCheckTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorFilters) {
+		if len(out.TrafficMirrorFilters) == 0 {
 			return nil
 		}
 

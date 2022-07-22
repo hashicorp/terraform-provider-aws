@@ -306,7 +306,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-service-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
 	}
 
 	mesh := parts[0]
