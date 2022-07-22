@@ -12,6 +12,13 @@ function do_provider_linting() {
   done
 
   echo "Packages: ${paths}"
+  echo $PWD
+
+  if [[ -d ./internal/service/amp ]]; then
+    echo "FOUND!"
+  else
+    echo "NOT FOUND!"
+  fi
 
   providerlint \
     -c 1 \
