@@ -415,6 +415,10 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 		}
 	}
 
+	if property.ValidateFunc != nil || property.ValidateDiagFunc != nil {
+		fprintf(e.SchemaWriter, "// TODO Validate,\n")
+	}
+
 	fprintf(e.SchemaWriter, "}")
 
 	return nil
