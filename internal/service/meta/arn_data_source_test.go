@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccMetaARNDataSource_basic(t *testing.T) {
-	arn := "arn:aws:rds:eu-west-1:123456789012:db:mysql-db"
+	arn := "arn:aws:rds:eu-west-1:123456789012:db:mysql-db" // lintignore:AWSAT003,AWSAT005
 	dataSourceName := "data.aws_arn.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,7 +24,7 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "account", "123456789012"),
 					resource.TestCheckResourceAttr(dataSourceName, "id", arn),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", "eu-west-1"),
+					resource.TestCheckResourceAttr(dataSourceName, "region", "eu-west-1"), // lintignore:AWSAT003
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "db:mysql-db"),
 					resource.TestCheckResourceAttr(dataSourceName, "service", "rds"),
 				),
