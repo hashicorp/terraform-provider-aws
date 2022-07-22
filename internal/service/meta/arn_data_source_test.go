@@ -33,6 +33,30 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
+	arn := "arn:aws:s3:::my_corporate_bucket/Development/*" // lintignore:AWSAT005
+	dataSourceName := "data.aws_arn.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProviderFactories: acctest.ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccARNDataSourceConfig_basic(arn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "account", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "id", arn),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
+					resource.TestCheckResourceAttr(dataSourceName, "region", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "resource", "my_corporate_bucket/Development/*"),
+					resource.TestCheckResourceAttr(dataSourceName, "service", "s3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccARNDataSourceConfig_basic(arn string) string {
 	return fmt.Sprintf(`
 data "aws_arn" "test" {
