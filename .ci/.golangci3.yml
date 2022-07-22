@@ -30,7 +30,7 @@ linters-settings:
   staticcheck:
     checks: ["all", "-SA1019"]
 run:
-  timeout: 35m
+  timeout: 75m
   go: 1.18
   skip-dirs:
     - .ci/providerlint/vendor
