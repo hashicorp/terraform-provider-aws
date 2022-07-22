@@ -184,7 +184,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.HasChange("monitor_arn_list") {
-		input.MonitorArnList = aws.StringSlice(d.Get("monitor_arn_list").([]string))
+		input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
 		requestUpdate = true
 	}
 
