@@ -37,6 +37,8 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "excludes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
