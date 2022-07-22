@@ -2409,7 +2409,7 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error { // nosemgrep:ec2-in-func-name
+func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error { // nosemgrep:ci.ec2-in-func-name
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -2458,7 +2458,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 	}
 }
 
-func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc { // nosemgrep:ec2-in-func-name
+func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc { // nosemgrep:ci.ec2-in-func-name
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2551,7 +2551,7 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupConfig_ec2Classic(rName string) string { // nosemgrep:ec2-in-func-name
+func testAccVPCSecurityGroupConfig_ec2Classic(rName string) string { // nosemgrep:ci.ec2-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -3482,7 +3482,7 @@ resource "aws_security_group" "test1" {
 `, rName)
 }
 
-func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string { // nosemgrep:ec2-in-func-name
+func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string { // nosemgrep:ci.ec2-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
 resource "aws_security_group" "test2" {
   name = "%[1]s-2"

@@ -685,7 +685,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
 }
 
-func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:caps5-in-func-name
+func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
 	apiObject := &ec2.IpPermission{
 		IpProtocol: aws.String(ProtocolForValue(d.Get("protocol").(string))),
 	}
@@ -782,7 +782,7 @@ func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 	return apiObject
 }
 
-func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission, isVPC bool) { // nosemgrep:caps5-in-func-name
+func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission, isVPC bool) { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return
 	}
