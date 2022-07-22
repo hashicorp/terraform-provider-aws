@@ -66,7 +66,7 @@ fmt:
 
 # Currently required by tf-deploy compile
 fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -76,7 +76,7 @@ gencheck:
 
 generate-changelog:
 	@echo "==> Generating changelog..."
-	@sh -c "'$(CURDIR)/scripts/generate-changelog.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -168,10 +168,10 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 website-link-check:
-	@scripts/markdown-link-check.sh
+	@.ci/scripts/markdown-link-check.sh
 
 website-link-check-ghrc:
-	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" scripts/markdown-link-check.sh
+	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
 website-lint:
 	@echo "==> Checking website against linters..."

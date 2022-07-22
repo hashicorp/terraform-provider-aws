@@ -181,7 +181,7 @@ jobs:
 
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
-            ./scripts/validate-terraform-file.sh -c .ci/.tflint.hcl "$filename" "${rules[@]}"
+            ./.ci/scripts/validate-terraform-file.sh -c .ci/.tflint.hcl "$filename" "${rules[@]}"
             lint_exitcode=$?
             set -e
             if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi

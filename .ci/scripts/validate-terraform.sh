@@ -5,7 +5,7 @@ set -eo pipefail
 # This script works from stdin and expects one filename per line.
 # To call it, e.g.
 # find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) \
-#   | ./scripts/validate-terraform.sh
+#   | ./.ci/scripts/validate-terraform.sh
 
 TERRAFMT_CMD="terrafmt"
 if [ -f ~/developer/terrafmt/terrafmt ]; then TERRAFMT_CMD="$HOME/developer/terrafmt/terrafmt"; fi

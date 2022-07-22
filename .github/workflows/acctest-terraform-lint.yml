@@ -10,7 +10,7 @@ on:
       - .go-version
       - .ci/.tflint.hcl
       - 'internal/service/**/*_test.go'
-      - scripts/validate-terraform.sh
+      - .ci/scripts/validate-terraform.sh
       - tools/go.mod
 
 jobs:
@@ -63,4 +63,4 @@ jobs:
 
       - run: |
           find ./internal/service -type f -name '*_test.go' \
-            | ./scripts/validate-terraform.sh
+            | ./.ci/scripts/validate-terraform.sh

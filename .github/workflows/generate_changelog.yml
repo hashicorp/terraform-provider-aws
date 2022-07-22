@@ -12,7 +12,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-      - run: ./scripts/generate-changelog.sh
+      - run: ./.ci/scripts/generate-changelog.sh
       - run: |
           if [[ `git status --porcelain` ]]; then
             if ${{github.event_name == 'workflow_dispatch'}}; then
