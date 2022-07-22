@@ -238,36 +238,50 @@ jobs:
             go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
           done </tmp/dep_pkgs
         fi
+
   golangci-lint:
-    needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
-      with:
+      - uses: actions/setup-go@v3
+        with:
           go-version-file: .go-version
-    # See also: https://github.com/actions/setup-go/issues/54
-    - name: go env
-      run: |
-        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    - uses: actions/cache@v3
-      continue-on-error: true
-      timeout-minutes: 2
-      with:
-        path: ${{ env.GOCACHE }}
-        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-    - uses: actions/cache@v3
-      continue-on-error: true
-      timeout-minutes: 2
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-      shell: bash
-    - run: golangci-lint -c .ci/.golangci.yml run ./internal/... --timeout 75m
-      shell: bash
-    - run: cd .ci/providerlint && golangci-lint -c ../.golangci.yml run ./...
-      shell: bash
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: latest
+          args: -c .ci/.golangci.yml
+#  golangci-lint:
+#    needs: [go_build]
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v3
+#    - uses: actions/setup-go@v3
+#      with:
+#          go-version-file: .go-version
+#    # See also: https://github.com/actions/setup-go/issues/54
+#    - name: go env
+#      run: |
+#        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+#    - uses: actions/cache@v3
+#      continue-on-error: true
+#      timeout-minutes: 2
+#      with:
+#        path: ${{ env.GOCACHE }}
+#        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+#    - uses: actions/cache@v3
+#      continue-on-error: true
+#      timeout-minutes: 2
+#      with:
+#        path: ~/go/pkg/mod
+#        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+#    - run: cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+#      shell: bash
+#    - run: golangci-lint -c .ci/.golangci.yml run ./internal/... --timeout 75m
+#      shell: bash
+#    - run: cd .ci/providerlint && golangci-lint -c ../.golangci.yml run ./...
+#      shell: bash
 
   importlint:
     needs: [go_build]

@@ -88,11 +88,6 @@ func main() {
 
 	td := TemplateData{}
 
-	// 0 1 2 3
-	// 4 5 6 7
-	// 8 9 10 11
-	// 12 13 14 15
-
 	for i := 0; i < jobs; i++ {
 		if i == (jobs - 1) {
 			td.ServiceChunks = append(td.ServiceChunks, strings.Join(services[i*perJob:], " "))
