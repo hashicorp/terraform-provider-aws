@@ -120,7 +120,6 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
@@ -143,7 +142,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig_monitorARNList(rName2, rName3, address),
+				Config: testAccAnomalySubscriptionConfig_monitorARNList(rName, rName2, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", "arn"),
@@ -433,7 +432,7 @@ resource "aws_ce_anomaly_monitor" "test2" {
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
-  frequency = "WEEKLY"
+  frequency = "DAILY"
 
   monitor_arn_list = [
     aws_ce_anomaly_monitor.test.arn,
