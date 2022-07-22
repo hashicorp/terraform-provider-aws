@@ -290,7 +290,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+    - run: cd .ci && go install github.com/golangci/golangci-lint/cmd/golangci-lint
       shell: bash
     - run: golangci-lint run ./internal/... --timeout 75m
       shell: bash
@@ -321,7 +321,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/pavius/impi/cmd/impi
+    - run: cd .ci && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
 
   tfproviderdocs:
@@ -338,7 +338,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: cd tools && go install github.com/bflad/tfproviderdocs
+    - run: cd .ci && go install github.com/bflad/tfproviderdocs
     - uses: actions/cache@v3
       timeout-minutes: 2
       with:
