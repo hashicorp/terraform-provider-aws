@@ -72,4 +72,5 @@ type dataSourceARN struct{}
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadDataSourceRequest and new state values set on the ReadDataSourceResponse.
 func (d *dataSourceARN) Read(ctx context.Context, request tfsdk.ReadDataSourceRequest, response *tfsdk.ReadDataSourceResponse) {
+	tflog.Trace(ctx, "dataSourceARN.Read enter")
 }
