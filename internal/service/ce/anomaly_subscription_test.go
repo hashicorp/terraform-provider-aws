@@ -432,7 +432,7 @@ resource "aws_ce_anomaly_monitor" "test2" {
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   threshold = 100
-  frequency = "DAILY"
+  frequency = "WEEKLY"
 
   monitor_arn_list = [
     aws_ce_anomaly_monitor.test.arn,
