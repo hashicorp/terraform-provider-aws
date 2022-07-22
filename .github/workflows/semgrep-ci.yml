@@ -23,7 +23,7 @@ jobs:
       with:
        fetch-depth: 0
     - run: .ci/scripts/semgrep.sh .ci/.semgrep.yml
-  naming_cac:
+  naming_cae:
     name: Semgrep Naming Scan Caps/AWS/EC2
     runs-on: ubuntu-latest
     container:
