@@ -31,9 +31,8 @@ func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 				Computed: true,
 			},
 			"arn": {
-				Type:     types.StringType,
+				Type:     ARNType,
 				Required: true,
-				// TODO Validate,
 			},
 			"id": {
 				Type:     types.StringType,
