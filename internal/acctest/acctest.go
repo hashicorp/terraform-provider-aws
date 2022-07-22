@@ -334,7 +334,7 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -354,7 +354,7 @@ func MatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -375,7 +375,7 @@ func MatchResourceAttrRegionalARNAccountID(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -390,7 +390,7 @@ func MatchResourceAttrRegionalHostname(resourceName, attributeName, serviceName 
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
+			return fmt.Errorf("unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -405,7 +405,7 @@ func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName st
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
+			return fmt.Errorf("unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -463,7 +463,7 @@ func MatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, 
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -484,7 +484,7 @@ func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeN
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -503,7 +503,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -537,7 +537,7 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 
 		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
 		if err != nil {
-			return fmt.Errorf("Error normalizing expected JSON: %w", err)
+			return fmt.Errorf("normalizing expected JSON: %w", err)
 		}
 
 		if vNormal != expectedNormal {
@@ -551,12 +551,12 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
 	if !ok {
-		return nil, fmt.Errorf("Not found: %s", name)
+		return nil, fmt.Errorf("not found: %s", name)
 	}
 
 	is := rs.Primary
 	if is == nil {
-		return nil, fmt.Errorf("No primary instance: %s", name)
+		return nil, fmt.Errorf("no primary instance: %s", name)
 	}
 
 	return is, nil
@@ -1523,11 +1523,11 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ACM PCA Certificate Authority ID is set")
+			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
@@ -1543,7 +1543,7 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 		}
 
 		if output == nil || output.CertificateAuthority == nil {
-			return fmt.Errorf("ACM PCA Certificate Authority %s does not exist", rs.Primary.ID)
+			return fmt.Errorf("empty ACM PCA Certificate Authority (%s)", rs.Primary.ID)
 		}
 
 		*certificateAuthority = *output.CertificateAuthority
@@ -1910,11 +1910,11 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC ID is set")
+			return fmt.Errorf("no VPC ID is set")
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
@@ -1935,24 +1935,24 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Can't find AccountID resource: %s", n)
+			return fmt.Errorf("can't find AccountID resource: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Account Id resource ID not set.")
+			return fmt.Errorf("account Id resource ID not set.")
 		}
 
 		expected := Provider.Meta().(*conns.AWSClient).AccountID
 		if rs.Primary.Attributes["account_id"] != expected {
-			return fmt.Errorf("Incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
+			return fmt.Errorf("incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
 		}
 
 		if rs.Primary.Attributes["user_id"] == "" {
-			return fmt.Errorf("UserID expected to not be nil")
+			return fmt.Errorf("user_id expected to not be nil")
 		}
 
 		if rs.Primary.Attributes["arn"] == "" {
-			return fmt.Errorf("ARN expected to not be nil")
+			return fmt.Errorf("attribute ARN expected to not be nil")
 		}
 
 		return nil
@@ -1963,7 +1963,7 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {

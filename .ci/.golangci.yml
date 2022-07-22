@@ -1,10 +1,5 @@
 issues:
   exclude-rules:
-    # Exclude issues bypassing staticcheck.conf
-    - linters:
-        - staticcheck
-      text: "SA1019:"
-
     - linters:
         - unparam
       text: "always receives"
@@ -15,9 +10,6 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
-    - errcheck
-    - exportloopref
     - gofmt
     - gomnd
     - gosimple
@@ -27,16 +19,12 @@ linters:
     - nakedret
     - nilerr
     - nolintlint
-    - staticcheck
     - structcheck
     - unconvert
     - unparam
     - varcheck
-    - vet
 
 linters-settings:
-  errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
   gomnd:
     settings:
       mnd:
@@ -70,4 +58,7 @@ linters-settings:
       - gomnd
 
 run:
-  timeout: 35m
+  timeout: 75m
+  concurrency: 4
+  skip-dirs:
+    - .ci/providerlint/vendor

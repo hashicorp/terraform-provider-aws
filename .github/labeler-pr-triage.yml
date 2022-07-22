@@ -29,7 +29,6 @@ linter:
   - '.github/workflows/terraform_provider.yml'
   - '.github/workflows/website.yml'
   - '.github/workflows/workflow-lint.yml'
-  - 'staticcheck.conf'
 pre-service-packages:
   - '**/data_source_aws_*'
   - '**/resource_aws_*'
