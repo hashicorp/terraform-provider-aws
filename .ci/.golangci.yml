@@ -1,9 +1,4 @@
 issues:
-  exclude-rules:
-    - linters:
-        - unparam
-      text: "always receives"
-
   max-per-linter: 0
   max-same-issues: 0
 
@@ -11,54 +6,9 @@ linters:
   disable-all: true
   enable:
     - gofmt
-    - gomnd
-    - gosimple
-    - ineffassign
-    - makezero
-    - misspell
-    - nakedret
-    - nilerr
-    - nolintlint
-    - structcheck
-    - unconvert
-    - unparam
-    - varcheck
-
-linters-settings:
-  gomnd:
-    settings:
-      mnd:
-        checks:
-          - argument
-        ignored-functions:
-          # AWS Go SDK
-          - aws.Int64
-          - request.ConstantWaiterDelay
-          - request.WithWaiterMaxAttempts
-          # AWS Provider
-          - nullable.*
-          # Terraform Plugin SDK
-          - resource.Retry
-          - schema.DefaultTimeout
-          - validation.*
-          # Go
-          - make
-          - strconv.FormatFloat
-          - strconv.FormatInt
-          - strconv.ParseFloat
-          - strconv.ParseInt
-          - strings.SplitN
-  nolintlint:
-    allow-unused: true # Because of the disabled rules with Go 1.18
-    allow-leading-space: false
-    require-explanation: true
-    require-specific: true
-    allow-no-explanation:
-      - unparam
-      - gomnd
 
 run:
-  timeout: 75m
-  concurrency: 4
+  timeout: 20m
+  go: 1.18
   skip-dirs:
     - .ci/providerlint/vendor
