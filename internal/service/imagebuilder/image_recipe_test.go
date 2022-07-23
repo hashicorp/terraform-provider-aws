@@ -252,10 +252,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_throughput(t *testing.
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageRecipeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageRecipeConfig_blockDeviceMappingEBSThroughput(rName, 200),
