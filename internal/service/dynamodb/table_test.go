@@ -1605,7 +1605,6 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 	}
 
 	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1614,9 +1613,9 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaTags(rName, "benny", "smiles", true, false),
@@ -1645,7 +1644,6 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 	}
 
 	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1654,9 +1652,9 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_replicaTags(rName, "Structure", "Adobe", true, true),
