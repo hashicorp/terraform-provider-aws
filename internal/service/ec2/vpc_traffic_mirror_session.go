@@ -139,7 +139,7 @@ func resourceTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}
 	var removeFields []*string
 	if d.HasChange("description") {
 		n := d.Get("description")
-		if "" != n {
+		if n != "" {
 			input.Description = aws.String(n.(string))
 		} else {
 			removeFields = append(removeFields, aws.String("description"))
