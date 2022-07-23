@@ -129,6 +129,12 @@ func ResourceRestAPI() *schema.Resource {
 					return json
 				},
 			},
+			"put_rest_api_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigateway.PutModeOverwrite,
+				ValidateFunc: validation.StringInSlice(apigateway.PutMode_Values(), false),
+			},
 			"root_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
