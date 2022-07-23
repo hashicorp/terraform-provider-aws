@@ -620,10 +620,10 @@ func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
@@ -656,10 +656,10 @@ func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenzfsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
