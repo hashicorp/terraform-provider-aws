@@ -171,7 +171,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ds-in-func-name
+func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ci.ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}

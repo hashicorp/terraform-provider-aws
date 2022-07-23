@@ -220,7 +220,7 @@ func testAccCheckAppDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker App (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker App (%s): %w", rs.Primary.ID, err)
 		}
 
 		appArn := aws.StringValue(app.AppArn)

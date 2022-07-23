@@ -217,7 +217,7 @@ func testAccCheckContactFlowModuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccContactFlowModuleBaseConfig(rName string) string {
+func testAccContactFlowModuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -230,7 +230,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccContactFlowModuleConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccContactFlowModuleBaseConfig(rName),
+		testAccContactFlowModuleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow_module" "test" {
   instance_id = aws_connect_instance.test.id
@@ -290,7 +290,7 @@ resource "aws_connect_contact_flow_module" "test" {
 
 func testAccContactFlowModuleConfig_filename(rName, rName2 string, label string, filepath string) string {
 	return acctest.ConfigCompose(
-		testAccContactFlowModuleBaseConfig(rName),
+		testAccContactFlowModuleConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow_module" "test" {
   instance_id  = aws_connect_instance.test.id

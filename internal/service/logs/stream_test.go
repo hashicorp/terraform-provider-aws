@@ -129,7 +129,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {

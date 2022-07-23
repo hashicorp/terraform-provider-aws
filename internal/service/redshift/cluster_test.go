@@ -755,7 +755,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				),
 			},
 			// Apply a configuration without the source cluster to ensure final snapshot creation.
-			{ // nosemgrep:test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 			},
 			{
@@ -823,7 +823,7 @@ func testAccCheckDestroyClusterSnapshot(rName string) resource.TestCheckFunc {
 				})
 
 			if err != nil {
-				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", rName, err)
+				return fmt.Errorf("deleting Redshift Cluster Snapshot (%s): %w", rName, err)
 			}
 
 			_, err = tfredshift.FindClusterByID(conn, rs.Primary.ID)

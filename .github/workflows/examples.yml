@@ -7,7 +7,7 @@ on:
     paths:
       - .github/workflows/examples.yml
       - .go-version
-      - .tflint.hcl
+      - .ci/.tflint.hcl
       - examples/**
       - tools/go.mod
 
@@ -49,17 +49,17 @@ jobs:
         terraform_wrapper: false
 
     - name: install tflint
-      run: cd tools && go install github.com/terraform-linters/tflint
+      run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
     - uses: actions/cache@v3
       name: Cache plugin dir
       with:
         path: ~/.tflint.d/plugins
-        key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+        key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
     - name: terraform
       run: |
-        TFLINT_CONFIG="$(pwd -P)/.tflint.hcl"
+        TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
           pushd "$DIR"
           if [ -f terraform.template.tfvars ]; then

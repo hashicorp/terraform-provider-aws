@@ -280,7 +280,7 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserHierarchyStructureBaseConfig(rName string) string {
+func testAccUserHierarchyStructureConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -293,7 +293,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccUserHierarchyStructureConfig_basic(rName, levelOneName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -309,7 +309,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -329,7 +329,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -353,7 +353,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -381,7 +381,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id

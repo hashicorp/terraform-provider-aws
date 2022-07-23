@@ -201,7 +201,7 @@ func testAccCheckQueryDefinitionDestroy(s *terraform.State) error {
 
 		result, err := tflogs.FindQueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
 		}
 
 		if result != nil {

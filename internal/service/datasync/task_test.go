@@ -37,6 +37,8 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "excludes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
@@ -191,6 +193,44 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.value", "/test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSyncTask_includes(t *testing.T) {
+	var task1 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_includes(rName, "/folder1|/folder2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/folder1|/folder2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskConfig_includes(rName, "/test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
+					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/test"),
 				),
 			},
 		},
@@ -1029,6 +1069,24 @@ resource "aws_datasync_task" "test" {
   source_location_arn      = aws_datasync_location_nfs.source.arn
 
   excludes {
+    filter_type = "SIMPLE_PATTERN"
+    value       = %[2]q
+  }
+}
+`, rName, value))
+}
+
+func testAccTaskConfig_includes(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccTaskDestinationLocationS3BaseConfig(rName),
+		testAccTaskSourceLocationNFSBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  includes {
     filter_type = "SIMPLE_PATTERN"
     value       = %[2]q
   }

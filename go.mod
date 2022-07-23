@@ -1,13 +1,15 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.50
+	github.com/aws/aws-sdk-go v1.44.61
 	github.com/aws/aws-sdk-go-v2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/fis v1.12.8
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
 	github.com/beevik/etree v1.1.0
@@ -15,14 +17,16 @@ require (
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.17.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17
-	github.com/hashicorp/awspolicyequivalence v1.5.0
+	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/terraform-plugin-go v0.11.0
-	github.com/hashicorp/terraform-plugin-mux v0.6.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.18.0
+	github.com/hashicorp/hcl/v2 v2.13.0
+	github.com/hashicorp/terraform-plugin-framework v0.10.0
+	github.com/hashicorp/terraform-plugin-go v0.12.0
+	github.com/hashicorp/terraform-plugin-mux v0.7.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.19.0
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -59,11 +63,10 @@ require (
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/hc-install v0.4.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.2 // indirect
 	github.com/hashicorp/terraform-json v0.14.0 // indirect
-	github.com/hashicorp/terraform-plugin-log v0.4.1 // indirect
+	github.com/hashicorp/terraform-plugin-log v0.6.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.0.0-20220623143253-7d51757b572c // indirect
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
@@ -88,6 +91,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
-	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )

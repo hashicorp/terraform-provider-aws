@@ -74,13 +74,37 @@ The `virtual_service` object supports the following:
 
 * `virtual_service_name` - (Required) The name of the virtual service that traffic is routed to. Must be between 1 and 255 characters in length.
 
+The `http_route` and `http2_route`'s `action` object additionally supports the following:
+
+* `rewrite` - (Optional) The gateway route action to rewrite.
+
+The `rewrite` object supports the following:
+
+* `hostname` - (Optional) The host name to rewrite.
+* `prefix` - (Optional) The specified beginning characters to rewrite.
+
+The `hostname` object supports the following:
+
+* `default_target_hostname` - (Required) The default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
+
+The `prefix` object supports the following:
+
+* `default_prefix` - (Optional) The default prefix used to replace the incoming route prefix when rewritten. Valid values: `ENABLED`, `DISABLED`.
+* `value` - (Optional) The value used to replace the incoming route prefix when rewritten.
+
 The `grpc_route`'s `match` object supports the following:
 
 * `service_name` - (Required) The fully qualified domain name for the service to match from the request.
 
 The `http_route` and `http2_route`'s `match` object supports the following:
 
+* `hostname` - (Optional) The host name to match on.
 * `prefix` - (Required) Specifies the path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
+
+The `hostname` object supports the following:
+
+* `exact` - (Optional) The exact host name to match on.
+* `suffix` - (Optional) The specified ending characters of the host name to match on.
 
 ## Attributes Reference
 

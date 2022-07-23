@@ -151,7 +151,7 @@ func testAccCheckKeySigningKeyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey != nil {
@@ -179,7 +179,7 @@ func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey == nil {

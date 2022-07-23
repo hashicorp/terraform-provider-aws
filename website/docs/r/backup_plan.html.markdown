@@ -52,7 +52,7 @@ For **rule** the following attributes are supported:
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `start_window` - (Optional) The amount of time in minutes before beginning a backup.
-* `completion_window` - (Optional) The amount of time AWS Backup attempts a backup before canceling the job and returning an error.
+* `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
 * `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
 * `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.

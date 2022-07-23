@@ -1282,7 +1282,7 @@ func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.
 		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading LB (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading LB (%s): %w", rs.Primary.ID, err)
 		}
 
 		if lb != nil {

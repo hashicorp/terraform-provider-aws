@@ -178,7 +178,7 @@ func testAccCheckIPAMDestroy(s *terraform.State) error {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return fmt.Errorf("error waiting for IPAM to be deleted: %w", err)
+			return fmt.Errorf("waiting for IPAM to be deleted: %w", err)
 		}
 	}
 

@@ -178,7 +178,7 @@ func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMir
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorSessions) {
+		if len(out.TrafficMirrorSessions) == 0 {
 			return fmt.Errorf("Traffic mirror session %s not found", rs.Primary.ID)
 		}
 

@@ -365,7 +365,7 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 		logGroup, err := tflogs.LookupGroup(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if logGroup != nil {

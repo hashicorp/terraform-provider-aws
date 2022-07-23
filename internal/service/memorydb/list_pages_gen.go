@@ -29,7 +29,6 @@ func describeACLsPagesWithContext(ctx context.Context, conn *memorydb.MemoryDB, 
 	}
 	return nil
 }
-
 func describeClustersPages(conn *memorydb.MemoryDB, input *memorydb.DescribeClustersInput, fn func(*memorydb.DescribeClustersOutput, bool) bool) error {
 	return describeClustersPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func describeClustersPagesWithContext(ctx context.Context, conn *memorydb.Memory
 	}
 	return nil
 }
-
 func describeParameterGroupsPages(conn *memorydb.MemoryDB, input *memorydb.DescribeParameterGroupsInput, fn func(*memorydb.DescribeParameterGroupsOutput, bool) bool) error {
 	return describeParameterGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -71,7 +69,6 @@ func describeParameterGroupsPagesWithContext(ctx context.Context, conn *memorydb
 	}
 	return nil
 }
-
 func describeSnapshotsPages(conn *memorydb.MemoryDB, input *memorydb.DescribeSnapshotsInput, fn func(*memorydb.DescribeSnapshotsOutput, bool) bool) error {
 	return describeSnapshotsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -92,7 +89,6 @@ func describeSnapshotsPagesWithContext(ctx context.Context, conn *memorydb.Memor
 	}
 	return nil
 }
-
 func describeSubnetGroupsPages(conn *memorydb.MemoryDB, input *memorydb.DescribeSubnetGroupsInput, fn func(*memorydb.DescribeSubnetGroupsOutput, bool) bool) error {
 	return describeSubnetGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -113,7 +109,6 @@ func describeSubnetGroupsPagesWithContext(ctx context.Context, conn *memorydb.Me
 	}
 	return nil
 }
-
 func describeUsersPages(conn *memorydb.MemoryDB, input *memorydb.DescribeUsersInput, fn func(*memorydb.DescribeUsersOutput, bool) bool) error {
 	return describeUsersPagesWithContext(context.Background(), conn, input, fn)
 }

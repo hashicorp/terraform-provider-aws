@@ -166,7 +166,7 @@ func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
+		return fmt.Errorf("expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
 	}
 
 	return nil
@@ -192,7 +192,7 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 		resp, err := tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
 
 		if err != nil {
-			return fmt.Errorf("Error describing AccessAnalyzer ArchiveRule: %s", err.Error())
+			return fmt.Errorf("describing AccessAnalyzer ArchiveRule: %s", err.Error())
 		}
 
 		*archiveRule = *resp

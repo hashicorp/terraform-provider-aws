@@ -25,6 +25,7 @@ var websiteTmpl string
 type TemplateData struct {
 	DataSource          string
 	DataSourceLower     string
+	DataSourceSnake     string
 	IncludeComments     bool
 	ServicePackage      string
 	Service             string
@@ -54,6 +55,8 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
+	snakeName = resource.ToSnakeCase(dsName, snakeName)
+
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
@@ -67,6 +70,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 	templateData := TemplateData{
 		DataSource:          dsName,
 		DataSourceLower:     strings.ToLower(dsName),
+		DataSourceSnake:     snakeName,
 		IncludeComments:     comments,
 		ServicePackage:      servicePackage,
 		Service:             s,
@@ -76,17 +80,17 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		HumanDataSourceName: fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
 	}
 
-	f := fmt.Sprintf("%s_data_source.go", resource.ToSnakeCase(dsName, snakeName))
+	f := fmt.Sprintf("%s_data_source.go", snakeName)
 	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 
-	tf := fmt.Sprintf("%s_data_source_test.go", resource.ToSnakeCase(dsName, snakeName))
+	tf := fmt.Sprintf("%s_data_source_test.go", snakeName)
 	if err = writeTemplate("dstest", tf, datasourceTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource test template: %w", err)
 	}
 
-	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, resource.ToSnakeCase(dsName, snakeName))
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
 	wf = filepath.Join("..", "..", "..", "website", "docs", "d", wf)
 	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource website doc template: %w", err)

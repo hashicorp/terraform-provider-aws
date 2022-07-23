@@ -296,7 +296,7 @@ When executing the test, the following steps are taken for each `TestStep`:
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
-          return fmt.Errorf("Not found: %s", n)
+          return fmt.Errorf("not found: %s", n)
         }
 
         conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
@@ -348,7 +348,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
         _, err := conn.GetDashboard(&params)
         if err == nil {
-          return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+          return fmt.Errorf("dashboard still exists: %s", rs.Primary.ID)
         }
         if !isDashboardNotFoundErr(err) {
           return err

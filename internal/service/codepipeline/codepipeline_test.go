@@ -745,7 +745,7 @@ EOF
 `, rName)
 }
 
-func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -808,7 +808,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -872,7 +872,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -982,7 +982,7 @@ EOF
 `, rName)
 }
 
-func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRoleWithAssumeRole(rName),
@@ -1068,7 +1068,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1137,7 +1137,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tag1, tag2))
 }
 
-func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1231,7 +1231,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1325,7 +1325,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccCodePipelineConfig_basic(rName),
@@ -1364,7 +1364,7 @@ resource "aws_s3_bucket_acl" "%[1]s" {
 `, bucket, rName, provider)
 }
 
-func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1437,7 +1437,7 @@ resource "aws_s3_bucket_acl" "foo_acl" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1496,7 +1496,7 @@ resource "aws_codepipeline" "test" {
 `, rName, githubToken))
 }
 
-func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),

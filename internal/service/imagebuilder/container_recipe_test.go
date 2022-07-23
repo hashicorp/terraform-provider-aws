@@ -371,6 +371,35 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 	})
 }
 
+func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMappingEBS_throughput(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSThroughput(rName, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.throughput", "200"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMappingEBS_volumeSize(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
@@ -1105,6 +1134,44 @@ EOF
   }
 }
 `, rName))
+}
+
+func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSThroughput(rName string, throughput int) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  instance_configuration {
+    block_device_mapping {
+      ebs {
+        throughput  = %[2]d
+        volume_type = "gp3"
+      }
+    }
+  }
+}
+`, rName, throughput))
 }
 
 func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeSize(rName string) string {

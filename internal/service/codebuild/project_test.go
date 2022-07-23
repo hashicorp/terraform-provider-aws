@@ -34,7 +34,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 func testAccBitbucketSourceLocationFromEnv() string {
 	sourceLocation := os.Getenv("AWS_CODEBUILD_BITBUCKET_SOURCE_LOCATION")
 	if sourceLocation == "" {
-		return "https://terraform@bitbucket.org/terraform/aws-test.git" // nosemgrep: email-address
+		return "https://terraform@bitbucket.org/terraform/aws-test.git" // nosemgrep:ci.email-address
 	}
 	return sourceLocation
 }

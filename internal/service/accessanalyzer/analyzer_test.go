@@ -196,11 +196,11 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
+			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("resource (%s) ID not set", resourceName)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn

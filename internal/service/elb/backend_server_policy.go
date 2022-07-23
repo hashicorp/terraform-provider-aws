@@ -104,7 +104,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("load_balancer_name", loadBalancerName)
 	instancePortVal, err := strconv.ParseInt(instancePort, 10, 64)
 	if err != nil {
-		return fmt.Errorf("error parsing instance port: %s", err)
+		return fmt.Errorf("parsing instance port: %s", err)
 	}
 	d.Set("instance_port", instancePortVal)
 	d.Set("policy_names", flex.FlattenStringList(policyNames))

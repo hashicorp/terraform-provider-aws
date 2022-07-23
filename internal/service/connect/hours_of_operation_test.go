@@ -18,9 +18,10 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectHoursOfOperation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":         testAccHoursOfOperation_basic,
-		"disappears":    testAccHoursOfOperation_disappears,
-		"update_config": testAccHoursOfOperation_updateConfig,
+		"basic":        testAccHoursOfOperation_basic,
+		"disappears":   testAccHoursOfOperation_disappears,
+		"updateConfig": testAccHoursOfOperation_updateConfig,
+		"updateTags":   testAccHoursOfOperation_updateTags,
 	}
 
 	for name, tc := range testCases {
@@ -169,6 +170,56 @@ func testAccHoursOfOperation_updateConfig(t *testing.T) {
 	})
 }
 
+func testAccHoursOfOperation_updateTags(t *testing.T) {
+	var v connect.DescribeHoursOfOperationOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_hours_of_operation.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckHoursOfOperationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHoursOfOperationConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHoursOfOperationConfig_tags(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, description),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHoursOfOperationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Hours of Operation"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccHoursOfOperation_disappears(t *testing.T) {
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -260,7 +311,7 @@ func testAccCheckHoursOfOperationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccHoursOfOperationBaseConfig(rName string) string {
+func testAccHoursOfOperationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -273,7 +324,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccHoursOfOperationConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
@@ -304,7 +355,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 func testAccHoursOfOperationConfig_multipleConfig(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccHoursOfOperationBaseConfig(rName),
+		testAccHoursOfOperationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_hours_of_operation" "test" {
   instance_id = aws_connect_instance.test.id
@@ -342,6 +393,71 @@ resource "aws_connect_hours_of_operation" "test" {
 
   tags = {
     "Name" = "Test Hours of Operation"
+  }
+}
+`, rName2, label))
+}
+
+func testAccHoursOfOperationConfig_tags(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccHoursOfOperationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, label))
+}
+
+func testAccHoursOfOperationConfig_tagsUpdated(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccHoursOfOperationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_hours_of_operation" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+  time_zone   = "EST"
+
+  config {
+    day = "MONDAY"
+
+    end_time {
+      hours   = 23
+      minutes = 8
+    }
+
+    start_time {
+      hours   = 8
+      minutes = 0
+    }
+  }
+
+  tags = {
+    "Name" = "Test Hours of Operation"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName2, label))

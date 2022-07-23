@@ -46,7 +46,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_basicWithDescription(t *testing.T) {
+func TestAccIAMRole_description(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -1038,28 +1038,21 @@ func testAccRoleConfig_maxSessionDuration(rName string, maxSessionDuration int) 
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name                 = "test-role-%s"
+  name                 = %[1]q
   path                 = "/"
-  max_session_duration = %d
+  max_session_duration = %[2]d
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName, maxSessionDuration)
 }
@@ -1069,28 +1062,21 @@ func testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary string) st
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
-  name                 = "test-role-%s"
+  name                 = %[1]q
   path                 = "/"
-  permissions_boundary = %q
+  permissions_boundary = %[2]q
 }
 `, rName, permissionsBoundary)
 }
@@ -1100,27 +1086,20 @@ func testAccRoleConfig_basic(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "test-role-%s"
+  name = %[1]q
   path = "/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName)
 }
@@ -1130,28 +1109,21 @@ func testAccRoleConfig_description(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name        = "test-role-%s"
+  name        = %[1]q
   description = "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"
   path        = "/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName)
 }
@@ -1161,28 +1133,21 @@ func testAccRoleConfig_updatedDescription(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name        = "test-role-%s"
+  name        = %[1]q
   description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"
   path        = "/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName)
 }
@@ -1194,24 +1159,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   path = "/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `
 }
@@ -1224,24 +1182,17 @@ resource "aws_iam_role" "test" {
   name_prefix = %[1]q
   path        = "/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "ec2.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName)
 }
@@ -1251,28 +1202,24 @@ func testAccRoleConfig_pre(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "tf_old_name_%[1]s"
+  name = %[1]q
   path = "/test/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
-  name = "role_update_test_%[1]s"
+  name = "%[1]s-2"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1293,7 +1240,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%[1]s"
+  name = "%[1]s-2"
   path = "/test/"
   role = aws_iam_role.test.name
 }
@@ -1305,28 +1252,24 @@ func testAccRoleConfig_post(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "tf_new_name_%[1]s"
+  name = %[1]q
   path = "/test/"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
-  name = "role_update_test_%[1]s"
+  name = "%[1]s-2"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1347,7 +1290,7 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%[1]s"
+  name = "%[1]s-2"
   path = "/test/"
   role = aws_iam_role.test.name
 }
@@ -1359,9 +1302,9 @@ func testAccRoleConfig_badJSON(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "test-role-%s"
+  name = %[1]q
 
-  assume_role_policy = <<POLICY
+  assume_role_policy = <<INTENTIONALLYBAD
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1375,7 +1318,7 @@ resource "aws_iam_role" "test" {
   }
   ]
 }
-POLICY
+INTENTIONALLYBAD
 }
 `, rName)
 }
@@ -1385,7 +1328,7 @@ func testAccRoleConfig_forceDetachPolicies(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-iam-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1405,7 +1348,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name        = "tf-iam-policy-%[1]s"
+  name        = %[1]q
   description = "A test policy"
 
   policy = <<EOF
@@ -1430,24 +1373,20 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name                  = "tf-iam-role-%[1]s"
+  name                  = %[1]q
   force_detach_policies = true
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, rName)
 }
@@ -1457,23 +1396,19 @@ func testAccRoleConfig_tags(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   tags = {
     tag1 = "test-value1"
@@ -1488,23 +1423,19 @@ func testAccRoleConfig_tagsUpdate(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   tags = {
     tag2 = "test-value"
@@ -1520,21 +1451,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   inline_policy {
     name = %[2]q
@@ -1565,21 +1492,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   inline_policy {
     name = %[2]q
@@ -1629,21 +1552,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   inline_policy {
     name = %[2]q
@@ -1814,21 +1733,17 @@ resource "aws_iam_role" "test" {
   name                = %[2]q
   managed_policy_arns = [aws_iam_policy.test.arn]
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, policyName, roleName)
 }
@@ -1901,21 +1816,17 @@ resource "aws_iam_role" "test" {
   name                = %[4]q
   managed_policy_arns = [aws_iam_policy.test2.arn, aws_iam_policy.test3.arn]
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, policyName1, policyName2, policyName3, roleName)
 }
@@ -1988,21 +1899,17 @@ resource "aws_iam_role" "test" {
   name                = %[4]q
   managed_policy_arns = [aws_iam_policy.test3.arn]
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, policyName1, policyName2, policyName3, roleName)
 }
@@ -2055,21 +1962,17 @@ resource "aws_iam_role" "test" {
   name                = %[3]q
   managed_policy_arns = [aws_iam_policy.test.arn]
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, policyName1, policyName2, roleName)
 }
@@ -2096,21 +1999,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, roleName)
 }
@@ -2122,21 +2021,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 
 resource "aws_iam_policy" "managed-policy1" {
@@ -2168,21 +2063,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   inline_policy {}
 }
@@ -2196,21 +2087,17 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 
   managed_policy_arns = []
 }
