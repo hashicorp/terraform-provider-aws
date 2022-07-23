@@ -208,8 +208,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		input := &apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
 			Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
-			//Mode:      aws.String(apigateway.PutModeOverwrite),
-			Body: []byte(body.(string)),
+			Body:      []byte(body.(string)),
 		}
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -594,8 +593,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			input := &apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
 				Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
-				//Mode:      aws.String(apigateway.PutModeOverwrite),
-				Body: []byte(body.(string)),
+				Body:      []byte(body.(string)),
 			}
 
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
