@@ -149,50 +149,37 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway")
 
-	var description *string
-	if d.Get("description").(string) != "" {
-		description = aws.String(d.Get("description").(string))
-	}
-
 	params := &apigateway.CreateRestApiInput{
-		Name:        aws.String(d.Get("name").(string)),
-		Description: description,
-	}
-
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
+		Name: aws.String(d.Get("name").(string)),
+		Tags: Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
 		params.ApiKeySource = aws.String(v.(string))
 	}
-
+	if v, ok := d.GetOk("binary_media_types"); ok {
+		params.BinaryMediaTypes = flex.ExpandStringList(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
 		params.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
-
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
+		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
+	}
+	minimumCompressionSize := d.Get("minimum_compression_size").(int)
+	if minimumCompressionSize > -1 {
+		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
+	}
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 		}
 
 		params.Policy = aws.String(policy)
-	}
-
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	binaryMediaTypes, binaryMediaTypesOk := d.GetOk("binary_media_types")
-	if binaryMediaTypesOk {
-		params.BinaryMediaTypes = flex.ExpandStringList(binaryMediaTypes.([]interface{}))
-	}
-
-	minimumCompressionSize := d.Get("minimum_compression_size").(int)
-	if minimumCompressionSize > -1 {
-		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
 	}
 
 	gateway, err := conn.CreateRestApi(params)
@@ -456,24 +443,11 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	return operations
 }
 
-func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
+func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).APIGatewayConn
+	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
+
 	operations := make([]*apigateway.PatchOperation, 0)
-
-	if d.HasChange("name") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
-		})
-	}
-
-	if d.HasChange("description") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
-		})
-	}
 
 	if d.HasChange("api_key_source") {
 		operations = append(operations, &apigateway.PatchOperation{
@@ -482,39 +456,6 @@ func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.Patch
 			Value: aws.String(d.Get("api_key_source").(string)),
 		})
 	}
-
-	if d.HasChange("disable_execute_api_endpoint") {
-		value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/disableExecuteApiEndpoint"),
-			Value: aws.String(value),
-		})
-	}
-
-	if d.HasChange("policy") {
-		policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
-
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/policy"),
-			Value: aws.String(policy),
-		})
-	}
-
-	if d.HasChange("minimum_compression_size") {
-		minimumCompressionSize := d.Get("minimum_compression_size").(int)
-		var value string
-		if minimumCompressionSize > -1 {
-			value = strconv.Itoa(minimumCompressionSize)
-		}
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/minimumCompressionSize"),
-			Value: aws.String(value),
-		})
-	}
-
 	if d.HasChange("binary_media_types") {
 		o, n := d.GetChange("binary_media_types")
 		prefix := "binaryMediaTypes"
@@ -541,7 +482,21 @@ func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.Patch
 			}
 		}
 	}
-
+	if d.HasChange("description") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/description"),
+			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+	if d.HasChange("disable_execute_api_endpoint") {
+		value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/disableExecuteApiEndpoint"),
+			Value: aws.String(value),
+		})
+	}
 	if d.HasChange("endpoint_configuration.0.types") {
 		// The REST API must have an endpoint type.
 		// If attempting to remove the configuration, do nothing.
@@ -555,7 +510,7 @@ func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.Patch
 			})
 		}
 	}
-
+	// Compare these, don't blindly remove as they will be async operations
 	if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
 		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
 		prefix := "/endpointConfiguration/vpcEndpointIds"
@@ -579,19 +534,42 @@ func resourceRestAPIUpdateOperations(d *schema.ResourceData) []*apigateway.Patch
 			})
 		}
 	}
-
-	return operations
-}
-
-func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+	if d.HasChange("minimum_compression_size") {
+		minimumCompressionSize := d.Get("minimum_compression_size").(int)
+		var value string
+		if minimumCompressionSize > -1 {
+			value = strconv.Itoa(minimumCompressionSize)
 		}
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/minimumCompressionSize"),
+			Value: aws.String(value),
+		})
+	}
+	if d.HasChange("name") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/name"),
+			Value: aws.String(d.Get("name").(string)),
+		})
+	}
+	if d.HasChange("policy") {
+		policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
+
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/policy"),
+			Value: aws.String(policy),
+		})
+	}
+
+	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
+		RestApiId:       aws.String(d.Id()),
+		PatchOperations: operations,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error updating REST API (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChanges("body", "parameters") {
@@ -635,18 +613,14 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 			}
-
-			return resourceRestAPIRead(d, meta)
 		}
 	}
 
-	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
-		RestApiId:       aws.String(d.Id()),
-		PatchOperations: resourceRestAPIUpdateOperations(d),
-	})
-
-	if err != nil {
-		return fmt.Errorf("error updating REST API (%s): %w", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceRestAPIRead(d, meta)
