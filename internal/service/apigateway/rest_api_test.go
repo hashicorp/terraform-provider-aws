@@ -502,7 +502,6 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "binary_media_types"),
 				),
 			},
 			{
