@@ -83,12 +83,8 @@ func ResourceRestAPI() *schema.Resource {
 							MinItems: 1,
 							MaxItems: 1,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									apigateway.EndpointTypeEdge,
-									apigateway.EndpointTypeRegional,
-									apigateway.EndpointTypePrivate,
-								}, false),
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(apigateway.EndpointType_Values(), false),
 							},
 						},
 						"vpc_endpoint_ids": {
