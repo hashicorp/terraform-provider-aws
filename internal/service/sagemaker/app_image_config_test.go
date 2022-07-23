@@ -217,7 +217,7 @@ func testAccCheckAppImageDestroyConfig(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(config.AppImageConfigName) == rs.Primary.ID {

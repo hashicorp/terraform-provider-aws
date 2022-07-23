@@ -55,7 +55,7 @@ func UpdateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifi
 	_, err := conn.{{ .TagOp }}WithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	{{- else }}
@@ -89,7 +89,7 @@ func UpdateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifi
 		_, err := conn.{{ .UntagOp }}WithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -121,7 +121,7 @@ func UpdateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifi
 		_, err := conn.{{ .TagOp }}WithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 		{{- if .TagOpBatchSize }}
 		}

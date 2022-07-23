@@ -1407,7 +1407,7 @@ func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRec
 
 		respRaw, err := tfroute53.DeleteRecordSet(conn, input)
 		if err != nil {
-			return fmt.Errorf("error deleting resource record set: %s", err)
+			return fmt.Errorf("deleting resource record set: %s", err)
 		}
 
 		changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
@@ -1416,7 +1416,7 @@ func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRec
 		}
 
 		if err := tfroute53.WaitForRecordSetToSync(conn, tfroute53.CleanChangeID(*changeInfo.Id)); err != nil {
-			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
+			return fmt.Errorf("waiting for resource record set deletion: %s", err)
 		}
 
 		return nil

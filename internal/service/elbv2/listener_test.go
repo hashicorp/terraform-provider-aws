@@ -632,7 +632,7 @@ func testAccCheckListenerExists(n string, res *elbv2.Listener) resource.TestChec
 		listener, err := tfelbv2.FindListenerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
 		}
 
 		if listener == nil {
@@ -659,7 +659,7 @@ func testAccCheckListenerDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading ELBv2 Listener (%s): %w", rs.Primary.ID, err)
 		}
 
 		if listener == nil {

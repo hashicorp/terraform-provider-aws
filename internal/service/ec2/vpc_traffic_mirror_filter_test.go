@@ -160,7 +160,7 @@ func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirr
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorFilters) {
+		if len(out.TrafficMirrorFilters) == 0 {
 			return fmt.Errorf("Traffic mirror filter %s not found", rs.Primary.ID)
 		}
 

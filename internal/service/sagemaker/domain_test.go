@@ -528,7 +528,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
 		}
 
 		domainArn := aws.StringValue(domain.DomainArn)

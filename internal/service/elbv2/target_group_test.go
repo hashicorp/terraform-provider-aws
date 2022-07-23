@@ -3145,7 +3145,7 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if targetGroup == nil {

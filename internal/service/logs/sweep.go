@@ -57,7 +57,7 @@ func init() {
 func sweepGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).LogsConn
 	var sweeperErrs *multierror.Error
@@ -83,7 +83,7 @@ func sweepGroups(region string) error {
 			_, err := conn.DeleteLogGroup(input)
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting CloudWatch Log Group (%s): %w", name, err)
+				sweeperErr := fmt.Errorf("deleting CloudWatch Log Group (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
@@ -99,7 +99,7 @@ func sweepGroups(region string) error {
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudWatch Log Groups: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving CloudWatch Log Groups: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -109,7 +109,7 @@ func sweeplogQueryDefinitions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.(*conns.AWSClient).LogsConn
@@ -123,7 +123,7 @@ func sweeplogQueryDefinitions(region string) error {
 		output, err := conn.DescribeQueryDefinitions(input)
 
 		if err != nil {
-			err := fmt.Errorf("error reading CloudWatch Log Query Definition: %w", err)
+			err := fmt.Errorf("reading CloudWatch Log Query Definition: %w", err)
 			log.Printf("[ERROR] %s", err)
 			errs = multierror.Append(errs, err)
 			break
@@ -146,7 +146,7 @@ func sweeplogQueryDefinitions(region string) error {
 	}
 
 	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping CloudWatch Log Query Definition for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("sweeping CloudWatch Log Query Definition for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
@@ -160,7 +160,7 @@ func sweeplogQueryDefinitions(region string) error {
 func sweepResourcePolicies(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).LogsConn
 
@@ -174,7 +174,7 @@ func sweepResourcePolicies(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error describing CloudWatchLog Resource Policy: %s", err)
+			return fmt.Errorf("describing CloudWatchLog Resource Policy: %s", err)
 		}
 
 		for _, resourcePolicy := range output.ResourcePolicies {
@@ -186,7 +186,7 @@ func sweepResourcePolicies(region string) error {
 			log.Printf("[INFO] Deleting CloudWatch Log Resource Policy: %s", policyName)
 
 			if _, err := conn.DeleteResourcePolicy(deleteInput); err != nil {
-				return fmt.Errorf("error deleting CloudWatch log resource policy (%s): %s", policyName, err)
+				return fmt.Errorf("deleting CloudWatch log resource policy (%s): %s", policyName, err)
 			}
 		}
 

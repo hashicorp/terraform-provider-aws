@@ -41,7 +41,7 @@ func init() {
 func sweepConfigurationSets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).SESConn
 	input := &ses.ListConfigurationSetsInput{}
@@ -54,7 +54,7 @@ func sweepConfigurationSets(region string) error {
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Configuration Sets: %w", err))
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SES Configuration Sets: %w", err))
 			return sweeperErrs
 		}
 
@@ -69,7 +69,7 @@ func sweepConfigurationSets(region string) error {
 				continue
 			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Configuration Set (%s): %w", name, err)
+				sweeperErr := fmt.Errorf("deleting SES Configuration Set (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
@@ -88,7 +88,7 @@ func sweepConfigurationSets(region string) error {
 func sweepIdentities(region, identityType string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).SESConn
 	input := &ses.ListIdentitiesInput{
@@ -109,7 +109,7 @@ func sweepIdentities(region, identityType string) error {
 				Identity: aws.String(identity),
 			})
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Identity (%s): %w", identity, err)
+				sweeperErr := fmt.Errorf("deleting SES Identity (%s): %w", identity, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
@@ -123,7 +123,7 @@ func sweepIdentities(region, identityType string) error {
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Identities: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SES Identities: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -132,7 +132,7 @@ func sweepIdentities(region, identityType string) error {
 func sweepReceiptRuleSets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).SESConn
 
@@ -145,7 +145,7 @@ func sweepReceiptRuleSets(region string) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error disabling any currently active SES Receipt Rule Set: %w", err)
+		return fmt.Errorf("disabling any currently active SES Receipt Rule Set: %w", err)
 	}
 
 	input := &ses.ListReceiptRuleSetsInput{}
@@ -158,7 +158,7 @@ func sweepReceiptRuleSets(region string) error {
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Receipt Rule Sets: %w", err))
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SES Receipt Rule Sets: %w", err))
 			return sweeperErrs
 		}
 
@@ -173,7 +173,7 @@ func sweepReceiptRuleSets(region string) error {
 				continue
 			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Receipt Rule Set (%s): %w", name, err)
+				sweeperErr := fmt.Errorf("deleting SES Receipt Rule Set (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
