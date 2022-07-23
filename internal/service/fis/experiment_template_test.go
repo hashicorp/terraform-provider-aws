@@ -24,10 +24,10 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fis.ServiceID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccExperimentTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
@@ -73,10 +73,10 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fis.ServiceID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccExperimentTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
@@ -96,10 +96,10 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fis.ServiceID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccExperimentTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
