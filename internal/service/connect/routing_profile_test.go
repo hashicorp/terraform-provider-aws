@@ -355,10 +355,10 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoutingProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
