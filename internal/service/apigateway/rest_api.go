@@ -31,81 +31,44 @@ func ResourceRestAPI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
 			"api_key_source": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(apigateway.ApiKeySourceType_Values(), false),
 			},
-
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-
 			"binary_media_types": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"body": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"disable_execute_api_endpoint": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
-			},
-
-			"parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"minimum_compression_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      -1,
-				ValidateFunc: validation.IntBetween(-1, 10485760),
-			},
-
-			"root_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -140,7 +103,33 @@ func ResourceRestAPI() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			"minimum_compression_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntBetween(-1, 10485760),
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			"root_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
