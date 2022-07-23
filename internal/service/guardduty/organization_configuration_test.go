@@ -98,9 +98,9 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDetectorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(true),
