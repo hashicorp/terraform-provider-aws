@@ -133,10 +133,10 @@ func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFlowLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCFlowLogConfig_transitGatewayId(rName),
@@ -169,10 +169,10 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFlowLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCFlowLogConfig_transitGatewayAttachmentId(rName),
