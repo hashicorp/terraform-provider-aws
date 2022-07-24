@@ -56,10 +56,10 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_nameGenerated(),
@@ -84,10 +84,10 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories:    acctest.ProviderFactories,
-    CheckDestroy: testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),

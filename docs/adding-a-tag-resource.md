@@ -24,10 +24,10 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories:    acctest.ProviderFactories,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
@@ -51,10 +51,10 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories:    acctest.ProviderFactories,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
@@ -73,10 +73,10 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-    ErrorCheck:   acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories:    acctest.ProviderFactories,
-		CheckDestroy: testAccCheck{Service}TagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{Service}TagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
