@@ -192,6 +192,11 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 
+		// Terraform implementation uses the `overwrite` mode by default.
+		// Overwrite mode will delete existing literal properties if they are not explictly set in the OpenAPI definition.
+		// The VPC endpoints deletion and immediate recreation can cause a race condition.
+		// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
+		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 		input := &apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
 			Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
@@ -208,26 +213,21 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating API Gateway specification: %s", err)
 		}
 
-		// Terraform default operation mode is overwright (apigateway.PutModeOverwrite)
 		// Using PutRestApi with mode overwrite will remove any configuration
 		// that was done with CreateRestApi. Reconcile these changes by having
 		// any Terraform configured values overwrite imported configuration.
+		updateInput := &apigateway.UpdateRestApiInput{
+			RestApiId:       aws.String(d.Id()),
+			PatchOperations: []*apigateway.PatchOperation{},
+		}
 
-		if d.Get("put_rest_api_mode").(string) == apigateway.PutModeOverwrite {
+		updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
 
-			updateInput := &apigateway.UpdateRestApiInput{
-				RestApiId:       aws.String(d.Id()),
-				PatchOperations: []*apigateway.PatchOperation{},
-			}
+		if len(updateInput.PatchOperations) > 0 {
+			_, err := conn.UpdateRestApi(updateInput)
 
-			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
-
-			if len(updateInput.PatchOperations) > 0 {
-				_, err := conn.UpdateRestApi(updateInput)
-
-				if err != nil {
-					return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
-				}
+			if err != nil {
+				return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
 			}
 		}
 	}
@@ -388,25 +388,37 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
+	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		endpointConfiguration := expandEndpointConfiguration(v.([]interface{}))
+		prefix := "/endpointConfiguration/vpcEndpointIds"
 
 		if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
 			if output.EndpointConfiguration != nil {
-				for _, elem := range output.EndpointConfiguration.VpcEndpointIds {
+				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
+					for _, x := range endpointConfiguration.VpcEndpointIds {
+						if *v == *x {
+							break
+						}
+					}
 					operations = append(operations, &apigateway.PatchOperation{
 						Op:    aws.String(apigateway.OpRemove),
-						Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
-						Value: elem,
+						Path:  aws.String(prefix),
+						Value: v,
 					})
 				}
 			}
 
-			for _, elem := range endpointConfiguration.VpcEndpointIds {
+			for _, v := range endpointConfiguration.VpcEndpointIds {
+				for _, x := range output.EndpointConfiguration.VpcEndpointIds {
+					if *v == *x {
+						break
+					}
+				}
 				operations = append(operations, &apigateway.PatchOperation{
 					Op:    aws.String(apigateway.OpAdd),
-					Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
-					Value: elem,
+					Path:  aws.String(prefix),
+					Value: v,
 				})
 			}
 		}
@@ -510,7 +522,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 	}
-	// Compare these, don't blindly remove as they will be async operations
+	// Compare the old and new values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
 	if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
 		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
 		prefix := "/endpointConfiguration/vpcEndpointIds"
@@ -519,6 +531,11 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 		new := n.(*schema.Set).List()
 
 		for _, v := range old {
+			for _, x := range new {
+				if v.(string) == x.(string) {
+					break
+				}
+			}
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpRemove),
 				Path:  aws.String(prefix),
@@ -527,6 +544,11 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, v := range new {
+			for _, x := range old {
+				if v.(string) == x.(string) {
+					break
+				}
+			}
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpAdd),
 				Path:  aws.String(prefix),
@@ -576,6 +598,11 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 		if body, ok := d.GetOk("body"); ok {
 			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
 
+			// Terraform implementation uses the `overwrite` mode by default.
+			// Overwrite mode will delete existing literal properties if they are not explictly set in the OpenAPI definition.
+			// The VPC endpoints deletion and immediate recreation can cause a race condition.
+			// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
+			// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 			input := &apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
 				Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
@@ -592,25 +619,21 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating API Gateway specification: %s", err)
 			}
 
-			// Terraform default operation mode is overwright (apigateway.PutModeOverwrite)
 			// Using PutRestApi with mode overwrite will remove any configuration
 			// that was done previously. Reconcile these changes by having
 			// any Terraform configured values overwrite imported configuration.
-			if d.Get("put_rest_api_mode").(string) == apigateway.PutModeOverwrite {
+			updateInput := &apigateway.UpdateRestApiInput{
+				RestApiId:       aws.String(d.Id()),
+				PatchOperations: []*apigateway.PatchOperation{},
+			}
 
-				updateInput := &apigateway.UpdateRestApiInput{
-					RestApiId:       aws.String(d.Id()),
-					PatchOperations: []*apigateway.PatchOperation{},
-				}
+			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
 
-				updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
+			if len(updateInput.PatchOperations) > 0 {
+				_, err := conn.UpdateRestApi(updateInput)
 
-				if len(updateInput.PatchOperations) > 0 {
-					_, err := conn.UpdateRestApi(updateInput)
-
-					if err != nil {
-						return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
-					}
+				if err != nil {
+					return fmt.Errorf("error updating REST API (%s) after OpenAPI import: %w", d.Id(), err)
 				}
 			}
 		}
