@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccTransitGateway_serial(t *testing.T) {
@@ -576,11 +577,11 @@ func testAccTransitGateway_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayExists(resourceName string, transitGateway *ec2.TransitGateway) resource.TestCheckFunc {
+func testAccCheckTransitGatewayExists(n string, v *ec2.TransitGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -589,21 +590,13 @@ func testAccCheckTransitGatewayExists(resourceName string, transitGateway *ec2.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		gateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
+		output, err := tfec2.FindTransitGatewayByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if gateway == nil {
-			return fmt.Errorf("EC2 Transit Gateway not found")
-		}
-
-		if aws.StringValue(gateway.State) != ec2.TransitGatewayStateAvailable {
-			return fmt.Errorf("EC2 Transit Gateway (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(gateway.State))
-		}
-
-		*transitGateway = *gateway
+		*v = *output
 
 		return nil
 	}
@@ -617,9 +610,9 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		transitGateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
+		_, err := tfec2.FindTransitGatewayByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayID.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -627,13 +620,7 @@ func testAccCheckTransitGatewayDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if transitGateway == nil {
-			continue
-		}
-
-		if aws.StringValue(transitGateway.State) != ec2.TransitGatewayStateDeleted {
-			return fmt.Errorf("EC2 Transit Gateway (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(transitGateway.State))
-		}
+		return fmt.Errorf("EC2 Transit Gateway %s still exists", rs.Primary.ID)
 	}
 
 	return nil
