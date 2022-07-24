@@ -28,6 +28,7 @@ func ResourceTransitGateway() *schema.Resource {
 		Read:   resourceTransitGatewayRead,
 		Update: resourceTransitGatewayUpdate,
 		Delete: resourceTransitGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,11 +41,11 @@ func ResourceTransitGateway() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
-				// Only changes from disable to enable for feature_set should force a new resource
+				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == ec2.DefaultRouteTableAssociationValueDisable && new.(string) == ec2.DefaultRouteTableAssociationValueEnable
 			}),
 			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
-				// Only changes from disable to enable for feature_set should force a new resource
+				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == ec2.DefaultRouteTablePropagationValueDisable && new.(string) == ec2.DefaultRouteTablePropagationValueEnable
 			}),
 			verify.SetTagsDiff,
@@ -168,13 +169,13 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	output, err := conn.CreateTransitGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway: %w", err)
+		return fmt.Errorf("creating EC2 Transit Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGateway.TransitGatewayId))
 
 	if _, err := WaitTransitGatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayRead(d, meta)
@@ -188,13 +189,13 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	transitGateway, err := FindTransitGatewayByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Transit Gateway Connect %s not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Transit Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Connect (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", d.Id(), err)
 	}
 
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
@@ -215,11 +216,11 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -272,11 +273,11 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if _, err := conn.ModifyTransitGateway(input); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Transit Gateway (%s): %w", d.Id(), err)
 		}
 
 		if _, err := WaitTransitGatewayUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for EC2 Transit Gateway (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -284,7 +285,7 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Transit Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -306,11 +307,11 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Transit Gateway (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
