@@ -121,13 +121,10 @@ func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
 	}
 
-	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
+	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
+	if err != nil {
+		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -174,13 +171,10 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayId)
-	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
+	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
+	if err != nil {
+		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -269,14 +263,10 @@ func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
+		transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
-		transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
 		if err != nil {
-			return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-		}
-
-		if transitGateway.Options == nil {
-			return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
+			return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
