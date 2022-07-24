@@ -126,10 +126,17 @@ func ResourceRestAPI() *schema.Resource {
 				},
 			},
 			"put_rest_api_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Default not honored at runtime? Adding helper function.
 				Default:      apigateway.PutModeOverwrite,
 				ValidateFunc: validation.StringInSlice(apigateway.PutMode_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "" && new == apigateway.PutModeOverwrite {
+						return true
+					}
+					return false
+				},
 			},
 			"root_resource_id": {
 				Type:     schema.TypeString,
@@ -199,8 +206,10 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 		input := &apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
-			Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
-			Body:      []byte(body.(string)),
+			Mode:      aws.String(modeConfigOrDefault(d)),
+			// Default value from schema is not being returned at runtime.
+			//Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
+			Body: []byte(body.(string)),
 		}
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -605,8 +614,10 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 			input := &apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
-				Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
-				Body:      []byte(body.(string)),
+				Mode:      aws.String(modeConfigOrDefault(d)),
+				// Default value from schema is not being returned at runtime.
+				//Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
+				Body: []byte(body.(string)),
 			}
 
 			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -647,6 +658,14 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceRestAPIRead(d, meta)
+}
+
+func modeConfigOrDefault(d *schema.ResourceData) string {
+	if v, ok := d.GetOk("put_rest_api_mode"); ok {
+		return v.(string)
+	} else {
+		return apigateway.PutModeOverwrite
+	}
 }
 
 func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
