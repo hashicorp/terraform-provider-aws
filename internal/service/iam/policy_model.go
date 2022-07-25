@@ -157,6 +157,7 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 				for _, v := range value.([]interface{}) {
 					values = append(values, v.(string))
 				}
+				sort.Sort(sort.Reverse(sort.StringSlice(values)))
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
