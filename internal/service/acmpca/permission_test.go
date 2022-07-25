@@ -41,6 +41,29 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 	})
 }
 
+func TestAccACMPCAPermission_disappears(t *testing.T) {
+	var permission acmpca.Permission
+	resourceName := "aws_acmpca_permission.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_basic(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &permission),
+					acctest.CheckResourceDisappears(acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
