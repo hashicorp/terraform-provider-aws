@@ -87,7 +87,6 @@ func FindPatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGro
 	return result, err
 }
 
-// FindServiceSetting returns the Document corresponding to the specified name.
 func FindServiceSettingByARN(conn *ssm.SSM, arn string) (*ssm.ServiceSetting, error) {
 	input := &ssm.GetServiceSettingInput{
 		SettingId: aws.String(arn),

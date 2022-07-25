@@ -71,7 +71,7 @@ func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, e
 	return nil, err
 }
 
-func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration) (*ssm.ServiceSetting, error) { //nolint:unparam
+func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration) (*ssm.ServiceSetting, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
@@ -88,7 +88,7 @@ func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration)
 	return nil, err
 }
 
-func waitServiceSettingReset(conn *ssm.SSM, arn string, timeout time.Duration) error { //nolint:unparam
+func waitServiceSettingReset(conn *ssm.SSM, arn string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
