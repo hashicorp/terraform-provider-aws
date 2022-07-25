@@ -282,7 +282,7 @@ func resourceTransitGatewayVPCAttachmentDelete(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway VPC Attachment: %w", err)
+		return fmt.Errorf("deleting EC2 Transit Gateway VPC Attachment (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayVPCAttachmentDeleted(conn, d.Id()); err != nil {

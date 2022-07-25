@@ -1343,6 +1343,23 @@ const (
 	TransitGatewayVPCAttachmentUpdatedTimeout = 10 * time.Minute
 )
 
+func WaitTransitGatewayVPCAttachmentAccepted(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStatePending, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayVPCAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitTransitGatewayVPCAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
