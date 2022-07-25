@@ -11,7 +11,7 @@ import (
 
 func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -27,7 +27,7 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 
 func statusDirectoryShare(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

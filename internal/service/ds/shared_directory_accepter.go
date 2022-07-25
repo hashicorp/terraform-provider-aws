@@ -90,7 +90,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	dir, err := findDirectoryByID(conn, d.Id())
+	dir, err := FindDirectoryByID(conn, d.Id())
 
 	if err != nil {
 		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectoryAccepter, d.Id(), err)
