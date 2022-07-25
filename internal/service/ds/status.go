@@ -25,7 +25,7 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 	}
 }
 
-func statusDirectoryShare(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(conn, id)
 

@@ -78,7 +78,7 @@ func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectorySe
 			directoryservice.ShareStatusPendingAcceptance,
 		},
 		Target:                    []string{directoryservice.ShareStatusShared},
-		Refresh:                   statusDirectoryShare(conn, dirId),
+		Refresh:                   statusDirectoryShareStatus(conn, dirId),
 		Timeout:                   sharedDirectoryDeletedTimeout,
 		ContinuousTargetOccurence: 2,
 	}
