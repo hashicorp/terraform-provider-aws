@@ -134,9 +134,7 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	err = waitDirectoryDeleted(conn, d.Id())
-
-	if err != nil {
+	if _, err := waitDirectoryDeleted(conn, d.Id()); err != nil {
 		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectoryAccepter, d.Id(), err)
 	}
 

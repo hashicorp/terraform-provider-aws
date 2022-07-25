@@ -204,9 +204,8 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryId)
 
-	err = waitDirectoryCreated(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
+	if _, err := waitDirectoryCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for Directory Service Directory (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
@@ -355,10 +354,8 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	err = waitDirectoryDeleted(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)
+	if _, err := waitDirectoryDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for Directory Service Directory (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
