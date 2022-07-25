@@ -147,7 +147,7 @@ emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRSer
 ,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,No SDK support
 events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,
-fis,fis,fis,fis,,fis,,,FIS,FIS,,1,,aws_fis_,,fis_,Fault Injection Simulator,AWS,,,,,
+fis,fis,fis,fis,,fis,,,FIS,FIS,x,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,1,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,,,,
 fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,
@@ -279,6 +279,7 @@ rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,1,,aws_rbin_,,rbin_
 ,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,No SDK support
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,1,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,
+redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,1,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,,,,
 resource-groups,resourcegroups,resourcegroups,resourcegroups,,resourcegroups,,,ResourceGroups,ResourceGroups,,1,,aws_resourcegroups_,,resourcegroups_,Resource Groups,AWS,,,,,

@@ -705,7 +705,7 @@ func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	output, err := conn.CreateVirtualGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh virtual gateway: %w", err)
+		return fmt.Errorf("creating App Mesh virtual gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.VirtualGateway.Metadata.Uid))
@@ -747,12 +747,12 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Virtual Gateway: %w", err)
+		return fmt.Errorf("reading App Mesh Virtual Gateway: %w", err)
 	}
 
 	if virtualGateway == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Virtual Gateway: not found after creation")
+			return fmt.Errorf("reading App Mesh Virtual Gateway: not found after creation")
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
@@ -762,7 +762,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	if aws.StringValue(virtualGateway.Status.Status) == appmesh.VirtualGatewayStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Virtual Gateway: %s after creation", aws.StringValue(virtualGateway.Status.Status))
+			return fmt.Errorf("reading App Mesh Virtual Gateway: %s after creation", aws.StringValue(virtualGateway.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
@@ -780,24 +780,24 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %w", err)
+		return fmt.Errorf("setting spec: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh virtual gateway (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for App Mesh virtual gateway (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -820,7 +820,7 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		_, err := conn.UpdateVirtualGateway(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual gateway (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating App Mesh virtual gateway (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -829,7 +829,7 @@ func resourceVirtualGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual gateway (%s) tags: %w", arn, err)
+			return fmt.Errorf("updating App Mesh virtual gateway (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -850,7 +850,7 @@ func resourceVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting App Mesh virtual gateway (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -859,7 +859,7 @@ func resourceVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 func resourceVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-gateway-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name'", d.Id())
 	}
 
 	mesh := parts[0]

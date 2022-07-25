@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
@@ -17,7 +19,7 @@ const (
 )
 
 var (
-	_ attr.TypeWithValidate = DurationType
+	_ xattr.TypeWithValidate = DurationType
 )
 
 func (d durationType) TerraformType(_ context.Context) tftypes.Type {
@@ -61,7 +63,7 @@ func (d durationType) String() string {
 }
 
 // Validate implements type validation.
-func (d durationType) Validate(ctx context.Context, in tftypes.Value, path *tftypes.AttributePath) diag.Diagnostics {
+func (d durationType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if !in.Type().Is(tftypes.String) {

@@ -81,7 +81,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.CreateConfigurationSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SES configuration set (%s): %w", configurationSetName, err)
+		return fmt.Errorf("creating SES configuration set (%s): %w", configurationSetName, err)
 	}
 
 	d.SetId(configurationSetName)
@@ -94,7 +94,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
 		}
 	}
 
@@ -106,7 +106,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) reputation metrics enabled: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) reputation metrics enabled: %w", configurationSetName, err)
 		}
 	}
 
@@ -118,7 +118,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) sending enabled: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) sending enabled: %w", configurationSetName, err)
 		}
 	}
 
@@ -147,7 +147,7 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := d.Set("delivery_options", flattenConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
-		return fmt.Errorf("error setting delivery_options: %w", err)
+		return fmt.Errorf("setting delivery_options: %w", err)
 	}
 
 	d.Set("name", response.ConfigurationSet.Name)
@@ -182,7 +182,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) delivery options: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) delivery options: %w", d.Id(), err)
 		}
 	}
 
@@ -194,7 +194,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
 		}
 	}
 
@@ -206,7 +206,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
 		}
 	}
 
@@ -223,7 +223,7 @@ func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) er
 
 	if _, err := conn.DeleteConfigurationSet(input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
-			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
+			return fmt.Errorf("deleting SES Configuration Set (%s): %w", d.Id(), err)
 		}
 	}
 

@@ -33,8 +33,9 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":  testAccOrganizationConfiguration_basic,
-			"s3Logs": testAccOrganizationConfiguration_s3logs,
+			"basic":      testAccOrganizationConfiguration_basic,
+			"s3Logs":     testAccOrganizationConfiguration_s3logs,
+			"kubernetes": testAccOrganizationConfiguration_kubernetes,
 		},
 		"ThreatIntelSet": {
 			"basic": testAccThreatintelset_basic,

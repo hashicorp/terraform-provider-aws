@@ -24,9 +24,9 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
@@ -54,9 +54,9 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),

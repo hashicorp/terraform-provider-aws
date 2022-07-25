@@ -22,10 +22,10 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckObservabilityConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
@@ -51,10 +51,10 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckObservabilityConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObservabilityConfigurationConfig_traceConfiguration(rName),
@@ -82,10 +82,10 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckObservabilityConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
@@ -104,10 +104,10 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckObservabilityConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key1", "value1"),

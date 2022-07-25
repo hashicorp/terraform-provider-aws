@@ -21,10 +21,10 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_basic(rName),
@@ -54,10 +54,10 @@ func TestAccECSTaskSet_withExternalId(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_externalID(rName),
@@ -85,10 +85,10 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_scale(rName, 0.0),
@@ -133,10 +133,10 @@ func TestAccECSTaskSet_disappears(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_basic(rName),
@@ -155,10 +155,10 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_capacityProviderStrategy(rName, 1, 0),
@@ -197,10 +197,10 @@ func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_multipleCapacityProviderStrategies(rName),
@@ -226,10 +226,10 @@ func TestAccECSTaskSet_withAlb(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_alb(rName),
@@ -255,10 +255,10 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_launchTypeFargate(rName),
@@ -289,10 +289,10 @@ func TestAccECSTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_launchTypeFargateAndPlatformVersion(rName, "1.3.0"),
@@ -333,10 +333,10 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_serviceRegistries(rName),
@@ -362,10 +362,10 @@ func TestAccECSTaskSet_Tags(t *testing.T) {
 	resourceName := "aws_ecs_task_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTaskSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskSetConfig_tags1(rName, "key1", "value1"),

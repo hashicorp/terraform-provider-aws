@@ -32,10 +32,10 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
@@ -63,10 +63,10 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
@@ -89,10 +89,10 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
@@ -151,7 +151,7 @@ func testAccCheckQueryLogDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
 		}
 
 		if out.QueryLoggingConfig != nil {

@@ -243,10 +243,10 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDashboardDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
@@ -296,7 +296,7 @@ When executing the test, the following steps are taken for each `TestStep`:
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
-          return fmt.Errorf("Not found: %s", n)
+          return fmt.Errorf("not found: %s", n)
         }
 
         conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
@@ -348,7 +348,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
         _, err := conn.GetDashboard(&params)
         if err == nil {
-          return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+          return fmt.Errorf("dashboard still exists: %s", rs.Primary.ID)
         }
         if !isDashboardNotFoundErr(err) {
           return err
@@ -556,10 +556,10 @@ func TestAccExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckExampleThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -754,10 +754,10 @@ func TestAccExampleThing_disappears(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckExampleThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -797,10 +797,10 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
   resourceName := "aws_example_child_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckExampleChildThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleChildThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
@@ -827,10 +827,10 @@ func TestAccExampleThing_Description(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckExampleThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
@@ -872,8 +872,7 @@ resource "aws_example_thing" "test" {
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
 - In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
-- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -881,7 +880,6 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
-  var providers []*schema.Provider
   resourceName := "aws_example.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -889,9 +887,9 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(t)
       acctest.PreCheckOrganizationsAccount(t)
     },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories: acctest.FactoriesAlternate(&providers),
-    CheckDestroy:      testAccCheckExampleDestroy,
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+    CheckDestroy:             testAccCheckExampleDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
@@ -936,8 +934,7 @@ Searching for usage of `acctest.PreCheckOrganizationsAccount` in the codebase wi
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
 - In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
-- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `ProviderFactories: acctest.ProviderFactories` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2)` (where the last parameter is number of regions)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -945,7 +942,6 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
-  var providers []*schema.Provider
   resourceName := "aws_example.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -953,9 +949,9 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(t)
       acctest.PreCheckMultipleRegion(t, 2)
     },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-    CheckDestroy:      testAccCheckExampleDestroy,
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+    CheckDestroy:             testAccCheckExampleDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
@@ -1089,7 +1085,7 @@ func testAccGetPricingRegion() string {
 
 For the resource or data source acceptance tests, the key items to adjust are:
 
-* Ensure `TestCase` uses `ProviderFactories: acctest.ProviderFactories` instead of `Providers: acctest.Providers`
+* Ensure `TestCase` uses `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` instead of `ProviderFactories: acctest.ProviderFactories` or `Providers: acctest.Providers`
 * Add the call for the new `PreCheck` function (keeping `acctest.PreCheck(t)`), e.g. `PreCheck: func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },`
 * If the testing is for a managed resource with a `CheckDestroy` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
 * If the testing is for a managed resource with a `Check...Exists` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
@@ -1169,10 +1165,10 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckExampleThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckExampleThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),

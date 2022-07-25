@@ -1,7 +1,7 @@
 ---
 subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
-page_title: "AWS: aws_group_policy"
+page_title: "AWS: aws_iam_group_policy"
 description: |-
   Provides an IAM policy attached to a group.
 ---

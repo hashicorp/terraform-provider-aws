@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider"
 )
@@ -89,8 +90,7 @@ func TestDurationTypeValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.TODO()
 
-			attributePath := tftypes.NewAttributePath().WithAttributeName("test")
-			diags := fwprovider.DurationType.Validate(ctx, test.val, attributePath)
+			diags := fwprovider.DurationType.Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

@@ -95,7 +95,7 @@ func UpdateTagsWithContext(ctx context.Context, conn route53iface.Route53API, id
 	_, err := conn.ChangeTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

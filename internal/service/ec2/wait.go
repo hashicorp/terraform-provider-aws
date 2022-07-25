@@ -698,11 +698,12 @@ const (
 
 func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{},
-		Target:         []string{RouteTableStatusReady},
-		Refresh:        StatusRouteTable(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: RouteTableNotFoundChecks,
+		Pending:                   []string{},
+		Target:                    []string{RouteTableStatusReady},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            RouteTableNotFoundChecks,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -716,10 +717,11 @@ func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 func WaitRouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{RouteTableStatusReady},
-		Target:  []string{},
-		Refresh: StatusRouteTable(conn, id),
-		Timeout: timeout,
+		Pending:                   []string{RouteTableStatusReady},
+		Target:                    []string{},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

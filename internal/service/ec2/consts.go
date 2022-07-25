@@ -249,3 +249,15 @@ func outsideIPAddressType_Values() []string {
 		OutsideIPAddressTypePublicIPv4,
 	}
 }
+
+const (
+	securityGroupRuleTypeEgress  = "egress"
+	securityGroupRuleTypeIngress = "ingress"
+)
+
+func securityGroupRuleType_Values() []string {
+	return []string{
+		securityGroupRuleTypeEgress,
+		securityGroupRuleTypeIngress,
+	}
+}

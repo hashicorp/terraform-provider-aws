@@ -9,12 +9,14 @@ import (
 )
 
 const (
+	ErrActionChecking             = "checking"
 	ErrActionCheckingDestroyed    = "checking destroyed"
 	ErrActionCheckingExistence    = "checking existence"
 	ErrActionCheckingNotRecreated = "checking not recreated"
 	ErrActionCheckingRecreated    = "checking recreated"
 	ErrActionCreating             = "creating"
 	ErrActionDeleting             = "deleting"
+	ErrActionImporting            = "importing"
 	ErrActionReading              = "reading"
 	ErrActionSetting              = "setting"
 	ErrActionUpdating             = "updating"
@@ -52,6 +54,18 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 		},
 	}
+}
+
+// ErrorSetting returns an errors.Error with a standardized error message when setting
+// arguments and attributes values.
+func ErrorSetting(service, resource, id, argument string, gotError error) error {
+	return errors.New(ProblemStandardMessage(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError))
+}
+
+// DiagErrorSetting returns an errors.Error with a standardized error message when setting
+// arguments and attributes values.
+func DiagErrorSetting(service, resource, id, argument string, gotError error) diag.Diagnostics {
+	return DiagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
 }
 
 // AddWarning returns diag.Diagnostics with an additional diag.Diagnostic containing

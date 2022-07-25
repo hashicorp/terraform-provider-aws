@@ -165,6 +165,12 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
+												"throughput": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(125, 1000),
+												},
 												"volume_size": {
 													Type:         schema.TypeInt,
 													Optional:     true,

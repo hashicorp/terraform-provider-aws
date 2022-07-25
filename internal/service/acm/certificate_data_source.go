@@ -100,7 +100,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing certificates: %w", err)
+		return fmt.Errorf("listing certificates: %w", err)
 	}
 
 	if len(arns) == 0 {
@@ -128,7 +128,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
 		output, err := conn.DescribeCertificate(input)
 		if err != nil {
-			return fmt.Errorf("Error describing ACM certificate: %w", err)
+			return fmt.Errorf("describing ACM certificate: %w", err)
 		}
 		certificate := output.Certificate
 

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,9 +30,9 @@ func TestAccCodePipeline_basic(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_basic(name),
@@ -136,9 +135,9 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_basic(name),
@@ -163,9 +162,9 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_emptyStageArtifacts(name),
@@ -205,9 +204,9 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_deployServiceRole(name),
@@ -238,9 +237,9 @@ func TestAccCodePipeline_tags(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_tags(name, "tag1value", "tag2value"),
@@ -286,7 +285,6 @@ func TestAccCodePipeline_tags(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
@@ -297,9 +295,9 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 			testAccPreCheckSupported(t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_multiregion(name),
@@ -328,7 +326,6 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
@@ -339,9 +336,9 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 			testAccPreCheckSupported(t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_multiregion(name),
@@ -384,7 +381,6 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
@@ -395,9 +391,9 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 			testAccPreCheckSupported(t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_basic(name),
@@ -458,9 +454,9 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 			testAccPreCheckSupported(t)
 			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_namespace(name),
@@ -491,9 +487,9 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodePipelineConfig_gitHubv1SourceAction(name, githubToken),
@@ -749,7 +745,7 @@ EOF
 `, rName)
 }
 
-func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -812,7 +808,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -876,7 +872,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -986,7 +982,7 @@ EOF
 `, rName)
 }
 
-func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRoleWithAssumeRole(rName),
@@ -1072,7 +1068,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1141,7 +1137,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tag1, tag2))
 }
 
-func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1235,7 +1231,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1329,7 +1325,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccCodePipelineConfig_basic(rName),
@@ -1368,7 +1364,7 @@ resource "aws_s3_bucket_acl" "%[1]s" {
 `, bucket, rName, provider)
 }
 
-func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1441,7 +1437,7 @@ resource "aws_s3_bucket_acl" "foo_acl" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1500,7 +1496,7 @@ resource "aws_codepipeline" "test" {
 `, rName, githubToken))
 }
 
-func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:codepipeline-in-func-name
+func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
