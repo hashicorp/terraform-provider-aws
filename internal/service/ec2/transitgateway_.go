@@ -337,43 +337,6 @@ func DecodeTransitGatewayRouteTablePropagationID(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func DescribeTransitGateway(conn *ec2.EC2, transitGatewayID string) (*ec2.TransitGateway, error) {
-	input := &ec2.DescribeTransitGatewaysInput{
-		TransitGatewayIds: []*string{aws.String(transitGatewayID)},
-	}
-
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway (%s): %s", transitGatewayID, input)
-	for {
-		output, err := conn.DescribeTransitGateways(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || len(output.TransitGateways) == 0 {
-			return nil, nil
-		}
-
-		for _, transitGateway := range output.TransitGateways {
-			if transitGateway == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGateway.TransitGatewayId) == transitGatewayID {
-				return transitGateway, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
 func DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},

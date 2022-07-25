@@ -122,13 +122,10 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData,
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
-	transitGateway, err := DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
+	_, err = FindTransitGatewayByID(conn, transitGatewayID)
 
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
+	if err != nil {
+		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
 	}
 
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.RequesterTgwInfo.OwnerId)
