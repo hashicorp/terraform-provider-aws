@@ -19,10 +19,10 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 	resourceName := "aws_acmpca_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_valid(),
@@ -38,10 +38,10 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 
 func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionConfig_invalidPrincipal(),
@@ -53,10 +53,10 @@ func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
 
 func TestAccACMPCAPermission_InvalidActionsEntry(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionConfig_invalidActionsEntry(),
