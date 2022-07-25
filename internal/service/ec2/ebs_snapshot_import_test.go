@@ -23,10 +23,10 @@ func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
@@ -47,10 +47,10 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
@@ -71,10 +71,10 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
@@ -94,10 +94,10 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key1", "value1"),
@@ -134,10 +134,10 @@ func TestAccEC2EBSSnapshotImport_storageTier(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEBSSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotImportConfig_storageTier(t, rName),

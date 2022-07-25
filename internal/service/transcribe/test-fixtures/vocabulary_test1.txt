@@ -1,0 +1,7 @@
+Phrase	SoundsLike	IPA	DisplayAs
+Los-Angeles		l ɔ s æ n ʤ ə l ə s	Los Angeles
+A.B.C.-s	ay-bee-sees		ABCs
+Amazon-dot-com			Amazon.com
+C.L.I.		s ɪ ɛ l aɪ	CLI
+Andorra-la-Vella	ann-do-rah-la-bay-ah		Andorra la Vella
+Dynamo-D.B.			DynamoDB

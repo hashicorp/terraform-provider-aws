@@ -10,7 +10,7 @@ import (
 // Specifically, NotFound returns true if the error or a wrapped error is of type
 // resource.NotFoundError.
 func NotFound(err error) bool {
-	var e *resource.NotFoundError // nosemgrep: is-not-found-error
+	var e *resource.NotFoundError // nosemgrep:ci.is-not-found-error
 	return errors.As(err, &e)
 }
 

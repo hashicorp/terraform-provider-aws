@@ -11,27 +11,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// ListTags lists networkmanager service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(conn networkmanageriface.NetworkManagerAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn networkmanageriface.NetworkManagerAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &networkmanager.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return KeyValueTags(output.TagList), nil
-}
-
 // []*SERVICE.Tag handling
 
 // Tags returns networkmanager service tags.
@@ -80,7 +59,7 @@ func UpdateTagsWithContext(ctx context.Context, conn networkmanageriface.Network
 		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -93,7 +72,7 @@ func UpdateTagsWithContext(ctx context.Context, conn networkmanageriface.Network
 		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

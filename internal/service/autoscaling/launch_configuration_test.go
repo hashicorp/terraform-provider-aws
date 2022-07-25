@@ -25,10 +25,10 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_basic(rName),
@@ -72,10 +72,10 @@ func TestAccAutoScalingLaunchConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_basic(rName),
@@ -94,10 +94,10 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_nameGenerated(),
@@ -121,10 +121,10 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_namePrefix("tf-acc-test-prefix-"),
@@ -149,10 +149,10 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_blockDevices(rName),
@@ -196,10 +196,10 @@ func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_instanceStoreAMI(rName),
@@ -224,10 +224,10 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_cofingRootBlockDeviceCopiedAMI(rName),
@@ -254,10 +254,10 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_rootBlockDeviceVolumeSize(rName, 11),
@@ -290,10 +290,10 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName),
@@ -322,10 +322,10 @@ func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_spotPrice(rName),
@@ -353,10 +353,10 @@ func TestAccAutoScalingLaunchConfiguration_withVPCClassicLink(t *testing.T) {
 	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_vpcClassicLink(rName),
@@ -384,10 +384,10 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_iamProfile(rName),
@@ -411,10 +411,10 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_gp3(rName),
@@ -450,10 +450,10 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_encryptedEBSBlockDevice(rName, 9),
@@ -504,10 +504,10 @@ func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_metadataOptions(rName),
@@ -534,10 +534,10 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_ebsNoDevice(rName),
@@ -565,10 +565,10 @@ func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_userData(rName),
@@ -601,10 +601,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, ""),
@@ -632,10 +632,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "false"),
@@ -663,10 +663,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "true"),
@@ -694,10 +694,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, ""),
@@ -725,10 +725,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "false"),
@@ -756,10 +756,10 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 	groupResourceName := "aws_autoscaling_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLaunchConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "true"),

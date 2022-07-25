@@ -19,10 +19,10 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
@@ -45,10 +45,10 @@ func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
@@ -67,10 +67,10 @@ func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, chime.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),

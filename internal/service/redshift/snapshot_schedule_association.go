@@ -74,7 +74,7 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Schedule Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Schedule Association (%s): %w", d.Id(), err)
 	}
 	d.Set("cluster_identifier", assoicatedCluster.ClusterIdentifier)
 	d.Set("schedule_identifier", scheduleIdentifier)

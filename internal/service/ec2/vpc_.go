@@ -476,7 +476,15 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPC (%s): %w", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(vpcDeletedTimeout, func() (interface{}, error) {
+		return FindVPCByID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 VPC (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

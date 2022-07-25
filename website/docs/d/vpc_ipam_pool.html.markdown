@@ -45,7 +45,7 @@ The arguments of this data source act as filters for querying the available
 VPCs in the current region. The given filters must match exactly one
 VPC whose data will be exported as attributes.
 
-* `id` -
+* `ipam_pool_id` - The ID of the IPAM pool you would like information on.
 * `filter` - Custom filter block as described below.
 
 ## Attributes Reference
@@ -68,6 +68,7 @@ The following attribute is additionally exported:
 * `auto_import` - If enabled, IPAM will continuously look for resources within the CIDR range of this pool and automatically import them as allocations into your IPAM.
 * `aws_service` - Limits which service in AWS that the pool can be used in. "ec2", for example, allows users to use space for Elastic IP addresses and VPCs.
 * `description` - A description for the IPAM pool.
+* `id` - The ID of the IPAM pool.
 * `ipam_scope_id` - The ID of the scope the pool belongs to.
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `source_ipam_pool_id` - The ID of the source IPAM pool.

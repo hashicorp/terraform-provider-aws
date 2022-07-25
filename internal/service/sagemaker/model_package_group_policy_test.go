@@ -20,10 +20,10 @@ func TestAccSageMakerModelPackageGroupPolicy_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
@@ -47,10 +47,10 @@ func TestAccSageMakerModelPackageGroupPolicy_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
@@ -71,10 +71,10 @@ func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *tes
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckModelPackageGroupPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelPackageGroupPolicyConfig_basic(rName),
@@ -103,7 +103,7 @@ func testAccCheckModelPackageGroupPolicyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker Model Package Group Policy (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", rs.Primary.ID, err)
 		}
 	}
 

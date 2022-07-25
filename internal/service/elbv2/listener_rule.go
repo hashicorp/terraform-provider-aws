@@ -502,12 +502,12 @@ func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error 
 
 	params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
 	if err != nil {
-		return fmt.Errorf("error creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
+		return fmt.Errorf("creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
 	}
 
 	params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
-		return fmt.Errorf("error creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
+		return fmt.Errorf("creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
 	}
 
 	resp, err := retryListenerRuleCreate(conn, d, params, listenerArn)
@@ -536,7 +536,7 @@ func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Listener Rule (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("creating ELBv2 Listener Rule (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -761,7 +761,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 		conditions[i] = conditionMap
 	}
 	if err := d.Set("condition", conditions); err != nil {
-		return fmt.Errorf("error setting condition: %w", err)
+		return fmt.Errorf("setting condition: %w", err)
 	}
 
 	// tags at the end because, if not supported, will skip the rest of Read
@@ -773,18 +773,18 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -818,7 +818,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
 		if err != nil {
-			return fmt.Errorf("error modifying LB Listener Rule (%s) action: %w", d.Id(), err)
+			return fmt.Errorf("modifying LB Listener Rule (%s) action: %w", d.Id(), err)
 		}
 		requestUpdate = true
 	}
@@ -827,7 +827,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 		var err error
 		params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 		if err != nil {
-			return fmt.Errorf("error modifying LB Listener Rule (%s) condition: %w", d.Id(), err)
+			return fmt.Errorf("modifying LB Listener Rule (%s) condition: %w", d.Id(), err)
 		}
 		requestUpdate = true
 	}
@@ -872,7 +872,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating LB (%s) tags: %w", d.Id(), err)
 		}
 	}
 

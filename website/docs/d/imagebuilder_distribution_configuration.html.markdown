@@ -46,6 +46,16 @@ In addition to all arguments above, the following attributes are exported:
         * `target_repository` - Set of destination repositories for the container distribution configuration.
             * `repository_name` - Name of the container repository where the output container image is stored.
             * `service` - Service in which the image is registered.
+    * `fast_launch_configuration` - Nested list of Windows faster-launching configurations to use for AMI distribution.
+        * `account_id` - The owner account ID for the fast-launch enabled Windows AMI.
+        * `enabled` - A Boolean that represents the current state of faster launching for the Windows AMI.
+        * `launch_template` - Nested list of launch templates that the fast-launch enabled Windows AMI uses when it launches Windows instances to create pre-provisioned snapshots.
+            * `launch_template_id` - The ID of the launch template to use for faster launching for a Windows AMI.
+            * `launch_template_name` - The name of the launch template to use for faster launching for a Windows AMI.
+            * `launch_template_version` - The version of the launch template to use for faster launching for a Windows AMI.
+        * `max_parallel_launches` - The maximum number of parallel instances that are launched for creating resources.
+        * `snapshot_configuration` - Nested list of configurations for managing the number of snapshots that are created from pre-provisioned instances for the Windows AMI when faster launching is enabled.
+            * `target_resource_count` - The number of pre-provisioned snapshots to keep on hand for a fast-launch enabled Windows AMI.
     * `launch_template_configuration` - Nested list of launch template configurations.
         * `default` - Indicates whether the specified Amazon EC2 launch template is set as the default launch template.
         * `launch_template_id` - ID of the Amazon EC2 launch template.

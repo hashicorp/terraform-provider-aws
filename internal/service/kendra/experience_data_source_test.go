@@ -27,8 +27,8 @@ func testAccExperienceDataSource_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccExperienceDataSourceConfig_nonExistent,

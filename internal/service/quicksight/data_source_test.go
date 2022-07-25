@@ -231,10 +231,10 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
@@ -268,10 +268,10 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
@@ -292,10 +292,10 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_tags1(rId, rName, "key1", "value1"),
@@ -338,10 +338,10 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_permissions(rId, rName),

@@ -20,10 +20,10 @@ func TestAccBackupVault_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_basic(rInt),
@@ -46,10 +46,10 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_kmsKey(rInt),
@@ -73,10 +73,10 @@ func TestAccBackupVault_withTags(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_tags(rInt),
@@ -122,10 +122,10 @@ func TestAccBackupVault_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVaultConfig_basic(rInt),

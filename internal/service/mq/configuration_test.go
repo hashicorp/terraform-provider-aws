@@ -25,9 +25,9 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_basic(rName),
@@ -73,9 +73,9 @@ func TestAccMQConfiguration_withData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_data(rName),
@@ -108,9 +108,9 @@ func TestAccMQConfiguration_withLdapData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_ldapData(rName),
@@ -144,9 +144,9 @@ func TestAccMQConfiguration_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, mq.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationConfig_updateTags1(rName),

@@ -82,7 +82,7 @@ func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -96,7 +96,7 @@ func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

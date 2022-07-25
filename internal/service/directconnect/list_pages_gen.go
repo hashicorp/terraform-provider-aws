@@ -29,7 +29,6 @@ func describeGatewayAssociationProposalsPagesWithContext(ctx context.Context, co
 	}
 	return nil
 }
-
 func describeGatewayAssociationsPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationsOutput, bool) bool) error {
 	return describeGatewayAssociationsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func describeGatewayAssociationsPagesWithContext(ctx context.Context, conn *dire
 	}
 	return nil
 }
-
 func describeGatewaysPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewaysInput, fn func(*directconnect.DescribeDirectConnectGatewaysOutput, bool) bool) error {
 	return describeGatewaysPagesWithContext(context.Background(), conn, input, fn)
 }

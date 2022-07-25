@@ -39,9 +39,9 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -74,9 +74,9 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -105,9 +105,9 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
@@ -157,9 +157,9 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
@@ -210,9 +210,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),

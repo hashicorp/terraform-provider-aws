@@ -97,15 +97,13 @@ func TestAccS3BucketReplicationConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassStandard),

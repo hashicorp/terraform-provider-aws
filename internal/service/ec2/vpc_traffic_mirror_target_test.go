@@ -27,9 +27,9 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
@@ -62,9 +62,9 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_eni(rName, description),
@@ -95,9 +95,9 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key1", "value1"),
@@ -144,9 +144,9 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
@@ -181,7 +181,7 @@ func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirro
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorTargets) {
+		if len(out.TrafficMirrorTargets) == 0 {
 			return fmt.Errorf("Traffic mirror target %s not found", rs.Primary.ID)
 		}
 

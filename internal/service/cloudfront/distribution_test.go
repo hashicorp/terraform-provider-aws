@@ -24,10 +24,10 @@ func TestAccCloudFrontDistribution_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_enabled(false, false),
@@ -55,10 +55,10 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_s3(rName),
@@ -89,10 +89,10 @@ func TestAccCloudFrontDistribution_s3OriginWithTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_s3Tags(rName),
@@ -137,10 +137,10 @@ func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_custom(rName),
@@ -169,10 +169,10 @@ func TestAccCloudFrontDistribution_originPolicyDefault(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_originRequestPolicyDefault(rName),
@@ -201,10 +201,10 @@ func TestAccCloudFrontDistribution_originPolicyOrdered(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_originRequestPolicyOrdered(rName),
@@ -240,10 +240,10 @@ func TestAccCloudFrontDistribution_multiOrigin(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_multiOrigin(rName),
@@ -282,10 +282,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehavior(),
@@ -321,10 +321,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehaviorCachePolicy(rName),
@@ -357,10 +357,10 @@ func TestAccCloudFrontDistribution_orderedCacheBehaviorResponseHeadersPolicy(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehaviorResponseHeadersPolicy(rName),
@@ -393,10 +393,10 @@ func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehavior(),
@@ -416,10 +416,10 @@ func TestAccCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
 
 func TestAccCloudFrontDistribution_Origin_emptyDomainName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originEmptyDomainName(),
@@ -431,10 +431,10 @@ func TestAccCloudFrontDistribution_Origin_emptyDomainName(t *testing.T) {
 
 func TestAccCloudFrontDistribution_Origin_emptyOriginID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originEmptyOriginID(),
@@ -454,10 +454,10 @@ func TestAccCloudFrontDistribution_Origin_connectionAttempts(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_attempts = 0`),
@@ -489,10 +489,10 @@ func TestAccCloudFrontDistribution_Origin_connectionTimeout(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, `connection_timeout = 0`),
@@ -524,10 +524,10 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("cloudfront", t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.name`)),
@@ -576,10 +576,10 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.no_optional_items"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_noOptionalItems(),
@@ -664,10 +664,10 @@ func TestAccCloudFrontDistribution_http11(t *testing.T) {
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_http11(),
@@ -696,10 +696,10 @@ func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_isIPV6Enabled(),
@@ -730,10 +730,10 @@ func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
 	var distribution cloudfront.Distribution
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_noCustomErroResponseInfo(),
@@ -760,10 +760,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
@@ -804,10 +804,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
@@ -848,10 +848,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *test
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedKeyGroups(retainOnDelete, rName),
@@ -885,10 +885,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedSigners(t *testin
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
@@ -922,10 +922,10 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_realtimeLogARN(t *testin
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
@@ -956,10 +956,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testin
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehaviorRealtimeLogARN(rName, retainOnDelete),
@@ -991,10 +991,10 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_enabled(false, false),
@@ -1037,10 +1037,10 @@ func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_enabled(true, true),
@@ -1072,10 +1072,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesCookiesWhitelistedNamesUnordered3(retainOnDelete),
@@ -1120,10 +1120,10 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_orderedCacheBehaviorForwardedValuesHeadersUnordered3(retainOnDelete),
@@ -1162,10 +1162,10 @@ func TestAccCloudFrontDistribution_ViewerCertificate_acmCertificateARN(t *testin
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_viewerCertificateACMCertificateARN(retainOnDelete),
@@ -1194,10 +1194,10 @@ func TestAccCloudFrontDistribution_ViewerCertificateACMCertificateARN_conflictsW
 	retainOnDelete := testAccDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_viewerCertificateACMCertificateARNConflictsDefaultCertificate(retainOnDelete),
@@ -1228,10 +1228,10 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_waitForDeployment(false, false),
@@ -1281,10 +1281,10 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_eTagInitial(rName),
@@ -1548,10 +1548,10 @@ func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_originGroups(rName),

@@ -101,7 +101,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
-		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep: domain-names
+		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep:ci.domain-names
 		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
