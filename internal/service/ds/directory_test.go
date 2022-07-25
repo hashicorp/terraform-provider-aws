@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDSDirectory_basic(t *testing.T) {
@@ -292,12 +292,9 @@ func testAccCheckDirectoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := directoryservice.DescribeDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		out, err := conn.DescribeDirectories(&input)
+		_, err := tfds.FindDirectoryByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -305,9 +302,7 @@ func testAccCheckDirectoryDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if out != nil && len(out.DirectoryDescriptions) > 0 {
-			return fmt.Errorf("Expected AWS Directory Service Directory to be gone, but was still found")
-		}
+		return fmt.Errorf("Directory Service Directory %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -321,28 +316,18 @@ func testAccCheckServiceDirectoryExists(n string, v *directoryservice.DirectoryD
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Directory Service Directory ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
-		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		output, err := tfds.FindDirectoryByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(out.DirectoryDescriptions) < 1 {
-			return fmt.Errorf("No DS directory found")
-		}
-
-		if *out.DirectoryDescriptions[0].DirectoryId != rs.Primary.ID {
-			return fmt.Errorf("DS directory ID mismatch - existing: %q, state: %q",
-				*out.DirectoryDescriptions[0].DirectoryId, rs.Primary.ID)
-		}
-
-		*v = *out.DirectoryDescriptions[0]
+		*v = *output
 
 		return nil
 	}
