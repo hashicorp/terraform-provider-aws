@@ -50,6 +50,34 @@ func TestAccDSDirectory_basic(t *testing.T) {
 	})
 }
 
+func TestAccDSDirectory_disappears(t *testing.T) {
+	var ds directoryservice.DirectoryDescription
+	resourceName := "aws_directory_service_directory.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccDSDirectory_tags(t *testing.T) {
 	var ds directoryservice.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
@@ -285,39 +313,11 @@ func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccDSDirectory_disappears(t *testing.T) {
-	var ds directoryservice.DirectoryDescription
-	resourceName := "aws_directory_service_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckDirectoryService(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDirectoryConfig_basic(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.DirectoryDescription) resource.TestCheckFunc {
+func testAccCheckServiceDirectoryExists(n string, v *directoryservice.DirectoryDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -342,7 +342,7 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 				*out.DirectoryDescriptions[0].DirectoryId, rs.Primary.ID)
 		}
 
-		*ds = *out.DirectoryDescriptions[0]
+		*v = *out.DirectoryDescriptions[0]
 
 		return nil
 	}
