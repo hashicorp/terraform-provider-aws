@@ -1,5 +1,9 @@
 ## 4.24.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_acmpca_permission` ([#12485](https://github.com/hashicorp/terraform-provider-aws/issues/12485))
+
 ENHANCEMENTS:
 
 * resource/aws_datasync_task: Add `includes` argument ([#25929](https://github.com/hashicorp/terraform-provider-aws/issues/25929))
