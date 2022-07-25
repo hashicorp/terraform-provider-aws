@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayVPCAttachment_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T) {
 				Config: testAccTransitGatewayVPCAttachmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
-					testAccCheckTransitGatewayVPCAttachmentDisappears(&transitGatewayVpcAttachment1),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -437,11 +438,11 @@ func testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagati
 	})
 }
 
-func testAccCheckTransitGatewayVPCAttachmentExists(resourceName string, transitGatewayVpcAttachment *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
+func testAccCheckTransitGatewayVPCAttachmentExists(n string, v *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -450,21 +451,13 @@ func testAccCheckTransitGatewayVPCAttachmentExists(resourceName string, transitG
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := tfec2.DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
+		output, err := tfec2.FindTransitGatewayVPCAttachmentByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if attachment == nil {
-			return fmt.Errorf("EC2 Transit Gateway VPC Attachment not found")
-		}
-
-		if aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStateAvailable && aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStatePendingAcceptance {
-			return fmt.Errorf("EC2 Transit Gateway VPC Attachment (%s) exists in non-available/pending acceptance (%s) state", rs.Primary.ID, aws.StringValue(attachment.State))
-		}
-
-		*transitGatewayVpcAttachment = *attachment
+		*v = *output
 
 		return nil
 	}
@@ -474,13 +467,13 @@ func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_route_table" {
+		if rs.Type != "aws_ec2_transit_gateway_vpc_attachment" {
 			continue
 		}
 
-		vpcAttachment, err := tfec2.DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
+		_, err := tfec2.FindTransitGatewayVPCAttachmentByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -488,32 +481,10 @@ func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if vpcAttachment == nil {
-			continue
-		}
-
-		if aws.StringValue(vpcAttachment.State) != ec2.TransitGatewayAttachmentStateDeleted {
-			return fmt.Errorf("EC2 Transit Gateway VPC Attachment (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(vpcAttachment.State))
-		}
+		return fmt.Errorf("EC2 Transit Gateway VPC Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckTransitGatewayVPCAttachmentDisappears(transitGatewayVpcAttachment *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
-			TransitGatewayAttachmentId: transitGatewayVpcAttachment.TransitGatewayAttachmentId,
-		}
-
-		if _, err := conn.DeleteTransitGatewayVpcAttachment(input); err != nil {
-			return err
-		}
-
-		return tfec2.WaitForTransitGatewayAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
-	}
 }
 
 func testAccCheckTransitGatewayVPCAttachmentNotRecreated(i, j *ec2.TransitGatewayVpcAttachment) resource.TestCheckFunc {
