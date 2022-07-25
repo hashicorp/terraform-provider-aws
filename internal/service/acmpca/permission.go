@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,6 +21,7 @@ func ResourcePermission() *schema.Resource {
 		Create: resourcePermissionCreate,
 		Read:   resourcePermissionRead,
 		Delete: resourcePermissionDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
@@ -92,37 +94,19 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourcePermissionRead(d, meta)
 }
 
-func describePermissions(conn *acmpca.ACMPCA, certificateAuthorityArn string, principal string, sourceAccount string) (*acmpca.Permission, error) {
-
-	out, err := conn.ListPermissions(&acmpca.ListPermissionsInput{
-		CertificateAuthorityArn: &certificateAuthorityArn,
-	})
-
-	if err != nil {
-		log.Printf("[WARN] Error retrieving ACMPCA Permissions (%s) when waiting: %s", certificateAuthorityArn, err)
-		return nil, err
-	}
-
-	var permission *acmpca.Permission
-
-	for _, p := range out.Permissions {
-		if aws.StringValue(p.CertificateAuthorityArn) == certificateAuthorityArn && aws.StringValue(p.Principal) == principal && (sourceAccount == "" || aws.StringValue(p.SourceAccount) == sourceAccount) {
-			permission = p
-			break
-		}
-	}
-	return permission, nil
-}
-
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	permission, err := describePermissions(conn, d.Get("certificate_authority_arn").(string), d.Get("principal").(string), d.Get("source_account").(string))
+	permission, err := FindPermission(conn, d.Get("certificate_authority_arn").(string), d.Get("principal").(string), d.Get("source_account").(string))
 
-	if permission == nil {
-		log.Printf("[WARN] ACMPCA Permission (%s) not found", d.Get("certificate_authority_arn"))
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return err
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading ACM PCA Permission (%s): %w", d.Id(), err)
 	}
 
 	d.Set("source_account", permission.SourceAccount)
@@ -140,12 +124,14 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 		SourceAccount:           aws.String(d.Get("source_account").(string)),
 	}
 
-	log.Printf("[DEBUG] Deleting ACMPCA Permission: %s", input)
+	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
 	_, err := conn.DeletePermission(input)
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return fmt.Errorf("error deleting ACMPCA Permission: %s", err)
 	}
 
