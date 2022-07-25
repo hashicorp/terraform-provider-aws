@@ -100,14 +100,11 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 			},
 			"edition": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					directoryservice.DirectoryEditionEnterprise,
-					directoryservice.DirectoryEditionStandard,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(directoryservice.DirectoryEdition_Values(), false),
 			},
 			"enable_sso": {
 				Type:     schema.TypeBool,
@@ -148,16 +145,11 @@ func ResourceDirectory() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  directoryservice.DirectoryTypeSimpleAd,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					directoryservice.DirectoryTypeAdconnector,
-					directoryservice.DirectoryTypeMicrosoftAd,
-					directoryservice.DirectoryTypeSimpleAd,
-					directoryservice.DirectoryTypeSharedMicrosoftAd,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      directoryservice.DirectoryTypeSimpleAd,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(directoryservice.DirectoryType_Values(), false),
 			},
 			"vpc_settings": {
 				Type:     schema.TypeList,
