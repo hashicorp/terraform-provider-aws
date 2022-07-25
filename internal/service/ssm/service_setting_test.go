@@ -23,10 +23,10 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 	result, _ := stssvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccServiceSettingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccServiceSettingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSettingConfig_basic(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "false"),
