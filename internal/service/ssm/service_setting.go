@@ -1,14 +1,17 @@
 package ssm
 
 import (
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ResNameServiceSetting = "Service Setting"
 )
 
 func ResourceServiceSetting() *schema.Resource {
@@ -22,6 +25,10 @@ func ResourceServiceSetting() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"setting_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -29,18 +36,6 @@ func ResourceServiceSetting() *schema.Resource {
 			"setting_value": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_user": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -51,54 +46,50 @@ func ResourceServiceSetting() *schema.Resource {
 }
 
 func resourceServiceSettingUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn
 
-	log.Printf("[DEBUG] SSM service setting create: %s", d.Id())
+	log.Printf("[DEBUG] SSM service setting create: %s", d.Get("setting_id").(string))
 
 	updateServiceSettingInput := &ssm.UpdateServiceSettingInput{
 		SettingId:    aws.String(d.Get("setting_id").(string)),
 		SettingValue: aws.String(d.Get("setting_value").(string)),
 	}
 
-	if _, err := ssmconn.UpdateServiceSetting(updateServiceSettingInput); err != nil {
-		return fmt.Errorf("Error updating SSM service setting: %s", err)
+	if _, err := conn.UpdateServiceSetting(updateServiceSettingInput); err != nil {
+		return names.Error(names.SSM, names.ErrActionUpdating, ResNameServiceSetting, d.Get("setting_id").(string), err)
 	}
 
 	d.SetId(d.Get("setting_id").(string))
+
+	if _, err := waitServiceSettingUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return names.Error(names.SSM, names.ErrActionWaitingForUpdate, ResNameServiceSetting, d.Id(), err)
+	}
 
 	return resourceServiceSettingRead(d, meta)
 }
 
 func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
-	params := &ssm.GetServiceSettingInput{
-		SettingId: aws.String(d.Id()),
-	}
-
-	resp, err := ssmconn.GetServiceSetting(params)
-
+	output, err := FindServiceSettingByARN(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error reading SSM service setting: %s", err)
+		return names.Error(names.SSM, names.ErrActionReading, ResNameServiceSetting, d.Id(), err)
 	}
 
-	serviceSetting := resp.ServiceSetting
 	// AWS SSM service setting API requires the entire ARN as input,
 	// but setting_id in the output is only a part of ARN.
-	d.Set("setting_id", serviceSetting.ARN)
-	d.Set("setting_value", serviceSetting.SettingValue)
-	d.Set("arn", serviceSetting.ARN)
-	d.Set("last_modified_date", aws.TimeValue(serviceSetting.LastModifiedDate).Format(time.RFC3339))
-	d.Set("last_modified_user", serviceSetting.LastModifiedUser)
-	d.Set("status", serviceSetting.Status)
+	d.Set("setting_id", output.ARN)
+	d.Set("setting_value", output.SettingValue)
+	d.Set("arn", output.ARN)
+	d.Set("status", output.Status)
 
 	return nil
 }
 
 func resourceServiceSettingReset(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
 
@@ -106,10 +97,13 @@ func resourceServiceSettingReset(d *schema.ResourceData, meta interface{}) error
 		SettingId: aws.String(d.Get("setting_id").(string)),
 	}
 
-	_, err := ssmconn.ResetServiceSetting(resetServiceSettingInput)
-
+	_, err := conn.ResetServiceSetting(resetServiceSettingInput)
 	if err != nil {
-		return fmt.Errorf("Error deleting SSM Service Setting: %s", err)
+		return names.Error(names.SSM, names.ErrActionDeleting, ResNameServiceSetting, d.Id(), err)
+	}
+
+	if err := waitServiceSettingReset(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return names.Error(names.SSM, names.ErrActionWaitingForDeletion, ResNameServiceSetting, d.Id(), err)
 	}
 
 	return nil

@@ -6,21 +6,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMServiceSetting_basic(t *testing.T) {
-	var setting ssm.GetServiceSettingOutput
+	var setting ssm.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
-	awsSession := session.New()
-	stssvc := sts.New(awsSession)
-	result, _ := stssvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -29,7 +26,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 		CheckDestroy:             testAccServiceSettingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceSettingConfig_basic(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "false"),
+				Config: testAccServiceSettingConfig_basic("false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", "false"),
@@ -41,7 +38,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceSettingConfig_basic(aws.StringValue(result.Account), aws.StringValue(awsSession.Config.Region), "true"),
+				Config: testAccServiceSettingConfig_basic("true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", "true"),
@@ -67,14 +64,14 @@ func testAccServiceSettingDestroy(s *terraform.State) error {
 			return err
 		}
 		if output.ServiceSetting.Status != aws.String("default") {
-			return fmt.Errorf("SSM Service Setting still customized")
+			return names.Error(names.SSM, names.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 	}
 
 	return nil
 }
 
-func testAccServiceSettingExists(n string, res *ssm.GetServiceSettingOutput) resource.TestCheckFunc {
+func testAccServiceSettingExists(n string, res *ssm.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,28 +80,27 @@ func testAccServiceSettingExists(n string, res *ssm.GetServiceSettingOutput) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
-		resp, err := conn.GetServiceSetting(&ssm.GetServiceSettingInput{
-			SettingId: aws.String(rs.Primary.Attributes["setting_id"]),
-		})
+		output, err := tfssm.FindServiceSettingByARN(conn, rs.Primary.Attributes["setting_id"])
+
 		if err != nil {
-			return err
+			return names.Error(names.SSM, names.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 
-		*res = *resp
+		*res = *output
 
 		return nil
 	}
 }
 
-func testAccServiceSettingConfig_basic(accountID, region, value string) string {
-	return fmt.Sprintf(testSettingTemplate, region, accountID, value)
-}
-
-const testSettingTemplate = `
+func testAccServiceSettingConfig_basic(settingValue string) string {
+	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_ssm_service_setting" "test" {
-  setting_id    = "arn:${data.aws_partition.current.partition}:ssm:%s:%s:servicesetting/ssm/parameter-store/high-throughput-enabled"
-  setting_value = "%s"
+  setting_id    = "arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  setting_value = %[1]q
 }
-`
+`, settingValue)
+}

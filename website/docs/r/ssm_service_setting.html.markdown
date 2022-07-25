@@ -3,12 +3,12 @@ subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_service_setting"
 description: |-
-  Defines how a user interacts with or uses a service or a feature of a SSM service.
+  Defines how a user interacts with or uses a service or a feature of a service.
 ---
 
 # Resource: aws_ssm_service_setting
 
-Defines how a user interacts with or uses a service or a feature of a SSM service.
+This setting defines how a user interacts with or uses a service or a feature of a service.
 
 ## Example Usage
 
@@ -23,17 +23,15 @@ resource "aws_ssm_service_setting" "test_setting" {
 
 The following arguments are supported:
 
-* `service_id` - (Required) The ID of the service setting.
-* `service_value` - (Required) The value of the service setting.
+* `service_id` - (Required) ID of the service setting.
+* `service_value` - (Required) Value of the service setting.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the service setting.
-* `last_modified_date` - The last time the service setting was modified.
-* `last_modified_user` - The ARN of the last modified user. This field is populated only if the setting value was overwritten.
-* `status` - The status of the service setting. The value can be Default, Customized or PendingUpdate.
+* `arn` - ARN of the service setting.
+* `status` - Status of the service setting. Value can be `Default`, `Customized` or `PendingUpdate`.
 
 ## Import
 
