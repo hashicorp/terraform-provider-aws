@@ -61,6 +61,58 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
+func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
+	input := &directoryservice.DescribeRegionsInput{
+		DirectoryId: aws.String(directoryID),
+		RegionName:  aws.String(regionName),
+	}
+	var output []*directoryservice.RegionDescription
+
+	err := describeRegionsPagesWithContext(ctx, conn, input, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.RegionsDescription {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	region := output[0]
+
+	if status := aws.StringValue(region.Status); status == directoryservice.DirectoryStageDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return region, nil
+}
+
 func findSharedDirectoryByIDs(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryId string, sharedDirectoryId string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
 	input := &directoryservice.DescribeSharedDirectoriesInput{
 		OwnerDirectoryId:   aws.String(ownerDirectoryId),
