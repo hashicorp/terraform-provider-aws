@@ -230,7 +230,7 @@ tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interfa
 
 if len(tags) > 0 {
   if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
-    return fmt.Errorf("error adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
+    return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
 ```
@@ -264,11 +264,11 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-  return fmt.Errorf("error setting tags: %w", err)
+  return fmt.Errorf("setting tags: %w", err)
 }
 
 if err := d.Set("tags_all", tags.Map()); err != nil {
-  return fmt.Errorf("error setting tags_all: %w", err)
+  return fmt.Errorf("setting tags_all: %w", err)
 }
 ```
 
@@ -285,17 +285,17 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 tags, err := ListTags(conn, arn.String())
 
 if err != nil {
-  return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
+  return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
 }
 
 tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-  return fmt.Errorf("error setting tags: %w", err)
+  return fmt.Errorf("setting tags: %w", err)
 }
 
 if err := d.Set("tags_all", tags.Map()); err != nil {
-  return fmt.Errorf("error setting tags_all: %w", err)
+  return fmt.Errorf("setting tags_all: %w", err)
 }
 ```
 
@@ -307,7 +307,7 @@ In the resource `Update` operation, implement the logic to handle tagging update
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
   if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-    return fmt.Errorf("error updating tags: %w", err)
+    return fmt.Errorf("updating tags: %w", err)
   }
 }
 ```
@@ -324,7 +324,7 @@ if d.HasChangesExcept("tags", "tags_all") {
   }
 
   if _, err := conn.CreatePolicyVersion(request); err != nil {
-      return fmt.Errorf("error updating IAM policy (%s): %w", d.Id(), err)
+      return fmt.Errorf("updating IAM policy (%s): %w", d.Id(), err)
   }
 }
 ```

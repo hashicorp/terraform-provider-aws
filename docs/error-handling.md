@@ -40,7 +40,7 @@ For most use cases in this codebase, this means if code is receiving an error an
 return fmt.Errorf("adding some additional message: %w", err)
 ```
 
-This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
+This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `updating Service Thing (%s): %w`), so these messages can be more terse such as `waiting for completion: %w`.
 
 ### AWS SDK for Go v1 Errors
 
@@ -170,7 +170,7 @@ func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
     }
 
     if err != nil {
-        return fmt.Errorf("error reading {Service} {Thing} (%s): %w", d.Id(), err)
+        return fmt.Errorf("reading {Service} {Thing} (%s): %w", d.Id(), err)
     }
 
     /* ... */
@@ -185,7 +185,7 @@ Returning errors during creation should include additional messaging about the l
 
 ```go
 if err != nil {
-    return fmt.Errorf("error creating {SERVICE} {THING}: %w", err)
+    return fmt.Errorf("creating {SERVICE} {THING}: %w", err)
 }
 ```
 
@@ -193,7 +193,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error creating EC2 VPC: %w", err)
+    return fmt.Errorf("creating EC2 VPC: %w", err)
 }
 ```
 
@@ -201,7 +201,7 @@ Code that also uses waiters or other operations that return errors should follow
 
 ```go
 if _, err := VpcAvailable(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
 }
 ```
 
@@ -228,7 +228,7 @@ func resourceServiceThingDelete(d *schema.ResourceData, meta interface{}) error 
     }
 
     if err != nil {
-        return fmt.Errorf("error deleting {Service} {Thing} (%s): %w", d.Id(), err)
+        return fmt.Errorf("deleting {Service} {Thing} (%s): %w", d.Id(), err)
     }
 
     /* ... */
@@ -241,7 +241,7 @@ Returning errors during deletion should include the resource identifier and addi
 
 ```go
 if err != nil {
-    return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("deleting {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -249,7 +249,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("deleting EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -257,7 +257,7 @@ Code that also uses [waiters](retries-and-waiters.md) or other operations that r
 
 ```go
 if _, err := VpcDeleted(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
 }
 ```
 
@@ -280,7 +280,7 @@ For example in pseudo-code:
 output, err := conn.ListServiceThings(input)
 
 if err != nil {
-    return fmt.Errorf("error listing {Service} {Thing}s: %w", err)
+    return fmt.Errorf("listing {Service} {Thing}s: %w", err)
 }
 
 if output == nil || len(output.Results) == 0 {
@@ -302,7 +302,7 @@ Returning errors during read should include the resource identifier (for managed
 
 ```go
 if err != nil {
-    return fmt.Errorf("error reading {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("reading {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -310,7 +310,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -324,7 +324,7 @@ Returning errors during update should include the resource identifier and additi
 
 ```go
 if err != nil {
-    return fmt.Errorf("error updating {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("updating {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -332,7 +332,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error updating EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -340,6 +340,6 @@ Code that also uses waiters or other operations that return errors should follow
 
 ```go
 if _, err := VpcAvailable(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) update: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) update: %w", d.Id(), err)
 }
 ```

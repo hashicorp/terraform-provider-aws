@@ -313,12 +313,12 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Example Thing (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Example Thing (%s): %w", d.Id(), err)
 	}
 
 	// Prevent panics.
 	if output == nil {
-		return fmt.Errorf("error reading Example Thing (%s): empty response", d.Id())
+		return fmt.Errorf("reading Example Thing (%s): empty response", d.Id())
 	}
 
 	// ... refresh Terraform state as normal ...
@@ -397,7 +397,7 @@ function ExampleThingUpdate(d *schema.ResourceData, meta interface{}) error {
 		// ... AWS Go SDK logic to update attribute ...
 
 		if _, err := ThingAttributeUpdated(conn, d.Id(), d.Get("attribute").(string)); err != nil {
-			return fmt.Errorf("error waiting for Example Thing (%s) attribute update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Example Thing (%s) attribute update: %w", d.Id(), err)
 		}
 	}
 
@@ -417,7 +417,7 @@ In limited cases, the AWS service API model includes the information to automati
 
 ```go
 if err := conn.WaitUntilEndpointInService(input); err != nil {
-	return fmt.Errorf("error waiting for Example Thing (%s) ...: %w", d.Id(), err)
+	return fmt.Errorf("waiting for Example Thing (%s) ...: %w", d.Id(), err)
 }
 ```
 
@@ -504,7 +504,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to create resource ...
 
 	if _, err := ThingCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Example Thing (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Example Thing (%s) creation: %w", d.Id(), err)
 	}
 
 	return ExampleThingRead(d, meta)
@@ -514,7 +514,7 @@ function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to delete resource ...
 
 	if _, err := ThingDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Example Thing (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Example Thing (%s) deletion: %w", d.Id(), err)
 	}
 
 	return ExampleThingRead(d, meta)

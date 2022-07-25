@@ -735,7 +735,7 @@ if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
 }
 
 if err != nil {
-  return fmt.Errorf("error reading Example Thing (%s): %w", d.Id(), err)
+  return fmt.Errorf("reading Example Thing (%s): %w", d.Id(), err)
 }
 ```
 
