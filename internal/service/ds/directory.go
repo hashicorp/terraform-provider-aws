@@ -28,11 +28,92 @@ func ResourceDirectory() *schema.Resource {
 		Read:   resourceDirectoryRead,
 		Update: resourceDirectoryUpdate,
 		Delete: resourceDirectoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"alias": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"connect_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_zones": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"connect_ips": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"customer_dns_ips": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPAddress,
+							},
+						},
+						"customer_username": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"edition": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					directoryservice.DirectoryEditionEnterprise,
+					directoryservice.DirectoryEditionStandard,
+				}, false),
+			},
+			"enable_sso": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,6 +125,16 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"short_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"size": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -54,119 +145,8 @@ func ResourceDirectory() *schema.Resource {
 					directoryservice.DirectorySizeSmall,
 				}, false),
 			},
-			"alias": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"short_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"connect_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"connect_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"customer_username": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"customer_dns_ips": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
-							},
-							Set: schema.HashString,
-						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"enable_sso": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"access_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Computed: true,
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -179,15 +159,31 @@ func ResourceDirectory() *schema.Resource {
 					directoryservice.DirectoryTypeSharedMicrosoftAd,
 				}, false),
 			},
-			"edition": {
-				Type:     schema.TypeString,
+			"vpc_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					directoryservice.DirectoryEditionEnterprise,
-					directoryservice.DirectoryEditionStandard,
-				}, false),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_zones": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 		},
 
