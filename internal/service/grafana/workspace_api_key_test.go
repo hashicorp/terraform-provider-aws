@@ -22,10 +22,10 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceAPIKeyConfig_basic(rName, "test-api-1"),
+				Config: testAccWorkspaceAPIKeyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key_name", "test-api-1"),
-					resource.TestCheckResourceAttr(resourceName, "key_role", "EDITIR"),
+					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "key_role", managedgrafana.RoleEditor),
 					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key"),
@@ -35,10 +35,10 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceAPIKeyConfig_basic(rName string, apiKey string) string {
+func testAccWorkspaceAPIKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "test_iam"
+  name = %[1]q
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -66,5 +66,5 @@ resource "aws_grafana_workspace_api_key" "test" {
   seconds_to_live = 3600
   workspace_id    = aws_grafana_workspace.test.id
 }
-`, rName, apiKey)
+`, rName)
 }

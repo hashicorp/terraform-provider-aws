@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
@@ -20,15 +20,6 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 		Read:   schema.Noop,
 		Update: schema.Noop,
 		Delete: resourceWorkspaceAPIKeyDelete,
-
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"key": {
@@ -64,9 +55,8 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 
 func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
-
-	d.SetId(d.Get("workspace_id").(string))
-	_, err := FindWorkspaceByID(conn, d.Id())
+	wrkspc_id := d.Get("workspace_id").(string)
+	_, err := FindWorkspaceByID(conn, wrkspc_id)
 
 	if err != nil {
 		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
@@ -76,7 +66,7 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 		KeyName:       aws.String(d.Get("key_name").(string)),
 		KeyRole:       aws.String(d.Get("key_role").(string)),
 		SecondsToLive: aws.Int64(int64(d.Get("seconds_to_live").(int))),
-		WorkspaceId:   aws.String(d.Id()),
+		WorkspaceId:   aws.String(wrkspc_id),
 	}
 
 	log.Printf("[DEBUG] Creating Grafana API Key: %s", input)
@@ -86,6 +76,7 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error creating Grafana API Key : %w", err)
 	}
 
+	d.SetId(fmt.Sprintf("%s/%s", wrkspc_id, d.Get("key_name").(string)))
 	d.Set("key", output.Key)
 	return nil
 
@@ -95,20 +86,35 @@ func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())
+
+	wrkspacID, KeyName, er1 := UserParseID(d.Id())
+	if er1 != nil {
+		return er1
+	}
+
 	input := &managedgrafana.DeleteWorkspaceApiKeyInput{
-		KeyName:     aws.String(d.Get("key_name").(string)),
-		WorkspaceId: aws.String(d.Id()),
+		KeyName:     aws.String(KeyName),
+		WorkspaceId: aws.String(wrkspacID),
 	}
 	_, err := conn.DeleteWorkspaceApiKey(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Workspace API Key %s: %w", d.Id(), err)
-	}
-
-	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil
+		if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+		return err
 	}
 
 	return nil
 
+}
+
+func UserParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, "/", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected wrkspcID:keyName", id)
+	}
+
+	return parts[0], parts[1], nil
 }
