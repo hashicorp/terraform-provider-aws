@@ -15,5 +15,5 @@ var validModelVersionName = validIdentifier
 
 var validIdentifier = validation.All(
 	validation.StringLenBetween(1, modelIdentifierMaxLen),
-	validation.StringMatch(regexp.MustCompile(`[[:alnum:]-]`), "can contain A-Z, a-z, 0-9, and hypen (-)"),
+	validation.StringMatch(regexp.MustCompile(`[[:alnum:]-]`), "must contain A-Z, a-z, 0-9, and hypen (-)"),
 )

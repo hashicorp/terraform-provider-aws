@@ -251,7 +251,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// Because the IAM credentials aren't evaluated until later, we need to ensure we wait for the IAM propagation delay
+	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
 	time.Sleep(iamPropagationTimeout)
 
 	out, err := conn.CreateEntityRecognizer(ctx, in)
@@ -299,8 +299,12 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
-	re := regexp.MustCompile(`entity-recognizer/(.*)`)
-	name := re.FindStringSubmatch(arn.Resource)[1]
+	re := regexp.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
+	matches := re.FindStringSubmatch(arn.Resource)
+	if len(matches) != 2 {
+		return diag.Errorf("reading Comprehend Entity Recognizer (%s): unable to parse ARN (%s)", d.Id(), aws.ToString(out.EntityRecognizerArn))
+	}
+	name := matches[1]
 	d.Set("name", name)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {
@@ -334,7 +338,53 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ComprehendConn
 
-	if d.HasChange("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &comprehend.CreateEntityRecognizerInput{
+			DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
+			InputDataConfig:    expandInputDataConfig(d.Get("input_data_config").([]interface{})),
+			LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
+			RecognizerName:     aws.String(d.Get("name").(string)),
+			VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
+			ClientRequestToken: aws.String(resource.UniqueId()),
+		}
+
+		if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
+			in.ModelKmsKeyId = aws.String(v)
+		}
+
+		if v, ok := d.Get("version_name").(string); ok && v != "" {
+			in.VersionName = aws.String(v)
+		}
+
+		if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
+			in.VolumeKmsKeyId = aws.String(v)
+		}
+
+		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+		if len(tags) > 0 {
+			in.Tags = Tags(tags.IgnoreAWS())
+		}
+
+		// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
+		time.Sleep(iamPropagationTimeout)
+
+		out, err := conn.CreateEntityRecognizer(ctx, in)
+		if err != nil {
+			return diag.Errorf("updating Amazon Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		}
+
+		if out == nil || out.EntityRecognizerArn == nil {
+			return diag.Errorf("updating Amazon Comprehend Entity Recognizer (%s): empty output", d.Id())
+		}
+
+		d.SetId(aws.ToString(out.EntityRecognizerArn))
+
+		if _, err := waitEntityRecognizerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Amazon Comprehend Entity Recognizer (%s) to be updated: %s", d.Id(), err)
+		}
+	} else if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
@@ -394,14 +444,21 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
-		Target:  enum.Slice(types.ModelStatusTrained),
-		Refresh: statusEntityRecognizer(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
+		Target:     enum.Slice(types.ModelStatusTrained),
+		Refresh:    statusEntityRecognizer(ctx, conn, id),
+		MinTimeout: entityRegcognizerMinInterval,
+		Timeout:    timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
+		var ues *resource.UnexpectedStateError
+		if errors.As(err, &ues) {
+			if ues.State == string(types.ModelStatusInError) {
+				err = errors.New(aws.ToString(out.Message))
+			}
+		}
 		return out, err
 	}
 
@@ -410,10 +467,11 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 
 func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusStopRequested),
-		Target:  enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError),
-		Refresh: statusEntityRecognizer(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusStopRequested),
+		Target:     enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError),
+		Refresh:    statusEntityRecognizer(ctx, conn, id),
+		MinTimeout: entityRegcognizerMinInterval,
+		Timeout:    timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -426,10 +484,11 @@ func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, i
 
 func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
-		Target:  []string{},
-		Refresh: statusEntityRecognizer(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
+		Target:     []string{},
+		Refresh:    statusEntityRecognizer(ctx, conn, id),
+		MinTimeout: entityRegcognizerMinInterval,
+		Timeout:    timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
