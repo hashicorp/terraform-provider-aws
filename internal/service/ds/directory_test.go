@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -252,7 +251,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Config: testAccDirectoryConfig_alias(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					testAccCheckServiceDirectoryAlias(resourceName, alias),
+					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
@@ -268,7 +267,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Config: testAccDirectoryConfig_sso(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					testAccCheckServiceDirectoryAlias(resourceName, alias),
+					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "true"),
 				),
 			},
@@ -276,7 +275,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					testAccCheckServiceDirectoryAlias(resourceName, alias),
+					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
@@ -328,35 +327,6 @@ func testAccCheckServiceDirectoryExists(n string, v *directoryservice.DirectoryD
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
-		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if *out.DirectoryDescriptions[0].Alias != alias {
-			return fmt.Errorf("DS directory Alias mismatch - actual: %q, expected: %q",
-				*out.DirectoryDescriptions[0].Alias, alias)
-		}
 
 		return nil
 	}
