@@ -25,9 +25,9 @@ func testAccPolicy_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName, rName),
@@ -61,9 +61,9 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_cloudFrontDistribution(rName),
@@ -94,9 +94,9 @@ func testAccPolicy_includeMap(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_include(rName),
@@ -128,9 +128,9 @@ func testAccPolicy_update(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName1, rName1),
@@ -158,9 +158,9 @@ func testAccPolicy_resourceTags(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_resourceTags1(rName, "key1", "value1"),
@@ -193,9 +193,9 @@ func testAccPolicy_tags(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, fms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),

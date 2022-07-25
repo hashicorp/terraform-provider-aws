@@ -36,10 +36,10 @@ func testAccBotAssociation_basic(t *testing.T) {
 	resourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
@@ -67,10 +67,10 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	instanceResourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),

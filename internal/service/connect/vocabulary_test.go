@@ -42,10 +42,10 @@ func testAccVocabulary_basic(t *testing.T) {
 	resourceName := "aws_connect_vocabulary.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
@@ -83,10 +83,10 @@ func testAccVocabulary_disappears(t *testing.T) {
 	resourceName := "aws_connect_vocabulary.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
@@ -111,10 +111,10 @@ func testAccVocabulary_updateTags(t *testing.T) {
 	resourceName := "aws_connect_vocabulary.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
