@@ -21,6 +21,7 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 		Read:   resourceTransitGatewayVPCAttachmentRead,
 		Update: resourceTransitGatewayVPCAttachmentUpdate,
 		Delete: resourceTransitGatewayVPCAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,22 +36,16 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.ApplianceModeSupportValue_Values(), false),
 			},
 			"dns_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.DnsSupportValueEnable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.DnsSupportValueDisable,
-					ec2.DnsSupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.DnsSupportValueEnable,
+				ValidateFunc: validation.StringInSlice(ec2.DnsSupportValue_Values(), false),
 			},
 			"ipv6_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.Ipv6SupportValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.Ipv6SupportValueDisable,
-					ec2.Ipv6SupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.Ipv6SupportValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.Ipv6SupportValue_Values(), false),
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
@@ -96,7 +91,6 @@ func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta inte
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	transitGatewayID := d.Get("transit_gateway_id").(string)
-
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
 		Options: &ec2.CreateTransitGatewayVpcAttachmentRequestOptions{
 			ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
