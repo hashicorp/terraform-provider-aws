@@ -2027,6 +2027,7 @@ func Provider() *schema.Provider {
 			"aws_ssm_patch_baseline":            ssm.ResourcePatchBaseline(),
 			"aws_ssm_patch_group":               ssm.ResourcePatchGroup(),
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
+			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
 			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
