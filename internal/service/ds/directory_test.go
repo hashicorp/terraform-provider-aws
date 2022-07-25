@@ -94,12 +94,11 @@ func TestAccDSDirectory_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_tags(rName, domainName),
+				Config: testAccDirectoryConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.project", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -111,21 +110,20 @@ func TestAccDSDirectory_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDirectoryConfig_updateTags(rName, domainName),
+				Config: testAccDirectoryConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.project", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_removeTags(rName, domainName),
+				Config: testAccDirectoryConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -350,7 +348,7 @@ resource "aws_directory_service_directory" "test" {
 	)
 }
 
-func testAccDirectoryConfig_tags(rName, domain string) string {
+func testAccDirectoryConfig_tags1(rName, domain, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -365,15 +363,13 @@ resource "aws_directory_service_directory" "test" {
   }
 
   tags = {
-    foo     = "test"
-    project = "test"
+    %[2]q = %[3]q
   }
 }
-`, domain),
-	)
+`, domain, tagKey1, tagValue1))
 }
 
-func testAccDirectoryConfig_updateTags(rName, domain string) string {
+func testAccDirectoryConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -388,35 +384,11 @@ resource "aws_directory_service_directory" "test" {
   }
 
   tags = {
-    foo     = "test"
-    project = "test2"
-    fizz    = "buzz"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, domain),
-	)
-}
-
-func testAccDirectoryConfig_removeTags(rName, domain string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
-		fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
-  name     = %[1]q
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    vpc_id     = aws_vpc.test.id
-    subnet_ids = aws_subnet.test[*].id
-  }
-
-  tags = {
-    foo = "test"
-  }
-}
-`, domain),
-	)
+`, domain, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDirectoryConfig_connector(rName, domain string) string {
