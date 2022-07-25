@@ -307,9 +307,15 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("enable_sso") {
-		if err := enableSSO(conn, d); err != nil {
-			return err
+	if _, ok := d.GetOk("enable_sso"); ok {
+		input := &directoryservice.EnableSsoInput{
+			DirectoryId: aws.String(d.Id()),
+		}
+
+		_, err := conn.EnableSso(input)
+
+		if err != nil {
+			return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
 		}
 	}
 
@@ -332,8 +338,6 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("reading Directory Service Directory (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received DS directory: %s", dir)
 
 	d.Set("access_url", dir.AccessUrl)
 	d.Set("alias", dir.Alias)
@@ -393,8 +397,26 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("enable_sso") {
-		if err := enableSSO(conn, d); err != nil {
-			return err
+		if _, ok := d.GetOk("enable_sso"); ok {
+			input := &directoryservice.EnableSsoInput{
+				DirectoryId: aws.String(d.Id()),
+			}
+
+			_, err := conn.EnableSso(input)
+
+			if err != nil {
+				return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
+			}
+		} else {
+			input := &directoryservice.DisableSsoInput{
+				DirectoryId: aws.String(d.Id()),
+			}
+
+			_, err := conn.DisableSso(input)
+
+			if err != nil {
+				return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -402,7 +424,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating Directory Service Directory (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -545,24 +567,4 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	}
 
 	return tfMap
-}
-
-func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
-		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
-		if _, err := conn.EnableSso(&directoryservice.EnableSsoInput{
-			DirectoryId: aws.String(d.Id()),
-		}); err != nil {
-			return fmt.Errorf("Error Enabling SSO for DS directory %s: %s", d.Id(), err)
-		}
-	} else {
-		log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
-		if _, err := conn.DisableSso(&directoryservice.DisableSsoInput{
-			DirectoryId: aws.String(d.Id()),
-		}); err != nil {
-			return fmt.Errorf("Error Disabling SSO for DS directory %s: %s", d.Id(), err)
-		}
-	}
-
-	return nil
 }
