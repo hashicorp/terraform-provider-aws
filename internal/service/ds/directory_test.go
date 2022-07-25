@@ -253,7 +253,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySSO(resourceName, false),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySSO(resourceName, true),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "true"),
 				),
 			},
 			{
@@ -277,7 +277,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
 					testAccCheckServiceDirectoryAlias(resourceName, alias),
-					testAccCheckServiceDirectorySSO(resourceName, false),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
 		},
@@ -356,35 +356,6 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 		if *out.DirectoryDescriptions[0].Alias != alias {
 			return fmt.Errorf("DS directory Alias mismatch - actual: %q, expected: %q",
 				*out.DirectoryDescriptions[0].Alias, alias)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckServiceDirectorySSO(name string, ssoEnabled bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
-		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if *out.DirectoryDescriptions[0].SsoEnabled != ssoEnabled {
-			return fmt.Errorf("DS directory SSO mismatch - actual: %t, expected: %t",
-				*out.DirectoryDescriptions[0].SsoEnabled, ssoEnabled)
 		}
 
 		return nil
