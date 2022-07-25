@@ -182,43 +182,129 @@ func ResourceDirectory() *schema.Resource {
 
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	var directoryId string
-	var err error
-	directoryType := d.Get("type").(string)
+	switch directoryType := d.Get("type").(string); directoryType {
+	case directoryservice.DirectoryTypeAdconnector:
+		input := &directoryservice.ConnectDirectoryInput{
+			Name:     aws.String(d.Get("name").(string)),
+			Password: aws.String(d.Get("password").(string)),
+			Tags:     Tags(tags.IgnoreAWS()),
+		}
 
-	if directoryType == directoryservice.DirectoryTypeAdconnector {
-		directoryId, err = createDirectoryConnector(conn, d, meta)
-	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActive(conn, d, meta)
-	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimple(conn, d, meta)
+		if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ConnectSettings = expandDirectoryConnectSettings(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("size"); ok {
+			input.Size = aws.String(v.(string))
+		} else {
+			// Matching previous behavior of Default: "Large" for Size attribute.
+			input.Size = aws.String(directoryservice.DirectorySizeLarge)
+		}
+
+		if v, ok := d.GetOk("short_name"); ok {
+			input.ShortName = aws.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
+		output, err := conn.ConnectDirectory(input)
+
+		if err != nil {
+			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+		}
+
+		d.SetId(aws.StringValue(output.DirectoryId))
+
+	case directoryservice.DirectoryTypeMicrosoftAd:
+		input := &directoryservice.CreateMicrosoftADInput{
+			Name:     aws.String(d.Get("name").(string)),
+			Password: aws.String(d.Get("password").(string)),
+			Tags:     Tags(tags.IgnoreAWS()),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("edition"); ok {
+			input.Edition = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("short_name"); ok {
+			input.ShortName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
+		output, err := conn.CreateMicrosoftAD(input)
+
+		if err != nil {
+			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+		}
+
+		d.SetId(aws.StringValue(output.DirectoryId))
+
+	case directoryservice.DirectoryTypeSimpleAd:
+		input := &directoryservice.CreateDirectoryInput{
+			Name:     aws.String(d.Get("name").(string)),
+			Password: aws.String(d.Get("password").(string)),
+			Tags:     Tags(tags.IgnoreAWS()),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("size"); ok {
+			input.Size = aws.String(v.(string))
+		} else {
+			// Matching previous behavior of Default: "Large" for Size attribute.
+			input.Size = aws.String(directoryservice.DirectorySizeLarge)
+		}
+
+		if v, ok := d.GetOk("short_name"); ok {
+			input.ShortName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
+		output, err := conn.CreateDirectory(input)
+
+		if err != nil {
+			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+		}
+
+		d.SetId(aws.StringValue(output.DirectoryId))
 	}
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(directoryId)
 
 	if _, err := waitDirectoryCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("waiting for Directory Service Directory (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
-		input := directoryservice.CreateAliasInput{
+		alias := v.(string)
+		input := &directoryservice.CreateAliasInput{
+			Alias:       aws.String(alias),
 			DirectoryId: aws.String(d.Id()),
-			Alias:       aws.String(v.(string)),
 		}
 
-		log.Printf("[DEBUG] Assigning alias %q to DS directory %q",
-			v.(string), d.Id())
-		out, err := conn.CreateAlias(&input)
+		_, err := conn.CreateAlias(input)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", d.Id(), alias, err)
 		}
-		log.Printf("[DEBUG] Alias %q assigned to DS directory %q",
-			*out.Alias, *out.DirectoryId)
 	}
 
 	if d.HasChange("enable_sso") {
@@ -244,7 +330,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Directory Service Directory (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS directory: %s", dir)
@@ -252,16 +338,15 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("access_url", dir.AccessUrl)
 	d.Set("alias", dir.Alias)
 	d.Set("description", dir.Description)
-
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
 	} else {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
 	}
+	d.Set("edition", dir.Edition)
 	d.Set("name", dir.Name)
 	d.Set("short_name", dir.ShortName)
 	d.Set("size", dir.Size)
-	d.Set("edition", dir.Edition)
 	d.Set("type", dir.Type)
 
 	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
@@ -358,6 +443,32 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func expandDirectoryConnectSettings(tfMap map[string]interface{}) *directoryservice.DirectoryConnectSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &directoryservice.DirectoryConnectSettings{}
+
+	if v, ok := tfMap["customer_dns_ips"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.CustomerDnsIps = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["customer_username"].(string); ok && v != "" {
+		apiObject.CustomerUserName = aws.String(v)
+	}
+
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+		apiObject.VpcId = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings {
 	if tfMap == nil {
 		return nil
@@ -374,147 +485,6 @@ func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.
 	}
 
 	return apiObject
-}
-
-func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryservice.DirectoryConnectSettings, err error) {
-	v, ok := d.GetOk("connect_settings")
-	if !ok {
-		return nil, fmt.Errorf("connect_settings is required for type = ADConnector")
-	}
-	settings := v.([]interface{})
-	s := settings[0].(map[string]interface{})
-
-	var subnetIds []*string
-	for _, id := range s["subnet_ids"].(*schema.Set).List() {
-		subnetIds = append(subnetIds, aws.String(id.(string)))
-	}
-
-	var customerDnsIps []*string
-	for _, id := range s["customer_dns_ips"].(*schema.Set).List() {
-		customerDnsIps = append(customerDnsIps, aws.String(id.(string)))
-	}
-
-	connectSettings = &directoryservice.DirectoryConnectSettings{
-		CustomerDnsIps:   customerDnsIps,
-		CustomerUserName: aws.String(s["customer_username"].(string)),
-		SubnetIds:        subnetIds,
-		VpcId:            aws.String(s["vpc_id"].(string)),
-	}
-
-	return connectSettings, nil
-}
-
-func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	input := directoryservice.ConnectDirectoryInput{
-		Name:     aws.String(d.Get("name").(string)),
-		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAWS()),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("size"); ok {
-		input.Size = aws.String(v.(string))
-	} else {
-		// Matching previous behavior of Default: "Large" for Size attribute
-		input.Size = aws.String(directoryservice.DirectorySizeLarge)
-	}
-	if v, ok := d.GetOk("short_name"); ok {
-		input.ShortName = aws.String(v.(string))
-	}
-
-	input.ConnectSettings, err = buildConnectSettings(d)
-	if err != nil {
-		return "", err
-	}
-
-	log.Printf("[DEBUG] Creating Directory Connector: %s", input)
-	out, err := conn.ConnectDirectory(&input)
-	if err != nil {
-		return "", err
-	}
-	log.Printf("[DEBUG] Directory Connector created: %s", out)
-
-	return *out.DirectoryId, nil
-}
-
-func createSimple(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	input := directoryservice.CreateDirectoryInput{
-		Name:     aws.String(d.Get("name").(string)),
-		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAWS()),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("size"); ok {
-		input.Size = aws.String(v.(string))
-	} else {
-		// Matching previous behavior of Default: "Large" for Size attribute
-		input.Size = aws.String(directoryservice.DirectorySizeLarge)
-	}
-
-	if v, ok := d.GetOk("short_name"); ok {
-		input.ShortName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	log.Printf("[DEBUG] Creating Simple Directory Service: %s", input)
-	out, err := conn.CreateDirectory(&input)
-	if err != nil {
-		return "", err
-	}
-	log.Printf("[DEBUG] Simple Directory Service created: %s", out)
-
-	return *out.DirectoryId, nil
-}
-
-func createActive(conn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	input := directoryservice.CreateMicrosoftADInput{
-		Name:     aws.String(d.Get("name").(string)),
-		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAWS()),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("edition"); ok {
-		input.Edition = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("short_name"); ok {
-		input.ShortName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	log.Printf("[DEBUG] Creating Microsoft AD Directory Service: %s", input)
-	out, err := conn.CreateMicrosoftAD(&input)
-	if err != nil {
-		return "", err
-	}
-	log.Printf("[DEBUG] Microsoft AD Directory Service created: %s", out)
-
-	return *out.DirectoryId, nil
 }
 
 func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
