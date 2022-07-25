@@ -180,12 +180,12 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
 		{{- else }}
-		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
@@ -232,12 +232,12 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:        acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
 		{{- else }}
-		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{{ .Resource }}Destroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),

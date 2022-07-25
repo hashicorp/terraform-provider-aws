@@ -22,10 +22,10 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 	secretKey := "456"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBaiduChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBaiduChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBaiduChannelConfig_basic(apiKey, secretKey),

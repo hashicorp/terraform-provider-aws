@@ -27,9 +27,9 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
@@ -60,9 +60,9 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicUser(userName, rName),
@@ -93,9 +93,9 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),

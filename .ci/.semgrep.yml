@@ -770,13 +770,15 @@ rules:
       - pattern: tfiam.PropagationTimeout
     severity: ERROR
 
-  - id: use-acctest-provider-factories
+  - id: use-acctest-protov5-provider-factories
     languages: [go]
-    message: Use acctest.ProviderFactories, not acctest.Providers
+    message: Use acctest.ProtoV5ProviderFactories, not acctest.Providers or acctest.ProviderFactories
     paths:
       include:
         - "internal/**/*_test.go"
-    pattern-regex: Providers:\s+(acctest\.)?Providers,
+    pattern-either:
+      - pattern-regex: Providers:\s+(acctest\.)?Providers,
+      - pattern-regex: ProviderFactories:\s+(acctest\.)?ProviderFactories,
     severity: WARNING
 
   - id: prefer-aws-go-sdk-pointer-conversion-int-conversion-int64-pointer

@@ -30,9 +30,9 @@ func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_noVPCCreate(rName),
@@ -61,9 +61,9 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_noVPCCreate(rName),
@@ -98,9 +98,9 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_vpcCreate(rName),
@@ -147,9 +147,9 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_noVPCCreateTags(rName),
@@ -191,9 +191,9 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_customCookbooksSet(rName),
@@ -230,10 +230,10 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
 	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_classicEndpoint(rName),

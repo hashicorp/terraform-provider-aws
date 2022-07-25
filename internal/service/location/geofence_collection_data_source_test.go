@@ -16,10 +16,10 @@ func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionDataSourceConfig_basic(rName),
