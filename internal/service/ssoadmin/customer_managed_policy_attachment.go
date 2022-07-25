@@ -4,13 +4,20 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	customerPolicyAttachmentTimeout = 5 * time.Minute
 )
 
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
@@ -65,8 +72,26 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 		},
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
+	err := resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
 
-	_, err := conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) {
+				return resource.RetryableError(err)
+			}
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeThrottlingException) {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error attaching Customer Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
@@ -132,8 +157,22 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 			Path: aws.String(policyPath),
 		},
 	}
+	err = resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
 
-	_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) {
+				return resource.RetryableError(err)
+			}
+			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeThrottlingException) {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+
+	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
