@@ -715,6 +715,9 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	req := &s3.CreateBucketInput{
 		Bucket: aws.String(bucket),
+		// NOTE: Please, do not add any other fields here unless the field is
+		// supported in *all* AWS partitions (including ISO partitions) and by
+		// 3rd party S3 providers.
 	}
 
 	if acl, ok := d.GetOk("acl"); ok {
