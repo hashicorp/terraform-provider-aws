@@ -14,7 +14,7 @@ Ensure that the following steps are tracked within the issue and completed withi
 - Verify `make test lint` works as expected
 - Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
-- Update `development-environment.md`
+- Update `docs/development-environment.md`
 - Update `.go-version`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
