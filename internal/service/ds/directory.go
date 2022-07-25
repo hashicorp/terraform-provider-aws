@@ -337,6 +337,13 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("access_url", dir.AccessUrl)
 	d.Set("alias", dir.Alias)
+	if dir.ConnectSettings != nil {
+		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
+			return fmt.Errorf("setting connect_settings: %w", err)
+		}
+	} else {
+		d.Set("connect_settings", nil)
+	}
 	d.Set("description", dir.Description)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
@@ -344,42 +351,39 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
 	}
 	d.Set("edition", dir.Edition)
-	d.Set("name", dir.Name)
-	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
-	d.Set("type", dir.Type)
-
-	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
-		return fmt.Errorf("error setting VPC settings: %s", err)
-	}
-
-	if err := d.Set("connect_settings", flattenConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
-		return fmt.Errorf("error setting connect settings: %s", err)
-	}
-
 	d.Set("enable_sso", dir.SsoEnabled)
-
+	d.Set("name", dir.Name)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
+	d.Set("short_name", dir.ShortName)
+	d.Set("size", dir.Size)
+	d.Set("type", dir.Type)
+	if dir.VpcSettings != nil {
+		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
+			return fmt.Errorf("setting vpc_settings: %w", err)
+		}
+	} else {
+		d.Set("vpc_settings", nil)
+	}
 
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -469,6 +473,40 @@ func expandDirectoryConnectSettings(tfMap map[string]interface{}) *directoryserv
 	return apiObject
 }
 
+func flattenDirectoryConnectSettingsDescription(apiObject *directoryservice.DirectoryConnectSettingsDescription, dnsIpAddrs []*string) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZones; v != nil {
+		tfMap["availability_zones"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.ConnectIps; v != nil {
+		tfMap["connect_ips"] = aws.StringValueSlice(v)
+	}
+
+	if dnsIpAddrs != nil {
+		tfMap["customer_dns_ips"] = aws.StringValueSlice(dnsIpAddrs)
+	}
+
+	if v := apiObject.CustomerUserName; v != nil {
+		tfMap["customer_username"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
 func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings {
 	if tfMap == nil {
 		return nil
@@ -485,6 +523,28 @@ func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.
 	}
 
 	return apiObject
+}
+
+func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.DirectoryVpcSettingsDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZones; v != nil {
+		tfMap["availability_zones"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
