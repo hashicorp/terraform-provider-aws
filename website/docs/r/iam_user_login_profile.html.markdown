@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_user_login_profile"
 description: |-
@@ -13,7 +14,7 @@ Manages an IAM User Login Profile with limited support for password creation dur
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user" "example" {
   name          = "example"
   path          = "/"
@@ -21,12 +22,12 @@ resource "aws_iam_user" "example" {
 }
 
 resource "aws_iam_user_login_profile" "example" {
-  user    = "${aws_iam_user.example.name}"
+  user    = aws_iam_user.example.name
   pgp_key = "keybase:some_person_that_exists"
 }
 
 output "password" {
-  value = "${aws_iam_user_login_profile.example.encrypted_password}"
+  value = aws_iam_user_login_profile.example.encrypted_password
 }
 ```
 
@@ -35,14 +36,15 @@ output "password" {
 The following arguments are supported:
 
 * `user` - (Required) The IAM user's name.
-* `pgp_key` - (Required) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
-* `password_length` - (Optional, default 20) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument.
-* `password_reset_required` - (Optional, default "true") Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument.
+* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
+* `password_length` - (Optional) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument. Default value is `20`.
+* `password_reset_required` - (Optional) Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `password` - The plain text password, only available when `pgp_key` is not provided.
 * `key_fingerprint` - The fingerprint of the PGP key used to encrypt the password. Only available if password was handled on Terraform resource creation, not import.
 * `encrypted_password` - The encrypted password, base64 encoded. Only available if password was handled on Terraform resource creation, not import.
 
@@ -51,20 +53,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM User Login Profiles can be imported without password information support via the IAM User name, e.g.
+IAM User Login Profiles can be imported without password information support via the IAM User name, e.g.,
 
 ```sh
 $ terraform import aws_iam_user_login_profile.example myusername
 ```
 
-Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/resources.html#ignore_changes) to ignore them unless password recreation is desired. e.g.
+Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them unless password recreation is desiredE.g.,
 
-```hcl
+```terraform
 resource "aws_iam_user_login_profile" "example" {
   # ... other configuration ...
 
   lifecycle {
-    ignore_changes = ["password_length", "password_reset_required", "pgp_key"]
+    ignore_changes = [
+      password_length,
+      password_reset_required,
+      pgp_key,
+    ]
   }
 }
 ```

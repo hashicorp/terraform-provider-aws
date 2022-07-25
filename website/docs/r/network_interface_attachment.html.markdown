@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface_attachment"
 description: |-
@@ -11,10 +12,10 @@ Attach an Elastic network interface (ENI) resource with EC2 instance.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_network_interface_attachment" "test" {
-  instance_id          = "${aws_instance.test.id}"
-  network_interface_id = "${aws_network_interface.test.id}"
+  instance_id          = aws_instance.test.id
+  network_interface_id = aws_network_interface.test.id
   device_index         = 0
 }
 ```

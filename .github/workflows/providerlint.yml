@@ -1,0 +1,138 @@
+name: ProviderLint Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .ci/scripts/providerlint.sh
+      - .github/workflows/providerlint.yml
+      - .go-version
+      - GNUmakefile
+      - go.sum
+      - internal/**
+      - names/**
+
+jobs:
+  providerlinta:
+    name: 1 of 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh accessanalyzer account acm acmpca amp amplify apigateway apigatewayv2 appautoscaling appconfig appflow appintegrations applicationinsights appmesh apprunner appstream appsync athena autoscaling autoscalingplans backup batch budgets ce chime cloud9 cloudcontrol cloudformation cloudfront cloudhsmv2 cloudsearch cloudtrail cloudwatch codeartifact codebuild codecommit codepipeline
+  providerlintb:
+    name: 2 of 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh codestarconnections codestarnotifications cognitoidentity cognitoidp configservice connect cur dataexchange datapipeline datasync dax deploy detective devicefarm directconnect dlm dms docdb ds dynamodb ec2 ec2 ec2 ec2 ec2 ec2 ec2 ec2 ec2 ecr ecrpublic ecs efs eks elasticache elasticbeanstalk elasticsearch
+  providerlintc:
+    name: 3 of 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh elastictranscoder elb elbv2 emr emrcontainers emrserverless events firehose fis fms fsx gamelift glacier globalaccelerator glue grafana greengrass guardduty iam identitystore imagebuilder inspector iot iotanalytics iotevents kafka kafkaconnect kendra keyspaces kinesis kinesisanalytics kinesisanalyticsv2 kinesisvideo kms lakeformation lambda lexmodels
+  providerlintd:
+    name: 4 of 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh licensemanager lightsail location logs macie macie2 mediaconnect mediaconvert medialive mediapackage mediastore memorydb meta mq mwaa neptune networkfirewall networkmanager opensearch opsworks organizations outposts pinpoint pricing qldb quicksight ram rds redshift redshiftdata redshiftserverless resourcegroups resourcegroupstaggingapi rolesanywhere route53 route53domains route53recoverycontrolconfig
+  providerlinte:
+    name: 5 of 5
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh route53recoveryreadiness route53resolver rum s3 s3control s3outposts sagemaker schemas secretsmanager securityhub serverlessrepo servicecatalog servicediscovery servicequotas ses sfn shield signer simpledb sns sqs ssm ssoadmin storagegateway sts swf synthetics timestreamwrite transcribe transfer waf wafregional wafv2 worklink workspaces xray

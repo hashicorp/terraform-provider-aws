@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_route_table_association"
 description: |-
@@ -11,10 +12,10 @@ Manages a VPC Endpoint Route Table Association
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint_route_table_association" "example" {
-  route_table_id  = "${aws_route_table.example.id}"
-  vpc_endpoint_id = "${aws_vpc_endpoint.example.id}"
+  route_table_id  = aws_route_table.example.id
+  vpc_endpoint_id = aws_vpc_endpoint.example.id
 }
 ```
 
@@ -35,8 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,
-e.g.
+e.g.,
 
 ```
-$ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rt-bbbbbbbb
+$ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rtb-bbbbbbbb
 ```

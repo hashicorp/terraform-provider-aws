@@ -1,4 +1,5 @@
 ---
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_rule"
 description: |-
@@ -11,7 +12,7 @@ Provides an SES receipt rule resource
 
 ## Example Usage
 
-```hcl
+```terraform
 # Add a header to the email and store it in S3
 resource "aws_ses_receipt_rule" "store" {
   name          = "store"
@@ -43,7 +44,7 @@ The following arguments are supported:
 * `enabled` - (Optional) If true, the rule will be enabled
 * `recipients` - (Optional) A list of email addresses
 * `scan_enabled` - (Optional) If true, incoming emails will be scanned for spam and viruses
-* `tls_policy` - (Optional) Require or Optional
+* `tls_policy` - (Optional) `Require` or `Optional`
 * `add_header_action` - (Optional) A list of Add Header Action blocks. Documented below.
 * `bounce_action` - (Optional) A list of Bounce Action blocks. Documented below.
 * `lambda_action` - (Optional) A list of Lambda Action blocks. Documented below.
@@ -70,7 +71,7 @@ Bounce actions support the following:
 Lambda actions support the following:
 
 * `function_arn` - (Required) The ARN of the Lambda function to invoke
-* `invocation_type` - (Optional) Event or RequestResponse
+* `invocation_type` - (Optional) `Event` or `RequestResponse`
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -86,10 +87,11 @@ SNS actions support the following:
 
 * `topic_arn` - (Required) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+* `encoding` - (Optional) The encoding to use for the email within the Amazon SNS notification. Default value is `UTF-8`.
 
 Stop actions support the following:
 
-* `scope` - (Required) The scope to apply
+* `scope` - (Required) The scope to apply. The only acceptable value is `RuleSet`.
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -98,6 +100,13 @@ WorkMail actions support the following:
 * `organization_arn` - (Required) The ARN of the WorkMail organization
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The SES receipt rule name.
+* `arn` - The SES receipt rule ARN.
 
 ## Import
 

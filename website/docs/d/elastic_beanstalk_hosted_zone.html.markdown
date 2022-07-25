@@ -1,4 +1,5 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_hosted_zone"
 description: |-
@@ -11,7 +12,7 @@ Use this data source to get the ID of an [elastic beanstalk hosted zone](http://
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elastic_beanstalk_hosted_zone" "current" {}
 ```
 

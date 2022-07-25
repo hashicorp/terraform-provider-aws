@@ -1,4 +1,5 @@
 ---
+subcategory: "QuickSight"
 layout: "aws"
 page_title: "AWS: aws_quicksight_group"
 description: |-
@@ -11,9 +12,9 @@ Resource for managing QuickSight Group
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_quicksight_group" "example" {
-	group_name = "tf-example"
+  group_name = "tf-example"
 }
 ```
 
