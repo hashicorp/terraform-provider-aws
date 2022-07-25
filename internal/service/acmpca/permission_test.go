@@ -2,7 +2,6 @@ package acmpca_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccACMPCAPermission_Valid(t *testing.T) {
+func TestAccACMPCAPermission_basic(t *testing.T) {
 	var permission acmpca.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
@@ -26,46 +25,17 @@ func TestAccACMPCAPermission_Valid(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_valid(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccPermissionConfig_basic(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
+					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccACMPCAPermission_InvalidPrincipal(t *testing.T) {
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPermissionConfig_invalidPrincipal(commonName),
-				ExpectError: regexp.MustCompile("Error: expected principal to be one of .*, got .*"),
-			},
-		},
-	})
-}
-
-func TestAccACMPCAPermission_InvalidActionsEntry(t *testing.T) {
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPermissionConfig_invalidActionsEntry(commonName),
-				ExpectError: regexp.MustCompile("Error: expected actions.1 to be one of .*, got .*"),
 			},
 		},
 	})
@@ -130,7 +100,7 @@ func testAccCheckPermissionExists(resourceName string, permission *acmpca.Permis
 	}
 }
 
-func testAccPermissionConfig_base(commonName string) string {
+func testAccPermissionConfig_basic(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
@@ -144,35 +114,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 }
+
+resource "aws_acmpca_permission" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+  principal                 = "acm.amazonaws.com"
+  actions                   = ["IssueCertificate", "GetCertificate", "ListPermissions"]
+}
 `, commonName)
-}
-
-func testAccPermissionConfig_valid(commonName string) string {
-	return acctest.ConfigCompose(testAccPermissionConfig_base(commonName), `
-resource "aws_acmpca_permission" "test" {
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-  principal                 = "acm.amazonaws.com"
-  actions                   = ["IssueCertificate", "GetCertificate", "ListPermissions"]
-}
-`)
-}
-
-func testAccPermissionConfig_invalidPrincipal(commonName string) string {
-	return acctest.ConfigCompose(testAccPermissionConfig_base(commonName), `
-resource "aws_acmpca_permission" "test" {
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-  principal                 = "notacm.amazonaws.com"
-  actions                   = ["IssueCertificate", "GetCertificate", "ListPermissions"]
-}
-`)
-}
-
-func testAccPermissionConfig_invalidActionsEntry(commonName string) string {
-	return acctest.ConfigCompose(testAccPermissionConfig_base(commonName), `
-resource "aws_acmpca_permission" "test" {
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-  principal                 = "acm.amazonaws.com"
-  actions                   = ["IssueCert", "GetCertificate", "ListPermissions"]
-}
-`)
 }
