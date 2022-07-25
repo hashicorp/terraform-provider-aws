@@ -1337,6 +1337,63 @@ func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transit
 	return nil, err
 }
 
+const (
+	TransitGatewayVPCAttachmentCreatedTimeout = 10 * time.Minute
+	TransitGatewayVPCAttachmentDeletedTimeout = 10 * time.Minute
+	TransitGatewayVPCAttachmentUpdatedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayVPCAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Timeout: TransitGatewayVPCAttachmentCreatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayVPCAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayVPCAttachmentDeletedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayVPCAttachmentUpdated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateModifying},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayVPCAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitVolumeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{ec2.VolumeStateCreating},

@@ -859,24 +859,7 @@ func waitForTransitGatewayVPCAttachmentAcceptance(conn *ec2.EC2, transitGatewayA
 	return err
 }
 
-func waitForTransitGatewayAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
-		Target: []string{
-			ec2.TransitGatewayAttachmentStatePendingAcceptance,
-			ec2.TransitGatewayAttachmentStateAvailable,
-		},
-		Refresh: transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Attachment (%s) availability", transitGatewayAttachmentID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func WaitForTransitGatewayAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+func waitForTransitGatewayAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStateAvailable,
@@ -894,20 +877,6 @@ func WaitForTransitGatewayAttachmentDeletion(conn *ec2.EC2, transitGatewayAttach
 	if tfresource.NotFound(err) {
 		return nil
 	}
-
-	return err
-}
-
-func waitForTransitGatewayAttachmentUpdate(conn *ec2.EC2, transitGatewayAttachmentID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayAttachmentStateModifying},
-		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
-		Refresh: transitGatewayAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Attachment (%s) availability", transitGatewayAttachmentID)
-	_, err := stateConf.WaitForState()
 
 	return err
 }
