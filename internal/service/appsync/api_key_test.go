@@ -24,10 +24,10 @@ func testAccAPIKey_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_required(rName),
@@ -53,10 +53,10 @@ func testAccAPIKey_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description1"),
@@ -89,10 +89,10 @@ func testAccAPIKey_expires(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_expires(rName, dateAfterTenDays.Format(time.RFC3339)),

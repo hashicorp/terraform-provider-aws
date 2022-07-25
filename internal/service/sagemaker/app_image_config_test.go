@@ -21,10 +21,10 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppImageDestroyConfig,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_basic(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T)
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppImageDestroyConfig,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayKernalSpecs1(rName),
@@ -94,10 +94,10 @@ func TestAccSageMakerAppImageConfig_KernelGatewayImage_fileSystem(t *testing.T) 
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppImageDestroyConfig,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_kernelGatewayFileSystem1(rName),
@@ -140,10 +140,10 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_tags1(rName, "key1", "value1"),
@@ -185,10 +185,10 @@ func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app_image_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAppImageDestroyConfig,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppImageDestroyConfig,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppImageConfigConfig_basic(rName),
@@ -217,7 +217,7 @@ func testAccCheckAppImageDestroyConfig(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker App Image Config (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(config.AppImageConfigName) == rs.Primary.ID {

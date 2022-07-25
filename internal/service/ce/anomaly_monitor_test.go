@@ -24,10 +24,10 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -54,10 +54,10 @@ func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -78,10 +78,10 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -112,10 +112,10 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_tags1(rName, "key1", "value1"),
@@ -160,10 +160,10 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_dimensional(rName),

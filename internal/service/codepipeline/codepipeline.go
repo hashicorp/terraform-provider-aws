@@ -30,7 +30,7 @@ const (
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func ResourceCodePipeline() *schema.Resource { // nosemgrep:codepipeline-in-func-name
+func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
 	return &schema.Resource{
 		Create: resourceCreate,
 		Read:   resourceRead,

@@ -139,7 +139,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 				t.Fatalf("expected no error, got: %s", err)
 			}
 
-			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment
+			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment
 				t.Errorf("expected tfec2.TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
 			}
 		})
@@ -153,10 +153,10 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
@@ -243,10 +243,10 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
@@ -272,10 +272,10 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnel1InsideCIDR(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
@@ -301,10 +301,10 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
@@ -330,10 +330,10 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnel1PresharedKey(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
@@ -400,10 +400,10 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
@@ -538,10 +538,10 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	tunnel2Updated.tunnelCidr = tunnel2.tunnelCidr
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
@@ -1037,10 +1037,10 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_staticRoutes(rName, rBgpAsn),
@@ -1065,10 +1065,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePrivate(rName, rBgpAsn),
@@ -1093,10 +1093,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_outsideAddressTypePublic(rName, rBgpAsn),
@@ -1121,10 +1121,10 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_enableAcceleration(rName, rBgpAsn),
@@ -1149,10 +1149,10 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_ipv6(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d201/128", "fd00:2001:db8:2:2d1:81ff:fe41:d202/128", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
@@ -1176,10 +1176,10 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_tags1(rName, rBgpAsn, "key1", "value1"),
@@ -1222,10 +1222,10 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.111.0.0/16", "10.222.33.0/24"),
@@ -1259,10 +1259,10 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_ipv6(rName, rBgpAsn, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
@@ -1283,10 +1283,10 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
@@ -1308,10 +1308,10 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_customerGatewayID(rName, rBgpAsn1, rBgpAsn2),
@@ -1344,10 +1344,10 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_vpnGatewayID(rName, rBgpAsn),
@@ -1380,10 +1380,10 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayID(rName, rBgpAsn),
@@ -1418,10 +1418,10 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
@@ -1456,10 +1456,10 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),

@@ -17,9 +17,9 @@ func TestAccWAFIPSetDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_ipset.ipset"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, waf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIPSetDataSourceConfig_nonExistent,

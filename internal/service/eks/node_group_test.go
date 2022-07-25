@@ -30,10 +30,10 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_dataSourceName(rName),
@@ -80,10 +80,10 @@ func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_nameGenerated(rName),
@@ -108,10 +108,10 @@ func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
@@ -136,10 +136,10 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_dataSourceName(rName),
@@ -159,10 +159,10 @@ func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_amiType(rName, eks.AMITypesAl2X8664Gpu),
@@ -193,10 +193,10 @@ func TestAccEKSNodeGroup_CapacityType_spot(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_capacityType(rName, eks.CapacityTypesSpot),
@@ -220,10 +220,10 @@ func TestAccEKSNodeGroup_diskSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_diskSize(rName, 21),
@@ -247,10 +247,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, "1.19"),
@@ -283,10 +283,10 @@ func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 	instanceTypes := fmt.Sprintf("%q, %q, %q, %q", "t2.medium", "t3.medium", "t2.large", "t3.large")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_instanceTypesMultiple(rName, instanceTypes),
@@ -314,10 +314,10 @@ func TestAccEKSNodeGroup_InstanceTypes_single(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_instanceTypesSingle(rName),
@@ -341,10 +341,10 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_labels1(rName, "key1", "value1"),
@@ -388,10 +388,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateId1(rName),
@@ -427,10 +427,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateName1(rName),
@@ -465,10 +465,10 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateVersion1(rName),
@@ -503,10 +503,10 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.17"),
@@ -543,10 +543,10 @@ func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_remoteAccessEC2SSHKey(rName, publicKey),
@@ -576,10 +576,10 @@ func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_remoteAccessSourceSecurityIds1(rName, publicKey),
@@ -604,10 +604,10 @@ func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 2, 2, 1),
@@ -645,10 +645,10 @@ func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 1, 2, 1),
@@ -686,10 +686,10 @@ func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 2, 2, 2),
@@ -727,10 +727,10 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 0, 1, 0),
@@ -778,10 +778,10 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_tags1(rName, "key1", "value1"),
@@ -825,10 +825,10 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_taints1(rName, "key1", "value1", "NO_SCHEDULE"),
@@ -888,10 +888,10 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_update1(rName),
@@ -926,10 +926,10 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNodeGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_version(rName, "1.19"),

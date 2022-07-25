@@ -37,10 +37,10 @@ func TestAccEventsRule_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic(rName),
@@ -108,10 +108,10 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_busName(rName, busName, "description 1"),
@@ -158,10 +158,10 @@ func TestAccEventsRule_role(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_role(rName),
@@ -186,10 +186,10 @@ func TestAccEventsRule_description(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_description(rName, "description1"),
@@ -222,10 +222,10 @@ func TestAccEventsRule_pattern(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.ec2\"]}"),
@@ -259,10 +259,10 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_scheduleAndPattern(rName, "{\"source\":[\"aws.ec2\"]}"),
@@ -288,10 +288,10 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_namePrefix(rName),
@@ -315,10 +315,10 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_nameGenerated,
@@ -343,10 +343,10 @@ func TestAccEventsRule_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_tags1(rName, "key1", "value1"),
@@ -395,10 +395,10 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
@@ -445,10 +445,10 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_partnerBus(rName, busName),
@@ -481,10 +481,10 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 	eventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_busARN(rName, eventBusName),

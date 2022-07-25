@@ -292,7 +292,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Notebook Instance (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Notebook Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -397,12 +397,12 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := conn.StartNotebookInstance(startOpts)
 				if err != nil {
-					return resource.NonRetryableError(fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err))
+					return resource.NonRetryableError(fmt.Errorf("starting sagemaker notebook instance (%s): %s", d.Id(), err))
 				}
 
 				_, err = stateConf.WaitForState()
 				if err != nil {
-					return resource.RetryableError(fmt.Errorf("error waiting for sagemaker notebook instance (%s) to start: %s", d.Id(), err))
+					return resource.RetryableError(fmt.Errorf("waiting for sagemaker notebook instance (%s) to start: %s", d.Id(), err))
 				}
 
 				return nil
@@ -410,7 +410,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			if tfresource.TimedOut(err) {
 				_, err = conn.StartNotebookInstance(startOpts)
 				if err != nil {
-					return fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err)
+					return fmt.Errorf("starting sagemaker notebook instance (%s): %s", d.Id(), err)
 				}
 
 				_, err = stateConf.WaitForState()
@@ -420,7 +420,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			if _, err := WaitNotebookInstanceInService(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to to start after update: %w", d.Id(), err)
+				return fmt.Errorf("waiting for sagemaker notebook instance (%s) to to start after update: %w", d.Id(), err)
 			}
 		}
 	}
@@ -470,7 +470,7 @@ func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 		if tfresource.NotFound(err) {
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker Notebook Instance (%s): %w", id, err)
+		return fmt.Errorf("reading SageMaker Notebook Instance (%s): %w", id, err)
 	}
 
 	if aws.StringValue(notebook.NotebookInstanceStatus) == sagemaker.NotebookInstanceStatusStopped {
@@ -486,7 +486,7 @@ func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	}
 
 	if _, err := WaitNotebookInstanceStopped(conn, id); err != nil {
-		return fmt.Errorf("error waiting for sagemaker notebook instance (%s) to stop: %w", id, err)
+		return fmt.Errorf("waiting for sagemaker notebook instance (%s) to stop: %w", id, err)
 	}
 
 	return nil

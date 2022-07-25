@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `tracker_arn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
-* `update_time` - The timestamp for when the tracker resource was last update in ISO 8601 format.
+* `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
 
 ## Import
 

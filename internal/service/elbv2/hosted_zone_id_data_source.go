@@ -12,6 +12,7 @@ import (
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
+
 var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
@@ -42,6 +43,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 }
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
+
 var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z203XCE67M25HM",
 	endpoints.ApEast1RegionID:      "Z12Y7K3UBGUAD1",

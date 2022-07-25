@@ -1126,7 +1126,7 @@ func DeleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
+		return fmt.Errorf("deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
 	}
 
 	return nil
@@ -1146,7 +1146,7 @@ func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
 	_, err = WaitNetworkInterfaceDetached(conn, attachmentID, timeout)
@@ -1156,7 +1156,7 @@ func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil

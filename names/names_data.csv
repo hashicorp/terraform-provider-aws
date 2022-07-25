@@ -147,7 +147,7 @@ emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRSer
 ,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,No SDK support
 events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,
-fis,fis,fis,fis,,fis,,,FIS,FIS,,1,,aws_fis_,,fis_,Fault Injection Simulator,AWS,,,,,
+fis,fis,fis,fis,,fis,,,FIS,FIS,x,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,1,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,,,,
 fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,
@@ -279,11 +279,13 @@ rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,1,,aws_rbin_,,rbin_
 ,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,No SDK support
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,1,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,
+redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,1,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,,,,
 resource-groups,resourcegroups,resourcegroups,resourcegroups,,resourcegroups,,,ResourceGroups,ResourceGroups,,1,,aws_resourcegroups_,,resourcegroups_,Resource Groups,AWS,,,,,
 resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,,resourcegroupstaggingapi,,resourcegroupstagging,ResourceGroupsTaggingAPI,ResourceGroupsTaggingAPI,,1,,aws_resourcegroupstaggingapi_,,resourcegroupstaggingapi_,Resource Groups Tagging,AWS,,,,,
 robomaker,robomaker,robomaker,robomaker,,robomaker,,,RoboMaker,RoboMaker,,1,,aws_robomaker_,,robomaker_,RoboMaker,AWS,,,,,
+rolesanywhere,rolesanywhere,rolesanywhere,rolesanywhere,,rolesanywhere,,,RolesAnywhere,RolesAnywhere,x,2,,aws_rolesanywhere_,,rolesanywhere_,Roles Anywhere,AWS,,,,,
 route53,route53,route53,route53,,route53,,,Route53,Route53,x,1,aws_route53_(?!resolver_),aws_route53_,,route53_delegation_;route53_health_;route53_hosted_;route53_key_;route53_query_;route53_record;route53_traffic_;route53_vpc_;route53_zone,Route 53,Amazon,,,,,
 route53domains,route53domains,route53domains,route53domains,,route53domains,,,Route53Domains,Route53Domains,x,2,,aws_route53domains_,,route53domains_,Route 53 Domains,Amazon,,,,,
 route53-recovery-cluster,route53recoverycluster,route53recoverycluster,route53recoverycluster,,route53recoverycluster,,,Route53RecoveryCluster,Route53RecoveryCluster,,1,,aws_route53recoverycluster_,,route53recoverycluster_,Route 53 Recovery Cluster,Amazon,,,,,

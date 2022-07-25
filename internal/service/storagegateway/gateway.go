@@ -452,23 +452,26 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	bandwidthInput := &storagegateway.UpdateBandwidthRateLimitInput{
-		GatewayARN: aws.String(d.Id()),
-	}
+	switch d.Get("gateway_type").(string) {
+	case gatewayTypeCached, gatewayTypeStored, gatewayTypeVTL, gatewayTypeVTLSnow:
+		bandwidthInput := &storagegateway.UpdateBandwidthRateLimitInput{
+			GatewayARN: aws.String(d.Id()),
+		}
 
-	if v, ok := d.GetOk("average_download_rate_limit_in_bits_per_sec"); ok {
-		bandwidthInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
-	}
+		if v, ok := d.GetOk("average_download_rate_limit_in_bits_per_sec"); ok {
+			bandwidthInput.AverageDownloadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+		}
 
-	if v, ok := d.GetOk("average_upload_rate_limit_in_bits_per_sec"); ok {
-		bandwidthInput.AverageUploadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
-	}
+		if v, ok := d.GetOk("average_upload_rate_limit_in_bits_per_sec"); ok {
+			bandwidthInput.AverageUploadRateLimitInBitsPerSec = aws.Int64(int64(v.(int)))
+		}
 
-	if bandwidthInput.AverageDownloadRateLimitInBitsPerSec != nil || bandwidthInput.AverageUploadRateLimitInBitsPerSec != nil {
-		log.Printf("[DEBUG] Storage Gateway Gateway %q setting Bandwidth Rate Limit: %#v", d.Id(), bandwidthInput)
-		_, err := conn.UpdateBandwidthRateLimit(bandwidthInput)
-		if err != nil {
-			return fmt.Errorf("error setting Bandwidth Rate Limit: %s", err)
+		if bandwidthInput.AverageDownloadRateLimitInBitsPerSec != nil || bandwidthInput.AverageUploadRateLimitInBitsPerSec != nil {
+			log.Printf("[DEBUG] Storage Gateway Gateway %q setting Bandwidth Rate Limit: %#v", d.Id(), bandwidthInput)
+			_, err := conn.UpdateBandwidthRateLimit(bandwidthInput)
+			if err != nil {
+				return fmt.Errorf("error setting Bandwidth Rate Limit: %s", err)
+			}
 		}
 	}
 
@@ -599,22 +602,25 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting gateway_network_interface: %w", err)
 	}
 
-	bandwidthOutput, err := conn.DescribeBandwidthRateLimit(&storagegateway.DescribeBandwidthRateLimitInput{
-		GatewayARN: aws.String(d.Id()),
-	})
+	switch aws.StringValue(output.GatewayType) {
+	case gatewayTypeCached, gatewayTypeStored, gatewayTypeVTL, gatewayTypeVTLSnow:
+		bandwidthOutput, err := conn.DescribeBandwidthRateLimit(&storagegateway.DescribeBandwidthRateLimitInput{
+			GatewayARN: aws.String(d.Id()),
+		})
 
-	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") ||
-		tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
-		err = nil
-	}
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "not supported") ||
+			tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "not valid") {
+			err = nil
+		}
 
-	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway Bandwidth rate limit: %w", err)
-	}
+		if err != nil {
+			return fmt.Errorf("reading Storage Gateway Bandwidth rate limit: %w", err)
+		}
 
-	if bandwidthOutput != nil {
-		d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
-		d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
+		if bandwidthOutput != nil {
+			d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
+			d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
+		}
 	}
 
 	maintenanceStartTimeOutput, err := conn.DescribeMaintenanceStartTime(&storagegateway.DescribeMaintenanceStartTimeInput{

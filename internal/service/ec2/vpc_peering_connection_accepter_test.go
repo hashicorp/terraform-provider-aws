@@ -21,10 +21,10 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionSameAccount(rName),
@@ -112,7 +112,6 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T
 
 func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
 	var v ec2.VpcPeeringConnection
-	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
@@ -124,9 +123,9 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionDifferentAccount(rName),
@@ -149,7 +148,6 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T
 
 func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
 	var v ec2.VpcPeeringConnection
-	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
 	resourceNameConnection := "aws_vpc_peering_connection.main"        // Requester
@@ -162,9 +160,9 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *test
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_differentRegionDifferentAccount(rName),

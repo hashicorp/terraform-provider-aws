@@ -23,10 +23,10 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedZoneDNSSECConfig_basic(rName, domainName),
@@ -52,10 +52,10 @@ func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedZoneDNSSECConfig_basic(rName, domainName),
@@ -76,10 +76,10 @@ func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedZoneDNSSECConfig_signingStatus(rName, domainName, tfroute53.ServeSignatureNotSigning),
@@ -130,7 +130,7 @@ func testAccCheckHostedZoneDNSSECDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
 		}
 
 		if hostedZoneDnssec != nil && hostedZoneDnssec.Status != nil && aws.StringValue(hostedZoneDnssec.Status.ServeSignature) == tfroute53.ServeSignatureSigning {
@@ -158,7 +158,7 @@ func testAccHostedZoneDNSSECExists(resourceName string) resource.TestCheckFunc {
 		hostedZoneDnssec, err := tfroute53.FindHostedZoneDNSSEC(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", rs.Primary.ID, err)
 		}
 
 		if hostedZoneDnssec == nil {

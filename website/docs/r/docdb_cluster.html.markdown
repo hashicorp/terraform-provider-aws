@@ -1,7 +1,7 @@
 ---
 subcategory: "DocDB (DocumentDB)"
 layout: "aws"
-page_title: "AWS: aws_docdb"
+page_title: "AWS: aws_docdb_cluster"
 description: |-
   Manages a DocDB Aurora Cluster
 ---

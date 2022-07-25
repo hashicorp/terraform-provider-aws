@@ -12,6 +12,7 @@ import (
 // See http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
 // See https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-redshift.html
 // See https://docs.amazonaws.cn/en_us/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
+
 var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "365689465814",
 	endpoints.ApEast1RegionID:      "313564881002",

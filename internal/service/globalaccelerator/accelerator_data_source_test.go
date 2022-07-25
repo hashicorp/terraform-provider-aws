@@ -17,9 +17,9 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_Data_basic(t *testing.T) {
 	dataSourceName2 := "data.aws_globalaccelerator_accelerator.test_by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAcceleratorDataSourceConfig_basic(rName),

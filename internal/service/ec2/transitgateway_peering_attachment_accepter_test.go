@@ -8,13 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing.T) {
-	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	peeringAttachmentName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -28,9 +26,9 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_sameAccount(rName),
@@ -55,7 +53,6 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount(t *testing
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.T) {
-	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	rName := fmt.Sprintf("tf-testacc-tgwpeerattach-%s", sdkacctest.RandString(8))
@@ -66,9 +63,9 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tagsSameAccount(rName),
@@ -103,7 +100,6 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount(t *testing.
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic_differentAccount(t *testing.T) {
-	var providers []*schema.Provider
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	peeringAttachmentName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -117,9 +113,9 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic_differentAccount(t *te
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName),
