@@ -375,18 +375,19 @@ func documentAttributeValueSchema() *schema.Schema {
 				"date_value": {
 					Type:     schema.TypeString,
 					Optional: true,
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						oldTime, err := time.Parse(ISO8601UTC, old)
-						if err != nil {
-							return false
-						}
-						newTime, err := time.Parse(ISO8601UTC, new)
-						if err != nil {
-							return false
-						}
-						return oldTime.Equal(newTime)
-					},
-					DiffSuppressOnRefresh: true,
+					// DiffSuppressFunc does not work on attributes that are part of another attribute of TypeSet
+					// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// 	oldTime, err := time.Parse(ISO8601UTC, old)
+					// 	if err != nil {
+					// 		return false
+					// 	}
+					// 	newTime, err := time.Parse(ISO8601UTC, new)
+					// 	if err != nil {
+					// 		return false
+					// 	}
+					// 	return oldTime.Equal(newTime)
+					// },
+					// DiffSuppressOnRefresh: true,
 				},
 				"long_value": {
 					Type:     schema.TypeInt,

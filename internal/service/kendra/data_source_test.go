@@ -671,7 +671,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 						"condition.0.condition_document_attribute_key": "_created_at",
 						"condition.0.operator":                         "Equals",
 						"condition.0.condition_on_value.#":             "1",
-						"condition.0.condition_on_value.0.date_value":  "2006-01-02T15:04:05+02:00",
+						"condition.0.condition_on_value.0.date_value":  "2006-01-02T15:04:05+00:00",
 
 						"target.#":                               "1",
 						"target.0.target_document_attribute_key": "_authors",
@@ -1598,7 +1598,7 @@ resource "aws_kendra_data_source" "test" {
         operator                         = "Equals"
 
         condition_on_value {
-          date_value = "2006-01-02T15:04:05+02:00"
+          date_value = "2006-01-02T15:04:05+00:00"
         }
       }
 
