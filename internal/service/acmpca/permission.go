@@ -74,7 +74,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if sourceAccount != "" {
-		input.SetSourceAccount(sourceAccount)
+		input.SourceAccount = aws.String(sourceAccount)
 	}
 
 	log.Printf("[DEBUG] Creating ACM PCA Permission: %s", input)
@@ -131,7 +131,10 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	input := &acmpca.DeletePermissionInput{
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
-		SourceAccount:           aws.String(sourceAccount),
+	}
+
+	if sourceAccount != "" {
+		input.SourceAccount = aws.String(sourceAccount)
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())

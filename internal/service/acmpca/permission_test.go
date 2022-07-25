@@ -79,11 +79,6 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 				Config: testAccPermissionConfig_sourceAccount(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),
 			},
@@ -196,7 +191,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_acmpca_permission" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
   principal                 = "acm.amazonaws.com"
-  actions                   = ["GetCertificate", "ListPermissions"]
+  actions                   = ["IssueCertificate", "GetCertificate", "ListPermissions"]
   source_account            = data.aws_caller_identity.current.account_id
 }
 `, commonName)
