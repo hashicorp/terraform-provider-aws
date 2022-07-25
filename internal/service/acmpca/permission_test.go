@@ -64,6 +64,33 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 	})
 }
 
+func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
+	var permission acmpca.Permission
+	resourceName := "aws_acmpca_permission.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_sourceAccount(commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
+					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
@@ -145,6 +172,32 @@ resource "aws_acmpca_permission" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
   principal                 = "acm.amazonaws.com"
   actions                   = ["IssueCertificate", "GetCertificate", "ListPermissions"]
+}
+`, commonName)
+}
+
+func testAccPermissionConfig_sourceAccount(commonName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_acmpca_permission" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+  principal                 = "acm.amazonaws.com"
+  actions                   = ["GetCertificate", "ListPermissions"]
+  source_account            = data.aws_caller_identity.current.account_id
 }
 `, commonName)
 }
