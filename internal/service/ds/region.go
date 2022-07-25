@@ -68,6 +68,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &directoryservice.AddRegionInput{
 		DirectoryId: aws.String(directoryID),
 		RegionName:  aws.String(regionName),
+		VPCSettings: expandDirectoryVpcSettings(d.Get("vpc_settings").([]interface{})[0].(map[string]interface{})),
 	}
 
 	_, err := conn.AddRegionWithContext(ctx, input)

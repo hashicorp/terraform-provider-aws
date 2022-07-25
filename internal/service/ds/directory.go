@@ -358,24 +358,22 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func buildVPCSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
-	v, ok := d.GetOk("vpc_settings")
-	if !ok {
-		return nil, fmt.Errorf("vpc_settings is required for type = SimpleAD or MicrosoftAD")
-	}
-	settings := v.([]interface{})
-	s := settings[0].(map[string]interface{})
-	var subnetIds []*string
-	for _, id := range s["subnet_ids"].(*schema.Set).List() {
-		subnetIds = append(subnetIds, aws.String(id.(string)))
+func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings {
+	if tfMap == nil {
+		return nil
 	}
 
-	vpcSettings = &directoryservice.DirectoryVpcSettings{
-		SubnetIds: subnetIds,
-		VpcId:     aws.String(s["vpc_id"].(string)),
+	apiObject := &directoryservice.DirectoryVpcSettings{}
+
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
-	return vpcSettings, nil
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+		apiObject.VpcId = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryservice.DirectoryConnectSettings, err error) {
@@ -457,19 +455,20 @@ func createSimple(conn *directoryservice.DirectoryService, d *schema.ResourceDat
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("size"); ok {
 		input.Size = aws.String(v.(string))
 	} else {
 		// Matching previous behavior of Default: "Large" for Size attribute
 		input.Size = aws.String(directoryservice.DirectorySizeLarge)
 	}
+
 	if v, ok := d.GetOk("short_name"); ok {
 		input.ShortName = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVPCSettings(d)
-	if err != nil {
-		return "", err
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Simple Directory Service: %s", input)
@@ -495,16 +494,17 @@ func createActive(conn *directoryservice.DirectoryService, d *schema.ResourceDat
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("short_name"); ok {
-		input.ShortName = aws.String(v.(string))
-	}
+
 	if v, ok := d.GetOk("edition"); ok {
 		input.Edition = aws.String(v.(string))
 	}
 
-	input.VpcSettings, err = buildVPCSettings(d)
-	if err != nil {
-		return "", err
+	if v, ok := d.GetOk("short_name"); ok {
+		input.ShortName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Microsoft AD Directory Service: %s", input)
