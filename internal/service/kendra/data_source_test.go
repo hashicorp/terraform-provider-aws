@@ -621,7 +621,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key":  "_document_title",
-						"condition.0.operator":                          "Equals",
+						"condition.0.operator":                          string(types.ConditionOperatorEquals),
 						"condition.0.condition_on_value.#":              "1",
 						"condition.0.condition_on_value.0.string_value": "foo",
 
@@ -654,7 +654,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key":  "_document_title",
-						"condition.0.operator":                          "Equals",
+						"condition.0.operator":                          string(types.ConditionOperatorEquals),
 						"condition.0.condition_on_value.#":              "1",
 						"condition.0.condition_on_value.0.string_value": "foo2",
 
@@ -669,7 +669,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 
 						"condition.#": "1",
 						"condition.0.condition_document_attribute_key": "_created_at",
-						"condition.0.operator":                         "Equals",
+						"condition.0.operator":                         string(types.ConditionOperatorEquals),
 						"condition.0.condition_on_value.#":             "1",
 						"condition.0.condition_on_value.0.date_value":  "2006-01-02T15:04:05+00:00",
 
@@ -678,6 +678,69 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 						"target.0.target_document_attribute_value_deletion":              "false",
 						"target.0.target_document_attribute_value.#":                     "1",
 						"target.0.target_document_attribute_value.0.string_list_value.#": "2",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations3(rName, rName2, rName3, rName4, rName5, rName6),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "false",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key":  "_document_title",
+						"condition.0.operator":                          string(types.ConditionOperatorEquals),
+						"condition.0.condition_on_value.#":              "1",
+						"condition.0.condition_on_value.0.string_value": "foo2",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_category",
+						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value.#":              "1",
+						"target.0.target_document_attribute_value.0.string_value": "bar2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "false",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key": "_created_at",
+						"condition.0.operator":                         string(types.ConditionOperatorEquals),
+						"condition.0.condition_on_value.#":             "1",
+						"condition.0.condition_on_value.0.date_value":  "2006-01-02T15:04:05+00:00",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_authors",
+						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value.#":                     "1",
+						"target.0.target_document_attribute_value.0.string_list_value.#": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
+						"document_content_deletion": "true",
+
+						"condition.#": "1",
+						"condition.0.condition_document_attribute_key": "_excerpt_page_number",
+						"condition.0.operator":                         string(types.ConditionOperatorGreaterThan),
+						"condition.0.condition_on_value.#":             "1",
+						"condition.0.condition_on_value.0.long_value":  "3",
+
+						"target.#":                               "1",
+						"target.0.target_document_attribute_key": "_document_title",
+						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value.#":              "1",
+						"target.0.target_document_attribute_value.0.string_value": "baz",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
@@ -1608,6 +1671,131 @@ resource "aws_kendra_data_source" "test" {
 
         target_document_attribute_value {
           string_list_value = ["foo", "baz"]
+        }
+      }
+    }
+  }
+}
+`, rName4, rName5, rName6))
+}
+
+func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations3(rName, rName2, rName3, rName4, rName5, rName6 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[3]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "access_cw"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  custom_document_enrichment_configuration {
+    inline_configurations {
+      document_content_deletion = false
+
+      condition {
+        condition_document_attribute_key = "_document_title"
+        operator                         = "Equals"
+
+        condition_on_value {
+          string_value = "foo2"
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_category"
+        target_document_attribute_value_deletion = true
+
+        target_document_attribute_value {
+          string_value = "bar2"
+        }
+      }
+    }
+
+    inline_configurations {
+      document_content_deletion = false
+
+      condition {
+        condition_document_attribute_key = "_created_at"
+        operator                         = "Equals"
+
+        condition_on_value {
+          date_value = "2006-01-02T15:04:05+00:00"
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_authors"
+        target_document_attribute_value_deletion = false
+
+        target_document_attribute_value {
+          string_list_value = ["foo", "baz"]
+        }
+      }
+    }
+
+    inline_configurations {
+      document_content_deletion = true
+
+      condition {
+        condition_document_attribute_key = "_excerpt_page_number"
+        operator                         = "GreaterThan"
+
+        condition_on_value {
+          long_value = 3
+        }
+      }
+
+      target {
+        target_document_attribute_key            = "_document_title"
+        target_document_attribute_value_deletion = true
+
+        target_document_attribute_value {
+          string_value = "baz"
         }
       }
     }
