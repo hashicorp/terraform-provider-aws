@@ -14,8 +14,21 @@ func findDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	input := &directoryservice.DescribeDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}
+	var output []*directoryservice.DirectoryDescription
 
-	output, err := conn.DescribeDirectories(input)
+	err := describeDirectoriesPages(conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DirectoryDescriptions {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 		return nil, &resource.NotFoundError{
@@ -28,15 +41,15 @@ func findDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 		return nil, err
 	}
 
-	if output == nil || len(output.DirectoryDescriptions) == 0 || output.DirectoryDescriptions[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.DirectoryDescriptions); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	directory := output.DirectoryDescriptions[0]
+	directory := output[0]
 
 	if stage := aws.StringValue(directory.Stage); stage == directoryservice.DirectoryStageDeleted {
 		return nil, &resource.NotFoundError{
