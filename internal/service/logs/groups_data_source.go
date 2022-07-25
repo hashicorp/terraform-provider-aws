@@ -21,7 +21,7 @@ func DataSourceGroups() *schema.Resource {
 			},
 			"log_group_name_prefix": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"log_group_names": {
 				Type:     schema.TypeSet,
@@ -35,8 +35,10 @@ func DataSourceGroups() *schema.Resource {
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LogsConn
 
-	input := &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: aws.String(d.Get("log_group_name_prefix").(string)),
+	input := &cloudwatchlogs.DescribeLogGroupsInput{}
+
+	if v, ok := d.GetOk("log_group_name_prefix"); ok {
+		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
 	var results []*cloudwatchlogs.LogGroup
@@ -52,7 +54,7 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatch Log Groups: %w", err)
+		return fmt.Errorf("reading CloudWatch Log Groups: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

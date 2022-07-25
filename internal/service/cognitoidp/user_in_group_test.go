@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccCognitoUserInGroup_basic(t *testing.T) {
+func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -23,13 +23,13 @@ func TestAccCognitoUserInGroup_basic(t *testing.T) {
 	userResourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserInGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserInGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigUserInGroup_basic(rName),
+				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
@@ -41,18 +41,18 @@ func TestAccCognitoUserInGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoUserInGroup_disappears(t *testing.T) {
+func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserInGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserInGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigUserInGroup_basic(rName),
+				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
@@ -63,7 +63,7 @@ func TestAccCognitoUserInGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigUserInGroup_basic(rName string) string {
+func testAccUserInGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q

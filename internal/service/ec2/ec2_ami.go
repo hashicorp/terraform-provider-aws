@@ -496,7 +496,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 		ImageId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return nil
 	}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -88,17 +89,16 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 		input.Cidr = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Provisioning IPAM Pool Cidr: %s", input)
 	output, err := conn.ProvisionIpamPoolCidr(input)
 	if err != nil {
-		return fmt.Errorf("Error provisioning ipam pool cidr in ipam pool (%s): %w", d.Get("ipam_pool_id").(string), err)
+		return fmt.Errorf("Error provisioning CIDR in IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
 
 	cidr := aws.StringValue(output.IpamPoolCidr.Cidr)
 	id := encodeIPAMPoolCIDRId(cidr, pool_id)
 
 	if _, err = WaitIPAMPoolCIDRAvailable(conn, id, ipamPoolCIDRCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool Cidr (%s) to be provision: %w", id, err)
+		return fmt.Errorf("error waiting for IPAM Pool CIDR (%s) to be provisioned: %w", id, err)
 	}
 
 	d.SetId(id)
@@ -114,13 +114,13 @@ func resourceIPAMPoolCIDRRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !d.IsNewResource() && cidr == nil {
-		log.Printf("[WARN] IPAM Pool Cidr (%s) not found or was deprovisioned, removing from state", cidr)
+		log.Printf("[WARN] IPAM Pool CIDR (%s) not found, removing from state", cidr)
 		d.SetId("")
 		return nil
 	}
 
 	if aws.StringValue(cidr.State) == ec2.IpamPoolCidrStateDeprovisioned {
-		log.Printf("[WARN] IPAM Pool Cidr (%s) not found or was deprovisioned, removing from state", cidr)
+		log.Printf("[WARN] IPAM Pool CIDR (%s) was deprovisioned, removing from state", cidr)
 		d.SetId("")
 		return nil
 	}
@@ -141,7 +141,6 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		IpamPoolId: aws.String(pool_id),
 	}
 	return resource.Retry(ipamPoolCIDRDeleteTimeout, func() *resource.RetryError {
-		log.Printf("[DEBUG] Deprovisioning IPAM Pool Cidr: %s", input)
 		// releasing allocations is eventually consistent and can cause deprovisioning to fail
 		_, err = conn.DeprovisionIpamPoolCidr(input)
 
@@ -151,18 +150,18 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 				output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), ipamPoolCIDRDeleteTimeout)
 				if err != nil {
 					// State = failed-deprovision
-					return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
+					return resource.RetryableError(fmt.Errorf("Expected CIDR to be deprovisioned but was in state %s", aws.StringValue(output.State)))
 				}
 				// State = deprovisioned
 				return nil
 			}
-			return resource.NonRetryableError(fmt.Errorf("error deprovisioning ipam pool cidr: (%s): %w", cidr, err))
+			return resource.NonRetryableError(fmt.Errorf("error deprovisioning IPAM pool CIDR: (%s): %w", cidr, err))
 		}
 
 		output, err := WaitIPAMPoolCIDRDeleted(conn, d.Id(), ipamPoolCIDRDeleteTimeout)
 		if err != nil {
 			// State = failed-deprovision
-			return resource.RetryableError(fmt.Errorf("Expected cidr to be deprovisioned but was in state %s", aws.StringValue(output.State)))
+			return resource.RetryableError(fmt.Errorf("Expected CIDR to be deprovisioned but was in state %s", aws.StringValue(output.State)))
 		}
 		// State = deprovisioned
 		return nil
@@ -209,6 +208,10 @@ func WaitIPAMPoolCIDRAvailable(conn *ec2.EC2, id string, timeout time.Duration) 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
 		return output, err
 	}
 
@@ -227,6 +230,10 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
 		return output, err
 	}
 

@@ -1,6 +1,7 @@
 package ds
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -11,11 +12,12 @@ import (
 )
 
 const (
-	directoryCreatedTimeout = 60 * time.Minute
-	directoryDeletedTimeout = 60 * time.Minute
+	directoryCreatedTimeout       = 60 * time.Minute
+	directoryDeletedTimeout       = 60 * time.Minute
+	sharedDirectoryDeletedTimeout = 60 * time.Minute
 )
 
-func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
 		Target:  []string{directoryservice.DirectoryStageActive},
@@ -23,18 +25,12 @@ func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string) (*
 		Timeout: directoryCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
-
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
-func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
 		Target:  []string{},
@@ -42,10 +38,55 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*
 		Timeout: directoryDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
+	return err
+}
+
+func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			directoryservice.ShareStatusDeleting,
+			directoryservice.ShareStatusShared,
+			directoryservice.ShareStatusPendingAcceptance,
+			directoryservice.ShareStatusRejectFailed,
+			directoryservice.ShareStatusRejected,
+			directoryservice.ShareStatusRejecting,
+		},
+		Target:                    []string{},
+		Refresh:                   statusSharedDirectory(ctx, conn, ownerId, sharedId),
+		Timeout:                   sharedDirectoryDeletedTimeout,
+		MinTimeout:                30 * time.Second,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ShareStatus)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectoryService, dirId string) (*directoryservice.SharedDirectory, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			directoryservice.ShareStatusSharing,
+			directoryservice.ShareStatusPendingAcceptance,
+		},
+		Target:                    []string{directoryservice.ShareStatusShared},
+		Refresh:                   statusDirectoryShare(conn, dirId),
+		Timeout:                   sharedDirectoryDeletedTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ShareStatus)))
 
 		return output, err
 	}

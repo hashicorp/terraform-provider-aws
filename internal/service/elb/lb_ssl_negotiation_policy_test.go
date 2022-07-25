@@ -25,13 +25,13 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSLNegotiationPolicyConfig_basic(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
@@ -51,13 +51,13 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBSSLNegotiationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSLNegotiationPolicyConfig_basic(rName, key, certificate),
+				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					testAccCheckLoadBalancerExists(elbResourceName, &loadBalancer),
@@ -195,7 +195,7 @@ func policyAttributesToMap(attributes *[]*elb.PolicyAttributeDescription) map[st
 }
 
 // Sets the SSL Negotiation policy with attributes.
-func testAccSSLNegotiationPolicyConfig_basic(rName, key, certificate string) string {
+func testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

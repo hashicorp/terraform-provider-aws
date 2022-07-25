@@ -24,13 +24,13 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContributorInsightsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, ""),
+				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
@@ -42,7 +42,7 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, indexName),
+				Config: testAccContributorInsightsConfig_basic(rName, indexName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
@@ -58,13 +58,13 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_contributor_insights.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContributorInsightsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContributorInsightsBasicConfig(rName, ""),
+				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceContributorInsights(), resourceName),
@@ -99,7 +99,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccContributorInsightsBasicConfig(rName, indexName string) string {
+func testAccContributorInsightsConfig_basic(rName, indexName string) string {
 	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
 resource "aws_dynamodb_contributor_insights" "test" {
   table_name = aws_dynamodb_table.test.name

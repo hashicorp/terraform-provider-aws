@@ -100,7 +100,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing certificates: %w", err)
+		return fmt.Errorf("listing certificates: %w", err)
 	}
 
 	if len(arns) == 0 {
@@ -128,7 +128,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
 		output, err := conn.DescribeCertificate(input)
 		if err != nil {
-			return fmt.Errorf("Error describing ACM certificate: %w", err)
+			return fmt.Errorf("describing ACM certificate: %w", err)
 		}
 		certificate := output.Certificate
 
@@ -143,7 +143,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 					// At this point, we already have a candidate certificate
 					// Check if we are filtering by most recent and update if necessary
 					if filterMostRecent {
-						matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 						if err != nil {
 							return err
 						}
@@ -163,7 +163,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		// At this point, we already have a candidate certificate
 		// Check if we are filtering by most recent and update if necessary
 		if filterMostRecent {
-			matchedCertificate, err = mostRecentAcmCertificate(certificate, matchedCertificate)
+			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mostRecentAcmCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
+func mostRecentCertificate(i, j *acm.CertificateDetail) (*acm.CertificateDetail, error) {
 	if aws.StringValue(i.Status) != aws.StringValue(j.Status) {
 		return nil, fmt.Errorf("most_recent filtering on different ACM certificate statues is not supported")
 	}

@@ -24,13 +24,13 @@ func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 	streamResourceName := "aws_kinesis_stream.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRealtimeLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRealtimeLogConfig(rName, samplingRate),
+				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -62,13 +62,13 @@ func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_realtime_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRealtimeLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRealtimeLogConfig(rName, samplingRate),
+				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
@@ -91,13 +91,13 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 	stream2ResourceName := "aws_kinesis_stream.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRealtimeLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRealtimeLogConfig(rName, samplingRate1),
+				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -114,7 +114,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRealtimeLogUpdatedConfig(rName, samplingRate2),
+				Config: testAccRealtimeLogConfigConfig_updated(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
@@ -242,7 +242,7 @@ EOF
 `, rName, count)
 }
 
-func testAccRealtimeLogConfig(rName string, samplingRate int) string {
+func testAccRealtimeLogConfigConfig_basic(rName string, samplingRate int) string {
 	return acctest.ConfigCompose(
 		testAccRealtimeLogBaseConfig(rName, 1),
 		fmt.Sprintf(`
@@ -265,7 +265,7 @@ resource "aws_cloudfront_realtime_log_config" "test" {
 `, rName, samplingRate))
 }
 
-func testAccRealtimeLogUpdatedConfig(rName string, samplingRate int) string {
+func testAccRealtimeLogConfigConfig_updated(rName string, samplingRate int) string {
 	return acctest.ConfigCompose(
 		testAccRealtimeLogBaseConfig(rName, 2),
 		fmt.Sprintf(`

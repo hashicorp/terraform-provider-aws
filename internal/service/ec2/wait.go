@@ -698,11 +698,12 @@ const (
 
 func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{},
-		Target:         []string{RouteTableStatusReady},
-		Refresh:        StatusRouteTable(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: RouteTableNotFoundChecks,
+		Pending:                   []string{},
+		Target:                    []string{RouteTableStatusReady},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            RouteTableNotFoundChecks,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -716,10 +717,11 @@ func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 func WaitRouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{RouteTableStatusReady},
-		Target:  []string{},
-		Refresh: StatusRouteTable(conn, id),
-		Timeout: timeout,
+		Pending:                   []string{RouteTableStatusReady},
+		Target:                    []string{},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -2266,8 +2268,8 @@ func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Du
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{vpcEndpointStateDeleting},
 		Target:     []string{},
-		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
+		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -2275,6 +2277,44 @@ func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Du
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStatePending},
+		Target:     []string{ec2.ServiceStateAvailable},
+		Refresh:    StatusVPCEndpointServiceStateAvailable(conn, id),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    StatusVPCEndpointServiceStateDeleted(conn, id),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
 		return output, err
 	}
 
@@ -2309,7 +2349,7 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 	return err
 }
 
-func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
+func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			EBSSnapshotImportStateActive,
@@ -2320,7 +2360,7 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
 		Refresh: StatusEBSSnapshotImport(conn, importTaskID),
-		Timeout: 60 * time.Minute,
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 
@@ -2354,35 +2394,26 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 	return nil, err
 }
 
-func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+const (
+	ebsSnapshotArchivedTimeout = 60 * time.Minute
+)
+
+func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"standard"},
+		Pending: []string{TargetStorageTierStandard},
 		Target:  []string{ec2.TargetStorageTierArchive},
-		Refresh: StatusSnapshotTierStatus(conn, id),
-		Timeout: 60 * time.Minute,
+		Refresh: StatusSnapshotStorageTier(conn, id),
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 
-	detail, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	} else {
-		return detail.(*ec2.SnapshotTierStatus), nil
-	}
-}
+	outputRaw, err := stateConf.WaitForState()
 
-// WaitVolumeAttachmentAttached waits for a VolumeAttachment to return Attached
-func WaitVolumeAttachmentAttached(conn *ec2.EC2, name, volumeID, instanceID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VolumeAttachmentStateAttaching},
-		Target:     []string{ec2.VolumeAttachmentStateAttached},
-		Refresh:    volumeAttachmentStateRefreshFunc(conn, name, volumeID, instanceID),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
+
+		return output, err
 	}
 
-	_, err := stateConf.WaitForState()
-
-	return err
+	return nil, err
 }

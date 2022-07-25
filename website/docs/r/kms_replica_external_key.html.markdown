@@ -1,7 +1,7 @@
 ---
 subcategory: "KMS (Key Management)"
 layout: "aws"
-page_title: "AWS: aws_replica_external kms_key"
+page_title: "AWS: aws_kms_replica_external_key"
 description: |-
   Manages a KMS multi-Region replica key that uses external key material.
 ---

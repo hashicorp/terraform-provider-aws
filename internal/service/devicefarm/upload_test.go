@@ -30,9 +30,9 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUploadDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
@@ -79,9 +79,9 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUploadDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
@@ -109,9 +109,9 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUploadDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUploadDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
@@ -138,7 +138,7 @@ func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheck
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindUploadByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -161,7 +161,7 @@ func testAccCheckUploadDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindUploadByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

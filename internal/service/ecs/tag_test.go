@@ -18,13 +18,13 @@ func TestAccECSTag_basic(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -45,13 +45,13 @@ func TestAccECSTag_disappears(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTag(), resourceName),
@@ -68,10 +68,10 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_resourceARNBatchComputeEnvironment(rName),
@@ -93,13 +93,13 @@ func TestAccECSTag_value(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig(rName, "key1", "value1"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -112,7 +112,7 @@ func TestAccECSTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTagConfig(rName, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -123,7 +123,7 @@ func TestAccECSTag_value(t *testing.T) {
 	})
 }
 
-func testAccTagConfig(rName string, key string, value string) string {
+func testAccTagConfig_basic(rName string, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q

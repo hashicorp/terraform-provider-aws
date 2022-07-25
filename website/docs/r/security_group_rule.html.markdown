@@ -114,6 +114,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
 
+## Timeouts
+
+`aws_security_group_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `5 minutes`) Used for security group rule creation
+
 ## Import
 
 Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g., `cidr_block`) separated by underscores (`_`). All parts are required.

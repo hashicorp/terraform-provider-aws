@@ -42,7 +42,7 @@ resource "aws_elasticache_replication_group" "example" {
   replication_group_id        = "tf-rep-group-1"
   description                 = "example description"
   node_type                   = "cache.m4.large"
-  number_cache_clusters       = 2
+  num_cache_clusters          = 2
   parameter_group_name        = "default.redis3.2"
   port                        = 6379
 }
@@ -50,8 +50,8 @@ resource "aws_elasticache_replication_group" "example" {
 
 You have two options for adjusting the number of replicas:
 
-* Adjusting `number_cache_clusters` directly. This will attempt to automatically add or remove replicas, but provides no granular control (e.g., preferred availability zone, cache cluster ID) for the added or removed replicas. This also currently expects cache cluster IDs in the form of `replication_group_id-00#`.
-* Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `number_cache_cluster` attribute.
+* Adjusting `num_cache_clusters` directly. This will attempt to automatically add or remove replicas, but provides no granular control (e.g., preferred availability zone, cache cluster ID) for the added or removed replicas. This also currently expects cache cluster IDs in the form of `replication_group_id-00#`.
+* Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `num_cache_cluster` attribute.
 
 ```terraform
 resource "aws_elasticache_replication_group" "example" {
@@ -60,12 +60,12 @@ resource "aws_elasticache_replication_group" "example" {
   replication_group_id        = "tf-rep-group-1"
   description                 = "example description"
   node_type                   = "cache.m4.large"
-  number_cache_clusters       = 2
+  num_cache_clusters          = 2
   parameter_group_name        = "default.redis3.2"
   port                        = 6379
 
   lifecycle {
-    ignore_changes = [number_cache_clusters]
+    ignore_changes = [num_cache_clusters]
   }
 }
 
@@ -99,14 +99,14 @@ resource "aws_elasticache_replication_group" "baz" {
 
 ```terraform
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "myreplicaciongroup"
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  port                          = 6379
-  apply_immediately             = true
-  auto_minor_version_upgrade    = false
-  maintenance_window            = "tue:06:30-tue:07:30"
-  snapshot_window               = "01:00-02:00"
+  replication_group_id       = "myreplicaciongroup"
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = true
+  auto_minor_version_upgrade = false
+  maintenance_window         = "tue:06:30-tue:07:30"
+  snapshot_window            = "01:00-02:00"
   log_delivery_configuration {
     destination      = aws_cloudwatch_log_group.example.name
     destination_type = "cloudwatch-logs"
@@ -138,7 +138,7 @@ resource "aws_elasticache_replication_group" "secondary" {
   description                 = "secondary replication group"
   global_replication_group_id = aws_elasticache_global_replication_group.example.global_replication_group_id
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_global_replication_group" "example" {
@@ -158,7 +158,7 @@ resource "aws_elasticache_replication_group" "primary" {
   engine_version = "5.0.6"
   node_type      = "cache.m5.large"
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 ```
 
@@ -178,7 +178,7 @@ The following arguments are optional:
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
-* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `number_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
+* `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `num_cache_clusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `availability_zones` - (Optional, **Deprecated** use `preferred_cache_cluster_azs` instead) List of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not considered.
 * `cluster_mode` - (Optional, **Deprecated** use root-level `num_node_groups` and `replicas_per_node_group` instead) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. Note that configuring this block does not enable cluster mode, i.e., data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.

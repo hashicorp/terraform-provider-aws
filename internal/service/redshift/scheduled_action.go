@@ -186,7 +186,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Scheduled Action (%s): %w", name, err)
+		return fmt.Errorf("creating Redshift Scheduled Action (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
@@ -206,7 +206,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	d.Set("description", scheduledAction.ScheduledActionDescription)
@@ -231,7 +231,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 
 	if scheduledAction.TargetAction != nil {
 		if err := d.Set("target_action", []interface{}{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
-			return fmt.Errorf("error setting target_action: %w", err)
+			return fmt.Errorf("setting target_action: %w", err)
 		}
 	} else {
 		d.Set("target_action", nil)
@@ -283,7 +283,7 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.ModifyScheduledAction(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -302,7 +302,7 @@ func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -15,7 +15,7 @@ import (
 	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 )
 
-func TestAccEventIntegration_basic(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -35,9 +35,9 @@ func TestAccEventIntegration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventIntegrationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, originalDescription, sourceName),
@@ -74,7 +74,7 @@ func TestAccEventIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccEventIntegration_updateTags(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -93,9 +93,9 @@ func TestAccEventIntegration_updateTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventIntegrationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
@@ -153,7 +153,7 @@ func TestAccEventIntegration_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccEventIntegration_disappears(t *testing.T) {
+func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -172,9 +172,9 @@ func TestAccEventIntegration_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEventIntegrationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),

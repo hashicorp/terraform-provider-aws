@@ -17,12 +17,12 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryDataSourceConfig(rName),
+				Config: testAccRepositoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -43,12 +43,12 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 	dataSourceName := "data.aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryDataSourceConfig_encryption(rName),
+				Config: testAccRepositoryDataSourceConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_id", dataSourceName, "registry_id"),
@@ -68,9 +68,9 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRepositoryDataSourceConfig_nonExistent,
@@ -86,7 +86,7 @@ data "aws_ecr_repository" "test" {
 }
 `
 
-func testAccCheckRepositoryDataSourceConfig(rName string) string {
+func testAccRepositoryDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %q
@@ -103,7 +103,7 @@ data "aws_ecr_repository" "test" {
 `, rName)
 }
 
-func testAccCheckRepositoryDataSourceConfig_encryption(rName string) string {
+func testAccRepositoryDataSourceConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 

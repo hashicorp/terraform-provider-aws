@@ -19,13 +19,13 @@ func TestAccElastiCacheSecurityGroup_basic(t *testing.T) {
 	resourceName := "aws_elasticache_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
@@ -85,7 +85,7 @@ func testAccCheckSecurityGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccSecurityGroupConfig(rName string) string {
+func testAccSecurityGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`

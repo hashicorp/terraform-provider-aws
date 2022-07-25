@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHoursOfOperation() *schema.Resource {
@@ -27,6 +28,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -227,37 +229,23 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	input := &connect.UpdateHoursOfOperationInput{
-		HoursOfOperationId: aws.String(hoursOfOperationID),
-		InstanceId:         aws.String(instanceID),
-	}
-
-	if d.HasChange("config") {
-		config := expandConfigs(d.Get("config").(*schema.Set).List())
-		input.Config = config
-	}
-
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
-	}
-
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("time_zone") {
-		input.TimeZone = aws.String(d.Get("time_zone").(string))
-	}
-
-	_, err = conn.UpdateHoursOfOperationWithContext(ctx, input)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+	if d.HasChanges("config", "description", "name", "time_zone") {
+		_, err = conn.UpdateHoursOfOperationWithContext(ctx, &connect.UpdateHoursOfOperationInput{
+			Config:             expandConfigs(d.Get("config").(*schema.Set).List()),
+			Description:        aws.String(d.Get("description").(string)),
+			HoursOfOperationId: aws.String(hoursOfOperationID),
+			InstanceId:         aws.String(instanceID),
+			Name:               aws.String(d.Get("name").(string)),
+			TimeZone:           aws.String(d.Get("time_zone").(string)),
+		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

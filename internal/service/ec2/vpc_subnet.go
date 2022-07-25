@@ -38,7 +38,7 @@ func ResourceSubnet() *schema.Resource {
 		MigrateState:  SubnetMigrateState,
 
 		// Keep in sync with aws_default_subnet's schema.
-		// See notes in default_subnet.go.
+		// See notes in vpc_default_subnet.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -362,7 +362,7 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 
 	if err := deleteLingeringLambdaENIs(conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error deleting Lambda ENIs for EC2 Subnet (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Lambda ENIs using EC2 Subnet (%s): %w", d.Id(), err)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
