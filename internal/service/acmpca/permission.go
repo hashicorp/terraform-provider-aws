@@ -3,7 +3,7 @@ package acmpca
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -21,10 +21,6 @@ func ResourcePermission() *schema.Resource {
 		Create: resourcePermissionCreate,
 		Read:   resourcePermissionRead,
 		Delete: resourcePermissionDelete,
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"actions": {
@@ -67,29 +63,28 @@ func ResourcePermission() *schema.Resource {
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	ca_arn := d.Get("certificate_authority_arn").(string)
+	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
-
+	sourceAccount := d.Get("source_account").(string)
+	id := PermissionCreateResourceID(caARN, principal, sourceAccount)
 	input := &acmpca.CreatePermissionInput{
 		Actions:                 flex.ExpandStringSet(d.Get("actions").(*schema.Set)),
-		CertificateAuthorityArn: aws.String(ca_arn),
+		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
 	}
 
-	source_account := d.Get("source_account").(string)
-	if source_account != "" {
-		input.SetSourceAccount(source_account)
+	if sourceAccount != "" {
+		input.SetSourceAccount(sourceAccount)
 	}
 
-	log.Printf("[DEBUG] Creating ACMPCA Permission: %s", input)
-
+	log.Printf("[DEBUG] Creating ACM PCA Permission: %s", input)
 	_, err := conn.CreatePermission(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating ACMPCA Permission: %s", err)
+		return fmt.Errorf("creating ACM PCA Permission (%s): %w", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", ca_arn, principal))
+	d.SetId(id)
 
 	return resourcePermissionRead(d, meta)
 }
@@ -97,7 +92,13 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	permission, err := FindPermission(conn, d.Get("certificate_authority_arn").(string), d.Get("principal").(string), d.Get("source_account").(string))
+	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	permission, err := FindPermission(conn, caARN, principal, sourceAccount)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
@@ -109,8 +110,11 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading ACM PCA Permission (%s): %w", d.Id(), err)
 	}
 
-	d.Set("source_account", permission.SourceAccount)
+	d.Set("actions", aws.StringValueSlice(permission.Actions))
+	d.Set("certificate_authority_arn", permission.CertificateAuthorityArn)
 	d.Set("policy", permission.Policy)
+	d.Set("principal", permission.Principal)
+	d.Set("source_account", permission.SourceAccount)
 
 	return nil
 }
@@ -118,22 +122,47 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
+	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
 	input := &acmpca.DeletePermissionInput{
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-		Principal:               aws.String(d.Get("principal").(string)),
-		SourceAccount:           aws.String(d.Get("source_account").(string)),
+		CertificateAuthorityArn: aws.String(caARN),
+		Principal:               aws.String(principal),
+		SourceAccount:           aws.String(sourceAccount),
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
-	_, err := conn.DeletePermission(input)
+	_, err = conn.DeletePermission(input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ACMPCA Permission: %s", err)
+		return fmt.Errorf("deleting ACM PCA Permission: %s", err)
 	}
 
 	return nil
+}
+
+const permissionIDSeparator = ","
+
+func PermissionCreateResourceID(caARN, principal, sourceAccount string) string {
+	parts := []string{caARN, principal, sourceAccount}
+	id := strings.Join(parts, permissionIDSeparator)
+
+	return id
+}
+
+func PermissionParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, permissionIDSeparator)
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CertificateAuthorityARN%[2]sPrincipal%[2]sSourceAccount", id, permissionIDSeparator)
 }
