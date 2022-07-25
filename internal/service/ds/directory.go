@@ -195,6 +195,187 @@ func ResourceDirectory() *schema.Resource {
 	}
 }
 
+func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DSConn
+
+	var directoryId string
+	var err error
+	directoryType := d.Get("type").(string)
+
+	if directoryType == directoryservice.DirectoryTypeAdconnector {
+		directoryId, err = createDirectoryConnector(conn, d, meta)
+	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
+		directoryId, err = createActive(conn, d, meta)
+	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
+		directoryId, err = createSimple(conn, d, meta)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	d.SetId(directoryId)
+
+	err = waitDirectoryCreated(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("alias"); ok {
+		input := directoryservice.CreateAliasInput{
+			DirectoryId: aws.String(d.Id()),
+			Alias:       aws.String(v.(string)),
+		}
+
+		log.Printf("[DEBUG] Assigning alias %q to DS directory %q",
+			v.(string), d.Id())
+		out, err := conn.CreateAlias(&input)
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] Alias %q assigned to DS directory %q",
+			*out.Alias, *out.DirectoryId)
+	}
+
+	if d.HasChange("enable_sso") {
+		if err := enableSSO(conn, d); err != nil {
+			return err
+		}
+	}
+
+	return resourceDirectoryRead(d, meta)
+}
+
+func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	dir, err := FindDirectoryByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Directory Service Directory (%s): %w", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Received DS directory: %s", dir)
+
+	d.Set("access_url", dir.AccessUrl)
+	d.Set("alias", dir.Alias)
+	d.Set("description", dir.Description)
+
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
+	} else {
+		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
+	}
+	d.Set("name", dir.Name)
+	d.Set("short_name", dir.ShortName)
+	d.Set("size", dir.Size)
+	d.Set("edition", dir.Edition)
+	d.Set("type", dir.Type)
+
+	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
+		return fmt.Errorf("error setting VPC settings: %s", err)
+	}
+
+	if err := d.Set("connect_settings", flattenConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
+		return fmt.Errorf("error setting connect settings: %s", err)
+	}
+
+	d.Set("enable_sso", dir.SsoEnabled)
+
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
+	} else {
+		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
+	}
+
+	tags, err := ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	return nil
+}
+
+func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DSConn
+
+	if d.HasChange("enable_sso") {
+		if err := enableSSO(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceDirectoryRead(d, meta)
+}
+
+func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DSConn
+
+	input := &directoryservice.DeleteDirectoryInput{
+		DirectoryId: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
+	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteDirectory(input)
+
+		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+			return nil
+		}
+		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteDirectory(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
+	}
+
+	err = waitDirectoryDeleted(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
 func buildVPCSettings(d *schema.ResourceData) (vpcSettings *directoryservice.DirectoryVpcSettings, err error) {
 	v, ok := d.GetOk("vpc_settings")
 	if !ok {
@@ -369,187 +550,6 @@ func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) 
 		}); err != nil {
 			return fmt.Errorf("Error Disabling SSO for DS directory %s: %s", d.Id(), err)
 		}
-	}
-
-	return nil
-}
-
-func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
-
-	var directoryId string
-	var err error
-	directoryType := d.Get("type").(string)
-
-	if directoryType == directoryservice.DirectoryTypeAdconnector {
-		directoryId, err = createDirectoryConnector(conn, d, meta)
-	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActive(conn, d, meta)
-	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimple(conn, d, meta)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	d.SetId(directoryId)
-
-	err = waitDirectoryCreated(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
-	}
-
-	if v, ok := d.GetOk("alias"); ok {
-		input := directoryservice.CreateAliasInput{
-			DirectoryId: aws.String(d.Id()),
-			Alias:       aws.String(v.(string)),
-		}
-
-		log.Printf("[DEBUG] Assigning alias %q to DS directory %q",
-			v.(string), d.Id())
-		out, err := conn.CreateAlias(&input)
-		if err != nil {
-			return err
-		}
-		log.Printf("[DEBUG] Alias %q assigned to DS directory %q",
-			*out.Alias, *out.DirectoryId)
-	}
-
-	if d.HasChange("enable_sso") {
-		if err := enableSSO(conn, d); err != nil {
-			return err
-		}
-	}
-
-	return resourceDirectoryRead(d, meta)
-}
-
-func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
-
-	if d.HasChange("enable_sso") {
-		if err := enableSSO(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceDirectoryRead(d, meta)
-}
-
-func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	dir, err := FindDirectoryByID(conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading Directory Service Directory (%s): %w", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Received DS directory: %s", dir)
-
-	d.Set("access_url", dir.AccessUrl)
-	d.Set("alias", dir.Alias)
-	d.Set("description", dir.Description)
-
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
-	} else {
-		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
-	}
-	d.Set("name", dir.Name)
-	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
-	d.Set("edition", dir.Edition)
-	d.Set("type", dir.Type)
-
-	if err := d.Set("vpc_settings", flattenVPCSettings(dir.VpcSettings)); err != nil {
-		return fmt.Errorf("error setting VPC settings: %s", err)
-	}
-
-	if err := d.Set("connect_settings", flattenConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
-		return fmt.Errorf("error setting connect settings: %s", err)
-	}
-
-	d.Set("enable_sso", dir.SsoEnabled)
-
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
-	} else {
-		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
-	}
-
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
-
-	input := &directoryservice.DeleteDirectoryInput{
-		DirectoryId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
-	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteDirectory(input)
-
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDirectory(input)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
-	}
-
-	err = waitDirectoryDeleted(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
