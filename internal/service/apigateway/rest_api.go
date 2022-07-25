@@ -27,9 +27,11 @@ func ResourceRestAPI() *schema.Resource {
 		Update: resourceRestAPIUpdate,
 		Delete: resourceRestAPIDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("put_rest_api_mode", apigateway.PutModeOverwrite)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
-
 		Schema: map[string]*schema.Schema{
 			"api_key_source": {
 				Type:         schema.TypeString,
@@ -126,17 +128,16 @@ func ResourceRestAPI() *schema.Resource {
 				},
 			},
 			"put_rest_api_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Default not honored at runtime? Adding helper function.
+				Type:         schema.TypeString,
+				Optional:     true,
 				Default:      apigateway.PutModeOverwrite,
 				ValidateFunc: validation.StringInSlice(apigateway.PutMode_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				/* DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "" && new == apigateway.PutModeOverwrite {
 						return true
 					}
 					return false
-				},
+				}, */
 			},
 			"root_resource_id": {
 				Type:     schema.TypeString,
@@ -230,7 +231,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			PatchOperations: []*apigateway.PatchOperation{},
 		}
 
-		updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
+		updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output, *input.Mode)
 
 		if len(updateInput.PatchOperations) > 0 {
 			_, err := conn.UpdateRestApi(updateInput)
@@ -283,6 +284,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", api.Description)
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
+	//d.Set("put_rest_api_mode", api. modeConfigOrDefault(d))
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
@@ -354,7 +356,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.RestApi) []*apigateway.PatchOperation {
+func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.RestApi, mode string) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != aws.StringValue(output.ApiKeySource) {
@@ -401,7 +403,6 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		endpointConfiguration := expandEndpointConfiguration(v.([]interface{}))
 		prefix := "/endpointConfiguration/vpcEndpointIds"
-
 		if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
 			if output.EndpointConfiguration != nil {
 				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
@@ -638,7 +639,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				PatchOperations: []*apigateway.PatchOperation{},
 			}
 
-			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
+			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output, *input.Mode)
 
 			if len(updateInput.PatchOperations) > 0 {
 				_, err := conn.UpdateRestApi(updateInput)

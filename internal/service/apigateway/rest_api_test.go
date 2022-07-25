@@ -818,6 +818,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 			{
@@ -834,6 +835,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 			// Verify updated body value is still overridden
@@ -844,6 +846,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 		},
@@ -868,10 +871,10 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName2, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 			{
@@ -880,8 +883,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"body"},
 			},
-			// TODO:finish the below
-			// Verify updated configuration value still overrides
+
+			// Verify updated endpoint configuration, and endpoint from OAS is discarded.
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -889,9 +892,10 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
-			// Verify updated body value is still overridden
+			// Verify updated endpoint configuration, and endpoint from OAS is discarded.
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -899,6 +903,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
 				),
 			},
 		},
@@ -1291,6 +1296,30 @@ func testAccCheckRestAPIRoutes(conf *apigateway.RestApi, routes []string) resour
 
 		if len(actualRoutePaths) > 0 {
 			return fmt.Errorf("Found unexpected paths %v", actualRoutePaths)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckRestAPIEndpointsCount(conf *apigateway.RestApi, count int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+
+		resp, err := conn.GetRestApi(&apigateway.GetRestApiInput{
+			RestApiId: conf.Id,
+		})
+		if err != nil {
+			return err
+		}
+
+		actualEndpoints := map[string]bool{}
+		for _, endpoint := range resp.EndpointConfiguration.VpcEndpointIds {
+			actualEndpoints[*endpoint] = true
+		}
+
+		if len(resp.EndpointConfiguration.VpcEndpointIds) != count {
+			return fmt.Errorf("Found unexpected endpoint in endpoints %v", actualEndpoints)
 		}
 
 		return nil
