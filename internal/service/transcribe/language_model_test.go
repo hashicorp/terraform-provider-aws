@@ -32,9 +32,9 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLanguageModelDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLanguageModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLanguageModelConfig_basic(rName),
@@ -68,9 +68,9 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLanguageModelDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLanguageModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLanguageModelConfig_basic(rName),
