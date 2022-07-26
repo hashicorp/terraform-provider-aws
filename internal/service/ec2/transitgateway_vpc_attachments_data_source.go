@@ -41,7 +41,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 	output, err := FindTransitGatewayVPCAttachments(conn, input)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway VPC Attachments: %s", err)
+		return diag.Errorf("reading EC2 Transit Gateway VPC Attachments: %s", err)
 	}
 
 	var attachmentIDs []string
