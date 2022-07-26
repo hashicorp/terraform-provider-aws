@@ -3717,7 +3717,7 @@ func FindTransitGatewayPeeringAttachment(conn *ec2.EC2, input *ec2.DescribeTrans
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].Options == nil || output[0].AccepterTgwInfo == nil || output[0].RequesterTgwInfo == nil {
+	if len(output) == 0 || output[0] == nil || output[0].AccepterTgwInfo == nil || output[0].RequesterTgwInfo == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -3779,7 +3779,6 @@ func FindTransitGatewayPeeringAttachmentByID(conn *ec2.EC2, id string) (*ec2.Tra
 			Message:     state,
 			LastRequest: input,
 		}
-
 	}
 
 	// Eventual consistency check.
@@ -4055,7 +4054,6 @@ func FindTransitGatewayVPCAttachmentByID(conn *ec2.EC2, id string) (*ec2.Transit
 			Message:     state,
 			LastRequest: input,
 		}
-
 	}
 
 	// Eventual consistency check.

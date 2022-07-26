@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -72,7 +71,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
-					testAccCheckTransitGatewayPeeringAttachmentDisappears(&transitGatewayPeeringAttachment),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPeeringAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,7 +79,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
+func testAccTransitGatewayPeeringAttachment_Tags(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -96,35 +95,34 @@ func testAccTransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1SameAccount(rName, "key1", "value1"),
+				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
-				Config:            testAccTransitGatewayPeeringAttachmentConfig_tags1SameAccount(rName, "key1", "value1"),
+				Config:            testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "key1", "value1"),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayPeeringAttachmentConfig_tags2SameAccount(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayPeeringAttachmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
-				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -162,7 +160,8 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 					},
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
@@ -225,22 +224,6 @@ func testAccCheckTransitGatewayPeeringAttachmentDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckTransitGatewayPeeringAttachmentDisappears(transitGatewayPeeringAttachment *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
-			TransitGatewayAttachmentId: transitGatewayPeeringAttachment.TransitGatewayAttachmentId,
-		}
-
-		if _, err := conn.DeleteTransitGatewayPeeringAttachment(input); err != nil {
-			return err
-		}
-
-		return tfec2.WaitForTransitGatewayPeeringAttachmentDeletion(conn, aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
-	}
-}
-
 func testAccTransitGatewayPeeringAttachmentConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
@@ -260,63 +243,63 @@ resource "aws_ec2_transit_gateway" "peer" {
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
-	return acctest.ConfigAlternateRegionProvider() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return testAccAlternateAccountAlternateRegionProviderConfig() + testAccTransitGatewayPeeringAttachmentConfig_base(rName)
+	return acctest.ConfigCompose(testAccAlternateAccountAlternateRegionProviderConfig(), testAccTransitGatewayPeeringAttachmentConfig_base(rName))
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName string) string {
-	return testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 }
-`, acctest.AlternateRegion())
+`, acctest.AlternateRegion()))
 }
 
 func testAccTransitGatewayPeeringAttachmentConfig_differentAccount(rName string) string {
-	return testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_differentAccount_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_account_id         = aws_ec2_transit_gateway.peer.owner_id
-  peer_region             = %[1]q
+  peer_region             = %[2]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, acctest.AlternateRegion())
+`, rName, acctest.AlternateRegion()))
 }
 
-func testAccTransitGatewayPeeringAttachmentConfig_tags1SameAccount(rName, tagKey1, tagValue1 string) string {
-	return testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
+func testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name = %[2]q
-
-    %[3]s = %[4]q
+    %[2]q = %[3]q
   }
 }
-`, acctest.AlternateRegion(), rName, tagKey1, tagValue1)
+`, acctest.AlternateRegion(), tagKey1, tagValue1))
 }
 
-func testAccTransitGatewayPeeringAttachmentConfig_tags2SameAccount(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
+func testAccTransitGatewayPeeringAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name = %[2]q
-
-    %[3]s = %[4]q
-    %[5]s = %[6]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, acctest.AlternateRegion(), rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -77,12 +77,12 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,
 			"DifferentAccount": testAccTransitGatewayPeeringAttachment_differentAccount,
-			"TagsSameAccount":  testAccTransitGatewayPeeringAttachment_Tags_sameAccount,
+			"Tags":             testAccTransitGatewayPeeringAttachment_Tags,
 		},
 		"PeeringAttachmentAccepter": {
-			"basicSameAccount":      testAccTransitGatewayPeeringAttachmentAccepter_basic_sameAccount,
-			"TagsSameAccount":       testAccTransitGatewayPeeringAttachmentAccepter_Tags_sameAccount,
-			"basicDifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_basic_differentAccount,
+			"basic":            testAccTransitGatewayPeeringAttachmentAccepter_basic,
+			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
+			"Tags":             testAccTransitGatewayPeeringAttachmentAccepter_Tags,
 		},
 		"PrefixListReference": {
 			"basic":                      testAccTransitGatewayPrefixListReference_basic,

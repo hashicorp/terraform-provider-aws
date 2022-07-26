@@ -181,7 +181,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 
 func testAccTransitGatewayPeeringAttachmentDataSourceConfig_tagsSameAccount(rName string) string {
 	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_tags1SameAccount(rName, "Name", rName),
+		testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "Name", rName),
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
