@@ -3710,6 +3710,88 @@ func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multica
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
+func FindTransitGatewayPeeringAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) (*ec2.TransitGatewayPeeringAttachment, error) {
+	output, err := FindTransitGatewayPeeringAttachments(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].Options == nil || output[0].AccepterTgwInfo == nil || output[0].RequesterTgwInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayPeeringAttachments(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) ([]*ec2.TransitGatewayPeeringAttachment, error) {
+	var output []*ec2.TransitGatewayPeeringAttachment
+
+	err := conn.DescribeTransitGatewayPeeringAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayPeeringAttachments {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPeeringAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+		TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayPeeringAttachment(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpc-attachments.html#vpc-attachment-lifecycle.
+	switch state := aws.StringValue(output.State); state {
+	case ec2.TransitGatewayAttachmentStateDeleted,
+		ec2.TransitGatewayAttachmentStateFailed,
+		ec2.TransitGatewayAttachmentStateRejected:
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, input *ec2.GetTransitGatewayPrefixListReferencesInput) (*ec2.TransitGatewayPrefixListReference, error) {
 	output, err := FindTransitGatewayPrefixListReferences(conn, input)
 
