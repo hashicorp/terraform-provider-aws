@@ -19,6 +19,7 @@ func ResourceTransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 		Read:   resourceTransitGatewayPeeringAttachmentAccepterRead,
 		Update: resourceTransitGatewayPeeringAttachmentAccepterUpdate,
 		Delete: resourceTransitGatewayPeeringAttachmentAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -58,25 +59,27 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(d *schema.ResourceDat
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	input := &ec2.AcceptTransitGatewayPeeringAttachmentInput{
-		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
+		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 	}
 
 	log.Printf("[DEBUG] Accepting EC2 Transit Gateway Peering Attachment: %s", input)
 	output, err := conn.AcceptTransitGatewayPeeringAttachment(input)
+
 	if err != nil {
-		return fmt.Errorf("error accepting EC2 Transit Gateway Peering Attachment: %s", err)
+		return fmt.Errorf("accepting EC2 Transit Gateway Peering Attachment (%s): %w", transitGatewayAttachmentID, err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
-	if err := waitForTransitGatewayPeeringAttachmentAcceptance(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) availability: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayPeeringAttachmentAccepted(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) update: %w", d.Id(), err)
 	}
 
 	if len(tags) > 0 {
 		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating EC2 Transit Gateway Peering Attachment (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -156,7 +159,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterUpdate(d *schema.ResourceDat
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating EC2 Transit Gateway Peering Attachment (%s) tags: %w", d.Id(), err)
 		}
 	}
 
