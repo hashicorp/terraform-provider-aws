@@ -734,7 +734,10 @@ func StatusTransitGatewayMulticastDomainAssociationState(conn *ec2.EC2, multicas
 
 func StatusTransitGatewayPeeringAttachmentState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayPeeringAttachmentByID(conn, id)
+		// Don't call FindTransitGatewayPeeringAttachmentByID as it maps useful status codes to NotFoundError.
+		output, err := FindTransitGatewayPeeringAttachment(conn, &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+			TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+		})
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -814,7 +817,10 @@ func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewa
 
 func StatusTransitGatewayVPCAttachmentState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayVPCAttachmentByID(conn, id)
+		// Don't call FindTransitGatewayVPCAttachmentByID as it maps useful status codes to NotFoundError.
+		output, err := FindTransitGatewayVPCAttachment(conn, &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+			TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+		})
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -1257,7 +1257,7 @@ func WaitTransitGatewayPeeringAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.
 			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateRejecting,
 		},
-		Target:  []string{},
+		Target:  []string{ec2.TransitGatewayAttachmentStateDeleted},
 		Timeout: TransitGatewayPeeringAttachmentDeletedTimeout,
 		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
 	}
@@ -1498,7 +1498,7 @@ func WaitTransitGatewayVPCAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.Tran
 			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateRejecting,
 		},
-		Target:  []string{},
+		Target:  []string{ec2.TransitGatewayAttachmentStateDeleted},
 		Timeout: TransitGatewayVPCAttachmentDeletedTimeout,
 		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
 	}
