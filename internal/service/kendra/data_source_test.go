@@ -373,6 +373,7 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName8 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
@@ -382,13 +383,13 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 		CheckDestroy:      testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
+				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
 			},
@@ -398,13 +399,13 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, "second"),
+				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source2", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
 				),
 			},
@@ -438,7 +439,7 @@ func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-1", rName5)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-1", rName4)),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
@@ -456,7 +457,7 @@ func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-2", rName5)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.0.access_control_list_configuration.0.key_path", fmt.Sprintf("s3://%s/path-2", rName4)),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
@@ -895,6 +896,49 @@ resource "aws_kendra_index" "test" {
 `, rName, rName2, rName3)
 }
 
+func testAccDataSourceConfigS3Base(rName, rName2 string) string {
+	// Kendra IAM policies: https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "test_data_source" {
+  name               = %[2]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+
+  inline_policy {
+    name = "data_source_policy"
+
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:GetObject"]
+          Effect   = "Allow"
+          Resource = "${aws_s3_bucket.test.arn}/*"
+        },
+        {
+          Action   = ["s3:ListBucket"]
+          Effect   = "Allow"
+          Resource = aws_s3_bucket.test.arn
+        },
+        {
+          Action = [
+            "kendra:BatchPutDocument",
+            "kendra:BatchDeleteDocument",
+          ]
+          Effect   = "Allow"
+          Resource = aws_kendra_index.test.arn
+        },
+      ]
+    })
+  }
+}
+`, rName, rName2)
+}
+
 func testAccDataSourceConfig_basic(rName, rName2, rName3, rName4 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
@@ -936,55 +980,18 @@ resource "aws_kendra_data_source" "test" {
 func testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, selectARN string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
 locals {
-  select_arn = %[5]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
+  select_arn = %[3]q
 }
 
 resource "aws_iam_role" "test_data_source2" {
-  name               = %[4]q
+  name               = %[2]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 
   inline_policy {
-    name = "access_cw"
+    name = "data_source_policy"
 
     policy = jsonencode({
       Version = "2012-10-17"
@@ -1024,57 +1031,20 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6, rName7, selectARN))
+`, rName6, rName7, selectARN))
 }
 
 func testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, schedule string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
   type     = "S3"
   role_arn = aws_iam_role.test_data_source.arn
-  schedule = %[4]q
+  schedule = %[2]q
 
   configuration {
     s3_configuration {
@@ -1082,7 +1052,7 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6, schedule))
+`, rName6, schedule))
 }
 
 func testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, tag, value string) string {
@@ -1172,30 +1142,26 @@ resource "aws_kendra_data_source" "test" {
 `, rName4, rName5))
 }
 
-func testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, selectBucket string) string {
+func testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, selectBucket string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
 locals {
-  select_bucket = %[5]q
+  select_bucket = %[4]q
 }
 
-resource "aws_s3_bucket" "test" {
+resource "aws_s3_bucket" "test2" {
   bucket        = %[2]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket" "test2" {
-  bucket        = %[3]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[4]q
+resource "aws_iam_role" "test_data_source2" {
+  name               = %[3]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 
   inline_policy {
-    name = "access_cw"
+    name = "data_source_policy"
 
     policy = jsonencode({
       Version = "2012-10-17"
@@ -1237,7 +1203,7 @@ resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
   type     = "S3"
-  role_arn = aws_iam_role.test_data_source.arn
+  role_arn = aws_iam_role.test_data_source2.arn
 
   configuration {
     s3_configuration {
@@ -1245,53 +1211,16 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6, rName7, selectBucket))
+`, rName6, rName7, rName8, selectBucket))
 }
 
 func testAccDataSourceConfig_configurationS3AccessControlList(rName, rName2, rName3, rName4, rName5, rName6, selectKeyPath string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
 locals {
-  select_key_path = %[4]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
+  select_key_path = %[2]q
 }
 
 resource "aws_kendra_data_source" "test" {
@@ -1309,51 +1238,14 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6, selectKeyPath))
+`, rName6, selectKeyPath))
 }
 
 func testAccDataSourceConfig_configurationS3DocumentsMetadataConfiguration(rName, rName2, rName3, rName4, rName5, rName6, s3Prefix string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1365,56 +1257,19 @@ resource "aws_kendra_data_source" "test" {
       bucket_name = aws_s3_bucket.test.id
 
       documents_metadata_configuration {
-        s3_prefix = %[4]q
+        s3_prefix = %[2]q
       }
     }
   }
 }
-`, rName4, rName5, rName6, s3Prefix))
+`, rName6, s3Prefix))
 }
 
 func testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1431,51 +1286,14 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6))
+`, rName6))
 }
 
 func testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes2(rName, rName2, rName3, rName4, rName5, rName6 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1492,51 +1310,14 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6))
+`, rName6))
 }
 
 func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1573,51 +1354,14 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6))
+`, rName6))
 }
 
 func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations2(rName, rName2, rName3, rName4, rName5, rName6 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1676,51 +1420,14 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6))
+`, rName6))
 }
 
 func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations3(rName, rName2, rName3, rName4, rName5, rName6 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test_data_source" {
-  name               = %[3]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
-
-  inline_policy {
-    name = "access_cw"
-
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["s3:GetObject"]
-          Effect   = "Allow"
-          Resource = "${aws_s3_bucket.test.arn}/*"
-        },
-        {
-          Action   = ["s3:ListBucket"]
-          Effect   = "Allow"
-          Resource = aws_s3_bucket.test.arn
-        },
-        {
-          Action = [
-            "kendra:BatchPutDocument",
-            "kendra:BatchDeleteDocument",
-          ]
-          Effect   = "Allow"
-          Resource = aws_kendra_index.test.arn
-        },
-      ]
-    })
-  }
-}
-
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
   name     = %[1]q
@@ -1801,5 +1508,5 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName4, rName5, rName6))
+`, rName6))
 }
