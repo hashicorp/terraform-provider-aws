@@ -349,9 +349,9 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("description", dir.Description)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.ConnectSettings.ConnectIps))
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
 	} else {
-		d.Set("dns_ip_addresses", flex.FlattenStringSet(dir.DnsIpAddrs))
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
 	}
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
