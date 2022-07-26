@@ -19,6 +19,7 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 		Read:   resourceTransitGatewayPeeringAttachmentRead,
 		Update: resourceTransitGatewayPeeringAttachmentUpdate,
 		Delete: resourceTransitGatewayPeeringAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,12 +60,12 @@ func resourceTransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	peerAccountId := meta.(*conns.AWSClient).AccountID
+	peerAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("peer_account_id"); ok {
-		peerAccountId = v.(string)
+		peerAccountID = v.(string)
 	}
 	input := &ec2.CreateTransitGatewayPeeringAttachmentInput{
-		PeerAccountId:        aws.String(peerAccountId),
+		PeerAccountId:        aws.String(peerAccountID),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
 		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
@@ -73,14 +74,15 @@ func resourceTransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
 	output, err := conn.CreateTransitGatewayPeeringAttachment(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway Peering Attachment: %s", err)
+		return fmt.Errorf("creating EC2 Transit Gateway Peering Attachment: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
-	if err := waitForTransitGatewayPeeringAttachmentCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) availability: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayPeeringAttachmentCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayPeeringAttachmentRead(d, meta)
