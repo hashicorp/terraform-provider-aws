@@ -101,6 +101,15 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if len(tags) > 0 {
+		regionConn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := UpdateTagsWithContext(ctx, regionConn, directoryID, nil, tags); err != nil {
+			return diag.Errorf("adding Directory Service Directory (%s) tags: %s", directoryID, err)
+		}
 	}
 
 	return resourceRegionRead(ctx, d, meta)
