@@ -1221,7 +1221,7 @@ func TestAccRoute53Record_aliasChangeDualstack(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordAliasChangeDualstackPre(rName),
+				Config: testAccRecordConfig_aliasChangeDualstackPre(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordAliasNameDualstack(&record1, true),
@@ -1235,7 +1235,7 @@ func TestAccRoute53Record_aliasChangeDualstack(t *testing.T) {
 			},
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordAliasChangeDualstackPost(rName),
+				Config: testAccRecordConfig_aliasChangeDualstackPost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 					testAccCheckRecordAliasNameDualstack(&record2, false),
@@ -2750,7 +2750,7 @@ resource "aws_route53_record" "empty" {
 }
 `
 
-func testAccRoute53RecordAliasChangeDualstackPre(rName string) string {
+func testAccRecordConfig_aliasChangeDualstackPre(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -2791,7 +2791,7 @@ resource "aws_route53_record" "test" {
  `, rName)
 }
 
-func testAccRoute53RecordAliasChangeDualstackPost(rName string) string {
+func testAccRecordConfig_aliasChangeDualstackPost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
