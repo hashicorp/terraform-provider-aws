@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
@@ -176,11 +176,11 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayPeeringAttachmentExists(resourceName string, transitGatewayPeeringAttachment *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPeeringAttachmentExists(n string, v *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -189,21 +189,13 @@ func testAccCheckTransitGatewayPeeringAttachmentExists(resourceName string, tran
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := tfec2.DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
+		output, err := tfec2.FindTransitGatewayPeeringAttachmentByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if attachment == nil {
-			return fmt.Errorf("EC2 Transit Gateway Peering Attachment not found")
-		}
-
-		if aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStateAvailable && aws.StringValue(attachment.State) != ec2.TransitGatewayAttachmentStatePendingAcceptance {
-			return fmt.Errorf("EC2 Transit Gateway Peering Attachment (%s) exists in non-available/pending acceptance (%s) state", rs.Primary.ID, aws.StringValue(attachment.State))
-		}
-
-		*transitGatewayPeeringAttachment = *attachment
+		*v = *output
 
 		return nil
 	}
@@ -217,9 +209,9 @@ func testAccCheckTransitGatewayPeeringAttachmentDestroy(s *terraform.State) erro
 			continue
 		}
 
-		peeringAttachment, err := tfec2.DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
+		_, err := tfec2.FindTransitGatewayPeeringAttachmentByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -227,13 +219,7 @@ func testAccCheckTransitGatewayPeeringAttachmentDestroy(s *terraform.State) erro
 			return err
 		}
 
-		if peeringAttachment == nil {
-			continue
-		}
-
-		if aws.StringValue(peeringAttachment.State) != ec2.TransitGatewayAttachmentStateDeleted {
-			return fmt.Errorf("EC2 Transit Gateway Peering Attachment (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(peeringAttachment.State))
-		}
+		return fmt.Errorf("EC2 Transit Gateway Peering Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
