@@ -1,0 +1,18 @@
+name: ProviderLint Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .ci/scripts/providerlint.sh
+      - .github/workflows/providerlint.yml
+      - .go-version
+      - GNUmakefile
+      - go.sum
+      - internal/**
+      - names/**
+
+jobs:

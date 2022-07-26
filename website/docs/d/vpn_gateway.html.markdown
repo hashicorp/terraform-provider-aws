@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway"
 description: |-
@@ -13,7 +13,7 @@ a specific VPN gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_vpn_gateway" "selected" {
   filter {
     name   = "tag:Name"
@@ -22,7 +22,7 @@ data "aws_vpn_gateway" "selected" {
 }
 
 output "vpn_gateway_id" {
-  value = "${data.aws_vpn_gateway.selected.id}"
+  value = data.aws_vpn_gateway.selected.id
 }
 ```
 

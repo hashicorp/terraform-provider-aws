@@ -14,7 +14,7 @@ Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "example-role"
 
@@ -37,7 +37,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
-  role       = "${aws_iam_role.example.name}"
+  role       = aws_iam_role.example.name
 }
 
 resource "aws_codedeploy_app" "example" {
@@ -49,9 +49,9 @@ resource "aws_sns_topic" "example" {
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name              = "${aws_codedeploy_app.example.name}"
+  app_name              = aws_codedeploy_app.example.name
   deployment_group_name = "example-group"
-  service_role_arn      = "${aws_iam_role.example.arn}"
+  service_role_arn      = aws_iam_role.example.arn
 
   ec2_tag_set {
     ec2_tag_filter {
@@ -70,7 +70,7 @@ resource "aws_codedeploy_deployment_group" "example" {
   trigger_configuration {
     trigger_events     = ["DeploymentFailure"]
     trigger_name       = "example-trigger"
-    trigger_target_arn = "${aws_sns_topic.example.arn}"
+    trigger_target_arn = aws_sns_topic.example.arn
   }
 
   auto_rollback_configuration {
@@ -87,17 +87,17 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ### Blue Green Deployments with ECS
 
-```hcl
+```terraform
 resource "aws_codedeploy_app" "example" {
   compute_platform = "ECS"
   name             = "example"
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name               = "${aws_codedeploy_app.example.name}"
+  app_name               = aws_codedeploy_app.example.name
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
   deployment_group_name  = "example"
-  service_role_arn       = "${aws_iam_role.example.arn}"
+  service_role_arn       = aws_iam_role.example.arn
 
   auto_rollback_configuration {
     enabled = true
@@ -121,22 +121,22 @@ resource "aws_codedeploy_deployment_group" "example" {
   }
 
   ecs_service {
-    cluster_name = "${aws_ecs_cluster.example.name}"
-    service_name = "${aws_ecs_service.example.name}"
+    cluster_name = aws_ecs_cluster.example.name
+    service_name = aws_ecs_service.example.name
   }
 
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = ["${aws_lb_listener.example.arn}"]
+        listener_arns = [aws_lb_listener.example.arn]
       }
 
       target_group {
-        name = "${aws_lb_target_group.blue.name}"
+        name = aws_lb_target_group.blue.name
       }
 
       target_group {
-        name = "${aws_lb_target_group.green.name}"
+        name = aws_lb_target_group.green.name
       }
     }
   }
@@ -145,15 +145,15 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ### Blue Green Deployments with Servers and Classic ELB
 
-```hcl
+```terraform
 resource "aws_codedeploy_app" "example" {
   name = "example-app"
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name              = "${aws_codedeploy_app.example.name}"
+  app_name              = aws_codedeploy_app.example.name
   deployment_group_name = "example-group"
-  service_role_arn      = "${aws_iam_role.example.arn}"
+  service_role_arn      = aws_iam_role.example.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
@@ -162,7 +162,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
   load_balancer_info {
     elb_info {
-      name = "${aws_elb.example.name}"
+      name = aws_elb.example.name
     }
   }
 
@@ -202,6 +202,7 @@ The following arguments are supported:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
@@ -330,9 +331,9 @@ The `test_traffic_route` configuration block supports the following:
 
 * `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
 
-### on_premises_tag_filter Argument Reference
+### on_premises_instance_tag_filter Argument Reference
 
-The `on_premises_tag_filter` configuration block supports the following:
+The `on_premises_instance_tag_filter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
 * `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
@@ -350,11 +351,15 @@ Add triggers to a Deployment Group to receive notifications about events related
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
+* `compute_platform` - The destination platform type for the deployment.
+* `deployment_group_id` - The ID of the CodeDeploy deployment group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.
+CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
 
 ```
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group

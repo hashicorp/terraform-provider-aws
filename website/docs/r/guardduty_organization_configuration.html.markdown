@@ -8,13 +8,13 @@ description: |-
 
 # Resource: aws_guardduty_organization_configuration
 
-Manages the GuardDuty Organization Configuration in the current AWS Region. The AWS account utilizing this resource must have been assigned as a delegated Organization administrator account, e.g. via the [`aws_guardduty_organization_admin_account` resource](/docs/providers/aws/r/guardduty_organization_admin_account.html). More information about Organizations support in GuardDuty can be found in the [GuardDuty User Guide](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html).
+Manages the GuardDuty Organization Configuration in the current AWS Region. The AWS account utilizing this resource must have been assigned as a delegated Organization administrator account, e.g., via the [`aws_guardduty_organization_admin_account` resource](/docs/providers/aws/r/guardduty_organization_admin_account.html). More information about Organizations support in GuardDuty can be found in the [GuardDuty User Guide](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html).
 
 ~> **NOTE:** This is an advanced Terraform resource. Terraform will automatically assume management of the GuardDuty Organization Configuration without import and perform no actions on removal from the Terraform configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_guardduty_detector" "example" {
   enable = true
 }
@@ -22,6 +22,17 @@ resource "aws_guardduty_detector" "example" {
 resource "aws_guardduty_organization_configuration" "example" {
   auto_enable = true
   detector_id = aws_guardduty_detector.example.id
+
+  datasources {
+    s3_logs {
+      auto_enable = true
+    }
+    kubernetes {
+      audit_logs {
+        enable = true
+      }
+    }
+  }
 }
 ```
 
@@ -31,6 +42,31 @@ The following arguments are supported:
 
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `detector_id` - (Required) The detector ID of the GuardDuty account.
+* `datasources` - (Optional) Configuration for the collected datasources.
+
+`datasources` supports the following:
+
+* `s3_logs` - (Optional) Enable S3 Protection automatically for new member accounts.
+* `kubernetes` - (Optional) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts.
+
+### S3 Logs
+
+`s3_logs` block supports the following:
+
+* `auto_enable` - (Optional) Set to `true` if you want S3 data event logs to be automatically enabled for new members of the organization. Default: `false`
+
+### Kubernetes
+`kubernetes` block supports the following:
+
+* `audit_logs` - (Required) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts. [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  See [Kubernetes Audit Logs](#kubernetes-audit-logs) below for more details.
+
+#### Kubernetes Audit Logs
+
+The `audit_logs` block supports the following:
+
+* `enable` - (Required) If true, enables Kubernetes audit logs as a data source for [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  Defaults to `true`.
 
 ## Attributes Reference
 
@@ -40,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GuardDuty Organization Configurations can be imported using the GuardDuty Detector ID, e.g.
+GuardDuty Organization Configurations can be imported using the GuardDuty Detector ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617

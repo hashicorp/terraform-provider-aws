@@ -12,7 +12,7 @@ Manages a Glue Security Configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_glue_security_configuration" "example" {
   name = "example"
 
@@ -26,7 +26,7 @@ resource "aws_glue_security_configuration" "example" {
     }
 
     s3_encryption {
-      kms_key_arn        = "${data.aws_kms_key.example.arn}"
+      kms_key_arn        = data.aws_kms_key.example.arn
       s3_encryption_mode = "SSE-KMS"
     }
   }
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Security Configurations can be imported using `name`, e.g.
+Glue Security Configurations can be imported using `name`, e.g.,
 
 ```
 $ terraform import aws_glue_security_configuration.example example

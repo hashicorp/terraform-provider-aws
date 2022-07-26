@@ -14,40 +14,87 @@ Provides an AppSync GraphQL API.
 
 ### API Key Authentication
 
-```hcl
+```terraform
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "API_KEY"
   name                = "example"
 }
 ```
 
-### AWS Cognito User Pool Authentication
-
-```hcl
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "AMAZON_COGNITO_USER_POOLS"
-  name                = "example"
-
-  user_pool_config {
-    aws_region     = "${data.aws_region.current.name}"
-    default_action = "DENY"
-    user_pool_id   = "${aws_cognito_user_pool.example.id}"
-  }
-}
-```
-
 ### AWS IAM Authentication
 
-```hcl
+```terraform
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "AWS_IAM"
   name                = "example"
 }
 ```
 
+### AWS Cognito User Pool Authentication
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "AMAZON_COGNITO_USER_POOLS"
+  name                = "example"
+
+  user_pool_config {
+    aws_region     = data.aws_region.current.name
+    default_action = "DENY"
+    user_pool_id   = aws_cognito_user_pool.example.id
+  }
+}
+```
+
+### OpenID Connect Authentication
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "OPENID_CONNECT"
+  name                = "example"
+
+  openid_connect_config {
+    issuer = "https://example.com"
+  }
+}
+```
+
+### AWS Lambda Authorizer Authentication
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "AWS_LAMBDA"
+  name                = "example"
+
+  lambda_authorizer_config {
+    authorizer_uri = "arn:aws:lambda:us-east-1:123456789012:function:custom_lambda_authorizer"
+  }
+}
+
+resource "aws_lambda_permission" "appsync_lambda_authorizer" {
+  statement_id  = "appsync_lambda_authorizer"
+  action        = "lambda:InvokeFunction"
+  function_name = "custom_lambda_authorizer"
+  principal     = "appsync.amazonaws.com"
+  source_arn    = aws_appsync_graphql_api.example.arn
+}
+```
+
+### With Multiple Authentication Providers
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name                = "example"
+
+  additional_authentication_provider {
+    authentication_type = "AWS_IAM"
+  }
+}
+```
+
 ### With Schema
 
-```hcl
+```terraform
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "AWS_IAM"
   name                = "example"
@@ -63,35 +110,9 @@ EOF
 }
 ```
 
-### OpenID Connect Authentication
-
-```hcl
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "OPENID_CONNECT"
-  name                = "example"
-
-  openid_connect_config {
-    issuer = "https://example.com"
-  }
-}
-```
-
-### With Multiple Authentication Providers
-
-```hcl
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "API_KEY"
-  name                = "example"
-
-  additional_authentication_provider {
-    authentication_type = "AWS_IAM"
-  }
-}
-```
-
 ### Enabling Logging
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "example"
 
@@ -113,15 +134,67 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
-  role       = "${aws_iam_role.example.name}"
+  role       = aws_iam_role.example.name
 }
 
 resource "aws_appsync_graphql_api" "example" {
   # ... other configuration ...
 
   log_config {
-    cloudwatch_logs_role_arn = "${aws_iam_role.example.arn}"
+    cloudwatch_logs_role_arn = aws_iam_role.example.arn
     field_log_level          = "ERROR"
+  }
+}
+```
+
+### Associate Web ACL (v2)
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name                = "example"
+}
+
+resource "aws_wafv2_web_acl_association" "example" {
+  resource_arn = aws_appsync_graphql_api.example.arn
+  web_acl_arn  = aws_wafv2_web_acl.example.arn
+}
+
+resource "aws_wafv2_web_acl" "example" {
+  name        = "managed-rule-example"
+  description = "Example of a managed rule."
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      block {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 ```
@@ -130,14 +203,15 @@ resource "aws_appsync_graphql_api" "example" {
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
+* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) A user-supplied name for the GraphqlApi.
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
+* `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. Defined below.
 * `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_enabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
 
 ### log_config
@@ -152,7 +226,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
+* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
 
@@ -174,17 +248,26 @@ The following arguments are supported:
 * `app_id_client_regex` - (Optional) A regular expression for validating the incoming Amazon Cognito User Pool app client ID.
 * `aws_region` - (Optional) The AWS region in which the user pool was created.
 
+### lambda_authorizer_config
+
+The following arguments are supported:
+
+* `authorizer_uri` - (Required) The ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
+* `authorizer_result_ttl_in_seconds` - (Optional) The number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
+* `identity_validation_expression` - (Optional) A regular expression for validation of tokens before the Lambda function is called.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - API ID
 * `arn` - The ARN
-* `uris` - Map of URIs associated with the API. e.g. `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import
 
-AppSync GraphQL API can be imported using the GraphQL API ID, e.g.
+AppSync GraphQL API can be imported using the GraphQL API ID, e.g.,
 
 ```
 $ terraform import aws_appsync_graphql_api.example 0123456789

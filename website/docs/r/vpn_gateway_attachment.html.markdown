@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_attachment"
 description: |-
@@ -17,7 +17,7 @@ to an existing VPC by setting the [`vpc_id`](vpn_gateway.html#vpc_id) attribute 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "network" {
   cidr_block = "10.0.0.0/16"
 }
@@ -29,8 +29,8 @@ resource "aws_vpn_gateway" "vpn" {
 }
 
 resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  vpc_id         = "${aws_vpc.network.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.vpn.id}"
+  vpc_id         = aws_vpc.network.id
+  vpn_gateway_id = aws_vpn_gateway.vpn.id
 }
 ```
 

@@ -1,0 +1,23 @@
+```release-note:note
+resource/aws_elasticache_replication_group: The `number_cache_clusters` argument has been deprecated. All configurations using `number_cache_clusters` should be updated to use the `num_cache_clusters` argument instead
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `num_cache_clusters` argument
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: The `replication_group_description` argument has been deprecated. All configurations using `replication_group_description` should be updated to use the `description` argument instead
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `description` argument
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: The `cluster_mode` argument has been deprecated. All configurations using `cluster_mode` should be updated to use the root-level `num_node_groups` and `replicas_per_node_group` arguments instead
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `num_node_groups` and `replicas_per_node_group` arguments
+```

@@ -12,7 +12,7 @@ Provides a CloudFormation Stack resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudformation_stack" "network" {
   name = "networking-stack"
 
@@ -64,7 +64,7 @@ The following arguments are supported:
   Conflicts w/ `policy_url`.
 * `policy_url` - (Optional) Location of a file containing the stack policy.
   Conflicts w/ `policy_body`.
-* `tags` - (Optional) A list of tags to associate with this stack.
+* `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `iam_role_arn` - (Optional) The ARN of an IAM role that AWS CloudFormation assumes to create the stack. If you don't specify a value, AWS CloudFormation uses the role that was previously associated with the stack. If no role is available, AWS CloudFormation uses a temporary session that is generated from your user credentials.
 * `timeout_in_minutes` - (Optional) The amount of time that can pass before the stack status becomes `CREATE_FAILED`.
 
@@ -74,11 +74,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 
 ## Import
 
-Cloudformation Stacks can be imported using the `name`, e.g.
+Cloudformation Stacks can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudformation_stack.stack networking-stack
@@ -87,7 +88,7 @@ $ terraform import aws_cloudformation_stack.stack networking-stack
 ## Timeouts
 
 `aws_cloudformation_stack` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for Creating Stacks
 - `update` - (Default `30 minutes`) Used for Stack modifications

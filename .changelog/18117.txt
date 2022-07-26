@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kms_key: Add `bypass_policy_lockout_safety_check` argument
+```
+
+```release-note:enhancement
+resource/aws_kms_external_key: Add `bypass_policy_lockout_safety_check` argument
+```

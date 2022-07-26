@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudHSM v2"
+subcategory: "CloudHSM"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_cluster"
 description: |-
@@ -12,7 +12,7 @@ Use this data source to get information about a CloudHSM v2 cluster
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudhsm_v2_cluster" "cluster" {
   cluster_id = "cluster-testclusterid"
 }
