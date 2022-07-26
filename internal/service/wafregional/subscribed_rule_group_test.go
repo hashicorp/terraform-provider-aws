@@ -6,7 +6,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccWafRegionalSubscribedRuleGroupDataSource_Basic(t *testing.T) {
@@ -25,8 +27,9 @@ func TestAccWafRegionalSubscribedRuleGroupDataSource_Basic(t *testing.T) {
 	datasourceName := "data.aws_wafregional_subscribed_rule_group.rulegroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_Nonexistent,
