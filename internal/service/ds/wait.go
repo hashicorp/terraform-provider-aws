@@ -115,15 +115,12 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Dire
 	return nil, err
 }
 
-func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectoryService, dirId string) (*directoryservice.SharedDirectory, error) {
+func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.SharedDirectory, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			directoryservice.ShareStatusSharing,
-			directoryservice.ShareStatusPendingAcceptance,
-		},
+		Pending:                   []string{directoryservice.ShareStatusPendingAcceptance, directoryservice.ShareStatusSharing},
 		Target:                    []string{directoryservice.ShareStatusShared},
-		Refresh:                   statusDirectoryShareStatus(conn, dirId),
-		Timeout:                   sharedDirectoryDeletedTimeout,
+		Refresh:                   statusDirectoryShareStatus(conn, id),
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 

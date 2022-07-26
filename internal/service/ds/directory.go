@@ -439,7 +439,6 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-
 	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
