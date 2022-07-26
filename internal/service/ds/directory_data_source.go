@@ -18,15 +18,7 @@ func DataSourceDirectory() *schema.Resource {
 		Read: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"directory_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"size": {
+			"access_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,43 +26,22 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"short_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchema(),
-			"vpc_settings": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
 			"connect_settings": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"availability_zones": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"connect_ips": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"customer_dns_ips": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -79,7 +50,66 @@ func DataSourceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"customer_dns_ips": {
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"edition": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enable_sso": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"short_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"size": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -93,38 +123,8 @@ func DataSourceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
-			},
-			"enable_sso": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"access_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"edition": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
