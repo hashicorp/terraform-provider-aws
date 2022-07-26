@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_directory_service_region
 ```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Add configurable timeouts for Create and Delete
+```

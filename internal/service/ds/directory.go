@@ -32,6 +32,11 @@ func ResourceDirectory() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"access_url": {
 				Type:     schema.TypeString,
@@ -288,7 +293,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.DirectoryId))
 	}
 
-	if _, err := waitDirectoryCreated(conn, d.Id()); err != nil {
+	if _, err := waitDirectoryCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("waiting for Directory Service Directory (%s) create: %w", d.Id(), err)
 	}
 
@@ -449,7 +454,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waitDirectoryDeleted(conn, d.Id()); err != nil {
+	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for Directory Service Directory (%s) delete: %w", d.Id(), err)
 	}
 
