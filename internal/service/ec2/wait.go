@@ -1202,6 +1202,80 @@ func WaitTransitGatewayMulticastDomainAssociationDeleted(conn *ec2.EC2, multicas
 }
 
 const (
+	TransitGatewayPeeringAttachmentCreatedTimeout = 10 * time.Minute
+	TransitGatewayPeeringAttachmentDeletedTimeout = 10 * time.Minute
+	TransitGatewayPeeringAttachmentUpdatedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayPeeringAttachmentAccepted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStatePending, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayPeeringAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPeeringAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateFailing, ec2.TransitGatewayAttachmentStateInitiatingRequest, ec2.TransitGatewayAttachmentStatePending},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Timeout: TransitGatewayPeeringAttachmentCreatedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPeeringAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStateAvailable,
+			ec2.TransitGatewayAttachmentStateDeleting,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateRejecting,
+		},
+		Target:  []string{},
+		Timeout: TransitGatewayPeeringAttachmentDeletedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
 )
 
@@ -1362,7 +1436,7 @@ func WaitTransitGatewayVPCAttachmentAccepted(conn *ec2.EC2, id string) (*ec2.Tra
 
 func WaitTransitGatewayVPCAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayAttachmentStatePending},
+		Pending: []string{ec2.TransitGatewayAttachmentStateFailing, ec2.TransitGatewayAttachmentStatePending},
 		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStatePendingAcceptance},
 		Timeout: TransitGatewayVPCAttachmentCreatedTimeout,
 		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
@@ -1379,7 +1453,12 @@ func WaitTransitGatewayVPCAttachmentCreated(conn *ec2.EC2, id string) (*ec2.Tran
 
 func WaitTransitGatewayVPCAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStateDeleting},
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStateAvailable,
+			ec2.TransitGatewayAttachmentStateDeleting,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateRejecting,
+		},
 		Target:  []string{},
 		Timeout: TransitGatewayVPCAttachmentDeletedTimeout,
 		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
