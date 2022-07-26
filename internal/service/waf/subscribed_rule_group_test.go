@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsWafSubscribedRuleGroup_Basic(t *testing.T) {
+func TestAccWafSubscribedRuleGroupDataSource_Basic(t *testing.T) {
 	if os.Getenv("AWS_WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
 		t.Skip("Environment variable AWS_WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
 	}
@@ -29,39 +29,39 @@ func TestAccDataSourceAwsWafSubscribedRuleGroup_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWafSubscribedRuleGroupConfig_NonExistent,
+				Config:      testAccSubscribedRuleGroupDataSourceConfig_Nonexistent,
 				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
 			},
 			{
-				Config: testAccDataSourceAwsWafSubscribedRuleGroupConfig_Name(ruleGroupName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_Name(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsWafSubscribedRuleGroupConfig_MetricName(metricName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_MetricName(metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsWafSubscribedRuleGroupConfig_NameAndMetricName(ruleGroupName, metricName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_NameAndMetricName(ruleGroupName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config:      testAccDataSourceAwsWafSubscribedRuleGroupConfig_NameAndMismatchingMetricName(ruleGroupName),
+				Config:      testAccSubscribedRuleGroupDataSourceConfig_NameAndMismatchingMetricName(ruleGroupName),
 				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsWafSubscribedRuleGroupConfig_Name(name string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_Name(name string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -69,7 +69,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 `, name)
 }
 
-func testAccDataSourceAwsWafSubscribedRuleGroupConfig_MetricName(metricName string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_MetricName(metricName string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
   metric_name = %[1]q
@@ -77,7 +77,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 `, metricName)
 }
 
-func testAccDataSourceAwsWafSubscribedRuleGroupConfig_NameAndMetricName(name string, metricName string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_NameAndMetricName(name string, metricName string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -86,7 +86,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 `, name, metricName)
 }
 
-func testAccDataSourceAwsWafSubscribedRuleGroupConfig_NameAndMismatchingMetricName(name string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_NameAndMismatchingMetricName(name string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -95,7 +95,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 `, name)
 }
 
-const testAccDataSourceAwsWafSubscribedRuleGroupConfig_NonExistent = `
+const testAccSubscribedRuleGroupDataSourceConfig_Nonexistent = `
 data "aws_waf_subscribed_rule_group" "rulegroup" {
   name = "tf-acc-test-does-not-exist"
 }

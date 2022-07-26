@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafRegionalSubscribedRuleGroup() *schema.Resource {
+func DataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafRegionalSubscribedRuleGroupRead,
+		Read: dataSourceSubscribedRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -26,8 +26,8 @@ func dataSourceAwsWafRegionalSubscribedRuleGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafRegionalSubscribedRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+func dataSourceSubscribedRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	name, nameOk := d.GetOk("name")
 	metricName, metricNameOk := d.GetOk("metric_name")
 
