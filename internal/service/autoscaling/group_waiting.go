@@ -56,6 +56,23 @@ func waitForASGCapacity(
 			return nil
 		}
 
+		// May be there is a fatal error in activity logs, check for it now
+		conn := meta.(*conns.AWSClient).AutoScalingConn
+		resp, aErr := conn.DescribeScalingActivities(&autoscaling.DescribeScalingActivitiesInput{
+			AutoScalingGroupName: aws.String(d.Id()),
+			MaxRecords:           aws.Int64(1),
+		})
+		if aErr == nil {
+			if len(resp.Activities) > 0 {
+				if (*resp.Activities[0].Progress == 100) && (*resp.Activities[0].StatusCode == "Failed") {
+					log.Printf("[DEBUG] checking scaling activities for  %s... Progress 100%% reached with failure", d.Id())
+					return resource.NonRetryableError(fmt.Errorf(*resp.Activities[0].StatusMessage))
+				}
+			}
+		} else {
+			log.Printf("[ERROR] checking scaling activities for  %s... got ERROR: %v", d.Id(), aErr)
+		}
+
 		return resource.RetryableError(fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
 	})
 	if tfresource.TimedOut(err) {

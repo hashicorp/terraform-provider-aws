@@ -590,7 +590,7 @@ func TestAccAutoScalingGroup_withErrorPlacementGroupNotSupportedOnInstanceType(t
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withErrorPlacementGroupNotSupportedOnInstanceType(randName),
-				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
+				ExpectError: regexp.MustCompile(`Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
 			},
 		},
 	})
@@ -606,7 +606,7 @@ func TestAccAutoScalingGroup_withErrorWrongInstanceArchitecture(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t4g.micro"),
-				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 		},
 	})
@@ -642,7 +642,7 @@ func TestAccAutoScalingGroup_withErrorMissingInstanceCapabilities(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t3.micro"),
-				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*Enhanced networking with the Elastic Network Adapter \(ENA\) is required for the .* instance type. Ensure that you are using an AMI that is enabled for ENA`),
+				ExpectError: regexp.MustCompile(`Enhanced networking with the Elastic Network Adapter \(ENA\) is required for the .* instance type. Ensure that you are using an AMI that is enabled for ENA`),
 			},
 		},
 	})
