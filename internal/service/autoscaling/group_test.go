@@ -580,6 +580,74 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_withErrorPlacementGroupNotSupportedOnInstanceType(t *testing.T) {
+	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGroupConfig_withErrorPlacementGroupNotSupportedOnInstanceType(randName),
+				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withErrorWrongInstanceArchitecture(t *testing.T) {
+	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t4g.micro"),
+				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withNoErrorProperInstanceArchitecture(t *testing.T) {
+	var group autoscaling.Group
+
+	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t2.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withErrorMissingInstanceCapabilities(t *testing.T) {
+	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t3.micro"),
+				ExpectError: regexp.MustCompile(`Waiting up to .*: Need at least 1 healthy instances in ASG(?ms).*Enhanced networking with the Elastic Network Adapter \(ENA\) is required for the .* instance type. Ensure that you are using an AMI that is enabled for ENA`),
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3782,6 +3850,94 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccGroupConfig_withErrorPlacementGroupNotSupportedOnInstanceType(name string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150603"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_placement_group" "test" {
+  name     = "%s"
+  strategy = "cluster"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones        = [data.aws_availability_zones.available.names[0]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
+  placement_group           = aws_placement_group.test.name
+  wait_for_capacity_timeout = "2m"
+
+  launch_configuration = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
+}
+`, name, name)
+}
+
+func testAccGroupConfig_withErrorWrongInstanceArchitecture(name, instance_type string) string {
+	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
+		fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150603"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id      = data.aws_ami.test_ami.id
+  instance_type = "%s"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones        = [data.aws_availability_zones.available.names[0]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
+  wait_for_capacity_timeout = "2m"
+
+  launch_configuration = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
+}
+`, instance_type, name)
 }
 
 func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {
