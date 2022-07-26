@@ -157,7 +157,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tags, err := ListTagsWithContext(ctx, regionConn, directoryID)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Directory Service Directory (%s): %w", directoryID, err)
+		return diag.Errorf("listing tags for Directory Service Directory (%s): %s", directoryID, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -190,8 +190,8 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Directory Service Directory (%s) tags: %w", directoryID, err)
+		if err := UpdateTagsWithContext(ctx, conn, directoryID, o, n); err != nil {
+			return diag.Errorf("updating Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
 
@@ -216,7 +216,7 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		DirectoryId: aws.String(directoryID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
 		return nil
 	}
 

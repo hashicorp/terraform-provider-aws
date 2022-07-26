@@ -82,7 +82,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
