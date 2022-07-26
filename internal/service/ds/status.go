@@ -57,9 +57,9 @@ func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, 
 	}
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) resource.StateRefreshFunc {
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findSharedDirectoryByIDs(ctx, conn, ownerId, sharedId)
+		output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

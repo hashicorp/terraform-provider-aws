@@ -7,5 +7,9 @@ resource/aws_directory_service_directory: Add configurable timeouts for Create a
 ```
 
 ```release-note:enhancement
+resource/aws_directory_service_shared_directory: Add configurable timeouts for Delete
+```
+
+```release-note:enhancement
 resource/aws_directory_service_shared_directory_accepter: Add configurable timeouts for Create and Delete
 ```

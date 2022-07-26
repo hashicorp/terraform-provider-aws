@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	directoryCreatedTimeout       = 60 * time.Minute
-	directoryDeletedTimeout       = 60 * time.Minute
-	sharedDirectoryDeletedTimeout = 60 * time.Minute
+	directoryCreatedTimeout = 60 * time.Minute
+	directoryDeletedTimeout = 60 * time.Minute
 )
 
 func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
@@ -89,7 +88,7 @@ func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryServ
 	return nil, err
 }
 
-func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
+func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string, timeout time.Duration) (*directoryservice.SharedDirectory, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			directoryservice.ShareStatusDeleting,
@@ -100,8 +99,8 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Dire
 			directoryservice.ShareStatusRejecting,
 		},
 		Target:                    []string{},
-		Refresh:                   statusSharedDirectory(ctx, conn, ownerId, sharedId),
-		Timeout:                   sharedDirectoryDeletedTimeout,
+		Refresh:                   statusSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID),
+		Timeout:                   timeout,
 		MinTimeout:                30 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}

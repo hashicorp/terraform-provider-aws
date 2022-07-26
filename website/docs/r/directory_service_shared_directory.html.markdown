@@ -59,6 +59,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the shared directory.
 * `shared_directory_id` - Identifier of the directory that is stored in the directory consumer account that corresponds to the shared directory in the owner account.
 
+## Timeouts
+
+`aws_directory_service_shared_directory` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `delete` - (Default `60 minutes`) Used for shared directory deletion
+
 ## Import
 
 Directory Service Shared Directories can be imported using the owner directory ID/shared directory ID, e.g.,
