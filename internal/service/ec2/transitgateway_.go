@@ -337,43 +337,6 @@ func DecodeTransitGatewayRouteTablePropagationID(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
-	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
-		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
-	}
-
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Peering Attachment (%s): %s", transitGatewayAttachmentID, input)
-	for {
-		output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || len(output.TransitGatewayPeeringAttachments) == 0 {
-			return nil, nil
-		}
-
-		for _, transitGatewayPeeringAttachment := range output.TransitGatewayPeeringAttachments {
-			if transitGatewayPeeringAttachment == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
-				return transitGatewayPeeringAttachment, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
 func DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		// As of the time of writing, the EC2 API reference documentation (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html)
@@ -478,30 +441,6 @@ func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRo
 	}
 
 	return output.Associations[0], nil
-}
-
-func transitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
-			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Peering Attachment (%s): %s", transitGatewayAttachmentID, err)
-		}
-
-		if transitGatewayPeeringAttachment == nil {
-			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
-		}
-
-		if aws.StringValue(transitGatewayPeeringAttachment.State) == ec2.TransitGatewayAttachmentStateFailed && transitGatewayPeeringAttachment.Status != nil {
-			return transitGatewayPeeringAttachment, aws.StringValue(transitGatewayPeeringAttachment.State), fmt.Errorf("%s: %s", aws.StringValue(transitGatewayPeeringAttachment.Status.Code), aws.StringValue(transitGatewayPeeringAttachment.Status.Message))
-		}
-
-		return transitGatewayPeeringAttachment, aws.StringValue(transitGatewayPeeringAttachment.State), nil
-	}
 }
 
 func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) resource.StateRefreshFunc {
@@ -613,29 +552,6 @@ func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTable
 
 		return transitGatewayRouteTable, aws.StringValue(transitGatewayRouteTable.State), nil
 	}
-}
-
-func WaitForTransitGatewayPeeringAttachmentDeletion(conn *ec2.EC2, transitGatewayAttachmentID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.TransitGatewayAttachmentStateAvailable,
-			ec2.TransitGatewayAttachmentStateDeleting,
-			ec2.TransitGatewayAttachmentStatePendingAcceptance,
-			ec2.TransitGatewayAttachmentStateRejected,
-		},
-		Target:  []string{ec2.TransitGatewayAttachmentStateDeleted},
-		Refresh: transitGatewayPeeringAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Peering Attachment (%s) deletion", transitGatewayAttachmentID)
-	_, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
 }
 
 func waitForTransitGatewayRouteTableAssociationCreation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) error {
