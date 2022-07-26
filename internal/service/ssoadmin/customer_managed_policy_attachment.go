@@ -29,17 +29,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"customer_managed_policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"customer_managed_policy_path": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "/",
-				ForceNew: true,
-			},
+
 			"instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -52,6 +42,27 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"customer_managed_policy_reference": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"path": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "/",
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -61,17 +72,14 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
-	policyName := d.Get("customer_managed_policy_name").(string)
-	policyPath := d.Get("customer_managed_policy_path").(string)
+	policyName, policyPath := expandPolicyReference(d.Get("customer_managed_policy_reference").([]interface{}))
 
 	input := &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
-		InstanceArn: aws.String(instanceArn),
-		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
-			Name: aws.String(policyName),
-			Path: aws.String(policyPath),
-		},
-		PermissionSetArn: aws.String(permissionSetArn),
+		InstanceArn:                    aws.String(instanceArn),
+		CustomerManagedPolicyReference: formatPolicyReference(d.Get("customer_managed_policy_reference").([]interface{})),
+		PermissionSetArn:               aws.String(permissionSetArn),
 	}
+	
 	err := resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
@@ -134,8 +142,6 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 	}
 
 	d.Set("instance_arn", instanceArn)
-	d.Set("customer_managed_policy_name", policyName)
-	d.Set("customer_managed_policy_path", policyPath)
 	d.Set("permission_set_arn", permissionSetArn)
 
 	return nil
@@ -195,4 +201,26 @@ func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, 
 		return "", "", "", "", fmt.Errorf("error parsing ID: expected CUSTOMER_MANAGED_POLICY_NAME, CUSTOMER_MANAGED_POLICY_PATH, PERMISSION_SET_ARN, INSTANCE_ARN")
 	}
 	return idParts[0], idParts[1], idParts[2], idParts[3], nil
+}
+
+func formatPolicyReference(l []interface{}) *ssoadmin.CustomerManagedPolicyReference {
+	n := l[0].(map[string]interface{})
+	p := l[0].(map[string]interface{})
+
+	policyRef := &ssoadmin.CustomerManagedPolicyReference{
+		Name: aws.String(string(n["name"].(string))),
+		Path: aws.String(string(p["path"].(string))),
+	}
+
+	return policyRef
+}
+
+func expandPolicyReference(l []interface{}) (string, string) {
+	n := l[0].(map[string]interface{})
+	p := l[0].(map[string]interface{})
+
+	policyName := string(n["name"].(string))
+	policyPath := string(p["path"].(string))
+
+	return policyName, policyPath
 }
