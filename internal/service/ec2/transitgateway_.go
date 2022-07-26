@@ -378,43 +378,6 @@ func DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, dest
 	return nil, nil
 }
 
-func DescribeTransitGatewayRouteTable(conn *ec2.EC2, transitGatewayRouteTableID string) (*ec2.TransitGatewayRouteTable, error) {
-	input := &ec2.DescribeTransitGatewayRouteTablesInput{
-		TransitGatewayRouteTableIds: []*string{aws.String(transitGatewayRouteTableID)},
-	}
-
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Route Table (%s): %s", transitGatewayRouteTableID, input)
-	for {
-		output, err := conn.DescribeTransitGatewayRouteTables(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if output == nil || len(output.TransitGatewayRouteTables) == 0 {
-			return nil, nil
-		}
-
-		for _, transitGatewayRouteTable := range output.TransitGatewayRouteTables {
-			if transitGatewayRouteTable == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId) == transitGatewayRouteTableID {
-				return transitGatewayRouteTable, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
 func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	if transitGatewayRouteTableID == "" {
 		return nil, nil
@@ -534,26 +497,6 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 	return nil
 }
 
-func transitGatewayRouteTableRefreshFunc(conn *ec2.EC2, transitGatewayRouteTableID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, transitGatewayRouteTableID)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
-			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
-		}
-
-		if err != nil {
-			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Route Table (%s): %s", transitGatewayRouteTableID, err)
-		}
-
-		if transitGatewayRouteTable == nil {
-			return nil, ec2.TransitGatewayRouteTableStateDeleted, nil
-		}
-
-		return transitGatewayRouteTable, aws.StringValue(transitGatewayRouteTable.State), nil
-	}
-}
-
 func waitForTransitGatewayRouteTableAssociationCreation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayAssociationStateAssociating},
@@ -581,42 +524,6 @@ func waitForTransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transitGa
 	}
 
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Route Table (%s) disassociation: %s", transitGatewayRouteTableID, transitGatewayAttachmentID)
-	_, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	return err
-}
-
-func waitForTransitGatewayRouteTableCreation(conn *ec2.EC2, transitGatewayRouteTableID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.TransitGatewayRouteTableStatePending},
-		Target:  []string{ec2.TransitGatewayRouteTableStateAvailable},
-		Refresh: transitGatewayRouteTableRefreshFunc(conn, transitGatewayRouteTableID),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Route Table (%s) availability", transitGatewayRouteTableID)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForTransitGatewayRouteTableDeletion(conn *ec2.EC2, transitGatewayRouteTableID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			ec2.TransitGatewayRouteTableStateAvailable,
-			ec2.TransitGatewayRouteTableStateDeleting,
-		},
-		Target:         []string{ec2.TransitGatewayRouteTableStateDeleted},
-		Refresh:        transitGatewayRouteTableRefreshFunc(conn, transitGatewayRouteTableID),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 1,
-	}
-
-	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Route Table (%s) deletion", transitGatewayRouteTableID)
 	_, err := stateConf.WaitForState()
 
 	if tfresource.NotFound(err) {
