@@ -68,7 +68,10 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &directoryservice.AddRegionInput{
 		DirectoryId: aws.String(directoryID),
 		RegionName:  aws.String(regionName),
-		VPCSettings: expandDirectoryVpcSettings(d.Get("vpc_settings").([]interface{})[0].(map[string]interface{})),
+	}
+
+	if v, ok := d.GetOk("vpc_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VPCSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.AddRegionWithContext(ctx, input)
@@ -79,7 +82,9 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(id)
 
-	// TODO Waiter.
+	if _, err := waitRegionCreated(ctx, conn, directoryID, regionName); err != nil {
+		return diag.Errorf("waiting for Directory Service Region (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceRegionRead(ctx, d, meta)
 }
@@ -107,6 +112,13 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("directory_id", region.DirectoryId)
 	d.Set("region_name", region.RegionName)
+	if region.VpcSettings != nil {
+		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettings(region.VpcSettings)}); err != nil {
+			return diag.Errorf("setting vpc_settings: %s", err)
+		}
+	} else {
+		d.Set("vpc_settings", nil)
+	}
 
 	return nil
 }
@@ -114,11 +126,13 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	directoryID, _, err := RegionParseResourceID(d.Id())
+	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// TODO The Region must be removed from a client in regionName.
 
 	_, err = conn.RemoveRegionWithContext(ctx, &directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
@@ -132,7 +146,9 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting Directory Service Region (%s): %s", d.Id(), err)
 	}
 
-	// TODO Waiter.
+	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName); err != nil {
+		return diag.Errorf("waiting for Directory Service Region (%s) delete: %s", d.Id(), err)
+	}
 
 	return nil
 }

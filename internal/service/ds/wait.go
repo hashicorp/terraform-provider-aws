@@ -55,6 +55,40 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string) (*
 	return nil, err
 }
 
+func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
+		Target:  []string{directoryservice.DirectoryStageActive},
+		Refresh: statusRegion(ctx, conn, directoryID, regionName),
+		Timeout: directoryCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*directoryservice.RegionDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
+		Target:  []string{},
+		Refresh: statusRegion(ctx, conn, directoryID, regionName),
+		Timeout: directoryDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*directoryservice.RegionDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) (*directoryservice.SharedDirectory, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
