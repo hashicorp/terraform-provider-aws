@@ -115,7 +115,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	response, err := conn.CreatePolicy(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Policy (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -133,7 +133,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		err := policyUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Policy (%s): %s", d.Id(), err)
 			return resourcePolicyRead(d, meta)
 		}
@@ -176,7 +176,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		getPolicyResponse, err = conn.GetPolicy(input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -186,7 +186,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM policy %s: %w", d.Id(), err)
 	}
 
-	if getPolicyResponse == nil || getPolicyResponse.Policy == nil {
+	if !d.IsNewResource() && (getPolicyResponse == nil || getPolicyResponse.Policy == nil) {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -239,8 +239,8 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		getPolicyVersionResponse, err = conn.GetPolicyVersion(getPolicyVersionRequest)
 	}
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Policy (%s) version (%s) not found, removing from state", d.Id(), aws.StringValue(policy.DefaultVersionId))
 		d.SetId("")
 		return nil
 	}
@@ -307,7 +307,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := policyUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Policy (%s): %s", d.Id(), err)
 			return resourcePolicyRead(d, meta)
 		}

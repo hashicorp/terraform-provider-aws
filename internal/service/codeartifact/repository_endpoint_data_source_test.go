@@ -15,33 +15,33 @@ func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "npm"),
+				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "pypi"),
+				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "maven"),
+				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "nuget"),
+				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
@@ -56,12 +56,12 @@ func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRepositoryEndpointOwnerConfig(rName),
+				Config: testAccRepositoryEndpointDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
@@ -90,7 +90,7 @@ resource "aws_codeartifact_repository" "test" {
 `, rName)
 }
 
-func testAccCheckRepositoryEndpointBasicConfig(rName, format string) string {
+func testAccRepositoryEndpointDataSourceConfig_basic(rName, format string) string {
 	return acctest.ConfigCompose(
 		testAccCheckRepositoryEndpointBaseConfig(rName),
 		fmt.Sprintf(`
@@ -102,7 +102,7 @@ data "aws_codeartifact_repository_endpoint" "test" {
 `, format))
 }
 
-func testAccCheckRepositoryEndpointOwnerConfig(rName string) string {
+func testAccRepositoryEndpointDataSourceConfig_owner(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCheckRepositoryEndpointBaseConfig(rName),
 		`

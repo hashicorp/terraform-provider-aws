@@ -22,13 +22,13 @@ func testAccTransitGatewayRouteTable_basic(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRouteTableDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableConfig(),
+				Config: testAccTransitGatewayRouteTableConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
@@ -52,13 +52,13 @@ func testAccTransitGatewayRouteTable_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRouteTableDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableConfig(),
+				Config: testAccTransitGatewayRouteTableConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRouteTable(), resourceName),
@@ -76,13 +76,13 @@ func testAccTransitGatewayRouteTable_disappears_TransitGateway(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRouteTableDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableConfig(),
+				Config: testAccTransitGatewayRouteTableConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
@@ -99,13 +99,13 @@ func testAccTransitGatewayRouteTable_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRouteTableDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableTags1Config("key1", "value1"),
+				Config: testAccTransitGatewayRouteTableConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +118,7 @@ func testAccTransitGatewayRouteTable_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayRouteTableTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayRouteTableConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable2),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable1, &transitGatewayRouteTable2),
@@ -128,7 +128,7 @@ func testAccTransitGatewayRouteTable_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTransitGatewayRouteTableTags1Config("key2", "value2"),
+				Config: testAccTransitGatewayRouteTableConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable3),
 					testAccCheckTransitGatewayRouteTableNotRecreated(&transitGatewayRouteTable2, &transitGatewayRouteTable3),
@@ -213,7 +213,7 @@ func testAccCheckTransitGatewayRouteTableNotRecreated(i, j *ec2.TransitGatewayRo
 	}
 }
 
-func testAccTransitGatewayRouteTableConfig() string {
+func testAccTransitGatewayRouteTableConfig_basic() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -223,7 +223,7 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 `
 }
 
-func testAccTransitGatewayRouteTableTags1Config(tagKey1, tagValue1 string) string {
+func testAccTransitGatewayRouteTableConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -237,7 +237,7 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccTransitGatewayRouteTableTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccTransitGatewayRouteTableConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {}
 

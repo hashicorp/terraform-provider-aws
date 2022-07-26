@@ -32,13 +32,13 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
+				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
@@ -63,13 +63,13 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
+				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
@@ -89,13 +89,13 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckQueryLog(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
+				Config: testAccQueryLogConfig_resourceBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
@@ -151,7 +151,7 @@ func testAccCheckQueryLogDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
 		}
 
 		if out.QueryLoggingConfig != nil {
@@ -162,7 +162,7 @@ func testAccCheckQueryLogDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckQueryLogResourceBasic1Config(rName, domainName string) string {
+func testAccQueryLogConfig_resourceBasic1(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccQueryLogRegionProviderConfig(),
 		fmt.Sprintf(`
@@ -240,11 +240,11 @@ func testAccPreCheckQueryLog(t *testing.T) {
 	testAccProviderRoute53QueryLogConfigure.Do(func() {
 		testAccProviderRoute53QueryLog = provider.Provider()
 
-		config := map[string]interface{}{
+		testAccRecordConfig_config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderRoute53QueryLog.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderRoute53QueryLog.Configure(context.Background(), terraform.NewResourceConfigRaw(testAccRecordConfig_config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

@@ -19,13 +19,13 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
+				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 				),
@@ -41,13 +41,13 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 
 func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
+				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists("aws_wafregional_web_acl_association.foo"),
 					testAccCheckWebACLAssociationDisappears("aws_wafregional_web_acl_association.foo"),
@@ -62,13 +62,13 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
+				Config: testAccWebACLAssociationConfig_multiples,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					testAccCheckWebACLAssociationExists("aws_wafregional_web_acl_association.bar"),
@@ -93,9 +93,9 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 			acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWebACLAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLAssociationConfig_checkResourceARNAPIGatewayStage(rName),
@@ -194,7 +194,7 @@ func testAccCheckWebACLAssociationDisappears(resourceName string) resource.TestC
 	}
 }
 
-const testAccCheckWafRegionalWebAclAssociationConfig_basic = `
+const testAccWebACLAssociationConfig_basic = `
 resource "aws_wafregional_rule" "foo" {
   name        = "foo"
   metric_name = "foo"
@@ -254,7 +254,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 }
 `
 
-const testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations = testAccCheckWafRegionalWebAclAssociationConfig_basic + `
+const testAccWebACLAssociationConfig_multiples = testAccWebACLAssociationConfig_basic + `
 resource "aws_alb" "bar" {
   internal = true
   subnets  = [aws_subnet.foo.id, aws_subnet.bar.id]

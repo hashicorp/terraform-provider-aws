@@ -1,0 +1,75 @@
+name: golangci-lint Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .github/workflows/golangci-lint.yml
+      - .go-version
+      - .ci/.golangci.yml
+      - .ci/.golangci2.yml
+      - internal/**
+      - go.sum
+      - main.go
+      - names/**
+      - tools/**
+
+jobs:
+  golangci-linta:
+    name: 1 of 4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: -c .ci/.golangci.yml
+  golangci-lintb:
+    name: 2 of 4
+    needs: [golangci-linta]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: -c .ci/.golangci2.yml
+  golangci-lintc:
+    name: 3 of 4
+    needs: [golangci-linta]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: -c .ci/.golangci3.yml
+  golangci-lintd:
+    name: 4 of 4
+    needs: [golangci-linta]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: -c .ci/.golangci4.yml

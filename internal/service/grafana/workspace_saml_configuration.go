@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceWorkspaceSamlConfiguration() *schema.Resource {
+func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceSamlConfigurationUpsert,
-		Read:   resourceWorkspaceSamlConfigurationRead,
-		Update: resourceWorkspaceSamlConfigurationUpsert,
+		Create: resourceWorkspaceSAMLConfigurationUpsert,
+		Read:   resourceWorkspaceSAMLConfigurationRead,
+		Update: resourceWorkspaceSAMLConfigurationUpsert,
 		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
@@ -98,7 +98,7 @@ func ResourceWorkspaceSamlConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceSAMLConfigurationUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	d.SetId(d.Get("workspace_id").(string))
@@ -209,14 +209,14 @@ func resourceWorkspaceSamlConfigurationUpsert(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error creating Grafana Saml Configuration: %w", err)
 	}
 
-	if _, err := waitWorkspaceSamlConfigurationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitWorkspaceSAMLConfigurationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Grafana Workspace Saml Configuration (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceWorkspaceSamlConfigurationRead(d, meta)
+	return resourceWorkspaceSAMLConfigurationRead(d, meta)
 }
 
-func resourceWorkspaceSamlConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceSAMLConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	saml, err := FindSamlConfigurationByID(conn, d.Id())

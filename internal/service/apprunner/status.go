@@ -12,14 +12,14 @@ const (
 	AutoScalingConfigurationStatusActive   = "active"
 	AutoScalingConfigurationStatusInactive = "inactive"
 
-	VpcConnectorStatusActive   = "ACTIVE"
-	VpcConnectorStatusInactive = "INACTIVE"
-
 	CustomDomainAssociationStatusActive                          = "active"
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
 	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
+
+	ObservabilityConfigurationStatusActive   = "ACTIVE"
+	ObservabilityConfigurationStatusInactive = "INACTIVE"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
@@ -42,7 +42,27 @@ func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunn
 	}
 }
 
-func StatusVpcConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apprunner.DescribeObservabilityConfigurationInput{
+			ObservabilityConfigurationArn: aws.String(arn),
+		}
+
+		output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.ObservabilityConfiguration == nil {
+			return nil, "", nil
+		}
+
+		return output.ObservabilityConfiguration, aws.StringValue(output.ObservabilityConfiguration.Status), nil
+	}
+}
+
+func StatusVPCConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeVpcConnectorInput{
 			VpcConnectorArn: aws.String(arn),

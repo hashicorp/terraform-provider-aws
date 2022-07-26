@@ -742,7 +742,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
 	projectSecondarySources := expandProjectSecondarySources(d)
 	projectLogsConfig := expandProjectLogsConfig(d)
-	projectBatchConfig := expandCodeBuildBuildBatchConfig(d)
+	projectBatchConfig := expandBuildBatchConfig(d)
 	projectFileSystemLocations := expandProjectFileSystemLocations(d)
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
@@ -801,7 +801,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
-		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+		params.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
@@ -1106,11 +1106,11 @@ func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
 		data := configList[0].(map[string]interface{})
 
 		if v, ok := data["cloudwatch_logs"]; ok {
-			logsConfig.CloudWatchLogs = expandCodeBuildCloudWatchLogsConfig(v.([]interface{}))
+			logsConfig.CloudWatchLogs = expandCloudWatchLogsConfig(v.([]interface{}))
 		}
 
 		if v, ok := data["s3_logs"]; ok {
-			logsConfig.S3Logs = expandCodeBuildS3LogsConfig(v.([]interface{}))
+			logsConfig.S3Logs = expandS3LogsConfig(v.([]interface{}))
 		}
 	}
 
@@ -1129,7 +1129,7 @@ func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
 	return logsConfig
 }
 
-func expandCodeBuildBuildBatchConfig(d *schema.ResourceData) *codebuild.ProjectBuildBatchConfig {
+func expandBuildBatchConfig(d *schema.ResourceData) *codebuild.ProjectBuildBatchConfig {
 	configs, ok := d.Get("build_batch_config").([]interface{})
 	if !ok || len(configs) == 0 || configs[0] == nil {
 		return nil
@@ -1138,7 +1138,7 @@ func expandCodeBuildBuildBatchConfig(d *schema.ResourceData) *codebuild.ProjectB
 	data := configs[0].(map[string]interface{})
 
 	projectBuildBatchConfig := &codebuild.ProjectBuildBatchConfig{
-		Restrictions: expandCodeBuildBatchRestrictions(data),
+		Restrictions: expandBatchRestrictions(data),
 		ServiceRole:  aws.String(data["service_role"].(string)),
 	}
 
@@ -1153,7 +1153,7 @@ func expandCodeBuildBuildBatchConfig(d *schema.ResourceData) *codebuild.ProjectB
 	return projectBuildBatchConfig
 }
 
-func expandCodeBuildBatchRestrictions(data map[string]interface{}) *codebuild.BatchRestrictions {
+func expandBatchRestrictions(data map[string]interface{}) *codebuild.BatchRestrictions {
 	if v, ok := data["restrictions"]; !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 		return nil
 	}
@@ -1172,7 +1172,7 @@ func expandCodeBuildBatchRestrictions(data map[string]interface{}) *codebuild.Ba
 	return restrictions
 }
 
-func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.CloudWatchLogsConfig {
+func expandCloudWatchLogsConfig(configList []interface{}) *codebuild.CloudWatchLogsConfig {
 	if len(configList) == 0 || configList[0] == nil {
 		return nil
 	}
@@ -1202,7 +1202,7 @@ func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.Cl
 	return cloudWatchLogsConfig
 }
 
-func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConfig {
+func expandS3LogsConfig(configList []interface{}) *codebuild.S3LogsConfig {
 	if len(configList) == 0 || configList[0] == nil {
 		return nil
 	}
@@ -1228,7 +1228,7 @@ func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConf
 	return s3LogsConfig
 }
 
-func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
+func expandVPCConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 	vpcConfig := codebuild.VpcConfig{}
 	if len(rawVpcConfig) == 0 || rawVpcConfig[0] == nil {
 		return &vpcConfig
@@ -1382,7 +1382,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting secondary_sources: %w", err)
 	}
 
-	if err := d.Set("secondary_source_version", flattenAwsCodeBuildProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
+	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return fmt.Errorf("error setting secondary_source_version: %w", err)
 	}
 
@@ -1515,7 +1515,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("vpc_config") {
-			params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
+			params.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 		}
 
 		if d.HasChange("logs_config") {
@@ -1524,7 +1524,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("build_batch_config") {
-			params.BuildBatchConfig = expandCodeBuildBuildBatchConfig(d)
+			params.BuildBatchConfig = expandBuildBatchConfig(d)
 		}
 
 		if d.HasChange("cache") {
@@ -1850,16 +1850,16 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	return m
 }
 
-func flattenAwsCodeBuildProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
+func flattenProjectSecondarySourceVersions(sourceVersions []*codebuild.ProjectSourceVersion) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, sourceVersion := range sourceVersions {
-		l = append(l, flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion))
+		l = append(l, flattenProjectSourceVersionsData(sourceVersion))
 	}
 	return l
 }
 
-func flattenAwsCodeBuildProjectsourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
+func flattenProjectSourceVersionsData(sourceVersion *codebuild.ProjectSourceVersion) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	if sourceVersion.SourceIdentifier != nil {

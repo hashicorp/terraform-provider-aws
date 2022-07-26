@@ -14,13 +14,13 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeIDsDataSourceConfig(rName),
+				Config: testAccEBSVolumesDataSourceConfig_volumeIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_filter", "ids.#", "1"),
@@ -31,7 +31,7 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEBSVolumeIDsDataSourceConfig(rName string) string {
+func testAccEBSVolumesDataSourceConfig_volumeIDs(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 

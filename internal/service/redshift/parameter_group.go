@@ -116,7 +116,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if _, err := conn.ModifyClusterParameterGroup(&modifyOpts); err != nil {
-			return fmt.Errorf("error adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
+			return fmt.Errorf("adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 		}
 	}
 
@@ -160,11 +160,11 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	describeParametersOpts := redshift.DescribeClusterParametersInput{
@@ -217,7 +217,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

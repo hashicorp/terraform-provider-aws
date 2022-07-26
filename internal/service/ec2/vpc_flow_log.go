@@ -66,7 +66,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -114,21 +114,33 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"traffic_type": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
+			},
+			"transit_gateway_attachment_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+			},
+			"transit_gateway_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 			"vpc_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
 			},
 		},
 
@@ -152,6 +164,14 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 			Type: ec2.FlowLogsResourceTypeVpc,
 		},
 		{
+			ID:   d.Get("transit_gateway_id").(string),
+			Type: ec2.FlowLogsResourceTypeTransitGateway,
+		},
+		{
+			ID:   d.Get("transit_gateway_attachment_id").(string),
+			Type: ec2.FlowLogsResourceTypeTransitGatewayAttachment,
+		},
+		{
 			ID:   d.Get("subnet_id").(string),
 			Type: ec2.FlowLogsResourceTypeSubnet,
 		},
@@ -171,11 +191,16 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		LogDestinationType: aws.String(d.Get("log_destination_type").(string)),
 		ResourceIds:        aws.StringSlice([]string{resourceID}),
 		ResourceType:       aws.String(resourceType),
-		TrafficType:        aws.String(d.Get("traffic_type").(string)),
+	}
+
+	if resourceType != ec2.FlowLogsResourceTypeTransitGateway && resourceType != ec2.FlowLogsResourceTypeTransitGatewayAttachment {
+		if v, ok := d.GetOk("traffic_type"); ok {
+			input.TrafficType = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("destination_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationOptions = expandEc2DestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("iam_role_arn"); ok {
@@ -199,7 +224,7 @@ func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
 	log.Printf("[DEBUG] Creating Flow Log: %s", input)
@@ -242,29 +267,41 @@ func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
+
 	d.Set("arn", arn)
+
 	if fl.DestinationOptions != nil {
-		if err := d.Set("destination_options", []interface{}{flattenEc2DestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
+		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return fmt.Errorf("error setting destination_options: %w", err)
 		}
 	} else {
 		d.Set("destination_options", nil)
 	}
+
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
-	d.Set("traffic_type", fl.TrafficType)
 
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
 		d.Set("vpc_id", resourceID)
+	case strings.HasPrefix(resourceID, "tgw-"):
+		if strings.HasPrefix(resourceID, "tgw-attach-") {
+			d.Set("transit_gateway_attachment_id", resourceID)
+		} else {
+			d.Set("transit_gateway_id", resourceID)
+		}
 	case strings.HasPrefix(resourceID, "subnet-"):
 		d.Set("subnet_id", resourceID)
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
+	}
+
+	if !strings.HasPrefix(aws.StringValue(fl.ResourceId), "tgw-") {
+		d.Set("traffic_type", fl.TrafficType)
 	}
 
 	tags := KeyValueTags(fl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -306,7 +343,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 		err = UnsuccessfulItemsError(output.Unsuccessful)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidFlowLogIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidFlowLogIdNotFound) {
 		return nil
 	}
 
@@ -317,7 +354,7 @@ func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandEc2DestinationOptionsRequest(tfMap map[string]interface{}) *ec2.DestinationOptionsRequest {
+func expandDestinationOptionsRequest(tfMap map[string]interface{}) *ec2.DestinationOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -339,7 +376,7 @@ func expandEc2DestinationOptionsRequest(tfMap map[string]interface{}) *ec2.Desti
 	return apiObject
 }
 
-func flattenEc2DestinationOptionsResponse(apiObject *ec2.DestinationOptionsResponse) map[string]interface{} {
+func flattenDestinationOptionsResponse(apiObject *ec2.DestinationOptionsResponse) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileFormat; v != nil {

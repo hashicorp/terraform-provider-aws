@@ -35,12 +35,19 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the keyspace.
-* `arn` - The ARN of the subnet group.
+* `arn` - The ARN of the keyspace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+
+## Timeouts
+
+`aws_keyspaces_keyspace` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `1 minute`) Used for keyspace creation
+- `delete` - (Default `1 minute`) Used for keyspace deletion
 
 ## Import
 
-Use the `name` to import a subnet group. For example:
+Use the `name` to import a keyspace. For example:
 
 ```
 $ terraform import aws_keyspaces_keyspace.example my_keyspace

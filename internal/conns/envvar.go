@@ -16,7 +16,7 @@ const (
 
 	// Container credentials endpoint
 	// See also AWS_ACCESS_KEY_ID and AWS_PROFILE
-	EnvVarContainerCredentialsFullUri = "AWS_CONTAINER_CREDENTIALS_FULL_URI"
+	EnvVarContainerCredentialsFullURI = "AWS_CONTAINER_CREDENTIALS_FULL_URI"
 
 	// Default AWS region for tests (AWS Go SDK does not provide this as constant)
 	EnvVarDefaultRegion = "AWS_DEFAULT_REGION"

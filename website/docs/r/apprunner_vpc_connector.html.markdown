@@ -39,8 +39,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner vpc connector can be imported by using the `vpc_connector_name`, e.g.,
+App Runner vpc connector can be imported by using the `arn`, e.g.,
 
 ```
-$ terraform import aws_apprunner_vpc_connector.vpc_connector_name 
+$ terraform import aws_apprunner_vpc_connector.example arn:aws:apprunner:us-east-1:1234567890:vpcconnector/example/1/0a03292a89764e5882c41d8f991c82fe
 ```

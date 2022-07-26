@@ -115,6 +115,36 @@ resource "aws_rds_cluster" "example" {
 }
 ```
 
+### RDS Serverless v2 Cluster
+
+-> More information about RDS Serverless v2 Clusters can be found in the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
+
+To create a Serverless v2 RDS cluster, you must additionally specify the `engine_mode` and `serverlessv2_scaling_configuration` attributes. An `aws_rds_cluster_instance` resource must also be added to the cluster with the `instance_class` attribute specified.
+
+```terraform
+resource "aws_rds_cluster" "example" {
+  cluster_identifier = "example"
+  engine             = "aurora-postgresql"
+  engine_mode        = "provisioned"
+  engine_version     = "13.6"
+  database_name      = "test"
+  master_username    = "test"
+  master_password    = "must_be_eight_characters"
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 1.0
+    min_capacity = 0.5
+  }
+}
+
+resource "aws_rds_cluster_instance" "example" {
+  cluster_identifier = aws_rds_cluster.example.id
+  instance_class     = "db.serverless"
+  engine             = aws_rds_cluster.example.engine
+  engine_version     = aws_rds_cluster.example.engine_version
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
@@ -127,7 +157,7 @@ The following arguments are supported:
 
 * `allow_major_version_upgrade` - (Optional) Enable to allow major engine version upgrades when changing engine versions. Defaults to `false`.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
-* `availability_zones` - (Optional) A list of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply. It is recommended to specify 3 AZs or use [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
+* `availability_zones` - (Optional) List of EC2 Availability Zones for the DB cluster storage where DB cluster instances can be created. RDS automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply. We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
 * `backtrack_window` - (Optional) The target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.

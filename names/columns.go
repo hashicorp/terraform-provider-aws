@@ -10,7 +10,7 @@ const (
 	ColSplitPackageRealPackage = 6
 	ColAliases                 = 7
 	ColProviderNameUpper       = 8
-	ColGoV1ClientName          = 9
+	ColGoV1ClientTypeName      = 9
 	ColSkipClientGenerate      = 10
 	ColSDKVersion              = 11
 	ColResourcePrefixActual    = 12

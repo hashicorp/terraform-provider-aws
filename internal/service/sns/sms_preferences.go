@@ -138,7 +138,7 @@ func ResourceSMSPreferences() *schema.Resource {
 func resourceSMSPreferencesSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := SMSPreferencesAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -167,7 +167,7 @@ func resourceSMSPreferencesGet(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting SNS SMS Preferences: %w", err)
 	}
 
-	err = SMSPreferencesAttributeMap.ApiAttributesToResourceData(aws.StringValueMap(output.Attributes), d)
+	err = SMSPreferencesAttributeMap.APIAttributesToResourceData(aws.StringValueMap(output.Attributes), d)
 
 	if err != nil {
 		return err
@@ -181,7 +181,7 @@ func resourceSMSPreferencesDelete(d *schema.ResourceData, meta interface{}) erro
 
 	// Reset the attributes to their default value.
 	attributes := make(map[string]string)
-	for _, apiAttributeName := range SMSPreferencesAttributeMap.ApiAttributeNames() {
+	for _, apiAttributeName := range SMSPreferencesAttributeMap.APIAttributeNames() {
 		attributes[apiAttributeName] = ""
 	}
 

@@ -138,10 +138,10 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNameGeneratedConfig(),
@@ -166,10 +166,10 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNamePrefixConfig("tf-acc-test-prefix-"),
@@ -465,10 +465,10 @@ More details about this code generation, including fixes for potential error mes
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
-      PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-      ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		  ProviderFactories: acctest.ProviderFactories,
-      CheckDestroy:      testAccCheckClusterDestroy,
+      PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+      ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+      ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+      CheckDestroy:             testAccCheckClusterDestroy,
       Steps: []resource.TestStep{
         {
           Config: testAccClusterConfigTags1(rName, "key1", "value1"),
@@ -595,11 +595,11 @@ filters := namevaluesfilters.New(map[string]string{
 	"internet-gateway-id": d.Get("internet_gateway_id").(string),
 })
 // Add filters based on keyvalue tags (N.B. Not applicable to all AWS services that support filtering)
-filters.Add(namevaluesfilters.Ec2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+filters.Add(namevaluesfilters.EC2Tags(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 // Add filters based on the custom filtering "filter" attribute.
 filters.Add(d.Get("filter").(*schema.Set))
 
-input.Filters = filters.Ec2Filters()
+input.Filters = filters.EC2Filters()
 ```
 
 ### Resource Filtering Documentation Implementation
@@ -740,11 +740,11 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{Service}TagDestroy,
-		Steps: []resource.TestStep{
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheck{Service}TagDestroy,
+    Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
@@ -888,7 +888,7 @@ manually sourced values from documentation. Amazon employees can code search
 previous region values to find new region values in internal packages like
 RIPStaticConfig if they are not documented yet.
 
-- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go)
+- [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to [`internal/service/elb/hosted_zone_id_data_source.go`](../../internal/service/elb/hosted_zone_id_data_source.go) and [`internal/service/elbv2/hosted_zone_id_data_source.go`](../../internal/service/elbv2/hosted_zone_id_data_source.go)
 - [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to [`internal/service/s3/hosted_zones.go`](../../internal/service/s3/hosted_zones.go)
 - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to [`internal/service/cloudtrail/service_account_data_source.go`](../../internal/service/cloudtrail/service_account_data_source.go)
 - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to [`internal/service/elb/service_account_data_source.go`](../../internal/service/elb/service_account_data_source.go)

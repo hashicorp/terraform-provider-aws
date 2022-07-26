@@ -68,7 +68,7 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 	d.Set("vpc_peering_connection_id", vpcPeeringConnection.VpcPeeringConnectionId)
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	} else {
@@ -76,7 +76,7 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	} else {

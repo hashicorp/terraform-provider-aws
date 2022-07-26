@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -103,13 +102,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
-		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
+		log.Printf("[WARN] Load Balancer (%s) not found, removing from state", loadBalancerName)
 		d.SetId("")
 		return nil
 	}
-
-	if tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -131,7 +129,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("policy_type_name", policyTypeName)
 	d.Set("load_balancer_name", loadBalancerName)
 	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policyAttributes)); err != nil {
-		return fmt.Errorf("error setting policy_attribute: %w", err)
+		return fmt.Errorf("setting policy_attribute: %w", err)
 	}
 
 	return nil
@@ -225,12 +223,11 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return false, nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				return false, nil
-			}
-		}
 		return false, fmt.Errorf("Error retrieving ELB description: %s", err)
 	}
 
@@ -275,12 +272,11 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return reassignments, nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				return reassignments, nil
-			}
-		}
 		return reassignments, fmt.Errorf("Error retrieving ELB description: %s", err)
 	}
 

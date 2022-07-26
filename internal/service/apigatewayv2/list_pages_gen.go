@@ -29,7 +29,6 @@ func getAPIsPagesWithContext(ctx context.Context, conn *apigatewayv2.ApiGatewayV
 	}
 	return nil
 }
-
 func getDomainNamesPages(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNamesInput, fn func(*apigatewayv2.GetDomainNamesOutput, bool) bool) error {
 	return getDomainNamesPagesWithContext(context.Background(), conn, input, fn)
 }

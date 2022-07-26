@@ -17,16 +17,16 @@ func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRegexPatternSetDataSource_NonExistent(name),
+				Config:      testAccRegexPatternSetDataSourceConfig_nonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 RegexPatternSet not found`),
 			},
 			{
-				Config: testAccRegexPatternSetDataSource_Name(name),
+				Config: testAccRegexPatternSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/regexpatternset/%v/.+$", name))),
@@ -41,7 +41,7 @@ func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRegexPatternSetDataSource_Name(name string) string {
+func testAccRegexPatternSetDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%s"
@@ -59,7 +59,7 @@ data "aws_wafv2_regex_pattern_set" "test" {
 `, name)
 }
 
-func testAccRegexPatternSetDataSource_NonExistent(name string) string {
+func testAccRegexPatternSetDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%s"

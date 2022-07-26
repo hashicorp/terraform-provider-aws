@@ -2,22 +2,28 @@
 package elasticbeanstalk
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/aws/aws-sdk-go/service/elasticbeanstalk/elasticbeanstalkiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *elasticbeanstalk.ElasticBeanstalk, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*elasticbeanstalk.Tag) tftags.KeyValueTags {
 // UpdateTags updates elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *elasticbeanstalk.ElasticBeanstalk, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 	removedTags := oldTags.Removed(newTags)
@@ -81,10 +90,10 @@ func UpdateTags(conn *elasticbeanstalk.ElasticBeanstalk, identifier string, oldT
 		input.TagsToRemove = aws.StringSlice(removedTags.Keys())
 	}
 
-	_, err := conn.UpdateTagsForResource(input)
+	_, err := conn.UpdateTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

@@ -24,13 +24,78 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisionedProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexp.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
+					// While another output will describe the output parameter configured in the S3 object resource,
+					// which we can check as follows.
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"description": "VPC ID",
+						"key":         "VpcID",
+					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]*regexp.Regexp{
+						"value": regexp.MustCompile(`vpc-.+`),
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
+					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACK"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+					"ignore_errors",
+					"provisioning_artifact_name",
+					"provisioning_parameters",
+					"retain_physical_resources",
+				},
+			},
+		},
+	})
+}
+
+// TestAccServiceCatalogProvisionedProduct_update verifies the resource update
+// of only a change in provisioning_parameters
+func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+				),
+			},
+			{
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.10.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
@@ -81,13 +146,13 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisionedProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
@@ -105,10 +170,10 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisionedProductDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_tags(rName, "Name", rName, domain, acctest.DefaultEmailAddress),
@@ -125,6 +190,38 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.NotName", rName),
 				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574
+func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				ExpectError: regexp.MustCompile(`unexpected state 'TAINTED', wanted target 'AVAILABLE'`),
+			},
+			{
+				// Check we can still run a complete plan after the previous update error
+				Config:   testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -298,7 +395,7 @@ data "aws_servicecatalog_launch_paths" "test" {
 `, rName, domain, email)
 }
 
-func testAccProvisionedProductConfig_basic(rName, domain, email string) string {
+func testAccProvisionedProductConfig_basic(rName, domain, email, vpcCidr string) string {
 	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
@@ -309,7 +406,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
   provisioning_parameters {
     key   = "VPCPrimaryCIDR"
-    value = "10.1.0.0/16"
+    value = %[2]q
   }
 
   provisioning_parameters {
@@ -317,7 +414,29 @@ resource "aws_servicecatalog_provisioned_product" "test" {
     value = ""
   }
 }
-`, rName))
+`, rName, vpcCidr))
+}
+
+func testAccProvisionedProductConfig_updateTainted(rName, domain, email, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+		fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_product.test.id
+  provisioning_artifact_name = %[1]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = %[2]q
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = "NotEmpty"
+  }
+}
+`, rName, vpcCidr))
 }
 
 func testAccProvisionedProductConfig_tags(rName, tagKey, tagValue, domain, email string) string {

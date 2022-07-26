@@ -454,9 +454,8 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
-			tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error()) {
+		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
+			regexp.MustCompile(" not found$").MatchString(err.Error())) {
 			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

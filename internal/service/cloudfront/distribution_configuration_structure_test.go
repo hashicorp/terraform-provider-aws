@@ -129,13 +129,13 @@ func customOriginConf() map[string]interface{} {
 		"origin_protocol_policy":   "http-only",
 		"http_port":                80,
 		"https_port":               443,
-		"origin_ssl_protocols":     customOriginSslProtocolsConf(),
+		"origin_ssl_protocols":     customOriginSSLProtocolsConf(),
 		"origin_read_timeout":      30,
 		"origin_keepalive_timeout": 5,
 	}
 }
 
-func customOriginSslProtocolsConf() *schema.Set {
+func customOriginSSLProtocolsConf() *schema.Set {
 	return schema.NewSet(schema.HashString, []interface{}{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"})
 }
 
@@ -295,7 +295,7 @@ func viewerCertificateConfSetACM() map[string]interface{} {
 	}
 }
 
-func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) {
+func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
 	data := defaultCacheBehaviorConf()
 	dcb := tfcloudfront.ExpandDefaultCacheBehavior(data)
 	if dcb == nil {
@@ -342,7 +342,7 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	}
 }
 
-func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
+func TestStructure_expandTrustedSigners(t *testing.T) {
 	data := trustedSignersConf()
 	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 2 {
@@ -356,7 +356,7 @@ func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenTrustedSigners(t *testing.T) {
+func TestStructure_flattenTrustedSigners(t *testing.T) {
 	in := trustedSignersConf()
 	ts := tfcloudfront.ExpandTrustedSigners(in)
 	out := tfcloudfront.FlattenTrustedSigners(ts)
@@ -366,7 +366,7 @@ func TestCloudFrontStructure_flattenTrustedSigners(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandTrustedSigners_empty(t *testing.T) {
+func TestStructure_expandTrustedSigners_empty(t *testing.T) {
 	data := []interface{}{}
 	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 0 {
@@ -380,7 +380,7 @@ func TestCloudFrontStructure_expandTrustedSigners_empty(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandLambdaFunctionAssociations(t *testing.T) {
+func TestStructure_expandLambdaFunctionAssociations(t *testing.T) {
 	data := lambdaFunctionAssociationsConf()
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
@@ -397,7 +397,7 @@ func TestCloudFrontStructure_expandLambdaFunctionAssociations(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenlambdaFunctionAssociations(t *testing.T) {
+func TestStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 	in := lambdaFunctionAssociationsConf()
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(in.List())
 	out := tfcloudfront.FlattenLambdaFunctionAssociations(lfa)
@@ -407,7 +407,7 @@ func TestCloudFrontStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
+func TestStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
 	data := new(schema.Set)
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
@@ -421,7 +421,7 @@ func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T
 	}
 }
 
-func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
+func TestStructure_expandFunctionAssociations(t *testing.T) {
 	data := functionAssociationsConf()
 	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
@@ -438,7 +438,7 @@ func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenFunctionAssociations(t *testing.T) {
+func TestStructure_flattenFunctionAssociations(t *testing.T) {
 	in := functionAssociationsConf()
 	lfa := tfcloudfront.ExpandFunctionAssociations(in.List())
 	out := tfcloudfront.FlattenFunctionAssociations(lfa)
@@ -448,7 +448,7 @@ func TestCloudFrontStructure_flattenFunctionAssociations(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandFunctionAssociations_empty(t *testing.T) {
+func TestStructure_expandFunctionAssociations_empty(t *testing.T) {
 	data := new(schema.Set)
 	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
@@ -462,7 +462,7 @@ func TestCloudFrontStructure_expandFunctionAssociations_empty(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
+func TestStructure_expandForwardedValues(t *testing.T) {
 	data := forwardedValuesConf()
 	fv := tfcloudfront.ExpandForwardedValues(data)
 	if !*fv.QueryString {
@@ -476,7 +476,7 @@ func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
+func TestStructure_flattenForwardedValues(t *testing.T) {
 	in := forwardedValuesConf()
 	fv := tfcloudfront.ExpandForwardedValues(in)
 	out := tfcloudfront.FlattenForwardedValues(fv)
@@ -486,7 +486,7 @@ func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandHeaders(t *testing.T) {
+func TestStructure_expandHeaders(t *testing.T) {
 	data := headersConf()
 	h := tfcloudfront.ExpandHeaders(data.List())
 	if *h.Quantity != 2 {
@@ -497,7 +497,7 @@ func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
+func TestStructure_flattenHeaders(t *testing.T) {
 	in := headersConf()
 	h := tfcloudfront.ExpandHeaders(in.List())
 	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenHeaders(h))
@@ -507,7 +507,7 @@ func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
+func TestStructure_expandQueryStringCacheKeys(t *testing.T) {
 	data := queryStringCacheKeysConf()
 	k := tfcloudfront.ExpandQueryStringCacheKeys(data)
 	if *k.Quantity != 2 {
@@ -518,7 +518,7 @@ func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenQueryStringCacheKeys(t *testing.T) {
+func TestStructure_flattenQueryStringCacheKeys(t *testing.T) {
 	in := queryStringCacheKeysConf()
 	k := tfcloudfront.ExpandQueryStringCacheKeys(in)
 	out := tfcloudfront.FlattenQueryStringCacheKeys(k)
@@ -528,7 +528,7 @@ func TestCloudFrontStructure_flattenQueryStringCacheKeys(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
+func TestStructure_expandCookiePreference(t *testing.T) {
 	data := cookiePreferenceConf()
 	cp := tfcloudfront.ExpandCookiePreference(data)
 	if *cp.Forward != "whitelist" {
@@ -539,7 +539,7 @@ func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
+func TestStructure_flattenCookiePreference(t *testing.T) {
 	in := cookiePreferenceConf()
 	cp := tfcloudfront.ExpandCookiePreference(in)
 	out := tfcloudfront.FlattenCookiePreference(cp)
@@ -549,7 +549,7 @@ func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
+func TestStructure_expandCookieNames(t *testing.T) {
 	data := cookieNamesConf()
 	cn := tfcloudfront.ExpandCookieNames(data.List())
 	if *cn.Quantity != 2 {
@@ -560,7 +560,7 @@ func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
+func TestStructure_flattenCookieNames(t *testing.T) {
 	in := cookieNamesConf()
 	cn := tfcloudfront.ExpandCookieNames(in.List())
 	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenCookieNames(cn))
@@ -570,7 +570,7 @@ func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
+func TestStructure_expandAllowedMethods(t *testing.T) {
 	data := allowedMethodsConf()
 	am := tfcloudfront.ExpandAllowedMethods(data)
 	if *am.Quantity != 7 {
@@ -581,7 +581,7 @@ func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
+func TestStructure_flattenAllowedMethods(t *testing.T) {
 	in := allowedMethodsConf()
 	am := tfcloudfront.ExpandAllowedMethods(in)
 	out := tfcloudfront.FlattenAllowedMethods(am)
@@ -591,7 +591,7 @@ func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
+func TestStructure_expandCachedMethods(t *testing.T) {
 	data := cachedMethodsConf()
 	cm := tfcloudfront.ExpandCachedMethods(data)
 	if *cm.Quantity != 3 {
@@ -602,7 +602,7 @@ func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
+func TestStructure_flattenCachedMethods(t *testing.T) {
 	in := cachedMethodsConf()
 	cm := tfcloudfront.ExpandCachedMethods(in)
 	out := tfcloudfront.FlattenCachedMethods(cm)
@@ -612,7 +612,7 @@ func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandOrigins(t *testing.T) {
+func TestStructure_expandOrigins(t *testing.T) {
 	data := multiOriginConf()
 	origins := tfcloudfront.ExpandOrigins(data)
 	if *origins.Quantity != 2 {
@@ -623,7 +623,7 @@ func TestCloudFrontStructure_expandOrigins(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
+func TestStructure_flattenOrigins(t *testing.T) {
 	in := multiOriginConf()
 	origins := tfcloudfront.ExpandOrigins(in)
 	out := tfcloudfront.FlattenOrigins(origins)
@@ -634,7 +634,7 @@ func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
+func TestStructure_expandOriginGroups(t *testing.T) {
 	in := originGroupsConf()
 	groups := tfcloudfront.ExpandOriginGroups(in)
 
@@ -670,7 +670,7 @@ func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
+func TestStructure_flattenOriginGroups(t *testing.T) {
 	in := originGroupsConf()
 	groups := tfcloudfront.ExpandOriginGroups(in)
 	out := tfcloudfront.FlattenOriginGroups(groups)
@@ -681,7 +681,7 @@ func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandOrigin(t *testing.T) {
+func TestStructure_expandOrigin(t *testing.T) {
 	data := originWithCustomConf()
 	or := tfcloudfront.ExpandOrigin(data)
 	if *or.Id != "CustomOrigin" {
@@ -701,7 +701,7 @@ func TestCloudFrontStructure_expandOrigin(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenOrigin(t *testing.T) {
+func TestStructure_flattenOrigin(t *testing.T) {
 	in := originWithCustomConf()
 	or := tfcloudfront.ExpandOrigin(in)
 	out := tfcloudfront.FlattenOrigin(or)
@@ -717,7 +717,7 @@ func TestCloudFrontStructure_flattenOrigin(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomHeaders(t *testing.T) {
+func TestStructure_expandCustomHeaders(t *testing.T) {
 	in := originCustomHeadersConf()
 	chs := tfcloudfront.ExpandCustomHeaders(in)
 	if *chs.Quantity != 2 {
@@ -728,7 +728,7 @@ func TestCloudFrontStructure_expandCustomHeaders(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCustomHeaders(t *testing.T) {
+func TestStructure_flattenCustomHeaders(t *testing.T) {
 	in := originCustomHeadersConf()
 	chs := tfcloudfront.ExpandCustomHeaders(in)
 	out := tfcloudfront.FlattenCustomHeaders(chs)
@@ -739,7 +739,7 @@ func TestCloudFrontStructure_flattenCustomHeaders(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenOriginCustomHeader(t *testing.T) {
+func TestStructure_flattenOriginCustomHeader(t *testing.T) {
 	in := originCustomHeaderConf1()
 	och := tfcloudfront.ExpandOriginCustomHeader(in)
 	out := tfcloudfront.FlattenOriginCustomHeader(och)
@@ -752,7 +752,7 @@ func TestCloudFrontStructure_flattenOriginCustomHeader(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandOriginCustomHeader(t *testing.T) {
+func TestStructure_expandOriginCustomHeader(t *testing.T) {
 	in := originCustomHeaderConf1()
 	och := tfcloudfront.ExpandOriginCustomHeader(in)
 
@@ -764,7 +764,7 @@ func TestCloudFrontStructure_expandOriginCustomHeader(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomOriginConfig(t *testing.T) {
+func TestStructure_expandCustomOriginConfig(t *testing.T) {
 	data := customOriginConf()
 	co := tfcloudfront.ExpandCustomOriginConfig(data)
 	if *co.OriginProtocolPolicy != "http-only" {
@@ -784,7 +784,7 @@ func TestCloudFrontStructure_expandCustomOriginConfig(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
+func TestStructure_flattenCustomOriginConfig(t *testing.T) {
 	in := customOriginConf()
 	co := tfcloudfront.ExpandCustomOriginConfig(in)
 	out := tfcloudfront.FlattenCustomOriginConfig(co)
@@ -809,16 +809,16 @@ func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
-	in := customOriginSslProtocolsConf()
+func TestStructure_expandCustomOriginConfigSSL(t *testing.T) {
+	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	if *ocs.Quantity != 4 {
 		t.Fatalf("Expected Quantity to be 4, got %v", *ocs.Quantity)
 	}
 }
 
-func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
-	in := customOriginSslProtocolsConf()
+func TestStructure_flattenCustomOriginConfigSSL(t *testing.T) {
+	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	out := tfcloudfront.FlattenCustomOriginConfigSSL(ocs)
 
@@ -827,7 +827,7 @@ func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
+func TestStructure_expandOriginShield(t *testing.T) {
 	data := originShield()
 	o := tfcloudfront.ExpandOriginShield(data)
 	if *o.Enabled != true {
@@ -838,7 +838,7 @@ func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenOriginShield(t *testing.T) {
+func TestStructure_flattenOriginShield(t *testing.T) {
 	in := originShield()
 	o := tfcloudfront.ExpandOriginShield(in)
 	out := tfcloudfront.FlattenOriginShield(o)
@@ -848,7 +848,7 @@ func TestCloudFrontStructure_flattenOriginShield(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandS3OriginConfig(t *testing.T) {
+func TestStructure_expandS3OriginConfig(t *testing.T) {
 	data := s3OriginConf()
 	s3o := tfcloudfront.ExpandS3OriginConfig(data)
 	if *s3o.OriginAccessIdentity != "origin-access-identity/cloudfront/E127EXAMPLE51Z" {
@@ -856,7 +856,7 @@ func TestCloudFrontStructure_expandS3OriginConfig(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenS3OriginConfig(t *testing.T) {
+func TestStructure_flattenS3OriginConfig(t *testing.T) {
 	in := s3OriginConf()
 	s3o := tfcloudfront.ExpandS3OriginConfig(in)
 	out := tfcloudfront.FlattenS3OriginConfig(s3o)
@@ -866,7 +866,7 @@ func TestCloudFrontStructure_flattenS3OriginConfig(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomErrorResponses(t *testing.T) {
+func TestStructure_expandCustomErrorResponses(t *testing.T) {
 	data := customErrorResponsesConfSet()
 	ers := tfcloudfront.ExpandCustomErrorResponses(data)
 	if *ers.Quantity != 2 {
@@ -877,7 +877,7 @@ func TestCloudFrontStructure_expandCustomErrorResponses(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenCustomErrorResponses(t *testing.T) {
+func TestStructure_flattenCustomErrorResponses(t *testing.T) {
 	in := customErrorResponsesConfSet()
 	ers := tfcloudfront.ExpandCustomErrorResponses(in)
 	out := tfcloudfront.FlattenCustomErrorResponses(ers)
@@ -887,7 +887,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponses(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomErrorResponse(t *testing.T) {
+func TestStructure_expandCustomErrorResponse(t *testing.T) {
 	data := customErrorResponsesConfFirst()
 	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ErrorCode != 404 {
@@ -904,7 +904,7 @@ func TestCloudFrontStructure_expandCustomErrorResponse(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandCustomErrorResponse_emptyResponseCode(t *testing.T) {
+func TestStructure_expandCustomErrorResponse_emptyResponseCode(t *testing.T) {
 	data := customErrorResponseConfNoResponseCode()
 	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ResponseCode != "" {
@@ -915,7 +915,7 @@ func TestCloudFrontStructure_expandCustomErrorResponse_emptyResponseCode(t *test
 	}
 }
 
-func TestCloudFrontStructure_flattenCustomErrorResponse(t *testing.T) {
+func TestStructure_flattenCustomErrorResponse(t *testing.T) {
 	in := customErrorResponsesConfFirst()
 	er := tfcloudfront.ExpandCustomErrorResponse(in)
 	out := tfcloudfront.FlattenCustomErrorResponse(er)
@@ -925,7 +925,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponse(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
+func TestStructure_expandLoggingConfig(t *testing.T) {
 	data := loggingConfigConf()
 
 	lc := tfcloudfront.ExpandLoggingConfig(data)
@@ -943,7 +943,7 @@ func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
+func TestStructure_expandLoggingConfig_nilValue(t *testing.T) {
 	lc := tfcloudfront.ExpandLoggingConfig(nil)
 	if *lc.Enabled {
 		t.Fatalf("Expected Enabled to be false, got %v", *lc.Enabled)
@@ -959,7 +959,7 @@ func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandAliases(t *testing.T) {
+func TestStructure_expandAliases(t *testing.T) {
 	data := aliasesConf()
 	a := tfcloudfront.ExpandAliases(data)
 	if *a.Quantity != 2 {
@@ -970,7 +970,7 @@ func TestCloudFrontStructure_expandAliases(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenAliases(t *testing.T) {
+func TestStructure_flattenAliases(t *testing.T) {
 	in := aliasesConf()
 	a := tfcloudfront.ExpandAliases(in)
 	out := tfcloudfront.FlattenAliases(a)
@@ -981,7 +981,7 @@ func TestCloudFrontStructure_flattenAliases(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandRestrictions(t *testing.T) {
+func TestStructure_expandRestrictions(t *testing.T) {
 	data := geoRestrictionsConf()
 	r := tfcloudfront.ExpandRestrictions(data)
 	if *r.GeoRestriction.RestrictionType != "whitelist" {
@@ -989,7 +989,7 @@ func TestCloudFrontStructure_expandRestrictions(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
+func TestStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	data := geoRestrictionWhitelistConf()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "whitelist" {
@@ -1003,7 +1003,7 @@ func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenGeoRestriction_whitelist(t *testing.T) {
+func TestStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 	in := geoRestrictionWhitelistConf()
 	gr := tfcloudfront.ExpandGeoRestriction(in)
 	out := tfcloudfront.FlattenGeoRestriction(gr)
@@ -1016,7 +1016,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandGeoRestriction_no_items(t *testing.T) {
+func TestStructure_expandGeoRestriction_no_items(t *testing.T) {
 	data := geoRestrictionConfNoItems()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "none" {
@@ -1030,7 +1030,7 @@ func TestCloudFrontStructure_expandGeoRestriction_no_items(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
+func TestStructure_flattenGeoRestriction_no_items(t *testing.T) {
 	in := geoRestrictionConfNoItems()
 	gr := tfcloudfront.ExpandGeoRestriction(in)
 	out := tfcloudfront.FlattenGeoRestriction(gr)
@@ -1043,7 +1043,7 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certificate(t *testing.T) {
+func TestStructure_expandViewerCertificateDefaultCertificate(t *testing.T) {
 	data := viewerCertificateConfSetDefault()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
@@ -1063,7 +1063,7 @@ func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certific
 	}
 }
 
-func TestCloudFrontStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
+func TestStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
 	data := viewerCertificateConfSetIAM()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
@@ -1083,7 +1083,7 @@ func TestCloudFrontStructure_expandViewerCertificate_iam_certificate_id(t *testi
 	}
 }
 
-func TestCloudFrontStructure_expandViewerCertificate_acm_certificate_arn(t *testing.T) {
+func TestStructure_expandViewerCertificate_acm_certificate_arn(t *testing.T) {
 	data := viewerCertificateConfSetACM()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 

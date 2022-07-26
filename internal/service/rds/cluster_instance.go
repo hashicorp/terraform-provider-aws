@@ -210,10 +210,17 @@ func ResourceClusterInstance() *schema.Resource {
 			},
 
 			"performance_insights_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntInSlice([]int{7, 731}),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.IntInSlice([]int{7, 731}),
+					validation.All(
+						validation.IntAtLeast(7),
+						validation.IntAtMost(731),
+						validation.IntDivisibleBy(31),
+					),
+				),
 			},
 
 			"copy_tags_to_snapshot": {
@@ -331,7 +338,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -604,7 +611,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting

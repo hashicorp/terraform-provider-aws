@@ -17,12 +17,12 @@ func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyDataSourceConfig(rName),
+				Config: testAccPublicKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -43,12 +43,12 @@ func TestAccKMSPublicKeyDataSource_encrypt(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyEncryptDataSourceConfig(rName),
+				Config: testAccPublicKeyDataSourceConfig_encrypt(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -74,7 +74,7 @@ func testAccPublicKeyCheckDataSource(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPublicKeyDataSourceConfig(rName string) string {
+func testAccPublicKeyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q
@@ -89,7 +89,7 @@ data "aws_kms_public_key" "test" {
 `, rName)
 }
 
-func testAccPublicKeyEncryptDataSourceConfig(rName string) string {
+func testAccPublicKeyDataSourceConfig_encrypt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q

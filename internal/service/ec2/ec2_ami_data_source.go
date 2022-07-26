@@ -104,6 +104,11 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"include_deprecated": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -128,7 +133,7 @@ func DataSourceAMI() *schema.Resource {
 			},
 			"owners": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -194,6 +199,10 @@ func DataSourceAMI() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -211,12 +220,17 @@ func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
-		Owners: flex.ExpandStringList(d.Get("owners").([]interface{})),
+		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
+	}
+
+	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
+		params.Owners = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
 		params.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
+
 	if v, ok := d.GetOk("filter"); ok {
 		params.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
@@ -296,6 +310,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("state", image.State)
+	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 

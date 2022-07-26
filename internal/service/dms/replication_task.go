@@ -194,7 +194,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
-	settings, err := dmsReplicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
+	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
 	if err != nil {
 		return err
 	}
@@ -343,7 +343,7 @@ func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
+func replicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
 	var settingsData map[string]interface{}
 	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
 		return nil, err

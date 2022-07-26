@@ -21,13 +21,13 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRouteTablePropagationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablePropagationConfig(),
+				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(resourceName, &transitGatewayRouteTablePropagtion1),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -118,7 +118,7 @@ func testAccCheckTransitGatewayRouteTablePropagationDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccTransitGatewayRouteTablePropagationConfig() string {
+func testAccTransitGatewayRouteTablePropagationConfig_basic() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

@@ -25,13 +25,13 @@ func TestAccIAMUserSSHKey_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserSSHKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSSHKeyConfig_sshEncoding(rName, publicKey),
+				Config: testAccUserSSHKeyConfig_encoding(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(resourceName, "Inactive", &conf),
 				),
@@ -48,19 +48,17 @@ func TestAccIAMUserSSHKey_basic(t *testing.T) {
 
 func TestAccIAMUserSSHKey_pemEncoding(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
-
-	ri := sdkacctest.RandInt()
-	config := fmt.Sprintf(testAccSSHKeyConfig_pemEncoding, ri)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserSSHKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccSSHKeyConfig_pemEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(resourceName, "Active", &conf),
 				),
@@ -158,7 +156,7 @@ func testAccUserSSHKeyImportStateIdFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccSSHKeyConfig_sshEncoding(rName, publicKey string) string {
+func testAccUserSSHKeyConfig_encoding(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = %[1]q
@@ -174,9 +172,10 @@ resource "aws_iam_user_ssh_key" "user" {
 `, rName, publicKey)
 }
 
-const testAccSSHKeyConfig_pemEncoding = `
+func testAccSSHKeyConfig_pemEncoding(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-  name = "test-user-%d"
+  name = %[1]q
   path = "/"
 }
 
@@ -196,4 +195,5 @@ NQIDAQAB
 -----END PUBLIC KEY-----
 EOF
 }
-`
+`, rName)
+}

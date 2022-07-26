@@ -20,13 +20,13 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		CheckDestroy:      testAccCheckFieldLevelEncryptionProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		CheckDestroy:             testAccCheckFieldLevelEncryptionProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFieldLevelEncryptionProfileConfig(rName),
+				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
@@ -48,7 +48,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFieldLevelEncryptionProfileExtendedConfig(rName),
+				Config: testAccFieldLevelEncryptionProfileConfig_extended(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some other comment"),
@@ -75,13 +75,13 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		CheckDestroy:      testAccCheckFieldLevelEncryptionProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		CheckDestroy:             testAccCheckFieldLevelEncryptionProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFieldLevelEncryptionProfileConfig(rName),
+				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(resourceName, &profile),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionProfile(), resourceName),
@@ -142,7 +142,7 @@ func testAccCheckFieldLevelEncryptionProfileExists(r string, v *cloudfront.GetFi
 	}
 }
 
-func testAccFieldLevelEncryptionProfileConfig(rName string) string {
+func testAccFieldLevelEncryptionProfileConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"
@@ -168,7 +168,7 @@ resource "aws_cloudfront_field_level_encryption_profile" "test" {
 `, rName)
 }
 
-func testAccFieldLevelEncryptionProfileExtendedConfig(rName string) string {
+func testAccFieldLevelEncryptionProfileConfig_extended(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"

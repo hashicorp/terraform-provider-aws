@@ -18,7 +18,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexGameLiftScript = `aws_gamelift_script`
+const scriptMutex = `aws_gamelift_script`
 
 func ResourceScript() *schema.Resource {
 	return &schema.Resource{
@@ -106,8 +106,8 @@ func resourceScriptCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
-		defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
+		conns.GlobalMutexKV.Lock(scriptMutex)
+		defer conns.GlobalMutexKV.Unlock(scriptMutex)
 
 		file, err := loadFileContent(v.(string))
 		if err != nil {
@@ -212,8 +212,8 @@ func resourceScriptUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("zip_file") {
 			if v, ok := d.GetOk("zip_file"); ok {
-				conns.GlobalMutexKV.Lock(awsMutexGameLiftScript)
-				defer conns.GlobalMutexKV.Unlock(awsMutexGameLiftScript)
+				conns.GlobalMutexKV.Lock(scriptMutex)
+				defer conns.GlobalMutexKV.Unlock(scriptMutex)
 
 				file, err := loadFileContent(v.(string))
 				if err != nil {

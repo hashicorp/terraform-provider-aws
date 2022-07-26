@@ -2,9 +2,6 @@ package connect
 
 import "github.com/aws/aws-sdk-go/service/connect"
 
-const InstanceStatusStatusNotFound = "ResourceNotFoundException"
-const BotAssociationStatusNotFound = "ResourceNotFoundException"
-
 const (
 	ListInstancesMaxResults = 10
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
@@ -36,9 +33,18 @@ const (
 	// ListRoutingProfileQueuesMaxResults Valid Range: Minimum value of 1. Maximum value of 100.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListRoutingProfileQueues.html
 	ListRoutingProfileQueuesMaxResults = 60
+	// ListRoutingProfilesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListRoutingProfiles.html
+	ListRoutingProfilesMaxResults = 60
 	// ListSecurityProfilePermissionsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
 	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfilePermissions.html
 	ListSecurityProfilePermissionsMaxResults = 60
+	// ListSecurityProfilesMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListSecurityProfiles.html
+	ListSecurityProfilesMaxResults = 60
+	// ListUserHierarchyGroupsMaxResults Valid Range: Minimum value of 1. Maximum value of 1000.
+	// https://docs.aws.amazon.com/connect/latest/APIReference/API_ListUserHierarchyGroups.html
+	ListUserHierarchyGroupsMaxResults = 60
 )
 
 func InstanceAttributeMapping() map[string]string {

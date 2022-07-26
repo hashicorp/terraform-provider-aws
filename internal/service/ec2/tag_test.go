@@ -16,13 +16,13 @@ func TestAccEC2Tag_basic(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -43,13 +43,13 @@ func TestAccEC2Tag_disappears(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTag(), resourceName),
@@ -65,13 +65,13 @@ func TestAccEC2Tag_value(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTagDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
+				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -84,7 +84,7 @@ func TestAccEC2Tag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1updated"),
+				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
@@ -95,7 +95,7 @@ func TestAccEC2Tag_value(t *testing.T) {
 	})
 }
 
-func testAccEc2TagConfig(rBgpAsn int, key string, value string) string {
+func testAccTagConfig_basic(rBgpAsn int, key string, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {}
 

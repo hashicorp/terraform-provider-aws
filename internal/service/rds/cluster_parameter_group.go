@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const rdsClusterParameterGroupMaxParamsBulkEdit = 20
+const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
@@ -216,10 +216,10 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 			// we've got them all.
 			for parameters != nil {
 				var paramsToModify []*rds.Parameter
-				if len(parameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
+				if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
 					paramsToModify, parameters = parameters[:], nil
 				} else {
-					paramsToModify, parameters = parameters[:rdsClusterParameterGroupMaxParamsBulkEdit], parameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
+					paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
 				}
 
 				modifyOpts := rds.ModifyDBClusterParameterGroupInput{
@@ -258,10 +258,10 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 			for resetParameters != nil {
 				parameterGroupName := d.Get("name").(string)
 				var paramsToReset []*rds.Parameter
-				if len(resetParameters) <= rdsClusterParameterGroupMaxParamsBulkEdit {
+				if len(resetParameters) <= clusterParameterGroupMaxParamsBulkEdit {
 					paramsToReset, resetParameters = resetParameters[:], nil
 				} else {
-					paramsToReset, resetParameters = resetParameters[:rdsClusterParameterGroupMaxParamsBulkEdit], resetParameters[rdsClusterParameterGroupMaxParamsBulkEdit:]
+					paramsToReset, resetParameters = resetParameters[:clusterParameterGroupMaxParamsBulkEdit], resetParameters[clusterParameterGroupMaxParamsBulkEdit:]
 				}
 
 				resetOpts := rds.ResetDBClusterParameterGroupInput{

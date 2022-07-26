@@ -16,13 +16,13 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginDataSourceConfig(rName),
+				Config: testAccCustomPluginDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -35,7 +35,7 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCustomPluginDataSourceConfig(rName string) string {
+func testAccCustomPluginDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q

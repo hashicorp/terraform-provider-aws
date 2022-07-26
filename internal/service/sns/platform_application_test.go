@@ -161,10 +161,10 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:          func() { acctest.PreCheck(t) },
-				ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
@@ -212,10 +212,10 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
@@ -263,10 +263,10 @@ func TestAccSNSPlatformApplication_iamRoleAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
@@ -316,20 +316,20 @@ func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
-								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName1),
+								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName1),
 								Check: resource.ComposeTestCheckFunc(
 									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName1))),
 								),
 							},
 							{
-								Config: testAccPlatformApplicationConfig_snsTopicAttribute(name, platform, tc, snsTopicName2),
+								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName2),
 								Check: resource.ComposeTestCheckFunc(
 									testAccCheckPlatformApplicationExists(resourceName),
 									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName2))),
@@ -469,7 +469,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, iamRoleName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
-func testAccPlatformApplicationConfig_snsTopicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
+func testAccPlatformApplicationConfig_topicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = "%s"

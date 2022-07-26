@@ -4,6 +4,7 @@
 package lightsail
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -16,6 +17,11 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_lightsail_container_service", &resource.Sweeper{
+		Name: "aws_lightsail_container_service",
+		F:    sweepContainerServices,
+	})
+
 	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
 		Name: "aws_lightsail_instance",
 		F:    sweepInstances,
@@ -25,6 +31,56 @@ func init() {
 		Name: "aws_lightsail_static_ip",
 		F:    sweepStaticIPs,
 	})
+}
+
+func sweepContainerServices(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).LightsailConn
+
+	input := &lightsail.GetContainerServicesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	output, err := conn.GetContainerServicesWithContext(context.TODO(), input)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Container Service sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving Lightsail Container Services: %s", err)
+	}
+
+	for _, service := range output.ContainerServices {
+		if service == nil {
+			continue
+		}
+
+		r := ResourceContainerService()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(service.ContainerServiceName))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Container Services sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Lightsail Container Services  for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Lightsail Container Services for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepInstances(region string) error {

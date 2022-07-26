@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,9 +27,9 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 			testAccPreCheckGlobalTable(t)
 			testAccGlobalTablePreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalTableConfig_invalidName(sdkacctest.RandString(2)),
@@ -63,7 +62,6 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
@@ -74,9 +72,9 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccGlobalTablePreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckGlobalTableDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalTableConfig_multipleRegions1(tableName),

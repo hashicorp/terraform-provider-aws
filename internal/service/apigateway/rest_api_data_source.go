@@ -126,7 +126,7 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("minimum_compression_size", match.MinimumCompressionSize)
 	}
 
-	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(match.EndpointConfiguration)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %w", err)
 	}
 

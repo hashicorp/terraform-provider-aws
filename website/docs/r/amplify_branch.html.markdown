@@ -41,13 +41,8 @@ resource "aws_amplify_branch" "master" {
   app_id      = aws_amplify_app.example.id
   branch_name = "master"
 
-  basic_auth_config {
-    # Enable basic authentication.
-    enable_basic_auth = true
-
-    username = "username"
-    password = "password"
-  }
+  enable_basic_auth      = true
+  basic_auth_credentials = base64encode("username:password")
 }
 ```
 

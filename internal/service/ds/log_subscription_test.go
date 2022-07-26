@@ -14,21 +14,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDirectoryServiceLogSubscription_basic(t *testing.T) {
+func TestAccDSLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLogSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{
-				Config: testAccDirectoryServiceLogSubscriptionConfig(rName, domainName, logGroupName),
+				Config: testAccLogSubscriptionConfig_basic(rName, domainName, logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(
 						resourceName,
@@ -107,9 +107,9 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 	}
 }
 
-func testAccDirectoryServiceLogSubscriptionConfig(rName, domain, logGroupName string) string {
+func testAccLogSubscriptionConfig_basic(rName, domain, logGroupName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_log_subscription" "subscription" {
   directory_id   = aws_directory_service_directory.test.id

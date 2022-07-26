@@ -120,17 +120,18 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
 			log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading DocDB Subnet Group (%s) parameters: %s", d.Id(), err)
+		return fmt.Errorf("error reading DocDB Subnet Group (%s) parameters: %w", d.Id(), err)
 	}
 
-	if len(subnetGroups) != 1 ||
-		aws.StringValue(subnetGroups[0].DBSubnetGroupName) != d.Id() {
-		return fmt.Errorf("unable to find DocDB Subnet Group: %s, removing from state", d.Id())
+	if !d.IsNewResource() && (len(subnetGroups) != 1 || aws.StringValue(subnetGroups[0].DBSubnetGroupName) != d.Id()) {
+		log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	subnetGroup := subnetGroups[0]
@@ -143,13 +144,13 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
 	}
 	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %s", err)
+		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DocumentDB Subnet Group (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for DocumentDB Subnet Group (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

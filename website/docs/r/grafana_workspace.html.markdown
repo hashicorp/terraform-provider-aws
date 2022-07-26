@@ -50,7 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `CLOUDWATCH`, `PROMETHEUS`, `XRAY`, `TIMESTREAM`, `SITEWISE`.
+* `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `XRAY`
 * `description` - (Optional) The workspace description.
 * `name` - (Optional) The Grafana workspace name.
 * `notification_destinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.

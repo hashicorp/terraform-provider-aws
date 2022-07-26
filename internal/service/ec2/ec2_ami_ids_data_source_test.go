@@ -11,9 +11,9 @@ import (
 
 func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIIdsDataSourceConfig_basic,
@@ -27,14 +27,13 @@ func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
 
 func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIIdsDataSourceConfig_sorted(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSSnapshotIDDataSource("data.aws_ami_ids.test"),
 					resource.TestCheckResourceAttr("data.aws_ami_ids.test", "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_ami_ids.test", "ids.0",
