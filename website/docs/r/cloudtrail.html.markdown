@@ -38,6 +38,7 @@ resource "aws_s3_bucket" "foo" {
 
 resource "aws_s3_bucket_policy" "foo" {
   bucket = aws_s3_bucket.foo.id
+  depends_on = [aws_s3_bucket.foo]
   policy = <<POLICY
 {
     "Version": "2012-10-17",
