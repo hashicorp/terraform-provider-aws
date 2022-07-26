@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -84,45 +85,17 @@ func resourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayRouteTable, err := DescribeTransitGatewayRouteTable(conn, d.Id())
+	transitGatewayRouteTable, err := FindTransitGatewayRouteTableByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %s", err)
+		return fmt.Errorf("reading EC2 Transit Gateway Route Table (%s): %w", d.Id(), err)
 	}
-
-	if transitGatewayRouteTable == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(transitGatewayRouteTable.State) == ec2.TransitGatewayRouteTableStateDeleting || aws.StringValue(transitGatewayRouteTable.State) == ec2.TransitGatewayRouteTableStateDeleted {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(transitGatewayRouteTable.State))
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
-	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
-
-	tags := KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -131,8 +104,21 @@ func resourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
+	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
+	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
+	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
+
+	tags := KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("setting tags_all: %w", err)
+	}
 
 	return nil
 }

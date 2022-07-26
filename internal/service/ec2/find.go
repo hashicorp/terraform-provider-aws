@@ -3911,6 +3911,24 @@ func FindTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destinat
 	return nil, &resource.NotFoundError{}
 }
 
+func FindTransitGatewayRouteTable(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) (*ec2.TransitGatewayRouteTable, error) {
+	output, err := FindTransitGatewayRouteTables(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 
@@ -3937,6 +3955,34 @@ func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGate
 
 	if err != nil {
 		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayRouteTableByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
+	input := &ec2.DescribeTransitGatewayRouteTablesInput{
+		TransitGatewayRouteTableIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayRouteTable(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayRouteTableStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayRouteTableId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
