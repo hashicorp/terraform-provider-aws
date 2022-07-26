@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -88,40 +89,19 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(d *schema.ResourceDat
 
 func resourceTransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayPeeringAttachment, err := DescribeTransitGatewayPeeringAttachment(conn, d.Id())
+	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachmentByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Peering Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Peering Attachment: %s", err)
-	}
-
-	if transitGatewayPeeringAttachment == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Peering Attachment (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	recreationStates := map[string]bool{
-		ec2.TransitGatewayAttachmentStateDeleted:   true,
-		ec2.TransitGatewayAttachmentStateDeleting:  true,
-		ec2.TransitGatewayAttachmentStateFailed:    true,
-		ec2.TransitGatewayAttachmentStateFailing:   true,
-		ec2.TransitGatewayAttachmentStateRejected:  true,
-		ec2.TransitGatewayAttachmentStateRejecting: true,
-	}
-	if _, ok := recreationStates[aws.StringValue(transitGatewayPeeringAttachment.State)]; ok {
-		log.Printf("[WARN] EC2 Transit Gateway Peering Attachment (%s) in state (%s), removing from state", d.Id(), aws.StringValue(transitGatewayPeeringAttachment.State))
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading EC2 Transit Gateway Peering Attachment (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
@@ -134,20 +114,19 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData,
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.RequesterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.RequesterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
+	d.Set("transit_gateway_attachment_id", transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
+	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
 
 	tags := KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	d.Set("transit_gateway_attachment_id", transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
-	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
 
 	return nil
 }
