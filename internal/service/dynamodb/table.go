@@ -968,12 +968,12 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 			}
 			for _, region := range replicaRegions {
-				if tableDetail, err := waitReplicaSSEUpdated(region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return fmt.Errorf("error waiting for DynamoDB Table (%s) in region (#{region}) SSE: {%w}", *tableDetail.TableName, err)
+				if _, err := waitReplicaSSEUpdated(meta.(*conns.AWSClient), region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("error waiting for DynamoDB Table (%s) replica SSE update in region %q: %w", d.Id(), region, err)
 				}
 			}
-			if tableDetail, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			if _, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Using normal update for SSE")
@@ -985,8 +985,8 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 			}
 
-			if tableDetail, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", *tableDetail.TableName, err)
+			if _, err := waitSSEUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 			}
 		}
 	}
