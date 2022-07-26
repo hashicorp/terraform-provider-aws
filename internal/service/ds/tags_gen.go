@@ -2,22 +2,28 @@
 package ds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/directoryservice/directoryserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *directoryservice.DirectoryService, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn directoryserviceiface.DirectoryServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*directoryservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *directoryservice.DirectoryService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn directoryserviceiface.DirectoryServiceAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +77,10 @@ func UpdateTags(conn *directoryservice.DirectoryService, identifier string, oldT
 			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTagsFromResource(input)
+		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +90,10 @@ func UpdateTags(conn *directoryservice.DirectoryService, identifier string, oldT
 			Tags:       Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTagsToResource(input)
+		_, err := conn.AddTagsToResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

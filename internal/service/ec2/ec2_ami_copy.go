@@ -25,9 +25,9 @@ func ResourceAMICopy() *schema.Resource {
 		Delete: resourceAMIDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
+			Create: schema.DefaultTimeout(amiRetryTimeout),
+			Update: schema.DefaultTimeout(amiRetryTimeout),
+			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -236,6 +236,10 @@ func ResourceAMICopy() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,

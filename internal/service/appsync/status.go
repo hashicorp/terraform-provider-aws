@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusApiCache(conn *appsync.AppSync, name string) resource.StateRefreshFunc {
+func StatusAPICache(conn *appsync.AppSync, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindApiCacheByID(conn, name)
+		output, err := FindAPICacheByID(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +23,9 @@ func StatusApiCache(conn *appsync.AppSync, name string) resource.StateRefreshFun
 	}
 }
 
-func statusDomainNameApiAssociation(conn *appsync.AppSync, id string) resource.StateRefreshFunc {
+func statusDomainNameAPIAssociation(conn *appsync.AppSync, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainNameApiAssociationByID(conn, id)
+		output, err := FindDomainNameAPIAssociationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

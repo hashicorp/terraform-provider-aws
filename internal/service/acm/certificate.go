@@ -29,11 +29,11 @@ import (
 const (
 	// Maximum amount of time for ACM Certificate cross-service reference propagation.
 	// Removal of ACM Certificates from API Gateway Custom Domains can take >15 minutes.
-	AcmCertificateCrossServicePropagationTimeout = 20 * time.Minute
+	certificateCrossServicePropagationTimeout = 20 * time.Minute
 
 	// Maximum amount of time for ACM Certificate asynchronous DNS validation record assignment.
 	// This timeout is unrelated to any creation or validation of those assigned DNS records.
-	AcmCertificateDnsValidationAssignmentTimeout = 5 * time.Minute
+	certificateDNSValidationAssignmentTimeout = 5 * time.Minute
 
 	certificateValidationMethodNone = "NONE"
 )
@@ -107,7 +107,7 @@ func ResourceCertificate() *schema.Resource {
 						},
 					},
 				},
-				Set: acmDomainValidationOptionsHash,
+				Set: domainValidationOptionsHash,
 			},
 			"options": {
 				Type:     schema.TypeList,
@@ -229,7 +229,7 @@ func ResourceCertificate() *schema.Resource {
 						}
 					}
 
-					if err := diff.SetNew("domain_validation_options", schema.NewSet(acmDomainValidationOptionsHash, domainValidationOptionsList)); err != nil {
+					if err := diff.SetNew("domain_validation_options", schema.NewSet(domainValidationOptionsHash, domainValidationOptionsList)); err != nil {
 						return fmt.Errorf("error setting new domain_validation_options diff: %w", err)
 					}
 				}
@@ -237,10 +237,10 @@ func ResourceCertificate() *schema.Resource {
 				// ACM automatically adds the domain_name value to the list of SANs. Mimic ACM's behavior
 				// so that the user doesn't need to explicitly set it themselves.
 				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+					domainName := diff.Get("domain_name").(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
-						sanSet.Add(domain_name)
+						sanSet.Add(domainName)
 						if err := diff.SetNew("subject_alternative_names", sanSet); err != nil {
 							return fmt.Errorf("error setting new subject_alternative_names diff: %w", err)
 						}
@@ -330,7 +330,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), AcmCertificateDnsValidationAssignmentTimeout); err != nil {
+	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
 		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
 	}
 
@@ -438,7 +438,7 @@ func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(AcmCertificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCertificate(&acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),
@@ -468,7 +468,7 @@ func certificateValidationMethod(certificate *acm.CertificateDetail) string {
 	return certificateValidationMethodNone
 }
 
-func acmDomainValidationOptionsHash(v interface{}) int {
+func domainValidationOptionsHash(v interface{}) int {
 	m, ok := v.(map[string]interface{})
 
 	if !ok {

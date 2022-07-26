@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceProxyTarget() *schema.Resource {
@@ -17,41 +19,36 @@ func ResourceProxyTarget() *schema.Resource {
 		Create: resourceProxyTargetCreate,
 		Read:   resourceProxyTargetRead,
 		Delete: resourceProxyTargetDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"db_cluster_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
+			"db_instance_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+				ExactlyOneOf: []string{
+					"db_instance_identifier",
+					"db_cluster_identifier",
+				},
+			},
 			"db_proxy_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"target_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
-				ValidateFunc: validIdentifier,
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"db_instance_identifier",
-					"db_cluster_identifier",
-				},
 				ValidateFunc: validIdentifier,
 			},
 			"endpoint": {
@@ -70,6 +67,12 @@ func ResourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"target_group_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
+			},
 			"tracked_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,27 +90,30 @@ func resourceProxyTargetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	targetGroupName := d.Get("target_group_name").(string)
-
-	params := rds.RegisterDBProxyTargetsInput{
+	input := &rds.RegisterDBProxyTargetsInput{
 		DBProxyName:     aws.String(dbProxyName),
 		TargetGroupName: aws.String(targetGroupName),
 	}
 
-	if v, ok := d.GetOk("db_instance_identifier"); ok {
-		params.DBInstanceIdentifiers = []*string{aws.String(v.(string))}
-	}
-
 	if v, ok := d.GetOk("db_cluster_identifier"); ok {
-		params.DBClusterIdentifiers = []*string{aws.String(v.(string))}
+		input.DBClusterIdentifiers = aws.StringSlice([]string{v.(string)})
 	}
 
-	resp, err := conn.RegisterDBProxyTargets(&params)
+	if v, ok := d.GetOk("db_instance_identifier"); ok {
+		input.DBInstanceIdentifiers = aws.StringSlice([]string{v.(string)})
+	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+		func() (interface{}, error) {
+			return conn.RegisterDBProxyTargets(input)
+		},
+		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
 
 	if err != nil {
 		return fmt.Errorf("error registering RDS DB Proxy (%s/%s) Target: %w", dbProxyName, targetGroupName, err)
 	}
 
-	dbProxyTarget := resp.DBProxyTargets[0]
+	dbProxyTarget := outputRaw.(*rds.RegisterDBProxyTargetsOutput).DBProxyTargets[0]
 
 	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, aws.StringValue(dbProxyTarget.Type), aws.StringValue(dbProxyTarget.RdsResourceId)}, "/"))
 

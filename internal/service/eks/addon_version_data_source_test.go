@@ -20,13 +20,13 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonVersionDataSourceConfig_Basic(rName, addonName, true),
+				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
@@ -35,7 +35,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAddonVersionDataSourceConfig_Basic(rName, addonName, false),
+				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
@@ -47,7 +47,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAddonVersionDataSourceConfig_Basic(rName, addonName string, mostRecent bool) string {
+func testAccAddonVersionDataSourceConfig_basic(rName, addonName string, mostRecent bool) string {
 	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
 data "aws_eks_addon_version" "test" {
   addon_name         = %[2]q

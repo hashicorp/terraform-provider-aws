@@ -20,13 +20,13 @@ func TestAccRDSSecurityGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &v),
 					testAccCheckSecurityGroupAttributes(&v),
@@ -140,7 +140,7 @@ func testAccCheckSecurityGroupExists(n string, v *rds.DBSecurityGroup) resource.
 	}
 }
 
-func testAccSecurityGroupConfig(name string) string {
+func testAccSecurityGroupConfig_basic(name string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`

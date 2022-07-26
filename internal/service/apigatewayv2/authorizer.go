@@ -103,7 +103,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	apiOutput, err := FindAPIByID(conn, apiId)
 
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+		return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	protocolType := aws.StringValue(apiOutput.ProtocolType)
@@ -134,13 +134,13 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 		req.EnableSimpleResponses = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("jwt_configuration"); ok {
-		req.JwtConfiguration = expandApiGateway2JwtConfiguration(v.([]interface{}))
+		req.JwtConfiguration = expandJWTConfiguration(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 authorizer: %s", req)
 	resp, err := conn.CreateAuthorizer(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 authorizer: %s", err)
+		return fmt.Errorf("creating API Gateway v2 authorizer: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.AuthorizerId))
@@ -161,7 +161,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 authorizer: %s", err)
+		return fmt.Errorf("reading API Gateway v2 authorizer: %s", err)
 	}
 
 	d.Set("authorizer_credentials_arn", resp.AuthorizerCredentialsArn)
@@ -171,10 +171,10 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("authorizer_uri", resp.AuthorizerUri)
 	d.Set("enable_simple_responses", resp.EnableSimpleResponses)
 	if err := d.Set("identity_sources", flex.FlattenStringSet(resp.IdentitySource)); err != nil {
-		return fmt.Errorf("error setting identity_sources: %s", err)
+		return fmt.Errorf("setting identity_sources: %s", err)
 	}
-	if err := d.Set("jwt_configuration", flattenApiGateway2JwtConfiguration(resp.JwtConfiguration)); err != nil {
-		return fmt.Errorf("error setting jwt_configuration: %s", err)
+	if err := d.Set("jwt_configuration", flattenJWTConfiguration(resp.JwtConfiguration)); err != nil {
+		return fmt.Errorf("setting jwt_configuration: %s", err)
 	}
 	d.Set("name", resp.Name)
 
@@ -213,13 +213,13 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.Name = aws.String(d.Get("name").(string))
 	}
 	if d.HasChange("jwt_configuration") {
-		req.JwtConfiguration = expandApiGateway2JwtConfiguration(d.Get("jwt_configuration").([]interface{}))
+		req.JwtConfiguration = expandJWTConfiguration(d.Get("jwt_configuration").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 authorizer: %s", req)
 	_, err := conn.UpdateAuthorizer(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 authorizer: %s", err)
+		return fmt.Errorf("updating API Gateway v2 authorizer: %s", err)
 	}
 
 	return resourceAuthorizerRead(d, meta)
@@ -237,7 +237,7 @@ func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 authorizer: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 authorizer: %s", err)
 	}
 
 	return nil
@@ -246,7 +246,7 @@ func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceAuthorizerImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/authorizer-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/authorizer-id'", d.Id())
 	}
 
 	d.SetId(parts[1])
@@ -255,7 +255,7 @@ func resourceAuthorizerImport(d *schema.ResourceData, meta interface{}) ([]*sche
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandApiGateway2JwtConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfiguration {
+func expandJWTConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfiguration {
 	configuration := &apigatewayv2.JWTConfiguration{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
@@ -273,7 +273,7 @@ func expandApiGateway2JwtConfiguration(vConfiguration []interface{}) *apigateway
 	return configuration
 }
 
-func flattenApiGateway2JwtConfiguration(configuration *apigatewayv2.JWTConfiguration) []interface{} {
+func flattenJWTConfiguration(configuration *apigatewayv2.JWTConfiguration) []interface{} {
 	if configuration == nil {
 		return []interface{}{}
 	}

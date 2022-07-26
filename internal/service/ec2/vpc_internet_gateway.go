@@ -53,7 +53,7 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateInternetGatewayInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
@@ -173,9 +173,9 @@ func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(internetGatewayDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteInternetGateway(input)
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidInternetGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInternetGatewayIDNotFound) {
 		return nil
 	}
 
@@ -195,7 +195,7 @@ func attachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string) error
 	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
 		return conn.AttachInternetGateway(input)
-	}, ErrCodeInvalidInternetGatewayIDNotFound)
+	}, errCodeInvalidInternetGatewayIDNotFound)
 
 	if err != nil {
 		return fmt.Errorf("error attaching EC2 Internet Gateway (%s) to VPC (%s): %w", internetGatewayID, vpcID, err)
@@ -219,9 +219,9 @@ func detachInternetGateway(conn *ec2.EC2, internetGatewayID, vpcID string) error
 	log.Printf("[INFO] Detaching EC2 Internet Gateway: %s", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(internetGatewayDetachedTimeout, func() (interface{}, error) {
 		return conn.DetachInternetGateway(input)
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeGatewayNotAttached) {
+	if tfawserr.ErrCodeEquals(err, errCodeGatewayNotAttached) {
 		return nil
 	}
 

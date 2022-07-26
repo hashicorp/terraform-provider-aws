@@ -31,7 +31,7 @@ func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
 			"existing.basic":                         testAccDefaultSubnet_Existing_basic,
 			"existing.forceDestroy":                  testAccDefaultSubnet_Existing_forceDestroy,
 			"existing.ipv6":                          testAccDefaultSubnet_Existing_ipv6,
-			"existing.privateDnsNameOptionsOnLaunch": testAccDefaultSubnet_Existing_privateDnsNameOptionsOnLaunch,
+			"existing.privateDnsNameOptionsOnLaunch": testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch,
 			"notFound.basic":                         testAccDefaultSubnet_NotFound_basic,
 			"notFound.ipv6Native":                    testAccDefaultSubnet_NotFound_ipv6Native,
 		},
@@ -88,12 +88,12 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCConfig,
+				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -135,12 +135,12 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName),
+				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -182,12 +182,12 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCForceDestroyConfig,
+				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "true"),
@@ -209,12 +209,12 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCConfig,
+				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -256,12 +256,12 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName),
+				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -303,12 +303,12 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultVPCForceDestroyConfig,
+				Config: testAccVPCDefaultVPCConfig_forceDestroy,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_vpc", "false"),
@@ -437,17 +437,17 @@ func testAccEmptyDefaultVPC(vpcID string) error {
 	return nil
 }
 
-const testAccDefaultVPCConfig = `
+const testAccVPCDefaultVPCConfig_basic = `
 resource "aws_default_vpc" "test" {}
 `
 
-const testAccDefaultVPCForceDestroyConfig = `
+const testAccVPCDefaultVPCConfig_forceDestroy = `
 resource "aws_default_vpc" "test" {
   force_destroy = true
 }
 `
 
-func testAccDefaultVPCAssignGeneratedIPv6CIDRBlockConfig(rName string) string {
+func testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_default_vpc" "test" {
   assign_generated_ipv6_cidr_block = true

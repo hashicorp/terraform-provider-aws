@@ -233,7 +233,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(err) {
+	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)
 	}
 

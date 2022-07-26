@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -498,7 +500,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get("description").(string)),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
-		PolicyDetails:    expandDlmPolicyDetails(d.Get("policy_details").([]interface{})),
+		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
 		State:            aws.String(d.Get("state").(string)),
 	}
 
@@ -507,9 +509,9 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
-	out, err := verify.RetryOnAWSCode(dlm.ErrCodeInvalidRequestException, func() (interface{}, error) {
+	out, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicy(&input)
-	})
+	}, dlm.ErrCodeInvalidRequestException)
 
 	if err != nil {
 		return fmt.Errorf("error creating DLM Lifecycle Policy: %s", err)
@@ -544,7 +546,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("description", out.Policy.Description)
 	d.Set("execution_role_arn", out.Policy.ExecutionRoleArn)
 	d.Set("state", out.Policy.State)
-	if err := d.Set("policy_details", flattenDlmPolicyDetails(out.Policy.PolicyDetails)); err != nil {
+	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
 		return fmt.Errorf("error setting policy details %s", err)
 	}
 
@@ -580,7 +582,7 @@ func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) err
 			input.State = aws.String(d.Get("state").(string))
 		}
 		if d.HasChange("policy_details") {
-			input.PolicyDetails = expandDlmPolicyDetails(d.Get("policy_details").([]interface{}))
+			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]interface{}))
 		}
 
 		log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
@@ -617,7 +619,7 @@ func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
+func expandPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -634,42 +636,42 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 		policyDetails.ResourceLocations = flex.ExpandStringList(v)
 	}
 	if v, ok := m["schedule"].([]interface{}); ok && len(v) > 0 {
-		policyDetails.Schedules = expandDlmSchedules(v)
+		policyDetails.Schedules = expandSchedules(v)
 	}
 	if v, ok := m["action"].([]interface{}); ok && len(v) > 0 {
-		policyDetails.Actions = expandDlmActions(v)
+		policyDetails.Actions = expandActions(v)
 	}
 	if v, ok := m["event_source"].([]interface{}); ok && len(v) > 0 {
-		policyDetails.EventSource = expandDlmEventSource(v)
+		policyDetails.EventSource = expandEventSource(v)
 	}
 	if v, ok := m["target_tags"].(map[string]interface{}); ok && len(v) > 0 {
-		policyDetails.TargetTags = expandDlmTags(v)
+		policyDetails.TargetTags = expandTags(v)
 	}
 	if v, ok := m["parameters"].([]interface{}); ok && len(v) > 0 {
-		policyDetails.Parameters = expandDlmParameters(v, policyType)
+		policyDetails.Parameters = expandParameters(v, policyType)
 	}
 
 	return policyDetails
 }
 
-func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interface{} {
+func flattenPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringList(policyDetails.ResourceLocations)
-	result["action"] = flattenDlmActions(policyDetails.Actions)
-	result["event_source"] = flattenDlmEventSource(policyDetails.EventSource)
-	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
-	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
+	result["action"] = flattenActions(policyDetails.Actions)
+	result["event_source"] = flattenEventSource(policyDetails.EventSource)
+	result["schedule"] = flattenSchedules(policyDetails.Schedules)
+	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
 
 	if policyDetails.Parameters != nil {
-		result["parameters"] = flattenDlmParameters(policyDetails.Parameters)
+		result["parameters"] = flattenParameters(policyDetails.Parameters)
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
+func expandSchedules(cfg []interface{}) []*dlm.Schedule {
 	schedules := make([]*dlm.Schedule, len(cfg))
 	for i, c := range cfg {
 		schedule := &dlm.Schedule{}
@@ -678,31 +680,31 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 			schedule.CopyTags = aws.Bool(v.(bool))
 		}
 		if v, ok := m["create_rule"]; ok {
-			schedule.CreateRule = expandDlmCreateRule(v.([]interface{}))
+			schedule.CreateRule = expandCreateRule(v.([]interface{}))
 		}
 		if v, ok := m["cross_region_copy_rule"].(*schema.Set); ok && v.Len() > 0 {
-			schedule.CrossRegionCopyRules = expandDlmCrossRegionCopyRules(v.List())
+			schedule.CrossRegionCopyRules = expandCrossRegionCopyRules(v.List())
 		}
 		if v, ok := m["name"]; ok {
 			schedule.Name = aws.String(v.(string))
 		}
 		if v, ok := m["deprecate_rule"]; ok {
-			schedule.DeprecateRule = expandDlmDeprecateRule(v.([]interface{}))
+			schedule.DeprecateRule = expandDeprecateRule(v.([]interface{}))
 		}
 		if v, ok := m["fast_restore_rule"]; ok {
-			schedule.FastRestoreRule = expandDlmFastRestoreRule(v.([]interface{}))
+			schedule.FastRestoreRule = expandFastRestoreRule(v.([]interface{}))
 		}
 		if v, ok := m["share_rule"]; ok {
-			schedule.ShareRules = expandDlmShareRule(v.([]interface{}))
+			schedule.ShareRules = expandShareRule(v.([]interface{}))
 		}
 		if v, ok := m["retain_rule"]; ok {
-			schedule.RetainRule = expandDlmRetainRule(v.([]interface{}))
+			schedule.RetainRule = expandRetainRule(v.([]interface{}))
 		}
 		if v, ok := m["tags_to_add"]; ok {
-			schedule.TagsToAdd = expandDlmTags(v.(map[string]interface{}))
+			schedule.TagsToAdd = expandTags(v.(map[string]interface{}))
 		}
 		if v, ok := m["variable_tags"]; ok {
-			schedule.VariableTags = expandDlmTags(v.(map[string]interface{}))
+			schedule.VariableTags = expandTags(v.(map[string]interface{}))
 		}
 
 		schedules[i] = schedule
@@ -711,28 +713,28 @@ func expandDlmSchedules(cfg []interface{}) []*dlm.Schedule {
 	return schedules
 }
 
-func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
+func flattenSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(schedules))
 	for i, s := range schedules {
 		m := make(map[string]interface{})
 		m["copy_tags"] = aws.BoolValue(s.CopyTags)
-		m["create_rule"] = flattenDlmCreateRule(s.CreateRule)
-		m["cross_region_copy_rule"] = flattenDlmCrossRegionCopyRules(s.CrossRegionCopyRules)
+		m["create_rule"] = flattenCreateRule(s.CreateRule)
+		m["cross_region_copy_rule"] = flattenCrossRegionCopyRules(s.CrossRegionCopyRules)
 		m["name"] = aws.StringValue(s.Name)
-		m["retain_rule"] = flattenDlmRetainRule(s.RetainRule)
-		m["tags_to_add"] = flattenDlmTags(s.TagsToAdd)
-		m["variable_tags"] = flattenDlmTags(s.VariableTags)
+		m["retain_rule"] = flattenRetainRule(s.RetainRule)
+		m["tags_to_add"] = flattenTags(s.TagsToAdd)
+		m["variable_tags"] = flattenTags(s.VariableTags)
 
 		if s.DeprecateRule != nil {
-			m["deprecate_rule"] = flattenDlmDeprecateRule(s.DeprecateRule)
+			m["deprecate_rule"] = flattenDeprecateRule(s.DeprecateRule)
 		}
 
 		if s.FastRestoreRule != nil {
-			m["fast_restore_rule"] = flattenDlmFastRestoreRule(s.FastRestoreRule)
+			m["fast_restore_rule"] = flattenFastRestoreRule(s.FastRestoreRule)
 		}
 
 		if s.ShareRules != nil {
-			m["share_rule"] = flattenDlmShareRule(s.ShareRules)
+			m["share_rule"] = flattenShareRule(s.ShareRules)
 		}
 
 		result[i] = m
@@ -741,13 +743,13 @@ func flattenDlmSchedules(schedules []*dlm.Schedule) []map[string]interface{} {
 	return result
 }
 
-func expandDlmActions(cfg []interface{}) []*dlm.Action {
+func expandActions(cfg []interface{}) []*dlm.Action {
 	actions := make([]*dlm.Action, len(cfg))
 	for i, c := range cfg {
 		action := &dlm.Action{}
 		m := c.(map[string]interface{})
 		if v, ok := m["cross_region_copy"].(*schema.Set); ok {
-			action.CrossRegionCopy = expandDlmActionCrossRegionCopyRules(v.List())
+			action.CrossRegionCopy = expandActionCrossRegionCopyRules(v.List())
 		}
 		if v, ok := m["name"]; ok {
 			action.Name = aws.String(v.(string))
@@ -759,7 +761,7 @@ func expandDlmActions(cfg []interface{}) []*dlm.Action {
 	return actions
 }
 
-func flattenDlmActions(actions []*dlm.Action) []map[string]interface{} {
+func flattenActions(actions []*dlm.Action) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(actions))
 	for i, s := range actions {
 		m := make(map[string]interface{})
@@ -767,7 +769,7 @@ func flattenDlmActions(actions []*dlm.Action) []map[string]interface{} {
 		m["name"] = aws.StringValue(s.Name)
 
 		if s.CrossRegionCopy != nil {
-			m["cross_region_copy"] = flattenDlmActionCrossRegionCopyRules(s.CrossRegionCopy)
+			m["cross_region_copy"] = flattenActionCrossRegionCopyRules(s.CrossRegionCopy)
 		}
 
 		result[i] = m
@@ -776,7 +778,7 @@ func flattenDlmActions(actions []*dlm.Action) []map[string]interface{} {
 	return result
 }
 
-func expandDlmActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyAction {
+func expandActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -792,10 +794,10 @@ func expandDlmActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopy
 
 		rule := &dlm.CrossRegionCopyAction{}
 		if v, ok := m["encryption_configuration"].([]interface{}); ok {
-			rule.EncryptionConfiguration = expandDlmActionCrossRegionCopyRuleEncryptionConfiguration(v)
+			rule.EncryptionConfiguration = expandActionCrossRegionCopyRuleEncryptionConfiguration(v)
 		}
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.RetainRule = expandDlmCrossRegionCopyRuleRetainRule(v)
+			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
 		if v, ok := m["target"].(string); ok && v != "" {
 			rule.Target = aws.String(v)
@@ -807,7 +809,7 @@ func expandDlmActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopy
 	return rules
 }
 
-func flattenDlmActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []interface{} {
+func flattenActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []interface{} {
 	if len(rules) == 0 {
 		return []interface{}{}
 	}
@@ -820,8 +822,8 @@ func flattenDlmActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []
 		}
 
 		m := map[string]interface{}{
-			"encryption_configuration": flattenDlmActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
-			"retain_rule":              flattenDlmCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			"encryption_configuration": flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
+			"retain_rule":              flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
 			"target":                   aws.StringValue(rule.Target),
 		}
 
@@ -831,7 +833,7 @@ func flattenDlmActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []
 	return result
 }
 
-func expandDlmActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *dlm.EncryptionConfiguration {
+func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *dlm.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -847,7 +849,7 @@ func expandDlmActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) 
 	return config
 }
 
-func flattenDlmActionCrossRegionCopyRuleEncryptionConfiguration(rule *dlm.EncryptionConfiguration) []interface{} {
+func flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule *dlm.EncryptionConfiguration) []interface{} {
 	if rule == nil {
 		return []interface{}{}
 	}
@@ -860,7 +862,7 @@ func flattenDlmActionCrossRegionCopyRuleEncryptionConfiguration(rule *dlm.Encryp
 	return []interface{}{m}
 }
 
-func expandDlmEventSource(l []interface{}) *dlm.EventSource {
+func expandEventSource(l []interface{}) *dlm.EventSource {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -871,26 +873,26 @@ func expandDlmEventSource(l []interface{}) *dlm.EventSource {
 	}
 
 	if v, ok := m["parameters"].([]interface{}); ok && len(v) > 0 {
-		config.Parameters = expandDlmEventSourceParameters(v)
+		config.Parameters = expandEventSourceParameters(v)
 	}
 
 	return config
 }
 
-func flattenDlmEventSource(rule *dlm.EventSource) []interface{} {
+func flattenEventSource(rule *dlm.EventSource) []interface{} {
 	if rule == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"parameters": flattenDlmEventSourceParameters(rule.Parameters),
+		"parameters": flattenEventSourceParameters(rule.Parameters),
 		"type":       aws.StringValue(rule.Type),
 	}
 
 	return []interface{}{m}
 }
 
-func expandDlmEventSourceParameters(l []interface{}) *dlm.EventParameters {
+func expandEventSourceParameters(l []interface{}) *dlm.EventParameters {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -905,7 +907,7 @@ func expandDlmEventSourceParameters(l []interface{}) *dlm.EventParameters {
 	return config
 }
 
-func flattenDlmEventSourceParameters(rule *dlm.EventParameters) []interface{} {
+func flattenEventSourceParameters(rule *dlm.EventParameters) []interface{} {
 	if rule == nil {
 		return []interface{}{}
 	}
@@ -919,7 +921,7 @@ func flattenDlmEventSourceParameters(rule *dlm.EventParameters) []interface{} {
 	return []interface{}{m}
 }
 
-func expandDlmCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
+func expandCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -942,13 +944,13 @@ func expandDlmCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
 			rule.CopyTags = aws.Bool(v)
 		}
 		if v, ok := m["deprecate_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.DeprecateRule = expandDlmCrossRegionCopyRuleDeprecateRule(v)
+			rule.DeprecateRule = expandCrossRegionCopyRuleDeprecateRule(v)
 		}
 		if v, ok := m["encrypted"].(bool); ok {
 			rule.Encrypted = aws.Bool(v)
 		}
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.RetainRule = expandDlmCrossRegionCopyRuleRetainRule(v)
+			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
 		if v, ok := m["target"].(string); ok && v != "" {
 			rule.Target = aws.String(v)
@@ -960,7 +962,7 @@ func expandDlmCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
 	return rules
 }
 
-func flattenDlmCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interface{} {
+func flattenCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interface{} {
 	if len(rules) == 0 {
 		return []interface{}{}
 	}
@@ -975,9 +977,9 @@ func flattenDlmCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interfac
 		m := map[string]interface{}{
 			"cmk_arn":        aws.StringValue(rule.CmkArn),
 			"copy_tags":      aws.BoolValue(rule.CopyTags),
-			"deprecate_rule": flattenDlmCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
+			"deprecate_rule": flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
 			"encrypted":      aws.BoolValue(rule.Encrypted),
-			"retain_rule":    flattenDlmCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			"retain_rule":    flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
 			"target":         aws.StringValue(rule.Target),
 		}
 
@@ -987,7 +989,7 @@ func flattenDlmCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interfac
 	return result
 }
 
-func expandDlmCrossRegionCopyRuleDeprecateRule(l []interface{}) *dlm.CrossRegionCopyDeprecateRule {
+func expandCrossRegionCopyRuleDeprecateRule(l []interface{}) *dlm.CrossRegionCopyDeprecateRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1000,7 +1002,7 @@ func expandDlmCrossRegionCopyRuleDeprecateRule(l []interface{}) *dlm.CrossRegion
 	}
 }
 
-func expandDlmCrossRegionCopyRuleRetainRule(l []interface{}) *dlm.CrossRegionCopyRetainRule {
+func expandCrossRegionCopyRuleRetainRule(l []interface{}) *dlm.CrossRegionCopyRetainRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1013,7 +1015,7 @@ func expandDlmCrossRegionCopyRuleRetainRule(l []interface{}) *dlm.CrossRegionCop
 	}
 }
 
-func flattenDlmCrossRegionCopyRuleDeprecateRule(rule *dlm.CrossRegionCopyDeprecateRule) []interface{} {
+func flattenCrossRegionCopyRuleDeprecateRule(rule *dlm.CrossRegionCopyDeprecateRule) []interface{} {
 	if rule == nil {
 		return []interface{}{}
 	}
@@ -1026,7 +1028,7 @@ func flattenDlmCrossRegionCopyRuleDeprecateRule(rule *dlm.CrossRegionCopyDepreca
 	return []interface{}{m}
 }
 
-func flattenDlmCrossRegionCopyRuleRetainRule(rule *dlm.CrossRegionCopyRetainRule) []interface{} {
+func flattenCrossRegionCopyRuleRetainRule(rule *dlm.CrossRegionCopyRetainRule) []interface{} {
 	if rule == nil {
 		return []interface{}{}
 	}
@@ -1039,7 +1041,7 @@ func flattenDlmCrossRegionCopyRuleRetainRule(rule *dlm.CrossRegionCopyRetainRule
 	return []interface{}{m}
 }
 
-func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
+func expandCreateRule(cfg []interface{}) *dlm.CreateRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1072,7 +1074,7 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 	return createRule
 }
 
-func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
+func flattenCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	if createRule == nil {
 		return []map[string]interface{}{}
 	}
@@ -1099,7 +1101,7 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	return []map[string]interface{}{result}
 }
 
-func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
+func expandRetainRule(cfg []interface{}) *dlm.RetainRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1121,7 +1123,7 @@ func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
 	return rule
 }
 
-func flattenDlmRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
+func flattenRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["count"] = aws.Int64Value(retainRule.Count)
 	result["interval_unit"] = aws.StringValue(retainRule.IntervalUnit)
@@ -1130,7 +1132,7 @@ func flattenDlmRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
 	return []map[string]interface{}{result}
 }
 
-func expandDlmDeprecateRule(cfg []interface{}) *dlm.DeprecateRule {
+func expandDeprecateRule(cfg []interface{}) *dlm.DeprecateRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1152,7 +1154,7 @@ func expandDlmDeprecateRule(cfg []interface{}) *dlm.DeprecateRule {
 	return rule
 }
 
-func flattenDlmDeprecateRule(rule *dlm.DeprecateRule) []map[string]interface{} {
+func flattenDeprecateRule(rule *dlm.DeprecateRule) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["count"] = aws.Int64Value(rule.Count)
 	result["interval_unit"] = aws.StringValue(rule.IntervalUnit)
@@ -1161,7 +1163,7 @@ func flattenDlmDeprecateRule(rule *dlm.DeprecateRule) []map[string]interface{} {
 	return []map[string]interface{}{result}
 }
 
-func expandDlmFastRestoreRule(cfg []interface{}) *dlm.FastRestoreRule {
+func expandFastRestoreRule(cfg []interface{}) *dlm.FastRestoreRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1185,7 +1187,7 @@ func expandDlmFastRestoreRule(cfg []interface{}) *dlm.FastRestoreRule {
 	return rule
 }
 
-func flattenDlmFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface{} {
+func flattenFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["count"] = aws.Int64Value(rule.Count)
 	result["interval_unit"] = aws.StringValue(rule.IntervalUnit)
@@ -1195,7 +1197,7 @@ func flattenDlmFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface
 	return []map[string]interface{}{result}
 }
 
-func expandDlmShareRule(cfg []interface{}) []*dlm.ShareRule {
+func expandShareRule(cfg []interface{}) []*dlm.ShareRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1223,7 +1225,7 @@ func expandDlmShareRule(cfg []interface{}) []*dlm.ShareRule {
 	return rules
 }
 
-func flattenDlmShareRule(rules []*dlm.ShareRule) []map[string]interface{} {
+func flattenShareRule(rules []*dlm.ShareRule) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
 
 	for _, v := range rules {
@@ -1251,7 +1253,7 @@ func flattenDlmShareRule(rules []*dlm.ShareRule) []map[string]interface{} {
 	return values
 }
 
-func expandDlmTags(m map[string]interface{}) []*dlm.Tag {
+func expandTags(m map[string]interface{}) []*dlm.Tag {
 	var result []*dlm.Tag
 	for k, v := range m {
 		result = append(result, &dlm.Tag{
@@ -1263,7 +1265,7 @@ func expandDlmTags(m map[string]interface{}) []*dlm.Tag {
 	return result
 }
 
-func flattenDlmTags(tags []*dlm.Tag) map[string]string {
+func flattenTags(tags []*dlm.Tag) map[string]string {
 	result := make(map[string]string)
 	for _, t := range tags {
 		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
@@ -1272,7 +1274,7 @@ func flattenDlmTags(tags []*dlm.Tag) map[string]string {
 	return result
 }
 
-func expandDlmParameters(cfg []interface{}, policyType string) *dlm.Parameters {
+func expandParameters(cfg []interface{}, policyType string) *dlm.Parameters {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1290,7 +1292,7 @@ func expandDlmParameters(cfg []interface{}, policyType string) *dlm.Parameters {
 	return parameters
 }
 
-func flattenDlmParameters(parameters *dlm.Parameters) []map[string]interface{} {
+func flattenParameters(parameters *dlm.Parameters) []map[string]interface{} {
 	result := make(map[string]interface{})
 	if parameters.ExcludeBootVolume != nil {
 		result["exclude_boot_volume"] = aws.BoolValue(parameters.ExcludeBootVolume)

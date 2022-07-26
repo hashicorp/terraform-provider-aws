@@ -53,7 +53,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 		return conn.CreateRegexPatternSet(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Failed creating WAF Regional Regex Pattern Set: %s", err)
+		return fmt.Errorf("failed creating WAF Regional Regex Pattern Set: %w", err)
 	}
 	resp := out.(*waf.CreateRegexPatternSetOutput)
 
@@ -72,13 +72,13 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional Regex Pattern Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("Error getting WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting WAF Regional Regex Pattern Set (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", resp.RegexPatternSet.Name)
@@ -97,11 +97,6 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
 		err := updateRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		if err != nil {
 			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set(%s): %s", d.Id(), err)
 		}
@@ -122,7 +117,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set(%s): %s", d.Id(), err)
+			return fmt.Errorf("failed updating WAF Regional Regex Pattern Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -132,11 +127,10 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(d.Id()),
 		}
-		log.Printf("[INFO] Deleting WAF Regional Regex Pattern Set: %s", req)
 		return conn.DeleteRegexPatternSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Failed deleting WAF Regional Regex Pattern Set: %s", err)
+		return fmt.Errorf("failed deleting WAF Regional Regex Pattern Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

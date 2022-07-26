@@ -13,12 +13,12 @@ import (
 
 func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig,
+				Config: testAccSolutionStackDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSolutionStackIDDataSource("data.aws_elastic_beanstalk_solution_stack.multi_docker"),
 					resource.TestMatchResourceAttr("data.aws_elastic_beanstalk_solution_stack.multi_docker", "name", regexp.MustCompile("^64bit Amazon Linux (.*) Multi-container Docker (.*)$")),
@@ -43,7 +43,7 @@ func testAccCheckSolutionStackIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig = `
+const testAccSolutionStackDataSourceConfig_basic = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
   most_recent = true
   name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"

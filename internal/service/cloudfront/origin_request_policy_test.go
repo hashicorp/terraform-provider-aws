@@ -19,13 +19,13 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginRequestPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginRequestPolicyConfig(rName),
+				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -56,13 +56,13 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginRequestPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginRequestPolicyConfig(rName),
+				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
@@ -79,13 +79,13 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOriginRequestPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginRequestPolicyItemsConfig(rName),
+				Config: testAccOriginRequestPolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
@@ -114,7 +114,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOriginRequestPolicyItemsUpdatedConfig(rName),
+				Config: testAccOriginRequestPolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
@@ -184,7 +184,7 @@ func testAccCheckOriginRequestPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccOriginRequestPolicyConfig(rName string) string {
+func testAccOriginRequestPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "test" {
   name = %[1]q
@@ -204,7 +204,7 @@ resource "aws_cloudfront_origin_request_policy" "test" {
 `, rName)
 }
 
-func testAccOriginRequestPolicyItemsConfig(rName string) string {
+func testAccOriginRequestPolicyConfig_items(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "test" {
   name    = %[1]q
@@ -237,7 +237,7 @@ resource "aws_cloudfront_origin_request_policy" "test" {
 `, rName)
 }
 
-func testAccOriginRequestPolicyItemsUpdatedConfig(rName string) string {
+func testAccOriginRequestPolicyConfig_itemsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_request_policy" "test" {
   name    = %[1]q

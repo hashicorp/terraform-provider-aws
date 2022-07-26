@@ -70,8 +70,14 @@ func clusterAvailabilityZoneRelocationStatus_PendingValues() []string {
 		clusterAvailabilityZoneRelocationStatusPendingEnabling,
 		clusterAvailabilityZoneRelocationStatusPendingDisabling,
 	}
-
 }
+
+const (
+	endpointAccessStatusActive    = "active"
+	endpointAccessStatusCreating  = "creating"
+	endpointAccessStatusDeleting  = "deleting"
+	endpointAccessStatusModifying = "modifying"
+)
 
 const (
 	propagationTimeout = 2 * time.Minute

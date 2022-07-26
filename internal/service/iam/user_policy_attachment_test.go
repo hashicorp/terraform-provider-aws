@@ -22,13 +22,13 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyAttachConfig(rName, policyName1),
+				Config: testAccUserPolicyAttachmentConfig_attach(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 1, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName1}, &out),
@@ -56,7 +56,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3),
+				Config: testAccUserPolicyAttachmentConfig_attachUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 2, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
@@ -130,7 +130,7 @@ func testAccUserPolicyAttachmentImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccUserPolicyAttachConfig(rName, policyName string) string {
+func testAccUserPolicyAttachmentConfig_attach(rName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"
@@ -163,7 +163,7 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 `, rName, policyName)
 }
 
-func testAccUserPolicyAttachUpdateConfig(rName, policyName1, policyName2, policyName3 string) string {
+func testAccUserPolicyAttachmentConfig_attachUpdate(rName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = "test-user-%s"

@@ -22,13 +22,13 @@ func TestAccS3BucketPublicAccessBlock_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists("aws_s3_bucket.bucket"),
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config),
@@ -54,13 +54,13 @@ func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config),
 					testAccCheckBucketPublicAccessBlockDisappears(resourceName),
@@ -78,13 +78,13 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
@@ -101,13 +101,13 @@ func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "true", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "true", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
@@ -119,14 +119,14 @@ func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "true", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "true", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
@@ -142,13 +142,13 @@ func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "true", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "true", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -160,14 +160,14 @@ func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config2),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "true", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "true", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config3),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -183,13 +183,13 @@ func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "true", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "true", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
@@ -201,14 +201,14 @@ func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config2),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "true", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "true", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config3),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
@@ -224,13 +224,13 @@ func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "true"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
@@ -242,14 +242,14 @@ func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config2),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig(name, "false", "false", "false", "true"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(resourceName, &config3),
 					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
@@ -347,7 +347,7 @@ func testAccCheckBucketPublicAccessBlockDisappears(n string) resource.TestCheckF
 	}
 }
 
-func testAccBucketPublicAccessBlockConfig(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
+func testAccBucketPublicAccessBlockConfig_basic(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q

@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/crypto/ssh"
 )
 
 func ResourceKeyPair() *schema.Resource {
@@ -63,6 +65,10 @@ func ResourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_key": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -92,7 +98,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeKeyPair),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeKeyPair),
 	}
 
 	output, err := conn.ImportKeyPair(input)
@@ -134,6 +140,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.StringValue(keyPair.KeyName)))
+	d.Set("key_type", keyPair.KeyType)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 
 	tags := KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -176,4 +183,22 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+// OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
+// Any key comment is ignored when comparing values.
+func OpenSSHPublicKeysEqual(v1, v2 string) bool {
+	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
+
+	if err != nil {
+		return false
+	}
+
+	key2, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v2))
+
+	if err != nil {
+		return false
+	}
+
+	return key1.Type() == key2.Type() && bytes.Equal(key1.Marshal(), key2.Marshal())
 }

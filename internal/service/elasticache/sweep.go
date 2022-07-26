@@ -87,7 +87,7 @@ func sweepClusters(region string) error {
 	}
 	err = conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, lastPage bool) bool {
 		if len(page.CacheClusters) == 0 {
-			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
+			log.Print("[DEBUG] No ElastiCache Replication Groups to sweep")
 			return false
 		}
 
@@ -231,7 +231,7 @@ func sweepReplicationGroups(region string) error {
 
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, lastPage bool) bool {
 		if len(page.ReplicationGroups) == 0 {
-			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
+			log.Print("[DEBUG] No ElastiCache Replication Groups to sweep")
 			return !lastPage // in rare cases across API, one page may have empty results but not be last page
 		}
 

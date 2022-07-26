@@ -67,7 +67,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta 
 		PeerAccountId:        aws.String(peerAccountId),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
-		TagSpecifications:    ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
 		TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
 	}
 

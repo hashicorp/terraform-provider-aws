@@ -95,7 +95,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Create ElastiCache Parameter Group: %#v", createOpts)
 	resp, err := conn.CreateCacheParameterGroup(&createOpts)
 
-	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Parameter Group with tags: %s. Trying create without tags.", err)
 
 		createOpts.Tags = nil
@@ -118,24 +118,15 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := elasticache.DescribeCacheParameterGroupsInput{
-		CacheParameterGroupName: aws.String(d.Id()),
-	}
-
-	describeResp, err := conn.DescribeCacheParameterGroups(&describeOpts)
+	parameterGroup, err := FindParameterGroupByName(conn, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to find ElastiCache Parameter Group (%s): %w", d.Id(), err)
 	}
 
-	if len(describeResp.CacheParameterGroups) != 1 ||
-		aws.StringValue(describeResp.CacheParameterGroups[0].CacheParameterGroupName) != d.Id() {
-		return fmt.Errorf("unable to find Parameter Group: %#v", describeResp.CacheParameterGroups)
-	}
-
-	d.Set("name", describeResp.CacheParameterGroups[0].CacheParameterGroupName)
-	d.Set("family", describeResp.CacheParameterGroups[0].CacheParameterGroupFamily)
-	d.Set("description", describeResp.CacheParameterGroups[0].Description)
-	d.Set("arn", describeResp.CacheParameterGroups[0].ARN)
+	d.Set("name", parameterGroup.CacheParameterGroupName)
+	d.Set("family", parameterGroup.CacheParameterGroupFamily)
+	d.Set("description", parameterGroup.Description)
+	d.Set("arn", parameterGroup.ARN)
 
 	// Only include user customized parameters as there's hundreds of system/default ones
 	describeParametersOpts := elasticache.DescribeCacheParametersInput{
@@ -150,9 +141,9 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
 
-	tags, err := ListTags(conn, aws.StringValue(describeResp.CacheParameterGroups[0].ARN))
+	tags, err := ListTags(conn, aws.StringValue(parameterGroup.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(err) {
+	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("error listing tags for ElastiCache Parameter Group (%s): %w", d.Id(), err)
 	}
 
@@ -300,7 +291,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache Parameter Group (%s) tags: %w", d.Get("arn").(string), err)
 			}
@@ -315,8 +306,19 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
+	err := deleteParameterGroup(conn, d.Id())
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
+	}
+	return nil
+}
+
+func deleteParameterGroup(conn *elasticache.ElastiCache, name string) error {
 	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
-		CacheParameterGroupName: aws.String(d.Id()),
+		CacheParameterGroupName: aws.String(name),
 	}
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
@@ -335,15 +337,8 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
 	}
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
-		return nil
-	}
 
-	if err != nil {
-		return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
-	}
-
-	return nil
+	return err
 }
 
 func ParameterHash(v interface{}) int {

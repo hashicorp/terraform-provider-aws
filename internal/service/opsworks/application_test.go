@@ -22,13 +22,13 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 	resourceName := "aws_opsworks_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApplicationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationCreate(rName),
+				Config: testAccApplicationConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &opsapp),
 					testAccCheckCreateAppAttributes(&opsapp),
@@ -55,7 +55,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"environment"},
 			},
 			{
-				Config: testAccApplicationUpdate(rName),
+				Config: testAccApplicationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &opsapp),
 					testAccCheckUpdateAppAttributes(&opsapp),
@@ -262,9 +262,9 @@ func testAccCheckApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccApplicationCreate(rName string) string {
+func testAccApplicationConfig_create(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   document_root = "foo"
@@ -286,9 +286,9 @@ resource "aws_opsworks_application" "test" {
 `, rName))
 }
 
-func testAccApplicationUpdate(rName string) string {
+func testAccApplicationConfig_update(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   auto_bundle_on_deploy = "true"

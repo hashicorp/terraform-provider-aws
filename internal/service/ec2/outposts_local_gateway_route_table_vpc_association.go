@@ -15,7 +15,7 @@ import (
 
 const (
 	// Missing constant in AWS Go SDK
-	ec2ResourceTypeLocalGatewayRouteTableVpcAssociation = "local-gateway-route-table-vpc-association"
+	resourceTypeLocalGatewayRouteTableVPCAssociation = "local-gateway-route-table-vpc-association"
 )
 
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
@@ -58,7 +58,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(d *schema.ResourceData, 
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
-		TagSpecifications:        ec2TagSpecificationsFromKeyValueTags(tags, ec2ResourceTypeLocalGatewayRouteTableVpcAssociation),
+		TagSpecifications:        tagSpecificationsFromKeyValueTags(tags, resourceTypeLocalGatewayRouteTableVPCAssociation),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 	}
 

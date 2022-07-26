@@ -27,13 +27,13 @@ func TestAccIAMUser_basic(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(name1, path1),
+				Config: testAccUserConfig_basic(name1, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name1, "/"),
@@ -47,7 +47,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 					"force_destroy"},
 			},
 			{
-				Config: testAccUserConfig(name2, path2),
+				Config: testAccUserConfig_basic(name2, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 					testAccCheckUserAttributes(&conf, name2, "/path2/"),
@@ -64,13 +64,13 @@ func TestAccIAMUser_disappears(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(rName, "/"),
+				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserDisappears(&user),
@@ -88,13 +88,13 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserCreatesAccessKey(&user),
@@ -118,13 +118,13 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserCreatesLoginProfile(&user),
@@ -148,13 +148,13 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserCreatesMFADevice(&user),
@@ -178,13 +178,13 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserUploadsSSHKey(&user),
@@ -207,13 +207,13 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserServiceSpecificCredential(&user),
@@ -236,13 +236,13 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserForceDestroyConfig(rName),
+				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					testAccCheckUserUploadSigningCertificate(&user),
@@ -268,13 +268,13 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(name1, path),
+				Config: testAccUserConfig_basic(name1, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 				),
@@ -287,7 +287,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 					"force_destroy"},
 			},
 			{
-				Config: testAccUserConfig(name2, path),
+				Config: testAccUserConfig_basic(name2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 				),
@@ -305,13 +305,13 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig(name, path1),
+				Config: testAccUserConfig_basic(name, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 				),
@@ -324,7 +324,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 					"force_destroy"},
 			},
 			{
-				Config: testAccUserConfig(name, path2),
+				Config: testAccUserConfig_basic(name, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists("aws_iam_user.user", &conf),
 				),
@@ -343,10 +343,10 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			// Test creation
 			{
@@ -382,7 +382,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 			},
 			// Test removal
 			{
-				Config: testAccUserConfig(rName, "/"),
+				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
@@ -418,10 +418,10 @@ func TestAccIAMUser_tags(t *testing.T) {
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_tags(rName),
@@ -689,7 +689,7 @@ func testAccCheckUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) 
 	}
 }
 
-func testAccUserConfig(rName, path string) string {
+func testAccUserConfig_basic(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
   name = %q
@@ -707,7 +707,7 @@ resource "aws_iam_user" "user" {
 `, rName, permissionsBoundary)
 }
 
-func testAccUserForceDestroyConfig(rName string) string {
+func testAccUserConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   force_destroy = true

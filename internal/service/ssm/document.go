@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
+	documentPermissionsBatchLimit = 20
 )
 
 func ResourceDocument() *schema.Resource {
@@ -267,14 +267,14 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeDocumentOutput, err := conn.DescribeDocument(describeDocumentInput)
 
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
-		log.Printf("[WARN] SSM Document not found so removing from state")
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error describing SSM Document (%s): %w", d.Id(), err)
 	}
 
 	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
@@ -288,13 +288,19 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	getDocumentOutput, err := conn.GetDocument(getDocumentInput)
-
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeInvalidDocument, ssm.ErrCodeInvalidDocumentVersion) {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting SSM Document (%s): %w", d.Id(), err)
 	}
 
-	if getDocumentOutput == nil {
-		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	if !d.IsNewResource() && getDocumentOutput == nil {
+		log.Printf("[WARN] SSM Document (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	doc := describeDocumentOutput.Document
@@ -601,12 +607,12 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 
 	if accountIdsToAdd != nil {
 
-		accountIdsToAddBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
-		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		accountIdsToAddBatch := make([]string, 0, documentPermissionsBatchLimit)
+		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdsToAdd {
-			if len(accountIdsToAddBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+			if len(accountIdsToAddBatch) == documentPermissionsBatchLimit {
 				accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
-				accountIdsToAddBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+				accountIdsToAddBatch = make([]string, 0, documentPermissionsBatchLimit)
 			}
 			accountIdsToAddBatch = append(accountIdsToAddBatch, accountId.(string))
 		}
@@ -626,12 +632,12 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 
 	if accountIdstoRemove != nil {
 
-		accountIdsToRemoveBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
-		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		accountIdsToRemoveBatch := make([]string, 0, documentPermissionsBatchLimit)
+		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/documentPermissionsBatchLimit+1)
 		for _, accountId := range accountIdstoRemove {
-			if len(accountIdsToRemoveBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+			if len(accountIdsToRemoveBatch) == documentPermissionsBatchLimit {
 				accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
-				accountIdsToRemoveBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+				accountIdsToRemoveBatch = make([]string, 0, documentPermissionsBatchLimit)
 			}
 			accountIdsToRemoveBatch = append(accountIdsToRemoveBatch, accountId.(string))
 		}

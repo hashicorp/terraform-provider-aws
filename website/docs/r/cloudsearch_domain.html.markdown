@@ -39,6 +39,8 @@ resource "aws_cloudsearch_domain" "example" {
     facet  = true
     return = true
     sort   = true
+
+    source_fields = "headline"
   }
 }
 ```
@@ -81,6 +83,7 @@ This configuration block supports the following attributes:
 * `return` - (Optional) You can enable returning the value of all searchable fields.
 * `search` - (Optional) You can set whether this index should be searchable or not.
 * `sort` - (Optional) You can enable the property to be sortable.
+* `source_fields` - (Optional) A comma-separated list of source fields to map to the field. Specifying a source field copies data from one field to another, enabling you to use the same source data in different ways by configuring different options for the fields.
 
 ## Attributes Reference
 

@@ -37,7 +37,7 @@ func FindAlertManagerDefinitionByID(ctx context.Context, conn *prometheusservice
 	return output.AlertManagerDefinition, nil
 }
 
-func nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn string) (string, string, error) {
+func nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn string) (string, string, error) {
 	parts := strings.Split(arn, "/")
 	if len(parts) != 3 {
 		return "", "", fmt.Errorf("error reading Prometheus Rule Group Namespace expected the arn to be like: arn:PARTITION:aps:REGION:ACCOUNT:rulegroupsnamespace/IDstring/namespace_name but got: %s", arn)
@@ -45,8 +45,8 @@ func nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn string) (string, string, er
 	return parts[2], parts[1], nil
 }
 
-func FindRuleGroupNamespaceByArn(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	name, workspaceId, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn)
+func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
+	name, workspaceId, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn)
 	if err != nil {
 		return nil, err
 	}

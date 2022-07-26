@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 30 * time.Minute
-	emrInstanceGroupUpdateTimeout = 30 * time.Minute
+	instanceGroupCreateTimeout = 30 * time.Minute
+	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func ResourceInstanceGroup() *schema.Resource {
@@ -160,7 +160,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 		}
-		groupConfig.Configurations, err = expandConfigurationJson(info)
+		groupConfig.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
@@ -189,7 +189,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
-	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
@@ -224,7 +224,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case len(ig.Configurations) > 0:
-		configOut, err := flattenConfigurationJson(ig.Configurations)
+		configOut, err := flattenConfigurationJSON(ig.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR instance group configurations: %s", err)
 		}
@@ -302,7 +302,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 				if err != nil {
 					return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 				}
-				instanceGroupModifyConfig.Configurations, err = expandConfigurationJson(info)
+				instanceGroupModifyConfig.Configurations, err = expandConfigurationJSON(info)
 				if err != nil {
 					return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 				}
@@ -319,7 +319,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
+		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}

@@ -180,10 +180,10 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	return deleteDirectConnectConnection(conn, d.Id(), waitConnectionDeleted)
+	return deleteConnection(conn, d.Id(), waitConnectionDeleted)
 }
 
-func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connectionID string, waiter func(*directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
+func deleteConnection(conn *directconnect.DirectConnect, connectionID string, waiter func(*directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),

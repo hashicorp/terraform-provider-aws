@@ -30,7 +30,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const s3ObjectCreationTimeout = 2 * time.Minute
+const objectCreationTimeout = 2 * time.Minute
 
 func ResourceObject() *schema.Resource {
 	return &schema.Resource{
@@ -205,7 +205,7 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(s3ObjectCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(objectCreationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.HeadObject(input)
@@ -276,9 +276,9 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(conn, bucket, key)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -513,7 +513,7 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
@@ -546,9 +546,9 @@ func resourceObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId 
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn
-		keyMetadata, err := kms.FindKeyByID(conn, DefaultKmsKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKmsKeyAlias, err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
 		}
 
 		if aws.StringValue(sseKMSKeyId) != aws.StringValue(keyMetadata.Arn) {

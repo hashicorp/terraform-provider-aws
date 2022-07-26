@@ -1,7 +1,7 @@
 ---
 subcategory: "OpenSearch"
 layout: "aws"
-page_title: "AWS: aws_opensearch_domain"
+page_title: "AWS: aws_opensearch_domain_policy"
 description: |-
   Provides an OpenSearch Domain Policy.
 ---

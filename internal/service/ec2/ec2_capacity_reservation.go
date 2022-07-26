@@ -18,7 +18,7 @@ import (
 
 const (
 	// There is no constant in the SDK for this resource type
-	ec2ResourceTypeCapacityReservation = "capacity-reservation"
+	resourceTypeCapacityReservation = "capacity-reservation"
 )
 
 func ResourceCapacityReservation() *schema.Resource {
@@ -121,7 +121,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get("instance_type").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2ResourceTypeCapacityReservation),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, resourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -262,7 +262,7 @@ func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{})
 		CapacityReservationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCapacityReservationIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
 		return nil
 	}
 

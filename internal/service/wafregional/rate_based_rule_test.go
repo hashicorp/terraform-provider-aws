@@ -22,13 +22,13 @@ func TestAccWAFRegionalRateBasedRule_basic(t *testing.T) {
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleConfig(wafRuleName),
+				Config: testAccRateBasedRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`ratebasedrule/.+`)),
@@ -51,13 +51,13 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleTags1Config(wafRuleName, "key1", "value1"),
+				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -70,7 +70,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRateBasedRuleTags2Config(wafRuleName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRateBasedRuleConfig_tags2(wafRuleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -79,7 +79,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRateBasedRuleTags1Config(wafRuleName, "key2", "value2"),
+				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,13 +97,13 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleConfig(wafRuleName),
+				Config: testAccRateBasedRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
@@ -112,7 +112,7 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRateBasedRuleChangeNameConfig(wafRuleNewName),
+				Config: testAccRateBasedRuleConfig_changeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &after),
 					testAccCheckRateBasedRuleIdDiffers(&before, &after),
@@ -135,13 +135,13 @@ func TestAccWAFRegionalRateBasedRule_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleConfig(wafRuleName),
+				Config: testAccRateBasedRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafregional.ResourceRateBasedRule(), resourceName),
@@ -161,13 +161,13 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleConfig(ruleName),
+				Config: testAccRateBasedRuleConfig_basic(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists("aws_wafregional_ipset.ipset", &ipset),
 					testAccCheckRateBasedRuleExists(resourceName, &before),
@@ -209,13 +209,13 @@ func TestAccWAFRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	rateLimitAfter := "2001"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRateBasedRuleWithRateLimitConfig(ruleName, rateLimitBefore),
+				Config: testAccRateBasedRuleConfig_limit(ruleName, rateLimitBefore),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
@@ -223,7 +223,7 @@ func TestAccWAFRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRateBasedRuleWithRateLimitConfig(ruleName, rateLimitAfter),
+				Config: testAccRateBasedRuleConfig_limit(ruleName, rateLimitAfter),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
@@ -245,10 +245,10 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRateBasedRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRateBasedRuleConfig_noPredicates(ruleName),
@@ -334,7 +334,7 @@ func testAccCheckRateBasedRuleExists(n string, v *waf.RateBasedRule) resource.Te
 	}
 }
 
-func testAccRateBasedRuleConfig(name string) string {
+func testAccRateBasedRuleConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -360,7 +360,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 `, name)
 }
 
-func testAccRateBasedRuleTags1Config(name, tagKey1, tagValue1 string) string {
+func testAccRateBasedRuleConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -390,7 +390,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccRateBasedRuleTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRateBasedRuleConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -421,7 +421,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccRateBasedRuleChangeNameConfig(name string) string {
+func testAccRateBasedRuleConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = %[1]q
@@ -499,7 +499,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 `, name)
 }
 
-func testAccRateBasedRuleWithRateLimitConfig(name string, limit string) string {
+func testAccRateBasedRuleConfig_limit(name string, limit string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rate_based_rule" "wafrule" {
   name        = "%s"

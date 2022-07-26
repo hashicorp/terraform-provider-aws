@@ -15,12 +15,12 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	name := fmt.Sprintf("test_document-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDocumentDataSourceConfig(name, "JSON"),
+				Config: testAccDocumentDataSourceConfig_basic(name, "JSON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
@@ -31,7 +31,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckDocumentDataSourceConfig(name, "YAML"),
+				Config: testAccDocumentDataSourceConfig_basic(name, "YAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_document.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_ssm_document.test", "name"),
@@ -45,16 +45,16 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
+func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 	resourceName := "data.aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDocumentDataSourceAWSManagedDocumentConfig(),
+				Config: testAccDocumentDataSourceConfig_managed(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "AWS-StartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "arn", "AWS-StartEC2Instance"),
@@ -64,7 +64,7 @@ func TestAccSSMDocumentDataSource_awsManaged(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentDataSourceConfig(name, documentFormat string) string {
+func testAccDocumentDataSourceConfig_basic(name, documentFormat string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
   name          = "%s"
@@ -98,7 +98,7 @@ data "aws_ssm_document" "test" {
 `, name, documentFormat)
 }
 
-func testAccCheckDocumentDataSourceAWSManagedDocumentConfig() string {
+func testAccDocumentDataSourceConfig_managed() string {
 	return `
 data "aws_ssm_document" "test" {
   name = "AWS-StartEC2Instance"

@@ -42,7 +42,7 @@ func resourceAccountAliasCreate(d *schema.ResourceData, meta interface{}) error 
 	_, err := conn.CreateAccountAlias(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating account alias with name '%s': %s", account_alias, err)
+		return fmt.Errorf("Error creating account alias with name '%s': %w", account_alias, err)
 	}
 
 	d.SetId(account_alias)
@@ -58,10 +58,10 @@ func resourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.ListAccountAliases(params)
 
 	if err != nil {
-		return fmt.Errorf("Error listing account aliases: %s", err)
+		return fmt.Errorf("Error listing account aliases: %w", err)
 	}
 
-	if resp == nil || len(resp.AccountAliases) == 0 {
+	if !d.IsNewResource() && (resp == nil || len(resp.AccountAliases) == 0) {
 		d.SetId("")
 		return nil
 	}

@@ -12,12 +12,12 @@ func TestAccEC2OutpostsCoIPPoolsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoIPPoolsDataSourceConfig(),
+				Config: testAccOutpostsCoIPPoolsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_ids.#", "0"),
 				),
@@ -30,12 +30,12 @@ func TestAccEC2OutpostsCoIPPoolsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pools.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoIPPoolsFilterDataSourceConfig(),
+				Config: testAccOutpostsCoIPPoolsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", "1"),
 				),
@@ -44,13 +44,13 @@ func TestAccEC2OutpostsCoIPPoolsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccCoIPPoolsDataSourceConfig() string {
+func testAccOutpostsCoIPPoolsDataSourceConfig_basic() string {
 	return `
 data "aws_ec2_coip_pools" "test" {}
 `
 }
 
-func testAccCoIPPoolsFilterDataSourceConfig() string {
+func testAccOutpostsCoIPPoolsDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_coip_pools" "all" {}
 

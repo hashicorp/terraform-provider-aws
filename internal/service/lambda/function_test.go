@@ -44,13 +44,13 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
@@ -100,13 +100,13 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 	var timeBeforeUpdate time.Time
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFilenameConfig(initialFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_filename(initialFilename, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
@@ -120,7 +120,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccFilenameConfig(updatedFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_filename(updatedFilename, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
@@ -147,13 +147,13 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConfig(rName, rName, rName, rName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &function),
 					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceFunction(), resourceName),
@@ -186,13 +186,13 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSignerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSignerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCSCCreateConfig(roleName, funcName),
+				Config: testAccFunctionConfig_cscCreate(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -207,7 +207,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccCSCUpdateConfig(roleName, funcName),
+				Config: testAccFunctionConfig_cscUpdate(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -222,7 +222,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccCSCDeleteConfig(roleName, funcName),
+				Config: testAccFunctionConfig_cscDelete(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -249,13 +249,13 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basicConcurrency(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -270,7 +270,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -297,13 +297,13 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -318,7 +318,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -327,7 +327,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -347,13 +347,13 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName),
+				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
 			},
 		},
@@ -375,18 +375,18 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckNoResourceAttr(resourceName, "environment"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
 				),
 			},
 			{
@@ -396,7 +396,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccEnvVariablesConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_envVariables(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -405,7 +405,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvVariablesModifiedConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_envVariablesModified(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -415,12 +415,12 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvVariablesModifiedWithoutEnvironmentConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_envVariablesModifiedNoEnvironment(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckNoResourceAttr(resourceName, "environment"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
 				),
 			},
 		},
@@ -437,13 +437,13 @@ func TestAccLambdaFunction_EnvironmentVariables_noValue(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentVariablesNoValueConfig(rName),
+				Config: testAccFunctionConfig_environmentVariablesNoValue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.key1", ""),
@@ -475,13 +475,13 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_encryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -497,7 +497,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccEncryptedEnvVariablesModifiedConfig(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_encryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -527,13 +527,13 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 	version := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -578,13 +578,13 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 	versionUpdated := "3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, "1")),
@@ -598,7 +598,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccPublishableConfig(path, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(path, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -615,7 +615,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccVersionedNodeJs14xRuntimeConfig(path, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_versionedNodeJs14xRuntime(path, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -657,13 +657,13 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 	publishedVersion := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf1),
 					testAccCheckFunctionName(&conf1, funcName),
@@ -675,7 +675,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 			},
 			{
 				// No changes, except to `publish`. This should publish a new version.
-				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf2),
 					testAccCheckFunctionName(&conf2, funcName),
@@ -693,7 +693,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 			},
 			{
 				// No changes, `publish` is true. This should not publish a new version.
-				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf3),
 					testAccCheckFunctionName(&conf3, funcName),
@@ -725,13 +725,13 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 	unpublishedVersion := publishedVersion // Should remain the last published version
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf1),
 					testAccCheckFunctionName(&conf1, funcName),
@@ -743,7 +743,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 			},
 			{
 				// No changes, except to `publish`. This should not update the current version.
-				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf2),
 					testAccCheckFunctionName(&conf2, funcName),
@@ -779,13 +779,13 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_deadLetter(funcName, topicName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -809,7 +809,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 			},
 			// Ensure configuration can be removed
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 				),
@@ -835,16 +835,16 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_deadLetter(funcName, topic1Name, policyName, roleName, sgName),
 			},
 			{
-				Config: testAccWithDeadLetterUpdatedConfig(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_deadLetterUpdated(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					func(s *terraform.State) error {
@@ -879,13 +879,13 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_nil_dlcfg_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_nilDeadLetter(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile(
 					fmt.Sprintf("nil dead_letter_config supplied for function: %s", funcName)),
 			},
@@ -908,14 +908,14 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
-				Config: testAccFileSystemConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -934,7 +934,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be updated
 			{
-				Config: testAccFileSystemUpdateConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_fileSystemUpdate(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
@@ -943,7 +943,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be removed
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
@@ -978,13 +978,13 @@ func TestAccLambdaFunction_image(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccImageLatestV1V2PreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccImageConfig(funcName, policyName, roleName, sgName, imageLatestID),
+				Config: testAccFunctionConfig_image(funcName, policyName, roleName, sgName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1006,7 +1006,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 			},
 			// Ensure lambda image code can be updated
 			{
-				Config: testAccImageUpdateCodeConfig(funcName, policyName, roleName, sgName, imageV1ID),
+				Config: testAccFunctionConfig_imageUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV1ID),
@@ -1014,7 +1014,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 			},
 			// Ensure lambda image config can be updated
 			{
-				Config: testAccImageUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
+				Config: testAccFunctionConfig_imageUpdate(funcName, policyName, roleName, sgName, imageV2ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
@@ -1040,14 +1040,14 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1067,7 +1067,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 			},
 			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1097,14 +1097,14 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1124,7 +1124,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccArchitecturesUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesUpdate(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1155,14 +1155,14 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64Layer(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1182,7 +1182,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesUpdateLayer(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1210,13 +1210,13 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithEphemeralStorage(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_ephemeralStorage(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
@@ -1230,7 +1230,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_updateEphemeralStorage(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1260,13 +1260,13 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithTracingConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tracing(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1281,7 +1281,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithTracingUpdatedConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tracingUpdated(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1308,13 +1308,13 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKMSKeyARNNoEnvironmentVariablesConfig(rName),
+				Config: testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &function1),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
@@ -1347,13 +1347,13 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1389,13 +1389,13 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1411,7 +1411,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithLayersUpdatedConfig(funcName, layerName, layer2Name, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1439,13 +1439,13 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1478,13 +1478,13 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCConfig(rName, rName, rName, rName),
+				Config: testAccFunctionConfig_vpc(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -1497,7 +1497,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccBasicConfig(rName, rName, rName, rName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
@@ -1523,13 +1523,13 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1547,7 +1547,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithVPCUpdatedConfig(funcName, policyName, roleName, sgName, sgName2),
+				Config: testAccFunctionConfig_vpcUpdated(funcName, policyName, roleName, sgName, sgName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1579,13 +1579,13 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccInvokeFunction(&conf),
@@ -1617,13 +1617,13 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_w_invc_%s", rString)
 	resourceName := "aws_lambda_function.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1636,7 +1636,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1663,14 +1663,14 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1683,7 +1683,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccWithVPCUpdatedPublishConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcUpdatedPublish(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -1706,13 +1706,13 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCProperIAMDependenciesConfig(rName),
+				Config: testAccFunctionConfig_vpcProperIAMDependencies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, rName, &function),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -1736,13 +1736,13 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_emptyVPC(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
@@ -1768,13 +1768,13 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccS3Config(bucketName, roleName, funcName),
+				Config: testAccFunctionConfig_s3Simple(bucketName, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1813,10 +1813,10 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 	var timeBeforeUpdate time.Time
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1885,10 +1885,10 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 	defer os.Remove(updatedPath)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -1896,7 +1896,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_local_name_only(path, roleName, funcName),
+				Config: testAccFunctionConfig_localNameOnly(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1916,7 +1916,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_local_name_only(updatedPath, roleName, funcName),
+				Config: testAccFunctionConfig_localNameOnly(updatedPath, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -1946,10 +1946,10 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 	key := "lambda-func.zip"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -2009,10 +2009,10 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 	key2 := "lambda-func-modified.zip"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -2021,7 +2021,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2042,7 +2042,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2065,13 +2065,13 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_tags_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2086,7 +2086,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccTagsConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tags(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2097,7 +2097,7 @@ func TestAccLambdaFunction_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTagsModifiedConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tagsModified(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
@@ -2124,18 +2124,21 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	steps := []resource.TestStep{
 		{
 			// Test invalid runtime.
-			Config:      testAccRuntimeConfig(rName, rName),
+			Config:      testAccFunctionConfig_runtime(rName, rName),
 			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
 		},
 	}
 	for _, runtime := range lambda.Runtime_Values() {
 		// EOL runtimes.
+		// https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy.
 		switch runtime {
-		case lambda.RuntimeNodejs43Edge:
+		case lambda.RuntimeDotnetcore21:
 			fallthrough
-		case lambda.RuntimeDotnetcore20:
+		case lambda.RuntimePython27:
 			fallthrough
-		case lambda.RuntimeDotnetcore10:
+		case lambda.RuntimePython36:
+			fallthrough
+		case lambda.RuntimeRuby25:
 			fallthrough
 		case lambda.RuntimeNodejs10X:
 			fallthrough
@@ -2143,14 +2146,20 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case lambda.RuntimeNodejs610:
 			fallthrough
+		case lambda.RuntimeNodejs43Edge:
+			fallthrough
 		case lambda.RuntimeNodejs43:
 			fallthrough
 		case lambda.RuntimeNodejs:
+			fallthrough
+		case lambda.RuntimeDotnetcore20:
+			fallthrough
+		case lambda.RuntimeDotnetcore10:
 			continue
 		}
 
 		steps = append(steps, resource.TestStep{
-			Config: testAccRuntimeConfig(rName, runtime),
+			Config: testAccFunctionConfig_runtime(rName, runtime),
 			Check: resource.ComposeTestCheckFunc(
 				testAccCheckFunctionExists(resourceName, rName, &v),
 				resource.TestCheckResourceAttr(resourceName, "runtime", runtime),
@@ -2165,11 +2174,11 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	})
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
-		Steps:             steps,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps:                    steps,
 	})
 }
 
@@ -2181,17 +2190,17 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName),
+				Config:      testAccFunctionConfig_zipNoHandler(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
-				Config:      testAccZipWithoutRuntimeConfig(funcName, policyName, roleName, sgName),
+				Config:      testAccFunctionConfig_zipNoRuntime(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 		},
@@ -2388,7 +2397,7 @@ func createTempFile(prefix string) (string, *os.File, error) {
 	return pathToFile, f, nil
 }
 
-func testAccBasicConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_basic(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2469,7 +2478,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config_2" {
 `, roleName)
 }
 
-func testAccCSCCreateConfig(roleName, funcName string) string {
+func testAccFunctionConfig_cscCreate(roleName, funcName string) string {
 	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
@@ -2482,7 +2491,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccCSCUpdateConfig(roleName, funcName string) string {
+func testAccFunctionConfig_cscUpdate(roleName, funcName string) string {
 	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
@@ -2495,7 +2504,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccCSCDeleteConfig(roleName, funcName string) string {
+func testAccFunctionConfig_cscDelete(roleName, funcName string) string {
 	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2507,7 +2516,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_basicConcurrency(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
@@ -2520,7 +2529,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
@@ -2533,7 +2542,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_noFilenameAndS3Attributes(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"
@@ -2544,7 +2553,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccEnvVariablesConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_envVariables(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2562,7 +2571,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccEnvVariablesModifiedConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_envVariablesModified(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2581,7 +2590,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccEnvVariablesModifiedWithoutEnvironmentConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_envVariablesModifiedNoEnvironment(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2593,7 +2602,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccEnvironmentVariablesNoValueConfig(rName string) string {
+func testAccFunctionConfig_environmentVariablesNoValue(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -2613,7 +2622,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_encryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
   description = "%s"
@@ -2654,7 +2663,7 @@ resource "aws_lambda_function" "test" {
 `, keyDesc, funcName)
 }
 
-func testAccEncryptedEnvVariablesModifiedConfig(keyDesc, funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_encryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
   description = "%s"
@@ -2694,7 +2703,7 @@ resource "aws_lambda_function" "test" {
 `, keyDesc, funcName)
 }
 
-func testAccFilenameConfig(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_filename(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = %[1]q
@@ -2707,7 +2716,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName)
 }
 
-func testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
+func testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2720,7 +2729,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName, publish)
 }
 
-func testAccFileSystemConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
   tags = {
@@ -2775,7 +2784,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_fileSystemUpdate(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
   tags = {
@@ -2830,7 +2839,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccImageConfig(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccFunctionConfig_image(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2846,7 +2855,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccImageUpdateCodeConfig(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccFunctionConfig_imageUpdateCode(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2858,7 +2867,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccImageUpdateConfig(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccFunctionConfig_imageUpdate(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2872,7 +2881,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccArchitecturesARM64(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2885,7 +2894,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccArchitecturesUpdate(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_architecturesUpdate(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2898,7 +2907,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_architecturesARM64Layer(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -2919,7 +2928,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_architecturesUpdateLayer(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -2940,7 +2949,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccVersionedNodeJs14xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_versionedNodeJs14xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2953,7 +2962,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName)
 }
 
-func testAccVPCProperIAMDependenciesConfig(rName string) string {
+func testAccFunctionConfig_vpcProperIAMDependencies(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3030,7 +3039,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccWithTracingConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_tracing(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3046,7 +3055,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithTracingUpdatedConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_tracingUpdated(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3062,7 +3071,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_deadLetter(funcName, topicName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3082,7 +3091,7 @@ resource "aws_sns_topic" "test" {
 `, funcName, topicName)
 }
 
-func testAccWithDeadLetterUpdatedConfig(funcName, topic1Name, topic2Name, policyName,
+func testAccFunctionConfig_deadLetterUpdated(funcName, topic1Name, topic2Name, policyName,
 	roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
@@ -3107,7 +3116,7 @@ resource "aws_sns_topic" "test_2" {
 `, funcName, topic1Name, topic2Name)
 }
 
-func testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_nilDeadLetter(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3123,7 +3132,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccKMSKeyARNNoEnvironmentVariablesConfig(rName string) string {
+func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(rName, rName, rName)+`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -3159,7 +3168,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -3178,7 +3187,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccWithLayersUpdatedConfig(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_layersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -3206,7 +3215,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, layer2Name, funcName)
 }
 
-func testAccWithVPCConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3223,7 +3232,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3240,7 +3249,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithVPCUpdatedPublishConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_vpcUpdatedPublish(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3257,7 +3266,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithVPCUpdatedConfig(funcName, policyName, roleName, sgName, sgName2 string) string {
+func testAccFunctionConfig_vpcUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3294,7 +3303,7 @@ resource "aws_security_group" "sg_for_lambda_2" {
 `, funcName, sgName2)
 }
 
-func testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_emptyVPC(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3311,7 +3320,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccS3Config(bucketName, roleName, funcName string) string {
+func testAccFunctionConfig_s3Simple(bucketName, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "%s"
@@ -3354,7 +3363,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, roleName, funcName)
 }
 
-func testAccTagsConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_tags(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3371,7 +3380,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccTagsModifiedConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_tagsModified(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3422,7 +3431,7 @@ resource "aws_lambda_function" "test" {
 `, roleName, filePath, filePath, funcName)
 }
 
-func testAccFunctionConfig_local_name_only(filePath, roleName, funcName string) string {
+func testAccFunctionConfig_localNameOnly(filePath, roleName, funcName string) string {
 	return testAccFunctionConfig_local_name_only_tpl(filePath, roleName, funcName)
 }
 
@@ -3519,7 +3528,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, key, path, path, roleName, funcName)
 }
 
-func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path string) string {
+func testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
@@ -3569,7 +3578,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, key, path, path, roleName, funcName)
 }
 
-func testAccRuntimeConfig(rName, runtime string) string {
+func testAccFunctionConfig_runtime(rName, runtime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3583,7 +3592,7 @@ resource "aws_lambda_function" "test" {
 `, rName, runtime))
 }
 
-func testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_zipNoHandler(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"
@@ -3593,7 +3602,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccZipWithoutRuntimeConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_zipNoRuntime(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"
@@ -3646,7 +3655,7 @@ func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
 	}
 }
 
-func testAccWithEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_ephemeralStorage(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3662,7 +3671,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccWithUpdateEphemeralStorage(funcName, policyName, roleName, sgName string) string {
+func testAccFunctionConfig_updateEphemeralStorage(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"

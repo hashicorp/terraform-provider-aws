@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	awsSSOAdminAccountAssignmentCreateTimeout = 5 * time.Minute
-	awsSSOAdminAccountAssignmentDeleteTimeout = 5 * time.Minute
-	awsSSOAdminAccountAssignmentDelay         = 5 * time.Second
-	awsSSOAdminAccountAssignmentMinTimeout    = 3 * time.Second
-	permissionSetProvisioningRetryDelay       = 5 * time.Second
-	awsSSOAdminPermissionSetProvisionTimeout  = 10 * time.Minute
+	accountAssignmentCreateTimeout      = 5 * time.Minute
+	accountAssignmentDeleteTimeout      = 5 * time.Minute
+	accountAssignmentDelay              = 5 * time.Second
+	accountAssignmentMinTimeout         = 3 * time.Second
+	permissionSetProvisioningRetryDelay = 5 * time.Second
+	permissionSetProvisionTimeout       = 10 * time.Minute
 )
 
 func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
@@ -21,9 +21,9 @@ func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestI
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentCreation(conn, instanceArn, requestID),
-		Timeout:    awsSSOAdminAccountAssignmentCreateTimeout,
-		Delay:      awsSSOAdminAccountAssignmentDelay,
-		MinTimeout: awsSSOAdminAccountAssignmentMinTimeout,
+		Timeout:    accountAssignmentCreateTimeout,
+		Delay:      accountAssignmentDelay,
+		MinTimeout: accountAssignmentMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -39,9 +39,9 @@ func waitAccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestI
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentDeletion(conn, instanceArn, requestID),
-		Timeout:    awsSSOAdminAccountAssignmentDeleteTimeout,
-		Delay:      awsSSOAdminAccountAssignmentDelay,
-		MinTimeout: awsSSOAdminAccountAssignmentMinTimeout,
+		Timeout:    accountAssignmentDeleteTimeout,
+		Delay:      accountAssignmentDelay,
+		MinTimeout: accountAssignmentMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -58,7 +58,7 @@ func waitPermissionSetProvisioned(conn *ssoadmin.SSOAdmin, instanceArn, requestI
 		Pending: []string{ssoadmin.StatusValuesInProgress},
 		Target:  []string{ssoadmin.StatusValuesSucceeded},
 		Refresh: statusPermissionSetProvisioning(conn, instanceArn, requestID),
-		Timeout: awsSSOAdminPermissionSetProvisionTimeout,
+		Timeout: permissionSetProvisionTimeout,
 	}
 	outputRaw, err := stateConf.WaitForState()
 	if v, ok := outputRaw.(*ssoadmin.PermissionSetProvisioningStatus); ok {

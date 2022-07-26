@@ -34,3 +34,36 @@ func FindKeyspaceByName(ctx context.Context, conn *keyspaces.Keyspaces, name str
 
 	return output, nil
 }
+
+func FindTableByTwoPartKey(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) (*keyspaces.GetTableOutput, error) {
+	input := keyspaces.GetTableInput{
+		KeyspaceName: aws.String(keyspaceName),
+		TableName:    aws.String(tableName),
+	}
+
+	output, err := conn.GetTableWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, keyspaces.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := aws.StringValue(output.Status); status == keyspaces.TableStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

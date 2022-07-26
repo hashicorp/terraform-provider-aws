@@ -132,7 +132,7 @@ func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC
 		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
 		return nil
 	}
 

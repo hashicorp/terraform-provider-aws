@@ -15,12 +15,12 @@ func testAccAuthorizationTokenDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAuthorizationTokenBasicConfig(rName),
+				Config: testAccAuthorizationTokenDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -36,12 +36,12 @@ func testAccAuthorizationTokenDataSource_owner(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAuthorizationTokenOwnerConfig(rName),
+				Config: testAccAuthorizationTokenDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -57,12 +57,12 @@ func testAccAuthorizationTokenDataSource_duration(t *testing.T) {
 	dataSourceName := "data.aws_codeartifact_authorization_token.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codeartifact.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAuthorizationTokenDurationConfig(rName),
+				Config: testAccAuthorizationTokenDataSourceConfig_duration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -88,7 +88,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName)
 }
 
-func testAccCheckAuthorizationTokenBasicConfig(rName string) string {
+func testAccAuthorizationTokenDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`
@@ -98,7 +98,7 @@ data "aws_codeartifact_authorization_token" "test" {
 `)
 }
 
-func testAccCheckAuthorizationTokenOwnerConfig(rName string) string {
+func testAccAuthorizationTokenDataSourceConfig_owner(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`
@@ -109,7 +109,7 @@ data "aws_codeartifact_authorization_token" "test" {
 `)
 }
 
-func testAccCheckAuthorizationTokenDurationConfig(rName string) string {
+func testAccAuthorizationTokenDataSourceConfig_duration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`

@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -366,9 +368,9 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(conn, bucket, key)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
@@ -620,7 +622,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {

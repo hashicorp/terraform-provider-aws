@@ -13,13 +13,13 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableFilterDataSourceConfig(),
+				Config: testAccTransitGatewayRouteTableDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "default_association_route_table", dataSourceName, "default_association_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
@@ -37,13 +37,13 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableIDDataSourceConfig(),
+				Config: testAccTransitGatewayRouteTableDataSourceConfig_iD(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "default_association_route_table", dataSourceName, "default_association_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
@@ -56,7 +56,7 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayRouteTableFilterDataSourceConfig() string {
+func testAccTransitGatewayRouteTableDataSourceConfig_filter() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -73,7 +73,7 @@ data "aws_ec2_transit_gateway_route_table" "test" {
 `
 }
 
-func testAccTransitGatewayRouteTableIDDataSourceConfig() string {
+func testAccTransitGatewayRouteTableDataSourceConfig_iD() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 

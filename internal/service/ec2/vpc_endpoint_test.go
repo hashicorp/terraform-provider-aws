@@ -3,8 +3,6 @@ package ec2_test
 import (
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -23,26 +21,31 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+				Config: testAccVPCEndpointConfig_gatewayBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
 				),
 			},
 			{
@@ -54,55 +57,142 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	})
 }
 
-func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
-	var routeTable ec2.RouteTable
 	resourceName := "aws_vpc_endpoint.test"
-	routeTableResourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckRouteTableExists(routeTableResourceName, &routeTable),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+				Config: testAccVPCEndpointConfig_interfaceBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
 			{
-				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_disappears(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckRouteTableExists(routeTableResourceName, &routeTable),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_tags(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_gatewayRouteTableAndPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_gatewayRouteTableAndPolicyModified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
 				),
 			},
 			{
@@ -156,15 +246,15 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfigGatewayPolicy(rName, policy1),
+				Config: testAccVPCEndpointConfig_gatewayPolicy(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 				),
 			},
 			{
@@ -173,9 +263,9 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointConfigGatewayPolicy(rName, policy2),
+				Config: testAccVPCEndpointConfig_gatewayPolicy(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 				),
 			},
 		},
@@ -188,58 +278,59 @@ func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointOrderPolicyConfig(rName),
+				Config: testAccVPCEndpointConfig_orderPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 				),
 			},
 			{
-				Config:   testAccVpcEndpointNewOrderPolicyConfig(rName),
+				Config:   testAccVPCEndpointConfig_newOrderPolicy(rName),
 				PlanOnly: true,
 			},
 		},
 	})
 }
 
-func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
+func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceBasic(rName),
+				Config: testAccVPCEndpointConfig_ipAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auto_accept"},
+			},
+			{
+				Config: testAccVPCEndpointConfig_ipAddressType(rName, "dualstack"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+				),
 			},
 		},
 	})
@@ -251,47 +342,27 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceWithSubnet(rName),
+				Config: testAccVPCEndpointConfig_interfaceSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 				),
 			},
 			{
-				Config: testAccVpcEndpointConfig_interfaceWithSubnetModified(rName),
+				Config: testAccVPCEndpointConfig_interfaceSubnetModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 				),
 			},
 			{
@@ -303,35 +374,22 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) { // nosempgrep:aws-in-func-name
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, true),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "state", "available"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -344,55 +402,29 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
+func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) { // nosempgrep:aws-in-func-name
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, false),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "state", "pendingAcceptance"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName, true),
+				Config: testAccVPCEndpointConfig_interfaceNonAWSService(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "state", "available"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -400,74 +432,6 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"auto_accept"},
-			},
-		},
-	})
-}
-
-func TestAccVPCEndpoint_disappears(t *testing.T) {
-	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcEndpointConfig_gatewayBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpoint(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccVPCEndpoint_tags(t *testing.T) {
-	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcEndpointConfigTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVpcEndpointConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccVpcEndpointConfigTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -480,15 +444,15 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckELBv2GatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfigVpcEndpointTypeGatewayLoadBalancer(rName),
+				Config: testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_type", vpcEndpointServiceResourceName, "service_type"),
 				),
 			},
@@ -501,7 +465,7 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
+func testAccCheckVPCEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -523,7 +487,7 @@ func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(n string, v *ec2.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -531,55 +495,24 @@ func testAccCheckVpcEndpointExists(n string, endpoint *ec2.VpcEndpoint) resource
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC Endpoint ID is set")
+			return fmt.Errorf("No EC2 VPC Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		out, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCEndpointByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*endpoint = *out
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckVpcEndpointPrefixListAvailable(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		prefixListID := rs.Primary.Attributes["prefix_list_id"]
-		if prefixListID == "" {
-			return fmt.Errorf("Prefix list ID not available")
-		}
-		if !strings.HasPrefix(prefixListID, "pl") {
-			return fmt.Errorf("Prefix list ID does not appear to be a valid value: '%s'", prefixListID)
-		}
-
-		var (
-			cidrBlockSize int
-			err           error
-		)
-
-		if cidrBlockSize, err = strconv.Atoi(rs.Primary.Attributes["cidr_blocks.#"]); err != nil {
-			return err
-		}
-		if cidrBlockSize < 1 {
-			return fmt.Errorf("cidr_blocks seem suspiciously low: %d", cidrBlockSize)
-		}
-
-		return nil
-	}
-}
-
-func testAccVpcEndpointConfig_gatewayBasic(rName string) string {
+func testAccVPCEndpointConfig_gatewayBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -598,7 +531,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy(rName string) string {
+func testAccVPCEndpointConfig_gatewayRouteTableAndPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -664,7 +597,7 @@ resource "aws_route_table_association" "test" {
 `, rName)
 }
 
-func testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified(rName string) string {
+func testAccVPCEndpointConfig_gatewayRouteTableAndPolicyModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -726,7 +659,7 @@ resource "aws_route_table_association" "test" {
 `, rName)
 }
 
-func testAccVpcEndpointConfig_interfaceBasic(rName string) string {
+func testAccVPCEndpointConfig_interfaceBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -746,7 +679,34 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVpcEndpointConfigGatewayPolicy(rName, policy string) string {
+func testAccVPCEndpointConfig_ipAddressType(rName, addressType string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_supportedIPAddressTypesBase(rName), fmt.Sprintf(`
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  network_load_balancer_arns = aws_lb.test[*].arn
+  supported_ip_address_types = ["ipv4", "ipv6"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = aws_vpc_endpoint_service.test.service_name
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = false
+  auto_accept         = true
+  ip_address_type     = %[2]q
+
+  dns_options {
+    dns_record_ip_type = %[2]q
+  }
+}
+`, rName, addressType))
+}
+
+func testAccVPCEndpointConfig_gatewayPolicy(rName, policy string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service = "dynamodb"
@@ -774,7 +734,7 @@ POLICY
 `, rName, policy)
 }
 
-func testAccVpcEndpointConfig_vpcBase(rName string) string {
+func testAccVPCEndpointConfig_vpcBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -812,9 +772,9 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointConfig_interfaceWithSubnet(rName string) string {
+func testAccVPCEndpointConfig_interfaceSubnet(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointConfig_vpcBase(rName),
+		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
@@ -838,9 +798,9 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointConfig_interfaceWithSubnetModified(rName string) string {
+func testAccVPCEndpointConfig_interfaceSubnetModified(rName string) string {
 	return acctest.ConfigCompose(
-		testAccVpcEndpointConfig_vpcBase(rName),
+		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
@@ -865,9 +825,9 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string {
+func testAccVPCEndpointConfig_interfaceNonAWSService(rName string, autoAccept bool) string { // nosemgrep:ci.aws-in-func-name
 	return acctest.ConfigCompose(
-		testAccVpcEndpointConfig_vpcBase(rName),
+		testAccVPCEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`
 resource "aws_lb" "test" {
   name = %[1]q
@@ -917,7 +877,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName, autoAccept))
 }
 
-func testAccVpcEndpointConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -940,7 +900,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccVpcEndpointConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -964,11 +924,13 @@ resource "aws_vpc_endpoint" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVpcEndpointConfigVpcEndpointTypeGatewayLoadBalancer(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccVPCEndpointConfig_gatewayLoadBalancer(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
@@ -1003,7 +965,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -1024,7 +986,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
-func testAccVpcEndpointOrderPolicyConfig(rName string) string {
+func testAccVPCEndpointConfig_orderPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service = "dynamodb"
@@ -1063,7 +1025,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVpcEndpointNewOrderPolicyConfig(rName string) string {
+func testAccVPCEndpointConfig_newOrderPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service = "dynamodb"

@@ -14,12 +14,12 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPatchBaselineDataSourceConfig_existingBaseline(),
+				Config: testAccPatchBaselineDataSourceConfig_existing(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches_compliance_level", "UNSPECIFIED"),
@@ -44,13 +44,13 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPatchBaselineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPatchBaselineDataSourceConfig_newBaseline(rName),
+				Config: testAccPatchBaselineDataSourceConfig_new(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "approved_patches", resourceName, "approved_patches"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "approved_patches_compliance_level", resourceName, "approved_patches_compliance_level"),
@@ -70,7 +70,7 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 }
 
 // Test against one of the default baselines created by AWS
-func testAccCheckPatchBaselineDataSourceConfig_existingBaseline() string {
+func testAccPatchBaselineDataSourceConfig_existing() string {
 	return `
 data "aws_ssm_patch_baseline" "test" {
   owner            = "AWS"
@@ -81,7 +81,7 @@ data "aws_ssm_patch_baseline" "test" {
 }
 
 // Create a new baseline and pull it back
-func testAccCheckPatchBaselineDataSourceConfig_newBaseline(name string) string {
+func testAccPatchBaselineDataSourceConfig_new(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
   name             = "%s"

@@ -404,7 +404,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
 	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network Interface: %s", input)
@@ -1121,12 +1121,12 @@ func DeleteNetworkInterface(conn *ec2.EC2, networkInterfaceID string) error {
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInterfaceIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
+		return fmt.Errorf("deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
 	}
 
 	return nil
@@ -1141,12 +1141,12 @@ func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	log.Printf("[INFO] Detaching EC2 Network Interface: %s", input)
 	_, err := conn.DetachNetworkInterface(input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAttachmentIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAttachmentIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
 	_, err = WaitNetworkInterfaceDetached(conn, attachmentID, timeout)
@@ -1156,7 +1156,7 @@ func DetachNetworkInterface(conn *ec2.EC2, networkInterfaceID, attachmentID stri
 	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil
