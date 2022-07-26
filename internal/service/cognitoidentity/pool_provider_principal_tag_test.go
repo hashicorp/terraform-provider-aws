@@ -100,10 +100,10 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPoolProviderPrincipalTagsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolProviderPrincipalTagsConfig_oidc(name),
