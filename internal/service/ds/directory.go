@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -434,32 +433,20 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	input := &directoryservice.DeleteDirectoryInput{
-		DirectoryId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
 
-	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
-	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteDirectory(input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
+			DirectoryId: aws.String(d.Id()),
+		})
+	}, directoryservice.ErrCodeClientException, "authorized applications")
 
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDirectory(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitDirectoryDeleted(conn, d.Id()); err != nil {
