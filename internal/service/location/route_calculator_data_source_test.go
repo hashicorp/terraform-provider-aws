@@ -16,10 +16,10 @@ func TestAccLocationRouteCalculatorDataSource_basic(t *testing.T) {
 	resourceName := "aws_location_route_calculator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteCalculatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteCalculatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteCalculatorDataSourceConfig_basic(rName),
