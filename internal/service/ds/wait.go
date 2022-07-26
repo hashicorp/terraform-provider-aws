@@ -11,11 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	directoryCreatedTimeout = 60 * time.Minute
-	directoryDeletedTimeout = 60 * time.Minute
-)
-
 func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
@@ -54,12 +49,12 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string, ti
 	return nil, err
 }
 
-func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
+func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
 		Target:  []string{directoryservice.DirectoryStageActive},
 		Refresh: statusRegion(ctx, conn, directoryID, regionName),
-		Timeout: directoryCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -71,12 +66,12 @@ func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryServ
 	return nil, err
 }
 
-func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
+func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
 		Target:  []string{},
 		Refresh: statusRegion(ctx, conn, directoryID, regionName),
-		Timeout: directoryDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -21,6 +22,11 @@ func ResourceRegion() *schema.Resource {
 		CreateWithoutTimeout: resourceRegionCreate,
 		ReadWithoutTimeout:   resourceRegionRead,
 		DeleteWithoutTimeout: resourceRegionDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(90 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"directory_id": {
@@ -82,7 +88,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(id)
 
-	if _, err := waitRegionCreated(ctx, conn, directoryID, regionName); err != nil {
+	if _, err := waitRegionCreated(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
@@ -124,15 +130,18 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
-
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// TODO The Region must be removed from a client in regionName.
+	// The Region must be removed using a client in the region.
+	conn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	_, err = conn.RemoveRegionWithContext(ctx, &directoryservice.RemoveRegionInput{
 		DirectoryId: aws.String(directoryID),
@@ -146,11 +155,21 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting Directory Service Region (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName); err != nil {
+	if _, err := waitRegionDeleted(ctx, conn, directoryID, regionName, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Directory Service Region (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func regionalConn(client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {
+	sess, err := conns.NewSessionForRegion(&client.DSConn.Config, regionName, client.TerraformVersion)
+
+	if err != nil {
+		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)
+	}
+
+	return directoryservice.New(sess), nil
 }
 
 const regionIDSeparator = ","
