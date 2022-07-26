@@ -1176,7 +1176,8 @@ func TestAccRoute53Record_setIdentifierRenameWeighted(t *testing.T) {
 
 func TestAccRoute53Record_aliasChange(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
-	resourceName := "aws_route53_record.elb_alias_change"
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1185,7 +1186,7 @@ func TestAccRoute53Record_aliasChange(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_aliasChangePre,
+				Config: testAccRecordConfig_aliasChangePre(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -1199,7 +1200,7 @@ func TestAccRoute53Record_aliasChange(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRecordConfig_aliasChangePost,
+				Config: testAccRecordConfig_aliasChangePost(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -1210,7 +1211,8 @@ func TestAccRoute53Record_aliasChange(t *testing.T) {
 
 func TestAccRoute53Record_aliasChangeDualstack(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
-	resourceName := "aws_route53_record.elb_alias_change_ds"
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1219,7 +1221,7 @@ func TestAccRoute53Record_aliasChangeDualstack(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordAliasChangeDualstackPre,
+				Config: testAccRoute53RecordAliasChangeDualstackPre(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordAliasNameDualstack(&record1, true),
@@ -1231,10 +1233,9 @@ func TestAccRoute53Record_aliasChangeDualstack(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
-
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordAliasChangeDualstackPost,
+				Config: testAccRoute53RecordAliasChangeDualstackPost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 					testAccCheckRecordAliasNameDualstack(&record2, false),
@@ -1547,13 +1548,13 @@ func testAccCheckRecordAliasNameDualstack(record *route53.ResourceRecordSet, exp
 	return func(s *terraform.State) error {
 		alias := record.AliasTarget
 		if alias == nil {
-			return fmt.Errorf("Record has no alias target: %#v", record)
+			return fmt.Errorf("record has no alias target: %#v", record)
 		}
 		hasPrefix := strings.HasPrefix(*alias.DNSName, "dualstack.")
 		if expectPrefix && !hasPrefix {
-			return fmt.Errorf("Alias name did not have expected prefix: %#v", alias)
+			return fmt.Errorf("alias name did not have expected prefix: %#v", alias)
 		} else if !expectPrefix && hasPrefix {
-			return fmt.Errorf("Alias name had unexpected prefix: %#v", alias)
+			return fmt.Errorf("alias name had unexpected prefix: %#v", alias)
 		}
 		return nil
 	}
@@ -2678,7 +2679,8 @@ resource "aws_route53_record" "set_identifier_rename_weighted" {
 `, set_identifier)
 }
 
-const testAccRecordConfig_aliasChangePre = `
+func testAccRecordConfig_aliasChangePre(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -2692,8 +2694,8 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_elb" "alias_change" {
-  name               = "foobar-tf-elb-alias-change"
+resource "aws_elb" "test" {
+  name               = %[1]q
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
@@ -2704,25 +2706,27 @@ resource "aws_elb" "alias_change" {
   }
 }
 
-resource "aws_route53_record" "elb_alias_change" {
+resource "aws_route53_record" "test" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "alias-change"
   type    = "A"
 
   alias {
-    zone_id                = aws_elb.alias_change.zone_id
-    name                   = aws_elb.alias_change.dns_name
+    zone_id                = aws_elb.test.zone_id
+    name                   = aws_elb.test.dns_name
     evaluate_target_health = true
   }
 }
-`
+`, rName)
+}
 
-const testAccRecordConfig_aliasChangePost = `
+func testAccRecordConfig_aliasChangePost() string {
+	return `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_route53_record" "elb_alias_change" {
+resource "aws_route53_record" "test" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "alias-change"
   type    = "CNAME"
@@ -2730,6 +2734,7 @@ resource "aws_route53_record" "elb_alias_change" {
   records = ["www.terraform.io"]
 }
 `
+}
 
 const testAccRecordConfig_emptyName = `
 resource "aws_route53_zone" "main" {
@@ -2745,65 +2750,87 @@ resource "aws_route53_record" "empty" {
 }
 `
 
-const testAccRoute53RecordAliasChangeDualstackPre = `
- resource "aws_route53_zone" "main" {
- 	name = "notexample.com"
- }
+func testAccRoute53RecordAliasChangeDualstackPre(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
 
- resource "aws_elb" "alias_change_ds" {
-   name = "foobar-tf-elb-alias-change-ds"
-   availability_zones = ["us-west-2a"]
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
-   listener {
-     instance_port = 80
-     instance_protocol = "http"
-     lb_port = 80
-     lb_protocol = "http"
-   }
- }
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
 
- resource "aws_route53_record" "elb_alias_change_ds" {
-   zone_id = "${aws_route53_zone.main.zone_id}"
-   name = "alias-change-ds"
-   type = "A"
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
-   alias {
-     zone_id = "${aws_elb.alias_change_ds.zone_id}"
-     name = "dualstack.${aws_elb.alias_change_ds.dns_name}"
-     evaluate_target_health = true
-   }
- }
- `
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
 
-const testAccRoute53RecordAliasChangeDualstackPost = `
- resource "aws_route53_zone" "main" {
- 	name = "notexample.com"
- }
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "alias-change-ds"
+  type    = "A"
 
- resource "aws_elb" "alias_change_ds" {
-   name = "foobar-tf-elb-alias-change-ds"
-   availability_zones = ["us-west-2a"]
+  alias {
+    zone_id                = aws_elb.test.zone_id
+    name                   = "dualstack.${aws_elb.test.dns_name}"
+    evaluate_target_health = true
+  }
+}
+ `, rName)
+}
 
-   listener {
-     instance_port = 80
-     instance_protocol = "http"
-     lb_port = 80
-     lb_protocol = "http"
-   }
- }
+func testAccRoute53RecordAliasChangeDualstackPost(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
 
- resource "aws_route53_record" "elb_alias_change_ds" {
-   zone_id = "${aws_route53_zone.main.zone_id}"
-   name = "alias-change-ds"
-   type = "A"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
-   alias {
-     zone_id = "${aws_elb.alias_change_ds.zone_id}"
-     name = "${aws_elb.alias_change_ds.dns_name}"
-     evaluate_target_health = true
-   }
- }
- `
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "alias-change-ds"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_elb.test.zone_id
+    name                   = aws_elb.test.dns_name
+    evaluate_target_health = true
+  }
+}
+ `, rName)
+}
 
 const testAccRecordConfig_longTxt = `
 resource "aws_route53_zone" "main" {
