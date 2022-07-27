@@ -265,6 +265,9 @@ func flattenOrganizationDataSourceConfigurationsResult(apiObject *guardduty.Orga
 	if v := apiObject.Kubernetes; v != nil {
 		tfMap["kubernetes"] = []interface{}{flattenOrganizationKubernetesConfigurationResult(v)}
 	}
+	if v := apiObject.MalwareProtection; v != nil {
+		tfMap["malware_protection"] = []interface{}{flattenOrganizationMalwareProtectionConfigurationResult(v)}
+	}
 	return tfMap
 }
 
