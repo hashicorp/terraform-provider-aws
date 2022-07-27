@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -315,16 +314,6 @@ func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-}
-
-func DecodeTransitGatewayRouteTablePropagationID(id string) (string, string, error) {
-	parts := strings.Split(id, "_")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected tgw-rtb-ID_tgw-attach-ID", id)
-	}
-
-	return parts[0], parts[1], nil
 }
 
 func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
