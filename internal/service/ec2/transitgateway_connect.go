@@ -168,7 +168,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 		}
 
 		transitGatewayPropagationDefaultRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
-		transitGatewayDefaultRouteTablePropagation, err = FindTransitGatewayRouteTablePropagation(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
+		transitGatewayDefaultRouteTablePropagation, err = FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
 		if err != nil {
 			return diag.Errorf("error determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %s", d.Id(), transitGatewayPropagationDefaultRouteTableID, err)
 		}

@@ -716,7 +716,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagat
 			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := tfec2.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err
@@ -741,7 +741,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := tfec2.FindTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err

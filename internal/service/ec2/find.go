@@ -4061,7 +4061,7 @@ func FindTransitGatewayRouteTableAssociations(conn *ec2.EC2, input *ec2.GetTrans
 	return output, nil
 }
 
-func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+func FindTransitGatewayRouteTablePropagationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	if transitGatewayRouteTableID == "" {
 		return nil, nil
 	}

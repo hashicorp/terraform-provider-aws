@@ -156,7 +156,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(d *schema.ResourceData, met
 	}
 
 	transitGatewayPropagationDefaultRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
-	transitGatewayDefaultRouteTablePropagation, err := FindTransitGatewayRouteTablePropagation(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
+	transitGatewayDefaultRouteTablePropagation, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
 	if err != nil {
 		return fmt.Errorf("determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %w", d.Id(), transitGatewayPropagationDefaultRouteTableID, err)
 	}
