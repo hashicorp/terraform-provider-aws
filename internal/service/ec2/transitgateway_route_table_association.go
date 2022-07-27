@@ -134,6 +134,58 @@ func resourceTransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, m
 	return nil
 }
 
+func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
+	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+	_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+	if tfresource.NotFound(err) {
+		if associate {
+			input := &ec2.AssociateTransitGatewayRouteTableInput{
+				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+				TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+			}
+
+			_, err := conn.AssociateTransitGatewayRouteTable(input)
+
+			if err != nil {
+				return fmt.Errorf("creating EC2 Transit Gateway Route Table Association (%s): %w", id, err)
+			}
+
+			if _, err := WaitTransitGatewayRouteTableAssociationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+				return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", id, err)
+			}
+		}
+
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Transit Gateway Route Table Association (%s): %w", id, err)
+	}
+
+	if !associate {
+		// Disassociation must be done only on already associated state.
+		if _, err := WaitTransitGatewayRouteTableAssociationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", id, err)
+		}
+
+		input := &ec2.DisassociateTransitGatewayRouteTableInput{
+			TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+			TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+		}
+
+		if _, err := conn.DisassociateTransitGatewayRouteTable(input); err != nil {
+			return fmt.Errorf("deleting EC2 Transit Gateway Route Table Association (%s): %w", id, err)
+		}
+
+		if _, err := WaitTransitGatewayRouteTableAssociationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) delete: %w", id, err)
+		}
+	}
+
+	return nil
+}
+
 const transitGatewayRouteTableAssociationIDSeparator = "_"
 
 func TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID string) string {
