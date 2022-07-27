@@ -83,7 +83,7 @@ The `audit_logs` block supports the following:
    See [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) below for more details.
 
 #### Scan EC2 instance with findings
-The `scan_ec2_instance_with_findings` block supports the following: 
+The `scan_ec2_instance_with_findings` block supports the following:
 
 * `ebs_volumes` - (Required) Configure whether scanning EBS volumes should be auto-enabled for new members joining the organization
   See [EBS volumes](#ebs-volumes) below for more details.
