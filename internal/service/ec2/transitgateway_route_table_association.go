@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
@@ -83,33 +84,21 @@ func resourceTransitGatewayRouteTableAssociationRead(d *schema.ResourceData, met
 		return err
 	}
 
-	transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayRouteTableAssociation, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Route Table Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table (%s) Association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
+		return fmt.Errorf("reading EC2 Transit Gateway Route Table Association (%s): %w", d.Id(), err)
 	}
 
-	if transitGatewayAssociation == nil {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) Association (%s) not found, removing from state", transitGatewayRouteTableID, transitGatewayAttachmentID)
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(transitGatewayAssociation.State) == ec2.TransitGatewayAssociationStateDisassociating {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) Association (%s) in deleted state (%s), removing from state", transitGatewayRouteTableID, transitGatewayAttachmentID, aws.StringValue(transitGatewayAssociation.State))
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("resource_id", transitGatewayAssociation.ResourceId)
-	d.Set("resource_type", transitGatewayAssociation.ResourceType)
-	d.Set("transit_gateway_attachment_id", transitGatewayAssociation.TransitGatewayAttachmentId)
+	d.Set("resource_id", transitGatewayRouteTableAssociation.ResourceId)
+	d.Set("resource_type", transitGatewayRouteTableAssociation.ResourceType)
+	d.Set("transit_gateway_attachment_id", transitGatewayRouteTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
 	return nil

@@ -3996,7 +3996,20 @@ func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitG
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	return FindTransitGatewayRouteTableAssociation(conn, input)
+	output, err := FindTransitGatewayRouteTableAssociation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayAssociationStateDisassociated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return output, err
 }
 
 func FindTransitGatewayRouteTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTableAssociationsInput) (*ec2.TransitGatewayRouteTableAssociation, error) {

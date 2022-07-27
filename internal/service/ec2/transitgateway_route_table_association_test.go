@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
@@ -44,15 +44,15 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayRouteTableAssociationExists(resourceName string, transitGatewayRouteTableAssociation *ec2.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableAssociationExists(n string, v *ec2.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Route ID is set")
+			return fmt.Errorf("No EC2 Transit Gateway Route Table Association ID is set")
 		}
 
 		transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayRouteTableAssociationParseResourceID(rs.Primary.ID)
@@ -63,17 +63,13 @@ func testAccCheckTransitGatewayRouteTableAssociationExists(resourceName string, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		output, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
 		}
 
-		if association == nil {
-			return fmt.Errorf("EC2 Transit Gateway Route Table Association not found")
-		}
-
-		*transitGatewayRouteTableAssociation = *association
+		*v = *output
 
 		return nil
 	}
@@ -93,9 +89,9 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(s *terraform.State) 
 			return err
 		}
 
-		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		_, err = tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -103,11 +99,7 @@ func testAccCheckTransitGatewayRouteTableAssociationDestroy(s *terraform.State) 
 			return err
 		}
 
-		if association == nil {
-			continue
-		}
-
-		return fmt.Errorf("EC2 Transit Gateway Route Table (%s) Association (%s) still exists", transitGatewayRouteTableID, transitGatewayAttachmentID)
+		return fmt.Errorf("EC2 Transit Gateway Route Table Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
