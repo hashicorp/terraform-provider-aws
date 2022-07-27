@@ -87,29 +87,30 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect Attachment: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Connect: %s", input)
 	output, err := conn.CreateTransitGatewayConnectWithContext(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("error creating EC2 Transit Gateway Connect Attachment: %s", err)
+		return diag.Errorf("creating EC2 Transit Gateway Connect: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayConnect.TransitGatewayAttachmentId))
 
 	if _, err := WaitTransitGatewayConnectCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Connect (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Connect (%s) create: %s", d.Id(), err)
 	}
 
 	transportAttachment, err := FindTransitGatewayAttachmentByID(conn, transportAttachmentID)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
+		return diag.Errorf("reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
 	}
 
 	transitGatewayID := aws.StringValue(transportAttachment.TransitGatewayId)
 	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+		return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -140,20 +141,20 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayConnect.TransitGatewayId)
 	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+		return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -196,11 +197,11 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -214,7 +215,7 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 		transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
 
 		if err != nil {
-			return diag.Errorf("error reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+			return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
@@ -234,7 +235,7 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating EC2 Transit Gateway Connect Attachment (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating EC2 Transit Gateway Connect (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -254,11 +255,11 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayConnectDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for EC2 Transit Gateway Connect (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for EC2 Transit Gateway Connect (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

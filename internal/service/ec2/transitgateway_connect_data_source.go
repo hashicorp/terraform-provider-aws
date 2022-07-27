@@ -67,7 +67,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
 	if err := d.Set("tags", KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil
