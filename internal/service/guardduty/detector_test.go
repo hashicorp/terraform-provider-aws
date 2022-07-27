@@ -182,6 +182,45 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 	})
 }
 
+func testAccDetector_datasources_malware_protection(t *testing.T) {
+	resourceName := "aws_guardduty_detector.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorConfig_datasourcesMalwareProtection(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDetectorConfig_datasourcesMalwareProtection(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDetectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDetector_datasources_all(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"
 
@@ -369,6 +408,22 @@ resource "aws_guardduty_detector" "test" {
     kubernetes {
       audit_logs {
         enable = %[1]t
+      }
+    }
+  }
+}
+`, enable)
+}
+
+func testAccDetectorConfig_datasourcesMalwareProtection(enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  datasources {
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = %[1]t
+        }
       }
     }
   }
