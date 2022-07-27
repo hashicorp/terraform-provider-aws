@@ -71,10 +71,6 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"domain_controller_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_settings": {
@@ -378,19 +374,6 @@ func enableSSO(conn *directoryservice.DirectoryService, d *schema.ResourceData) 
 	return nil
 }
 
-func updateDomainControllerCount(conn *directoryservice.DirectoryService, d *schema.ResourceData) error {
-	if _, ok := d.GetOk("domain_controller_count"); ok {
-		log.Printf("[DEBUG] Updating Domain Controller Count for DS directory %q", d.Id())
-		if _, err := conn.UpdateNumberOfDomainControllers(&directoryservice.UpdateNumberOfDomainControllersInput{
-			DirectoryId:   aws.String(d.Id()),
-			DesiredNumber: aws.Int64(int64(d.Get("domain_controller_count").(int))),
-		}); err != nil {
-			return fmt.Errorf("Updating Domain Controller Count for DS directory %s: %s", d.Id(), err)
-		}
-	}
-	return nil
-}
-
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
@@ -439,12 +422,6 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("domain_controller_count") {
-		if err := updateDomainControllerCount(conn, d); err != nil {
-			return err
-		}
-	}
-
 	return resourceDirectoryRead(d, meta)
 }
 
@@ -453,12 +430,6 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enable_sso") {
 		if err := enableSSO(conn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("domain_controller_count") {
-		if err := updateDomainControllerCount(conn, d); err != nil {
 			return err
 		}
 	}
@@ -517,8 +488,6 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("enable_sso", dir.SsoEnabled)
-
-	d.Set("domain_controller_count", dir.DesiredNumberOfDomainControllers)
 
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
