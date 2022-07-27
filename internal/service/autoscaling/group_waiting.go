@@ -64,9 +64,9 @@ func waitForASGCapacity(
 		})
 		if aErr == nil {
 			if len(resp.Activities) > 0 {
-				if (*resp.Activities[0].Progress == 100) && (*resp.Activities[0].StatusCode == "Failed") {
+				if (aws.Int64Value(resp.Activities[0].Progress) == 100) && (aws.StringValue(resp.Activities[0].StatusCode) == "Failed") {
 					log.Printf("[DEBUG] checking scaling activities for  %s... Progress 100%% reached with failure", d.Id())
-					return resource.NonRetryableError(fmt.Errorf(*resp.Activities[0].StatusMessage))
+					return resource.NonRetryableError(fmt.Errorf(aws.StringValue(resp.Activities[0].StatusMessage)))
 				}
 			}
 		} else {
