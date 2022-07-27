@@ -141,8 +141,8 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_directory_service_region` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-- `create` - (Default `90 minutes`) Used for Region addition
-- `delete` - (Default `30 minutes`) Used for Region removal
+- `create` - (Default `180 minutes`) Used for Region addition
+- `delete` - (Default `90 minutes`) Used for Region removal
 
 ## Import
 
