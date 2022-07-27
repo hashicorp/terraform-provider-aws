@@ -33,7 +33,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
-					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_name", rNameFoo),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rNameFoo),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
 				),
@@ -71,7 +71,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_forceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
 					//lintignore:AWSAT001
-					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_name", rNameBar),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rNameBar),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
 				),
@@ -161,7 +161,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachment_multipleManagedPolicies(t *t
 					testAccCheckCustomerManagedPolicyAttachmentExists(resourceName),
 					testAccCheckCustomerManagedPolicyAttachmentExists(otherResourceName),
 					//lintignore:AWSAT001
-					resource.TestCheckResourceAttr(otherResourceName, "customer_managed_policy_name", rNameOther),
+					resource.TestCheckResourceAttr(otherResourceName, "customer_managed_policy_reference.0.name", rNameOther),
 					resource.TestCheckResourceAttrPair(otherResourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, "arn"),
 				),
@@ -299,8 +299,11 @@ func testAccCustomerManagedPolicyAttachmentConfig_basic(rName string, rNameFoo s
 resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
-  customer_managed_policy_name = aws_iam_policy.test_foo.name
-  customer_managed_policy_path = "/"
+  customer_managed_policy_reference {
+	name = aws_iam_policy.test_foo.name
+	path = "/"
+  }
+  
 }
 
 
@@ -314,8 +317,10 @@ func testAccCustomerManagedPolicyAttachmentConfig_forceNew(rName string, rNameFo
 resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
 	instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
 	permission_set_arn = aws_ssoadmin_permission_set.test.arn
-	customer_managed_policy_name = aws_iam_policy.test_bar.name
-	customer_managed_policy_path = "/"
+	customer_managed_policy_reference {
+		name = aws_iam_policy.test_bar.name
+		path = "/"
+	  }
 	}
 `)
 }
@@ -327,14 +332,16 @@ func testAccCustomerManagedPolicyAttachmentConfig_multiple(rName string, rNameFo
 resource "aws_ssoadmin_customer_managed_policy_attachment" "other" {
 	instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
 	permission_set_arn = aws_ssoadmin_permission_set.test.arn
-	customer_managed_policy_name = aws_iam_policy.other.name
-	customer_managed_policy_path = "/"
+	customer_managed_policy_reference {
+		name = aws_iam_policy.test_other.name
+		path = "/"
+	  }
 }
 
-resource "aws_iam_policy" "other" {
+resource "aws_iam_policy" "test_other" {
 	name        = %q
 	path        = "/"
-	description = "My test policy"
+	description = "My other test policy"
 	policy = jsonencode({
 	  Version = "2012-10-17"
 	  Statement = [

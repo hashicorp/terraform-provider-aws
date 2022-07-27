@@ -79,7 +79,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 		CustomerManagedPolicyReference: formatPolicyReference(d.Get("customer_managed_policy_reference").([]interface{})),
 		PermissionSetArn:               aws.String(permissionSetArn),
 	}
-	
+
 	err := resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
@@ -143,6 +143,7 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 
 	d.Set("instance_arn", instanceArn)
 	d.Set("permission_set_arn", permissionSetArn)
+	d.Set("customer_managed_policy_reference", flattenPolicyReference(policy))
 
 	return nil
 }
@@ -223,4 +224,22 @@ func expandPolicyReference(l []interface{}) (string, string) {
 	policyPath := string(p["path"].(string))
 
 	return policyName, policyPath
+}
+
+func flattenPolicyReference(l *ssoadmin.CustomerManagedPolicyReference) []interface{} {
+	if l == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if v := l.Name; v != nil {
+		m["name"] = aws.StringValue(v)
+	}
+
+	if v := l.Path; v != nil {
+		m["path"] = aws.StringValue(v)
+	}
+
+	return []interface{}{m}
 }
