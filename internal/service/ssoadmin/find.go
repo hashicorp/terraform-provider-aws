@@ -89,7 +89,7 @@ func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, 
 				continue
 			}
 
-			if aws.StringValue(policy.Name) == policyName {
+			if aws.StringValue(policy.Name) == policyName && aws.StringValue(policy.Path) == policyPath {
 				attachedPolicy = policy
 				return false
 			}
