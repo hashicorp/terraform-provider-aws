@@ -197,6 +197,10 @@ func expandOrganizationDataSourceConfigurations(tfMap map[string]interface{}) *g
 		apiObject.Kubernetes = expandOrganizationKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandOrganizationMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
