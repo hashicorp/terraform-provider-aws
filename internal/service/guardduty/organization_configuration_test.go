@@ -284,7 +284,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["guardduty.${data.aws_partition.current.dns_suffix}",  "malware-protection.guardduty.${data.aws_partition.current.dns_suffix}"]
+  aws_service_access_principals = ["guardduty.${data.aws_partition.current.dns_suffix}", "malware-protection.guardduty.${data.aws_partition.current.dns_suffix}"]
   feature_set                   = "ALL"
 }
 
