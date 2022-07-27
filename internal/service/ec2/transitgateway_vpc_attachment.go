@@ -126,11 +126,11 @@ func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta inte
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways.
 	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(output.TransitGatewayVpcAttachment.VpcOwnerId) {
 		if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) association: %w", d.Id(), aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), err)
+			return err
 		}
 
 		if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) propagation: %w", d.Id(), aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), err)
+			return err
 		}
 	}
 
@@ -259,13 +259,13 @@ func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta inte
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
 			if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-				return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) association: %w", d.Id(), aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), err)
+				return err
 			}
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_propagation") {
 			if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-				return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) propagation: %w", d.Id(), aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), err)
+				return err
 			}
 		}
 	}

@@ -365,12 +365,13 @@ func transitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGatewa
 }
 
 func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
-	transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayRouteTableAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
 	if err != nil {
 		return fmt.Errorf("error determining EC2 Transit Gateway Attachment Route Table (%s) association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
-	if associate && transitGatewayAssociation == nil {
+	if associate && transitGatewayRouteTableAssociation == nil {
 		input := &ec2.AssociateTransitGatewayRouteTableInput{
 			TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 			TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -383,7 +384,7 @@ func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRout
 		if err := waitForTransitGatewayRouteTableAssociationCreation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) association (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 		}
-	} else if !associate && transitGatewayAssociation != nil {
+	} else if !associate && transitGatewayRouteTableAssociation != nil {
 		// deassociation must be done only on already associated state
 		if err := waitForTransitGatewayRouteTableAssociationCreation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) association before deletion (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
@@ -408,6 +409,7 @@ func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRout
 
 func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, enablePropagation bool) error {
 	transitGatewayRouteTablePropagation, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
 	if err != nil {
 		return fmt.Errorf("error determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %s", transitGatewayAttachmentID, transitGatewayRouteTableID, err)
 	}

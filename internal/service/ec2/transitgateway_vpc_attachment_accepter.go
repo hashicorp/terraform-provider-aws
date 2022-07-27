@@ -115,11 +115,11 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(d *schema.ResourceData, m
 	}
 
 	if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-		return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) association: %w", d.Id(), aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), err)
+		return err
 	}
 
 	if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-		return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) propagation: %w", d.Id(), aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), err)
+		return err
 	}
 
 	return resourceTransitGatewayVPCAttachmentAccepterRead(d, meta)
@@ -214,13 +214,13 @@ func resourceTransitGatewayVPCAttachmentAccepterUpdate(d *schema.ResourceData, m
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
 			if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-				return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) association: %w", d.Id(), aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), err)
+				return err
 			}
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_propagation") {
 			if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-				return fmt.Errorf("updating EC2 Transit Gateway Attachment (%s) Route Table (%s) propagation: %w", d.Id(), aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), err)
+				return err
 			}
 		}
 	}
