@@ -1449,14 +1449,15 @@ func WaitTransitGatewayRouteTableAssociationDeleted(conn *ec2.EC2, transitGatewa
 }
 
 const (
-	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
+	TransitGatewayRouteTablePropagationCreatedTimeout = 5 * time.Minute
+	TransitGatewayRouteTablePropagationDeletedTimeout = 5 * time.Minute
 )
 
-func WaitTransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+func WaitTransitGatewayRouteTablePropagationCreated(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayPropagationStateEnabling},
 		Target:  []string{ec2.TransitGatewayPropagationStateEnabled},
-		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Timeout: TransitGatewayRouteTablePropagationCreatedTimeout,
 		Refresh: StatusTransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 	}
 
@@ -1469,11 +1470,11 @@ func WaitTransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitG
 	return nil, err
 }
 
-func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+func WaitTransitGatewayRouteTablePropagationDeleted(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayPropagationStateDisabling},
 		Target:  []string{},
-		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Timeout: TransitGatewayRouteTablePropagationDeletedTimeout,
 		Refresh: StatusTransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 	}
 

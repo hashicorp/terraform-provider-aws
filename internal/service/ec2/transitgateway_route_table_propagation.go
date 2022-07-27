@@ -67,7 +67,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, m
 
 	d.SetId(id)
 
-	if _, err := WaitTransitGatewayRouteTablePropagationStateEnabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTablePropagationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", d.Id(), err)
 	}
 
@@ -136,7 +136,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, m
 		return fmt.Errorf("deleting EC2 Transit Gateway Route Table Propagation (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayRouteTablePropagationStateDisabled(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTablePropagationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %w", d.Id(), err)
 	}
 
