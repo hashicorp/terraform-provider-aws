@@ -658,22 +658,23 @@ func testAccCheckTransitGatewayRecreated(i, j *ec2.TransitGateway) resource.Test
 func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		var attachmentID string
+
+		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
 		case *ec2.TransitGatewayVpcAttachment:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		case *ec2.TransitGatewayConnect:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
-		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+
+		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return errors.New("EC2 Transit Gateway Route Table Association not found")
+		}
 
 		if err != nil {
 			return err
-		}
-
-		if association == nil {
-			return errors.New("EC2 Transit Gateway Route Table Association not found")
 		}
 
 		return nil
@@ -683,72 +684,75 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		var attachmentID string
+
+		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
 		case *ec2.TransitGatewayVpcAttachment:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		case *ec2.TransitGatewayConnect:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
-		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+
+		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if association != nil {
-			return errors.New("EC2 Transit Gateway Route Table Association found")
-		}
-
-		return nil
+		return errors.New("EC2 Transit Gateway Route Table Association found")
 	}
 }
 
 func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		var attachmentID string
+
+		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
 		case *ec2.TransitGatewayVpcAttachment:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		case *ec2.TransitGatewayConnect:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
-		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, routeTableID, attachmentID)
+
+		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if propagation != nil {
-			return errors.New("EC2 Transit Gateway Route Table Propagation enabled")
-		}
-
-		return nil
+		return errors.New("EC2 Transit Gateway Route Table Propagation enabled")
 	}
 }
 
 func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		var attachmentID string
+
+		var transitGatewayAttachmentID string
 		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
 		case *ec2.TransitGatewayVpcAttachment:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		case *ec2.TransitGatewayConnect:
-			attachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
-		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, routeTableID, attachmentID)
+
+		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
+		}
 
 		if err != nil {
 			return err
-		}
-
-		if propagation == nil {
-			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
 		}
 
 		return nil
@@ -763,6 +767,42 @@ func testAccPreCheckTransitGateway(t *testing.T) {
 	}
 
 	_, err := conn.DescribeTransitGateways(input)
+
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckTransitGatewayConnect(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeTransitGatewayConnectsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeTransitGatewayConnects(input)
+
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckTransitGatewayVPCAttachment(t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeTransitGatewayVpcAttachments(input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		t.Skipf("skipping acceptance testing: %s", err)

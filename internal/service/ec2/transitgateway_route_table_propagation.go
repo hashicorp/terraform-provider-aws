@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
@@ -85,24 +86,14 @@ func resourceTransitGatewayRouteTablePropagationRead(d *schema.ResourceData, met
 
 	transitGatewayPropagation, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table (%s) Propagation (%s): %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
-	}
-
-	if transitGatewayPropagation == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Transit Gateway Route Table (%s) Propagation (%s): not found after creation", transitGatewayRouteTableID, transitGatewayAttachmentID)
-		}
-
-		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) Propagation (%s) not found, removing from state", transitGatewayRouteTableID, transitGatewayAttachmentID)
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading EC2 Transit Gateway Route Table Propagation (%s): %w", d.Id(), err)
 	}
 
 	d.Set("resource_id", transitGatewayPropagation.ResourceId)

@@ -162,20 +162,32 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways.
-	// Default these to a non-nil value so we can match the existing schema of Default: true.
-	transitGatewayDefaultRouteTableAssociation := &ec2.TransitGatewayRouteTableAssociation{}
-	transitGatewayDefaultRouteTablePropagation := &ec2.TransitGatewayRouteTablePropagation{}
+	transitGatewayDefaultRouteTableAssociation := true
+	transitGatewayDefaultRouteTablePropagation := true
+
 	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(transitGatewayVPCAttachment.VpcOwnerId) {
-		transitGatewayAssociationDefaultRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		transitGatewayDefaultRouteTableAssociation, err = DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayAssociationDefaultRouteTableID, d.Id())
-		if err != nil {
-			return fmt.Errorf("determining EC2 Transit Gateway Attachment (%s) association to Route Table (%s): %w", d.Id(), transitGatewayAssociationDefaultRouteTableID, err)
+		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId); transitGatewayRouteTableID != "" {
+			_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+
+			if tfresource.NotFound(err) {
+				transitGatewayDefaultRouteTableAssociation = false
+			} else if err != nil {
+				return fmt.Errorf("reading EC2 Transit Gateway Route Table Association (%s): %w", TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+			}
+		} else {
+			transitGatewayDefaultRouteTableAssociation = false
 		}
 
-		transitGatewayPropagationDefaultRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
-		transitGatewayDefaultRouteTablePropagation, err = FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayPropagationDefaultRouteTableID, d.Id())
-		if err != nil {
-			return fmt.Errorf("determining EC2 Transit Gateway Attachment (%s) propagation to Route Table (%s): %w", d.Id(), transitGatewayPropagationDefaultRouteTableID, err)
+		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId); transitGatewayRouteTableID != "" {
+			_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+
+			if tfresource.NotFound(err) {
+				transitGatewayDefaultRouteTablePropagation = false
+			} else if err != nil {
+				return fmt.Errorf("reading EC2 Transit Gateway Route Table Propagation (%s): %w", TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+			}
+		} else {
+			transitGatewayDefaultRouteTablePropagation = false
 		}
 	}
 
@@ -183,8 +195,8 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
 	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
-	d.Set("transit_gateway_default_route_table_association", (transitGatewayDefaultRouteTableAssociation != nil))
-	d.Set("transit_gateway_default_route_table_propagation", (transitGatewayDefaultRouteTablePropagation != nil))
+	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
+	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
 	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)

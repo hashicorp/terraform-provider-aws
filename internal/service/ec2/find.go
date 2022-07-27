@@ -4069,46 +4069,34 @@ func FindTransitGatewayRouteTableAssociations(conn *ec2.EC2, input *ec2.GetTrans
 }
 
 func FindTransitGatewayRouteTablePropagationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
-	if transitGatewayRouteTableID == "" {
-		return nil, nil
-	}
-
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("transit-gateway-attachment-id"),
-				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
-			},
-		},
+		Filters: BuildAttributeFilterList(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	var result *ec2.TransitGatewayRouteTablePropagation
-
-	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
-			if transitGatewayRouteTablePropagation == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
-				result = transitGatewayRouteTablePropagation
-				return false
-			}
-		}
-
-		return !lastPage
-	})
+	output, err := FindTransitGatewayRouteTablePropagation(conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayPropagationStateDisabled {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
 }
 
 func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTablePropagationsInput) (*ec2.TransitGatewayRouteTablePropagation, error) {
