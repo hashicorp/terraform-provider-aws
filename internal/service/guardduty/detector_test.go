@@ -192,7 +192,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 		CheckDestroy:             testAccCheckDetectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorConfig_datasourcesAll(true, false),
+				Config: testAccDetectorConfig_datasourcesAll(true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -200,6 +200,8 @@ func testAccDetector_datasources_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
 				),
 			},
 			{
@@ -208,7 +210,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDetectorConfig_datasourcesAll(true, true),
+				Config: testAccDetectorConfig_datasourcesAll(true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -216,10 +218,12 @@ func testAccDetector_datasources_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
 				),
 			},
 			{
-				Config: testAccDetectorConfig_datasourcesAll(false, false),
+				Config: testAccDetectorConfig_datasourcesAll(false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -227,10 +231,12 @@ func testAccDetector_datasources_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
 				),
 			},
 			{
-				Config: testAccDetectorConfig_datasourcesAll(false, true),
+				Config: testAccDetectorConfig_datasourcesAll(false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
@@ -238,6 +244,8 @@ func testAccDetector_datasources_all(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
 				),
 			},
 		},
@@ -368,7 +376,7 @@ resource "aws_guardduty_detector" "test" {
 `, enable)
 }
 
-func testAccDetectorConfig_datasourcesAll(enableK8s, enableS3 bool) string {
+func testAccDetectorConfig_datasourcesAll(enableK8s, enableS3, enableMalware bool) string {
 	return fmt.Sprintf(`
 resource "aws_guardduty_detector" "test" {
   datasources {
@@ -380,7 +388,15 @@ resource "aws_guardduty_detector" "test" {
     s3_logs {
       enable = %[2]t
     }
+
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          enable = %[3]t
+        }
+      }
+    }
   }
 }
-`, enableK8s, enableS3)
+`, enableK8s, enableS3, enableMalware)
 }
