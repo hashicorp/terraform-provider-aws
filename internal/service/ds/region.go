@@ -25,6 +25,10 @@ func ResourceRegion() *schema.Resource {
 		UpdateWithoutTimeout: resourceRegionUpdate,
 		DeleteWithoutTimeout: resourceRegionDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
