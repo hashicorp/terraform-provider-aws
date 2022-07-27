@@ -108,7 +108,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"disappears": testAccTransitGatewayRouteTableAssociation_disappears,
 		},
 		"RouteTablePropagation": {
-			"basic": testAccTransitGatewayRouteTablePropagation_basic,
+			"basic":      testAccTransitGatewayRouteTablePropagation_basic,
+			"disappears": testAccTransitGatewayRouteTablePropagation_disappears,
 		},
 		"VpcAttachment": {
 			"basic":                testAccTransitGatewayVPCAttachment_basic,
