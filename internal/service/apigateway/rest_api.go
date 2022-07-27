@@ -132,12 +132,6 @@ func ResourceRestAPI() *schema.Resource {
 				Optional:     true,
 				Default:      apigateway.PutModeOverwrite,
 				ValidateFunc: validation.StringInSlice(apigateway.PutMode_Values(), false),
-				/* DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "" && new == apigateway.PutModeOverwrite {
-						return true
-					}
-					return false
-				}, */
 			},
 			"root_resource_id": {
 				Type:     schema.TypeString,

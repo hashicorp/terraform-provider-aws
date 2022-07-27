@@ -881,7 +881,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 
 			// Verify updated endpoint configuration, and endpoint from OAS is discarded.
@@ -910,6 +910,56 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideTomergeBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
+	vpcEndpointResourceName2 := "aws_vpc_endpoint.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+
+			// Add the new attribute and verify works as desired.
+			{
+				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					testAccCheckRestAPIEndpointsCount(&conf, 1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
+			},
+		},
+	})
+}
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
