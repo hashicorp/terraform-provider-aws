@@ -161,6 +161,137 @@ func TestAccComprehendEntityRecognizer_VersionName(t *testing.T) {
 	})
 }
 
+func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var entityrecognizer types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeyIds(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+				),
+			},
+			{
+				Config:   testAccEntityRecognizerConfig_kmsKeyARNs(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var entityrecognizer types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeyARNs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "arn"),
+				),
+			},
+			{
+				Config:   testAccEntityRecognizerConfig_kmsKeyIds(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2, v3, v4 types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeys_None(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v1),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+				),
+			},
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeys_Set(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v2),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+				),
+			},
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeys_Update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v3),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 3),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", "key_id"),
+				),
+			},
+			{
+				Config: testAccEntityRecognizerConfig_kmsKeys_None(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &v4),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 4),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -498,6 +629,403 @@ resource "aws_s3_object" "entities" {
   source = "test-fixtures/entity_recognizer/entitylist.csv"
 }
 `, rName, vName, key, value))
+}
+
+func testAccEntityRecognizerConfig_kmsKeyIds(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  model_kms_key_id  = aws_kms_key.model.key_id
+  volume_kms_key_id = aws_kms_key.volume.key_id
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.model.arn,
+    ]
+  }
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.volume.arn,
+    ]
+  }
+}
+
+resource "aws_kms_key" "model" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "volume" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_kmsKeyARNs(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  model_kms_key_id  = aws_kms_key.model.arn
+  volume_kms_key_id = aws_kms_key.volume.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.model.arn,
+    ]
+  }
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.volume.arn,
+    ]
+  }
+}
+
+resource "aws_kms_key" "model" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "volume" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_kmsKeys_None(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_kmsKeys_Set(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  model_kms_key_id  = aws_kms_key.model.key_id
+  volume_kms_key_id = aws_kms_key.volume.key_id
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.model.arn,
+    ]
+  }
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.volume.arn,
+    ]
+  }
+}
+
+resource "aws_kms_key" "model" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "volume" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_kmsKeys_Update(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  model_kms_key_id  = aws_kms_key.model2.key_id
+  volume_kms_key_id = aws_kms_key.volume2.key_id
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test
+  ]
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.model2.arn,
+    ]
+  }
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.volume2.arn,
+    ]
+  }
+}
+
+resource "aws_kms_key" "model2" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "volume2" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
 }
 
 func testAccEntityRecognizerConfig_tags0(rName string) string {

@@ -176,8 +176,10 @@ func ResourceEntityRecognizer() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
 			},
 			"model_kms_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: diffSuppressKMSKeyId,
+				ValidateFunc:     validateKMSKey,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -192,8 +194,10 @@ func ResourceEntityRecognizer() *schema.Resource {
 				ValidateFunc: validModelVersionName,
 			},
 			"volume_kms_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: diffSuppressKMSKeyId,
+				ValidateFunc:     validateKMSKey,
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
