@@ -1409,6 +1409,46 @@ func WaitTransitGatewayRouteTableDeleted(conn *ec2.EC2, id string) (*ec2.Transit
 }
 
 const (
+	TransitGatewayRouteTableAssociationCreatedTimeout = 5 * time.Minute
+	TransitGatewayRouteTableAssociationDeletedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayRouteTableAssociationCreated(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAssociationStateAssociating},
+		Target:  []string{ec2.TransitGatewayAssociationStateAssociated},
+		Timeout: TransitGatewayRouteTableAssociationCreatedTimeout,
+		Refresh: StatusTransitGatewayRouteTableAssociationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayRouteTableAssociationDeleted(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{ec2.TransitGatewayAssociationStateAssociated, ec2.TransitGatewayAssociationStateDisassociating},
+		Target:         []string{},
+		Timeout:        TransitGatewayRouteTableAssociationDeletedTimeout,
+		Refresh:        StatusTransitGatewayRouteTableAssociationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
 )
 

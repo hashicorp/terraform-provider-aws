@@ -68,7 +68,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(d *schema.ResourceData, m
 
 	d.SetId(id)
 
-	if err := waitForTransitGatewayRouteTableAssociationCreation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTableAssociationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", d.Id(), err)
 	}
 
@@ -127,7 +127,7 @@ func resourceTransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, m
 		return fmt.Errorf("deleting EC2 Transit Gateway Route Table Association (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForTransitGatewayRouteTableAssociationDeletion(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if _, err := WaitTransitGatewayRouteTableAssociationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) delete: %w", d.Id(), err)
 	}
 
