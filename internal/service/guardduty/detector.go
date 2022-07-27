@@ -304,7 +304,9 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
 	}
-
+	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
 	return apiObject
 }
 
