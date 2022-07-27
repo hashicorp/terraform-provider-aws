@@ -15,6 +15,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_S3_ExclusionInclusionPatternsPrefixes":                                   testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes,
 			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition": testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition,
 			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN":             testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN,
+			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket":            testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket,
 			"CustomDocumentEnrichmentConfiguration_InlineConfigurations":                            testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations,
 			"Description":             testAccDataSource_description,
 			"LanguageCode":            testAccDataSource_languageCode,

@@ -921,6 +921,82 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	})
 }
 
+func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName8 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName9 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName10 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName11 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook", "id"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.role_arn", "aws_iam_role.test_extraction_hook", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.lambda_arn", "aws_lambda_function.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.s3_bucket", "aws_s3_bucket.test_extraction_hook2", "id"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_document_attribute_key", "_excerpt_page_number"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.operator", string(types.ConditionOperatorEquals)),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.post_extraction_hook_configuration.0.invocation_condition.0.condition_on_value.0.long_value", "3"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeS3)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataSourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
@@ -1877,4 +1953,52 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName10, rName11, selectARN))
+}
+
+func testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, selectBucket string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigS3Base(rName4, rName5),
+		testAccDataSourceConfigExtractionHookBase(rName6, rName7, rName8, rName9),
+		fmt.Sprintf(`
+locals {
+  select_bucket = %[3]q
+}
+
+resource "aws_s3_bucket" "test_extraction_hook2" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[2]q
+  type     = "S3"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.id
+    }
+  }
+
+  custom_document_enrichment_configuration {
+    role_arn = aws_iam_role.test_extraction_hook.arn
+
+    post_extraction_hook_configuration {
+      lambda_arn = aws_lambda_function.test.arn
+      s3_bucket  = local.select_bucket == "first" ? aws_s3_bucket.test_extraction_hook.id : aws_s3_bucket.test_extraction_hook2.id
+
+      invocation_condition {
+        condition_document_attribute_key = "_excerpt_page_number"
+        operator                         = "Equals"
+
+        condition_on_value {
+          long_value = 3
+        }
+      }
+    }
+  }
+}
+`, rName10, rName11, selectBucket))
 }
