@@ -374,11 +374,11 @@ func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guarddu
 	}
 
 	return &guardduty.MalwareProtectionConfiguration{
-		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEc2InstanceWithFindingsConfiguration(m),
+		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(m),
 	}
 }
 
-func expandMalwareProtectionScanEc2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
+func expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
 	if tfMap == nil {
 		return nil
 	}
@@ -394,12 +394,12 @@ func expandMalwareProtectionScanEc2InstanceWithFindingsConfiguration(tfMap map[s
 	}
 
 	apiObject := &guardduty.ScanEc2InstanceWithFindings{
-		EbsVolumes: expandMalwareProtectionEbsVolumesConfiguration(m),
+		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
 	}
 	return apiObject
 }
 
-func expandMalwareProtectionEbsVolumesConfiguration(tfMap map[string]interface{}) *bool {
+func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}) *bool {
 	if tfMap == nil {
 		return nil
 	}
@@ -485,13 +485,13 @@ func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectio
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
-		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEc2InstanceWithFindingsConfigurationResult(v)}
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenMalwareProtectionScanEc2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
+func flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -499,13 +499,13 @@ func flattenMalwareProtectionScanEc2InstanceWithFindingsConfigurationResult(apiO
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EbsVolumes; v != nil {
-		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEbsVolumesConfigurationResult(v)}
+		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEBSVolumesConfigurationResult(v)}
 	}
 
 	return tfMap
 }
 
-func flattenMalwareProtectionEbsVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
+func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
