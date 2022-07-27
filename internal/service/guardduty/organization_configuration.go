@@ -238,6 +238,60 @@ func expandOrganizationKubernetesConfiguration(tfMap map[string]interface{}) *gu
 	}
 }
 
+func expandOrganizationMalwareProtectionConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationMalwareProtectionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.OrganizationMalwareProtectionConfiguration{
+		ScanEc2InstanceWithFindings: expandOrganizationScanEC2InstanceWithFindingsConfiguration(m),
+	}
+}
+
+func expandOrganizationScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationScanEc2InstanceWithFindings {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["ebs_volumes"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.OrganizationScanEc2InstanceWithFindings{
+		EbsVolumes: expandOrganizationEBSVolumesConfiguration(m),
+	}
+}
+
+func expandOrganizationEBSVolumesConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationEbsVolumes {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.OrganizationEbsVolumes{}
+
+	if v, ok := tfMap["auto_enable"].(bool); ok {
+		apiObject.AutoEnable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandOrganizationKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.OrganizationKubernetesAuditLogsConfiguration {
 	if tfMap == nil {
 		return nil
