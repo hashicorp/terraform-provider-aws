@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+const (
+	DSNameSubscribedRuleGroup = "Subscribed Rule Group Data Source"
+)
+
 func DataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceSubscribedRuleGroupRead,
