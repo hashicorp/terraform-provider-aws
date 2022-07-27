@@ -8,6 +8,7 @@ ACCTEST_PARALLELISM ?= 20
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin TESTS), undefined)
