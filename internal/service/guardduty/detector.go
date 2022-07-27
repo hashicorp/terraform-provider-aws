@@ -476,3 +476,45 @@ func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesAudi
 
 	return tfMap
 }
+
+func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectionConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEc2InstanceWithFindingsConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionScanEc2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EbsVolumes; v != nil {
+		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEbsVolumesConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionEbsVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
