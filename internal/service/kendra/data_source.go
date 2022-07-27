@@ -120,7 +120,7 @@ func ResourceDataSource() *schema.Resource {
 									"exclusion_patterns": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										MinItems: 1,
+										MinItems: 0,
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -130,7 +130,7 @@ func ResourceDataSource() *schema.Resource {
 									"inclusion_patterns": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										MinItems: 1,
+										MinItems: 0,
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -140,7 +140,7 @@ func ResourceDataSource() *schema.Resource {
 									"inclusion_prefixes": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										MinItems: 1,
+										MinItems: 0,
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -792,15 +792,15 @@ func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguratio
 		result.DocumentsMetadataConfiguration = expandDocumentsMetadataConfiguration(v)
 	}
 
-	if v, ok := tfMap["exclusion_patterns"]; ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := tfMap["exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
 		result.ExclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
 	}
 
-	if v, ok := tfMap["inclusion_patterns"]; ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := tfMap["inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
 		result.InclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
 	}
 
-	if v, ok := tfMap["inclusion_prefixes"]; ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := tfMap["inclusion_prefixes"]; ok && v.(*schema.Set).Len() >= 0 {
 		result.InclusionPrefixes = flex.ExpandStringSetV2(v.(*schema.Set))
 	}
 
