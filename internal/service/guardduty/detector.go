@@ -373,6 +373,10 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 		tfMap["kubernetes"] = []interface{}{flattenKubernetesConfiguration(v)}
 	}
 
+	if v := apiObject.MalwareProtection; v != nil {
+		tfMap["malware_protection"] = []interface{}{flattenMalwareProtectionConfiguration(v)}
+	}
+
 	return tfMap
 }
 
