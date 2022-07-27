@@ -30,25 +30,6 @@ func RouteCreateID(routeTableID, destination string) string {
 	return fmt.Sprintf("r-%s%d", routeTableID, create.StringHashcode(destination))
 }
 
-const transitGatewayPrefixListReferenceSeparator = "_"
-
-func TransitGatewayPrefixListReferenceCreateID(transitGatewayRouteTableID string, prefixListID string) string {
-	parts := []string{transitGatewayRouteTableID, prefixListID}
-	id := strings.Join(parts, transitGatewayPrefixListReferenceSeparator)
-
-	return id
-}
-
-func TransitGatewayPrefixListReferenceParseID(id string) (string, string, error) {
-	parts := strings.Split(id, transitGatewayPrefixListReferenceSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected transit-gateway-route-table-id%[2]sprefix-list-id", id, transitGatewayPrefixListReferenceSeparator)
-}
-
 func VPCEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID string) string {
 	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(routeTableID))
 }
