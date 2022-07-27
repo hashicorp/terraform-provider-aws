@@ -358,6 +358,61 @@ func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guard
 	return apiObject
 }
 
+func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guardduty.MalwareProtectionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.MalwareProtectionConfiguration{
+		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEc2InstanceWithFindingsConfiguration(m),
+	}
+}
+
+func expandMalwareProtectionScanEc2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["ebs_volumes"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &guardduty.ScanEc2InstanceWithFindings{
+		EbsVolumes: expandMalwareProtectionEbsVolumesConfiguration(m),
+	}
+	return apiObject
+}
+
+func expandMalwareProtectionEbsVolumesConfiguration(tfMap map[string]interface{}) *bool {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObject *bool
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
