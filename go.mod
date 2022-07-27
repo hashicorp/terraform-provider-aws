@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.0
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.17.0
