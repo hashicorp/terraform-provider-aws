@@ -337,47 +337,6 @@ func DecodeTransitGatewayRouteTablePropagationID(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func DescribeTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
-	input := &ec2.SearchTransitGatewayRoutesInput{
-		// As of the time of writing, the EC2 API reference documentation (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html)
-		// incorrectly states which filter Names are allowed. The below are example errors:
-		// InvalidParameterValue: Value (transit-gateway-route-destination-cidr-block) for parameter Filters is invalid.
-		// InvalidParameterValue: Value (transit-gateway-route-type) for parameter Filters is invalid.
-		// InvalidParameterValue: Value (destination-cidr-block) for parameter Filters is invalid.
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("type"),
-				Values: []*string{aws.String("static")},
-			},
-		},
-		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	}
-
-	log.Printf("[DEBUG] Searching EC2 Transit Gateway Route Table (%s): %s", transitGatewayRouteTableID, input)
-	output, err := conn.SearchTransitGatewayRoutes(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Routes) == 0 {
-		return nil, nil
-	}
-
-	for _, route := range output.Routes {
-		if route == nil {
-			continue
-		}
-		if verify.CIDRBlocksEqual(aws.StringValue(route.DestinationCidrBlock), destination) {
-			cidrString := verify.CanonicalCIDRBlock(aws.StringValue(route.DestinationCidrBlock))
-			route.DestinationCidrBlock = aws.String(cidrString)
-			return route, nil
-		}
-	}
-
-	return nil, nil
-}
-
 func DescribeTransitGatewayRouteTableAssociation(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	if transitGatewayRouteTableID == "" {
 		return nil, nil
