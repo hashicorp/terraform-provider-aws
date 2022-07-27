@@ -104,7 +104,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"Tags":                     testAccTransitGatewayRouteTable_Tags,
 		},
 		"RouteTableAssociation": {
-			"basic": testAccTransitGatewayRouteTableAssociation_basic,
+			"basic":      testAccTransitGatewayRouteTableAssociation_basic,
+			"disappears": testAccTransitGatewayRouteTableAssociation_disappears,
 		},
 		"RouteTablePropagation": {
 			"basic": testAccTransitGatewayRouteTablePropagation_basic,
