@@ -163,6 +163,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `connect_ips` - The IP addresses of the AD Connector servers.
 
+## Timeouts
+
+`aws_directory_service_directory` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `60 minutes`) Used for directory creation
+- `delete` - (Default `60 minutes`) Used for directory deletion
+
 ## Import
 
 DirectoryService directories can be imported using the directory `id`, e.g.,

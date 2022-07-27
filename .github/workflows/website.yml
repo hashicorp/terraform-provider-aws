@@ -11,9 +11,9 @@ on:
     paths:
       - .github/workflows/website.yml
       - .go-version
-      - .markdownlinkcheck.json
-      - .markdownlint.yml
-      - .tflint.hcl
+      - .ci/.markdownlinkcheck.json
+      - .ci/.markdownlint.yml
+      - .ci/.tflint.hcl
       - website/docs/**
       - tools/go.mod
 
@@ -27,7 +27,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-prefix: "[a-h]"
           file-extension: ".markdown"
@@ -42,7 +42,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-prefix: "[i-z]"
           file-extension: ".markdown"
@@ -57,7 +57,7 @@ jobs:
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
-          config-file: ".markdownlinkcheck.json"
+          config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           file-extension: ".md"
           base-branch: "main"
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: ".markdownlint.yml"
+          config: ".ci/.markdownlint.yml"
           args: "website/docs"
   misspell:
     runs-on: ubuntu-latest
@@ -83,7 +83,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
+      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text website/
   terrafmt:
     runs-on: ubuntu-latest
@@ -98,7 +98,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: terrafmt diff ./website --check --pattern '*.markdown'
   validate-terraform:
     runs-on: ubuntu-latest
@@ -113,17 +113,17 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
-      - run: cd tools && go install github.com/terraform-linters/tflint
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - uses: actions/cache@v3
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint --init
+      - run: tflint -c .ci/.tflint.hcl --init
 
       - run: |
           exit_code=0
@@ -181,7 +181,7 @@ jobs:
 
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
-            ./scripts/validate-terraform-file.sh "$filename" "${rules[@]}"
+            ./.ci/scripts/validate-terraform-file.sh -c .ci/.tflint.hcl "$filename" "${rules[@]}"
             lint_exitcode=$?
             set -e
             if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi

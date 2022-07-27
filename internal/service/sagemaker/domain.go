@@ -329,7 +329,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] sagemaker domain create config: %#v", *input)
 	output, err := conn.CreateDomain(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker domain: %w", err)
+		return fmt.Errorf("creating SageMaker domain: %w", err)
 	}
 
 	domainArn := aws.StringValue(output.DomainArn)
@@ -341,7 +341,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(domainID)
 
 	if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker domain (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker domain (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceDomainRead(d, meta)
@@ -359,7 +359,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Unable to find SageMaker domain (%s), removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker domain (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(domain.DomainArn)
@@ -374,28 +374,28 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", domain.KmsKeyId)
 
 	if err := d.Set("subnet_ids", flex.FlattenStringSet(domain.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids for SageMaker domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting subnet_ids for SageMaker domain (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("default_user_settings", flattenDomainDefaultUserSettings(domain.DefaultUserSettings)); err != nil {
-		return fmt.Errorf("error setting default_user_settings for SageMaker domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting default_user_settings for SageMaker domain (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Domain (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -413,11 +413,11 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
 		_, err := conn.UpdateDomain(input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker domain: %w", err)
+			return fmt.Errorf("updating SageMaker domain: %w", err)
 		}
 
 		if _, err := WaitDomainInService(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -425,7 +425,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker domain (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker domain (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -445,13 +445,13 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := conn.DeleteDomain(input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("error deleting SageMaker domain (%s): %w", d.Id(), err)
+			return fmt.Errorf("deleting SageMaker domain (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitDomainDeleted(conn, d.Id()); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("error waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker domain (%s) to delete: %w", d.Id(), err)
 		}
 	}
 

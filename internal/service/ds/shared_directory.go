@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -25,8 +26,13 @@ func ResourceSharedDirectory() *schema.Resource {
 		CreateContext: resourceSharedDirectoryCreate,
 		ReadContext:   resourceSharedDirectoryRead,
 		DeleteContext: resourceSharedDirectoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -114,7 +120,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
-	output, err := findSharedDirectoryByIDs(ctx, conn, ownerDirID, sharedDirID)
+	output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())
@@ -160,7 +166,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
-	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId)
+	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectory, d.Id(), err)
@@ -171,7 +177,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ds-in-func-name
+func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ci.ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}

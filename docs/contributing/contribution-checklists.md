@@ -138,10 +138,10 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNameGeneratedConfig(),
@@ -166,10 +166,10 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNamePrefixConfig("tf-acc-test-prefix-"),
@@ -465,10 +465,10 @@ More details about this code generation, including fixes for potential error mes
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
-      PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-      ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		  ProviderFactories: acctest.ProviderFactories,
-      CheckDestroy:      testAccCheckClusterDestroy,
+      PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+      ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+      ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+      CheckDestroy:             testAccCheckClusterDestroy,
       Steps: []resource.TestStep{
         {
           Config: testAccClusterConfigTags1(rName, "key1", "value1"),
@@ -740,11 +740,11 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{Service}TagDestroy,
-		Steps: []resource.TestStep{
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheck{Service}TagDestroy,
+    Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(

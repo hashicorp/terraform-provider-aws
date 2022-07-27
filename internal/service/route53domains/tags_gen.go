@@ -93,7 +93,7 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 		_, err := conn.DeleteTagsForDomain(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -106,7 +106,7 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 		_, err := conn.UpdateTagsForDomain(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

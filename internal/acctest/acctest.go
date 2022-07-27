@@ -69,20 +69,10 @@ func Skip(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// Providers is a static map containing only the main provider instance.
-//
-// Deprecated: Terraform Plugin SDK version 2 uses TestCase.ProviderFactories
-// but supports this value in TestCase.Providers for backwards compatibility.
-// In the future Providers: Providers will be changed to
-// ProviderFactories: ProviderFactories
-var Providers map[string]*schema.Provider
-
-// ProviderFactories is a static map containing only the main provider instance
+// ProtoV5ProviderFactories is a static map containing only the main provider instance
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
-var ProviderFactories map[string]func() (*schema.Provider, error)
-
 var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 // Provider is the "main" provider instance
@@ -104,18 +94,16 @@ var testAccProviderConfigure sync.Once
 func init() {
 	Provider = provider.Provider()
 
-	Providers = map[string]*schema.Provider{
-		ProviderName: Provider,
-	}
-
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
-	}
+	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit(ProviderName)
+}
 
-	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		ProviderName: func() (tfprotov5.ProviderServer, error) {
+func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
+
+	for _, name := range providerNames {
+		factories[name] = func() (tfprotov5.ProviderServer, error) {
 			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
@@ -123,11 +111,12 @@ func init() {
 			}
 
 			return providerServerFactory(), nil
-		},
+		}
 	}
+
+	return factories
 }
 
-// factoriesInit creates ProviderFactories for the provider under testing.
 func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
@@ -146,15 +135,6 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 	return factories
 }
 
-// FactoriesInternal creates ProviderFactories for provider configuration testing
-//
-// This should only be used for TestAccProvider_ tests which need to
-// reference the provider instance itself. Other testing should use
-// ProviderFactories or other related functions.
-func FactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{ProviderName})
-}
-
 // FactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
 //
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
@@ -167,33 +147,37 @@ func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schem
 	})
 }
 
-// FactoriesAlternateAccountAndAlternateRegion creates ProviderFactories for cross-account and cross-region configurations
+func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+}
+
+// ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
-func FactoriesAlternateAccountAndAlternateRegion(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
 		ProviderNameSameAccountAlternateRegion,
-	})
+	)
 }
 
-// FactoriesMultipleRegion creates ProviderFactories for the number of region configurations
+// ProtoV5FactoriesMultipleRegions creates ProtoV5ProviderFactories for the specified number of region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
-func FactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[string]func() (*schema.Provider, error) {
-	providerNames := []string{
-		ProviderName,
-		ProviderNameAlternate,
+func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
+	switch n {
+	case 2:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+	case 3:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate, ProviderNameThird)
+	default:
+		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
 
-	if regions >= 3 {
-		providerNames = append(providerNames, ProviderNameThird)
-	}
-
-	return factoriesInit(providers, providerNames)
+	return nil
 }
 
 // PreCheck verifies and sets required provider testing configuration
@@ -334,7 +318,7 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -354,7 +338,7 @@ func MatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -375,7 +359,7 @@ func MatchResourceAttrRegionalARNAccountID(resourceName, attributeName, arnServi
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -390,7 +374,7 @@ func MatchResourceAttrRegionalHostname(resourceName, attributeName, serviceName 
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
+			return fmt.Errorf("unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -405,7 +389,7 @@ func MatchResourceAttrGlobalHostname(resourceName, attributeName, serviceName st
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
+			return fmt.Errorf("unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -463,7 +447,7 @@ func MatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, 
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -484,7 +468,7 @@ func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeN
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -503,7 +487,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("unable to compile ARN regexp (%s): %s", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -537,7 +521,7 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 
 		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
 		if err != nil {
-			return fmt.Errorf("Error normalizing expected JSON: %w", err)
+			return fmt.Errorf("normalizing expected JSON: %w", err)
 		}
 
 		if vNormal != expectedNormal {
@@ -551,12 +535,12 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
 	if !ok {
-		return nil, fmt.Errorf("Not found: %s", name)
+		return nil, fmt.Errorf("not found: %s", name)
 	}
 
 	is := rs.Primary
 	if is == nil {
-		return nil, fmt.Errorf("No primary instance: %s", name)
+		return nil, fmt.Errorf("no primary instance: %s", name)
 	}
 
 	return is, nil
@@ -1214,15 +1198,6 @@ provider "aws" {
 `, os.Getenv(conns.EnvVarAccAssumeRoleARN), policy)
 }
 
-const testAccProviderConfig_assumeRoleEmpty = `
-provider "aws" {
-  assume_role {
-  }
-}
-
-data "aws_caller_identity" "current" {}
-` //lintignore:AT004
-
 const testAccProviderConfigBase = `
 data "aws_partition" "provider_test" {}
 
@@ -1523,11 +1498,11 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ACM PCA Certificate Authority ID is set")
+			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn
@@ -1543,7 +1518,7 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 		}
 
 		if output == nil || output.CertificateAuthority == nil {
-			return fmt.Errorf("ACM PCA Certificate Authority %s does not exist", rs.Primary.ID)
+			return fmt.Errorf("empty ACM PCA Certificate Authority (%s)", rs.Primary.ID)
 		}
 
 		*certificateAuthority = *output.CertificateAuthority
@@ -1910,11 +1885,11 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC ID is set")
+			return fmt.Errorf("no VPC ID is set")
 		}
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn
@@ -1935,24 +1910,24 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Can't find AccountID resource: %s", n)
+			return fmt.Errorf("can't find AccountID resource: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Account Id resource ID not set.")
+			return fmt.Errorf("account Id resource ID not set.")
 		}
 
 		expected := Provider.Meta().(*conns.AWSClient).AccountID
 		if rs.Primary.Attributes["account_id"] != expected {
-			return fmt.Errorf("Incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
+			return fmt.Errorf("incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
 		}
 
 		if rs.Primary.Attributes["user_id"] == "" {
-			return fmt.Errorf("UserID expected to not be nil")
+			return fmt.Errorf("user_id expected to not be nil")
 		}
 
 		if rs.Primary.Attributes["arn"] == "" {
-			return fmt.Errorf("ARN expected to not be nil")
+			return fmt.Errorf("attribute ARN expected to not be nil")
 		}
 
 		return nil
@@ -1963,7 +1938,7 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if v, ok := rs.Primary.Attributes[key]; !ok || !(v > value) {

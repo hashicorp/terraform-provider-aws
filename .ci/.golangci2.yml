@@ -1,0 +1,46 @@
+issues:
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - exportloopref
+    - gomnd
+    - gosimple
+    - ineffassign
+
+linters-settings:
+  errcheck:
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  gomnd:
+    settings:
+      mnd:
+        checks:
+          - argument
+        ignored-functions:
+          # AWS Go SDK
+          - aws.Int64
+          - request.ConstantWaiterDelay
+          - request.WithWaiterMaxAttempts
+          # AWS Provider
+          - nullable.*
+          # Terraform Plugin SDK
+          - resource.Retry
+          - schema.DefaultTimeout
+          - validation.*
+          # Go
+          - make
+          - strconv.FormatFloat
+          - strconv.FormatInt
+          - strconv.ParseFloat
+          - strconv.ParseInt
+          - strings.SplitN
+
+run:
+  timeout: 75m
+  go: 1.18
+  skip-dirs:
+    - .ci/providerlint/vendor

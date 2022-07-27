@@ -36,6 +36,7 @@ const (
 	errCodeInvalidFleetIdNotFound                         = "InvalidFleetId.NotFound"
 	errCodeInvalidFlowLogIdNotFound                       = "InvalidFlowLogId.NotFound"
 	errCodeInvalidGatewayIDNotFound                       = "InvalidGatewayID.NotFound"
+	errCodeInvalidGroupInUse                              = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                           = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                          = "InvalidHostID.NotFound"
 	errCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"
