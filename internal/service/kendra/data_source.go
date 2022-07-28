@@ -1380,7 +1380,7 @@ func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interf
 	}
 
 	m := map[string]interface{}{
-		"bucket_name": apiObject.BucketName,
+		"bucket_name": aws.ToString(apiObject.BucketName),
 	}
 
 	if v := apiObject.AccessControlListConfiguration; v != nil {
@@ -1414,7 +1414,7 @@ func flattenAccessControlListConfiguration(apiObject *types.AccessControlListCon
 	m := map[string]interface{}{}
 
 	if v := apiObject.KeyPath; v != nil {
-		m["key_path"] = v
+		m["key_path"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1428,7 +1428,7 @@ func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataCon
 	m := map[string]interface{}{}
 
 	if v := apiObject.S3Prefix; v != nil {
-		m["s3_prefix"] = v
+		m["s3_prefix"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1548,7 +1548,7 @@ func flattenSeedUrlConfiguration(apiObject *types.SeedUrlConfiguration) []interf
 
 	m := map[string]interface{}{
 		"seed_urls":        flex.FlattenStringListV2(apiObject.SeedUrls),
-		"web_crawler_mode": apiObject.WebCrawlerMode,
+		"web_crawler_mode": string(apiObject.WebCrawlerMode),
 	}
 
 	return []interface{}{m}
@@ -1587,7 +1587,7 @@ func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumen
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m["role_arn"] = v
+		m["role_arn"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1625,7 +1625,7 @@ func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []
 	}
 
 	if v := apiObject.TargetDocumentAttributeKey; v != nil {
-		m["target_document_attribute_key"] = v
+		m["target_document_attribute_key"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetDocumentAttributeValue; v != nil {
@@ -1641,8 +1641,8 @@ func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"lambda_arn": apiObject.LambdaArn,
-		"s3_bucket":  apiObject.S3Bucket,
+		"lambda_arn": aws.ToString(apiObject.LambdaArn),
+		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {
@@ -1658,8 +1658,8 @@ func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeConditi
 	}
 
 	m := map[string]interface{}{
-		"condition_document_attribute_key": apiObject.ConditionDocumentAttributeKey,
-		"operator":                         apiObject.Operator,
+		"condition_document_attribute_key": aws.ToString(apiObject.ConditionDocumentAttributeKey),
+		"operator":                         string(apiObject.Operator),
 	}
 
 	if v := apiObject.ConditionOnValue; v != nil {
@@ -1681,7 +1681,7 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 		// A date expressed as an ISO 8601 string.
 		m["date_value"] = aws.ToTime(v).Format(ISO8601UTC)
 	} else if v := apiObject.StringValue; v != nil {
-		m["string_value"] = v
+		m["string_value"] = aws.ToString(v)
 	} else if v := apiObject.StringListValue; v != nil {
 		m["string_list_value"] = flex.FlattenStringListV2(v)
 	} else if v := apiObject.LongValue; v != nil {
