@@ -150,6 +150,175 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"web_crawler_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authentication_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"basic_authentication": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 10,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"credentials": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: verify.ValidARN,
+															},
+															"host": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 253),
+															},
+															"port": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 65535),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"crawl_depth": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      2,
+										ValidateFunc: validation.IntBetween(0, 10),
+									},
+									"max_content_size_per_page_in_mega_bytes": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										// Default:      50,
+										ValidateFunc: validation.FloatBetween(0.000001, 50),
+									},
+									"max_links_per_page": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(1, 1000),
+									},
+									"max_urls_per_minute_crawl_rate": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      300,
+										ValidateFunc: validation.IntBetween(1, 300),
+									},
+									"proxy_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"credentials": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"host": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 253),
+												},
+												"port": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
+											},
+										},
+									},
+									"url_exclusion_patterns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 100,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+									"url_inclusion_patterns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 100,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 150),
+										},
+									},
+									"urls": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"seed_url_configuration": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"seed_urls": {
+																Type:     schema.TypeSet,
+																Required: true,
+																MinItems: 0,
+																MaxItems: 100,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(1, 2048),
+																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																	),
+																},
+															},
+															"web_crawler_mode": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(dataSourceWebCrawlerModeValues(types.WebCrawlerMode("").Values()...), false),
+															},
+														},
+													},
+												},
+												"site_maps_configuration": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"site_maps": {
+																Type:     schema.TypeSet,
+																Required: true,
+																MinItems: 0,
+																MaxItems: 3,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(1, 2048),
+																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																	),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -767,9 +936,14 @@ func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfig
 		result.S3Configuration = expandS3Configuration(v)
 	}
 
+	if v, ok := tfMap["web_crawler_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.WebCrawlerConfiguration = expandWebCrawlerConfiguration(v)
+	}
+
 	return result
 }
 
+// S3 Configuration
 func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -845,6 +1019,177 @@ func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.Documents
 	return result
 }
 
+// Web Crawler Configuration
+func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.WebCrawlerConfiguration{
+		Urls: expandUrls(tfMap["urls"].([]interface{})),
+	}
+
+	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.AuthenticationConfiguration = expandAuthenticationConfiguration(v)
+	}
+
+	if v, ok := tfMap["crawl_depth"].(int); ok {
+		result.CrawlDepth = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["max_content_size_per_page_in_mega_bytes"].(float32); ok {
+		result.MaxContentSizePerPageInMegaBytes = aws.Float32(float32(v))
+	}
+
+	if v, ok := tfMap["max_links_per_page"].(int); ok {
+		result.MaxLinksPerPage = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["max_urls_per_minute_crawl_rate"].(int); ok {
+		result.MaxUrlsPerMinuteCrawlRate = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["proxy_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.ProxyConfiguration = expandProxyConfiguration(v)
+	}
+
+	if v, ok := tfMap["url_exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
+		result.UrlExclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["url_inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
+		result.UrlInclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+	}
+
+	return result
+}
+
+func expandAuthenticationConfiguration(tfList []interface{}) *types.AuthenticationConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.AuthenticationConfiguration{}
+
+	if v, ok := tfMap["basic_authentication"]; ok && v.(*schema.Set).Len() > 0 {
+		result.BasicAuthentication = expandBasicAuthentication(v.(*schema.Set).List())
+	}
+
+	return result
+}
+
+func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthenticationConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	result := []types.BasicAuthenticationConfiguration{}
+
+	for _, basicAuthenticationConfig := range tfList {
+		data := basicAuthenticationConfig.(map[string]interface{})
+		basicAuthenticationConfigExpanded := types.BasicAuthenticationConfiguration{
+			Credentials: aws.String(data["credentials"].(string)),
+			Host:        aws.String(data["host"].(string)),
+			Port:        aws.Int32(int32(data["port"].(int))),
+		}
+
+		result = append(result, basicAuthenticationConfigExpanded)
+	}
+
+	return result
+}
+
+func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.ProxyConfiguration{
+		Credentials: aws.String(tfMap["credentials"].(string)),
+		Host:        aws.String(tfMap["host"].(string)),
+		Port:        aws.Int32(int32(tfMap["port"].(int))),
+	}
+
+	return result
+}
+
+func expandUrls(tfList []interface{}) *types.Urls {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.Urls{}
+
+	if v, ok := tfMap["seed_url_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.SeedUrlConfiguration = expandSeedUrlConfiguration(v)
+	}
+
+	if v, ok := tfMap["site_maps_configuration"].([]interface{}); ok && len(v) > 0 {
+		result.SiteMapsConfiguration = expandSiteMapsConfiguration(v)
+	}
+
+	return result
+}
+
+func expandSeedUrlConfiguration(tfList []interface{}) *types.SeedUrlConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.SeedUrlConfiguration{
+		SeedUrls: flex.ExpandStringSetV2(tfMap["seed_urls"].(*schema.Set)),
+	}
+
+	if v, ok := tfMap["web_crawler_mode"].(string); ok && v != "" {
+		result.WebCrawlerMode = types.WebCrawlerMode(tfMap["web_crawler_mode"].(string))
+	}
+
+	return result
+}
+
+func expandSiteMapsConfiguration(tfList []interface{}) *types.SiteMapsConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &types.SiteMapsConfiguration{
+		SiteMaps: flex.ExpandStringSetV2(tfMap["site_maps"].(*schema.Set)),
+	}
+
+	return result
+}
+
+// Custom document enrichment configuration
 func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.CustomDocumentEnrichmentConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1018,9 +1363,14 @@ func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []
 		m["s3_configuration"] = flattenS3Configuration(v)
 	}
 
+	if v := apiObject.WebCrawlerConfiguration; v != nil {
+		m["web_crawler_configuration"] = flattenWebCrawlerConfiguration(v)
+	}
+
 	return []interface{}{m}
 }
 
+// S3 Configuration
 func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1081,6 +1431,136 @@ func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataCon
 	return []interface{}{m}
 }
 
+// Web Crawler Configuraiton
+func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"crawl_depth": aws.ToInt32(apiObject.CrawlDepth),
+		"urls":        flattenUrls(apiObject.Urls),
+	}
+
+	if v := apiObject.AuthenticationConfiguration; v != nil {
+		m["authentication_configuration"] = flattenAuthenticationConfiguration(v)
+	}
+
+	if v := apiObject.MaxContentSizePerPageInMegaBytes; v != nil {
+		m["max_content_size_per_page_in_mega_bytes"] = aws.ToFloat32(v)
+	}
+
+	if v := apiObject.MaxLinksPerPage; v != nil {
+		m["max_links_per_page"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MaxUrlsPerMinuteCrawlRate; v != nil {
+		m["max_urls_per_minute_crawl_rate"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.ProxyConfiguration; v != nil {
+		m["proxy_configuration"] = flattenProxyConfiguration(v)
+	}
+
+	if v := apiObject.UrlExclusionPatterns; v != nil {
+		m["url_exclusion_patterns"] = flex.FlattenStringListV2(v)
+	}
+
+	if v := apiObject.UrlInclusionPatterns; v != nil {
+		m["url_inclusion_patterns"] = flex.FlattenStringListV2(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.BasicAuthentication; v != nil {
+		m["basic_authentication"] = flattenBasicAuthentication(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBasicAuthentication(basicAuthentications []types.BasicAuthenticationConfiguration) []interface{} {
+	BasicAuthenticationList := []interface{}{}
+
+	for _, basicAuthentication := range basicAuthentications {
+		m := map[string]interface{}{
+			"credentials": aws.ToString(basicAuthentication.Credentials),
+			"host":        aws.ToString(basicAuthentication.Host),
+			"port":        aws.ToInt32(basicAuthentication.Port),
+		}
+
+		BasicAuthenticationList = append(BasicAuthenticationList, m)
+	}
+
+	return BasicAuthenticationList
+}
+
+func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"credentials": aws.ToString(apiObject.Credentials),
+		"host":        aws.ToString(apiObject.Host),
+		"port":        aws.ToInt32(apiObject.Port),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenUrls(apiObject *types.Urls) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.SeedUrlConfiguration; v != nil {
+		m["seed_url_configuration"] = flattenSeedUrlConfiguration(v)
+	}
+
+	if v := apiObject.SiteMapsConfiguration; v != nil {
+		m["site_maps_configuration"] = flattenSiteMapsConfiguration(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenSeedUrlConfiguration(apiObject *types.SeedUrlConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"seed_urls":        flex.FlattenStringListV2(apiObject.SeedUrls),
+		"web_crawler_mode": apiObject.WebCrawlerMode,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"site_maps": flex.FlattenStringListV2(apiObject.SiteMaps),
+	}
+
+	return []interface{}{m}
+}
+
+// Custom Document Enrichment Configuration
 func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1206,6 +1686,16 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 }
 
 // Helpers added. Could be generated or somehow use go 1.18 generics?
+func dataSourceWebCrawlerModeValues(input ...types.WebCrawlerMode) []string {
+	var output []string
+
+	for _, v := range input {
+		output = append(output, string(v))
+	}
+
+	return output
+}
+
 func dataSourceOperatorValues(input ...types.ConditionOperator) []string {
 	var output []string
 
