@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_rds_reserved_instance
 
-Manages RDS DB Instance Reservations. Once created, a reservation is valid for the `duration` of the provided `offering_id` and cannot be deleted. For more information see the official [RDS Reserved Instances Documentation](https://aws.amazon.com/rds/reserved-instances/)
+Manages RDS DB Instance Reservations. **Once created, a reservation is valid for the `duration` of the provided `offering_id` and cannot be deleted. Performing a `destroy` or removing this resource from your code will only remove the resource from state.** For more information see the official [RDS Reserved Instances Documentation](https://aws.amazon.com/rds/reserved-instances/)
 
 ## Example Usage
 
