@@ -317,14 +317,8 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("enable_sso"); ok {
-		input := &directoryservice.EnableSsoInput{
-			DirectoryId: aws.String(d.Id()),
-		}
-
-		_, err := conn.EnableSso(input)
-
-		if err != nil {
-			return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
+		if err := enableSSO(conn, d.Id()); err != nil {
+			return err
 		}
 	}
 
@@ -414,14 +408,8 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("enable_sso") {
 		if _, ok := d.GetOk("enable_sso"); ok {
-			input := &directoryservice.EnableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			}
-
-			_, err := conn.EnableSso(input)
-
-			if err != nil {
-				return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
+			if err := enableSSO(conn, d.Id()); err != nil {
+				return err
 			}
 		} else {
 			input := &directoryservice.DisableSsoInput{
@@ -482,6 +470,20 @@ func createAlias(conn *directoryservice.DirectoryService, directoryID, alias str
 
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
+	}
+
+	return nil
+}
+
+func enableSSO(conn *directoryservice.DirectoryService, directoryID string) error {
+	input := &directoryservice.EnableSsoInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.EnableSso(input)
+
+	if err != nil {
+		return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", directoryID, err)
 	}
 
 	return nil
