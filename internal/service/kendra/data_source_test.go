@@ -855,6 +855,60 @@ func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t 
 	})
 }
 
+func testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://registry.terraform.io/sitemap.xml"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://registry.terraform.io/sitemap.xml"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.site_maps_configuration.0.site_maps.*", "https://www.terraform.io/sitemap.xml"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2185,6 +2239,59 @@ resource "aws_kendra_data_source" "test" {
         seed_url_configuration {
           seed_urls = [
             "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName5))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      urls {
+        site_maps_configuration {
+          site_maps = [
+            "https://registry.terraform.io/sitemap.xml"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName5))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      urls {
+        site_maps_configuration {
+          site_maps = [
+            "https://registry.terraform.io/sitemap.xml",
+            "https://www.terraform.io/sitemap.xml"
           ]
         }
       }
