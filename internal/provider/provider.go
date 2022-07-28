@@ -1868,6 +1868,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_rds_cluster_parameter_group":               rds.ResourceClusterParameterGroup(),
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
+			"aws_rds_reserved_instance":                     rds.ResourceReservedInstance(),
 
 			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
