@@ -13,8 +13,6 @@ Terraform resource for managing a Roles Anywhere Profile.
 ## Example Usage
 
 ```terraform
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "test" {
   name = "test"
   path = "/"
@@ -22,9 +20,13 @@ resource "aws_iam_role" "test" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole",
+      Action = [
+        "sts:AssumeRole",
+        "sts:TagSession",
+        "sts:SetSourceIdentity"
+      ]
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = "rolesanywhere.amazonaws.com",
       }
       Effect = "Allow"
       Sid    = ""
