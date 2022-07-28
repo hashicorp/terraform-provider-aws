@@ -23,6 +23,7 @@ func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceReservedInstanceCreate,
 		ReadContext:   resourceReservedInstanceRead,
+		UpdateContext: resourceReservedInstanceUpdate,
 		DeleteContext: resourceReservedInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -69,6 +70,7 @@ func ResourceReservedInstance() *schema.Resource {
 			"offering_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"offering_type": {
 				Type:     schema.TypeString,
@@ -179,6 +181,29 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return nil
+}
+
+func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).RDSConn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return names.DiagError(names.RDS, names.ErrActionUpdating, ResTags, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return names.DiagError(names.RDS, names.ErrActionUpdating, ResTags, d.Id(), err)
+		}
+	}
+
+	return resourceReservedInstanceRead(ctx, d, meta)
+
 }
 
 func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
