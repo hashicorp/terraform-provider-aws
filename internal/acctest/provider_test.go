@@ -1,6 +1,7 @@
 package acctest_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -19,13 +20,17 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	if err := provider.Provider().InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
-	}
-}
+	p, err := provider.New(context.Background())
 
-func TestProvider_impl(t *testing.T) {
-	var _ *schema.Provider = provider.Provider()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = p.InternalValidate()
+
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestReverseDNS(t *testing.T) {
@@ -523,7 +528,12 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 
 // Replaces FactoriesInternal.
 func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) { //nolint:unparam
-	p := provider.Provider()
+	p, err := provider.New(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	*v = p
 
 	return map[string]func() (*schema.Provider, error){

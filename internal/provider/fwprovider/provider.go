@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// New returns a new Terraform Plugin Framework-style provider instance.
+// New returns a new, initialized Terraform Plugin Framework-style provider instance.
+// The provider instance is fully configured once the `Configure` method has been called.
 func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
 	return &provider{
 		Primary: primary,
