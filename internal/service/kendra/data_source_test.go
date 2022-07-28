@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
@@ -645,6 +646,55 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.*", "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.web_crawler_configuration.0.urls.0.seed_url_configuration.0.seed_urls.*", "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_faq"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+	originalCrawlDepth := 5
+	updatedCrawlDepth := 4
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5, originalCrawlDepth),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(originalCrawlDepth)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5, updatedCrawlDepth),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.crawl_depth", strconv.Itoa(updatedCrawlDepth)),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
 				),
 			},
@@ -1847,6 +1897,34 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName5))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5 string, crawlDepth int) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      crawl_depth = %[2]d
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName5, crawlDepth))
 }
 
 func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
