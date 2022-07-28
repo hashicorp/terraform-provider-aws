@@ -29,11 +29,11 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 			expected: meta.ARN{Unknown: true},
 		},
 		"valid ARN": {
-			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"),
+			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
 			expected: meta.ARN{Value: arn.ARN{
 				Partition: "aws",
 				Service:   "rds",
-				Region:    "us-east-1",
+				Region:    "us-east-1", // lintignore:AWSAT003
 				AccountID: "123456789012",
 				Resource:  "db:test",
 			}},
@@ -83,7 +83,7 @@ func TestARNTypeValidate(t *testing.T) {
 			val: tftypes.NewValue(tftypes.String, nil),
 		},
 		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"),
+			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid string": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),
