@@ -186,7 +186,6 @@ func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData,
 
 	// Reservations cannot be deleted. Removing from state.
 	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.RDS, ResReservedInstance, d.Id())
-	d.SetId("")
 
 	return nil
 }
