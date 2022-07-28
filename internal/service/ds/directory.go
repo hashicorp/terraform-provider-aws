@@ -412,14 +412,8 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		} else {
-			input := &directoryservice.DisableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			}
-
-			_, err := conn.DisableSso(input)
-
-			if err != nil {
-				return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", d.Id(), err)
+			if err := disableSSO(conn, d.Id()); err != nil {
+				return err
 			}
 		}
 	}
@@ -470,6 +464,20 @@ func createAlias(conn *directoryservice.DirectoryService, directoryID, alias str
 
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
+	}
+
+	return nil
+}
+
+func disableSSO(conn *directoryservice.DirectoryService, directoryID string) error {
+	input := &directoryservice.DisableSsoInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.DisableSso(input)
+
+	if err != nil {
+		return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", directoryID, err)
 	}
 
 	return nil
