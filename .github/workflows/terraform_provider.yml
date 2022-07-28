@@ -20,7 +20,6 @@ on:
       - GNUmakefile
       - main.go
       - names/**
-      - staticcheck.conf
       - tools/**
       - website/**
 
@@ -238,19 +237,6 @@ jobs:
               go test -run ^Test[^A][^c][^c] "github.com/hashicorp/terraform-provider-aws/${pkg}"
             done </tmp/dep_pkgs
           fi
-
-  golangci-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: .go-version
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: -c .ci/.golangci.yml
 
   importlint:
     needs: [go_build]

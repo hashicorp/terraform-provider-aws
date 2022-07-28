@@ -1,17 +1,17 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.57
+	github.com/aws/aws-sdk-go v1.44.63
 	github.com/aws/aws-sdk-go-v2 v1.16.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.30.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.8
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.20.3
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.0
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.17.0

@@ -22,10 +22,10 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_basic(rstring),
@@ -52,10 +52,10 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_basic(rstring),
@@ -79,7 +79,7 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {

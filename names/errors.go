@@ -9,13 +9,14 @@ import (
 )
 
 const (
+	ErrActionChecking             = "checking"
 	ErrActionCheckingDestroyed    = "checking destroyed"
 	ErrActionCheckingExistence    = "checking existence"
 	ErrActionCheckingNotRecreated = "checking not recreated"
 	ErrActionCheckingRecreated    = "checking recreated"
-	ErrActionChecking             = "checking"
 	ErrActionCreating             = "creating"
 	ErrActionDeleting             = "deleting"
+	ErrActionImporting            = "importing"
 	ErrActionReading              = "reading"
 	ErrActionSetting              = "setting"
 	ErrActionUpdating             = "updating"

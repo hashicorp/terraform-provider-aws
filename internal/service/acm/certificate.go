@@ -237,10 +237,10 @@ func ResourceCertificate() *schema.Resource {
 				// ACM automatically adds the domain_name value to the list of SANs. Mimic ACM's behavior
 				// so that the user doesn't need to explicitly set it themselves.
 				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+					domainName := diff.Get("domain_name").(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
-						sanSet.Add(domain_name)
+						sanSet.Add(domainName)
 						if err := diff.SetNew("subject_alternative_names", sanSet); err != nil {
 							return fmt.Errorf("error setting new subject_alternative_names diff: %w", err)
 						}

@@ -8,13 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccKMSReplicaKey_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryKeyResourceName := "aws_kms_key.test"
@@ -25,9 +23,9 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_basic(rName),
@@ -56,7 +54,6 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
@@ -66,9 +63,9 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_basic(rName),
@@ -83,7 +80,6 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,9 +92,9 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName2, false),
@@ -135,7 +131,6 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_policy(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
@@ -147,9 +142,9 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_policy(rName, policy1, false),
@@ -178,7 +173,6 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_tags(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
@@ -188,9 +182,9 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_tags1(rName, "key1", "value1"),
@@ -228,7 +222,6 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
-	var providers []*schema.Provider
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test1"
@@ -238,9 +231,9 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckKeyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_two(rName),

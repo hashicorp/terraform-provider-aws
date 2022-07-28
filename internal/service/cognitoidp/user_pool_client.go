@@ -513,7 +513,7 @@ func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) erro
 
 func resourceUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", d.Id())
 	}
 	userPoolId := strings.Split(d.Id(), "/")[0]
 	clientId := strings.Split(d.Id(), "/")[1]

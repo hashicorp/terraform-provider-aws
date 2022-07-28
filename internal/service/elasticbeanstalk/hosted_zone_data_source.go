@@ -9,6 +9,7 @@ import (
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
+
 var HostedZoneIDs = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",
 	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",

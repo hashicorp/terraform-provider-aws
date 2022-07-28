@@ -88,9 +88,9 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
@@ -135,9 +135,9 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
@@ -182,9 +182,9 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,
@@ -209,9 +209,9 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_basic,
@@ -256,9 +256,9 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyExists,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyExists,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
@@ -303,9 +303,9 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDefaultVPCDestroyNotFound,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultVPCDestroyNotFound,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCConfig_forceDestroy,

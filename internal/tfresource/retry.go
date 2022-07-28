@@ -89,7 +89,7 @@ func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}
 	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
 }
 
-var resourceFoundError = errors.New(`found resource`)
+var errFoundResource = errors.New(`found resource`)
 
 // RetryUntilNotFoundContext retries the specified function until it returns a resource.NotFoundError.
 func RetryUntilNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
@@ -102,7 +102,7 @@ func RetryUntilNotFoundContext(ctx context.Context, timeout time.Duration, f fun
 			return false, err
 		}
 
-		return true, resourceFoundError
+		return true, errFoundResource
 	})
 }
 

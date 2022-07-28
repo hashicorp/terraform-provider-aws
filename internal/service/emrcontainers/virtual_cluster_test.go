@@ -31,10 +31,10 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterConfig_basic(rName),
@@ -86,10 +86,10 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterConfig_basic(rName),
@@ -119,10 +119,10 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, emrcontainers.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		ExternalProviders: testExternalProviders,
-		CheckDestroy:      testAccCheckVirtualClusterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterConfig_tags1(rName, "key1", "value1"),
