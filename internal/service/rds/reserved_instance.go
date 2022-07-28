@@ -23,7 +23,6 @@ func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceReservedInstanceCreate,
 		ReadContext:   resourceReservedInstanceRead,
-		// UpdateContext: resourceReservedInstanceUpdate,
 		DeleteContext: resourceReservedInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
