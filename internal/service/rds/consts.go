@@ -213,3 +213,7 @@ func TimeoutAction_Values() []string {
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	ResTags = "Tags"
+)
