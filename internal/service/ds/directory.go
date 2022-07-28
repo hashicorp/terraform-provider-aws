@@ -305,16 +305,8 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
-		alias := v.(string)
-		input := &directoryservice.CreateAliasInput{
-			Alias:       aws.String(alias),
-			DirectoryId: aws.String(d.Id()),
-		}
-
-		_, err := conn.CreateAlias(input)
-
-		if err != nil {
-			return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", d.Id(), alias, err)
+		if err := createAlias(conn, d.Id(), v.(string)); err != nil {
+			return nil
 		}
 	}
 
@@ -475,6 +467,21 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for Directory Service Directory (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func createAlias(conn *directoryservice.DirectoryService, directoryID, alias string) error {
+	input := &directoryservice.CreateAliasInput{
+		Alias:       aws.String(alias),
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.CreateAlias(input)
+
+	if err != nil {
+		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
 	}
 
 	return nil
