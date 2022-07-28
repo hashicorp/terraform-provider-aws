@@ -702,6 +702,55 @@ func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	})
 }
 
+func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+	originalMaxLinksPerPage := 100
+	updatedMaxLinksPerPage := 110
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5, originalMaxLinksPerPage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(originalMaxLinksPerPage)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5, updatedMaxLinksPerPage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.max_links_per_page", strconv.Itoa(updatedMaxLinksPerPage)),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1925,6 +1974,34 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName5, crawlDepth))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5 string, maxLinksPerPage int) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerBase(rName4),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      max_links_per_page = %[2]d
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName5, maxLinksPerPage))
 }
 
 func testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6 string) string {
