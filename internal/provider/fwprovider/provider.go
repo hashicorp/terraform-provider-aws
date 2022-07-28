@@ -310,7 +310,7 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 	var diags diag.Diagnostics
 	dataSources := make(map[string]tfsdk.DataSourceType)
 
-	// TODO
+	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
 	t, err := meta.NewDataSourceARNType(ctx)
 
 	if err != nil {

@@ -738,7 +738,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
 			"aws_location_tracker":             location.DataSourceTracker(),
 
-			// "aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),
