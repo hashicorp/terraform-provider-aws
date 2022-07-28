@@ -19,6 +19,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_WebCrawler_UrlExclusionInclusionPatterns":                                testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns,
 			"Configuration_WebCrawler_UrlsSeedUrls":                                                 testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls,
 			"Configuration_WebCrawler_UrlsSiteMaps":                                                 testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps,
+			"Configuration_WebCrawler_UrlsWebCrawlerMode":                                           testAccDataSource_Configuration_WebCrawler_UrlsWebCrawlerMode,
 			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition": testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition,
 			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_LambdaARN":           testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_LambdaARN,
 			"CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN":             testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN,
