@@ -222,7 +222,7 @@ func ResourceDataSource() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"credentials": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
 												"host": {
@@ -1120,9 +1120,12 @@ func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
 	}
 
 	result := &types.ProxyConfiguration{
-		Credentials: aws.String(tfMap["credentials"].(string)),
-		Host:        aws.String(tfMap["host"].(string)),
-		Port:        aws.Int32(int32(tfMap["port"].(int))),
+		Host: aws.String(tfMap["host"].(string)),
+		Port: aws.Int32(int32(tfMap["port"].(int))),
+	}
+
+	if v, ok := tfMap["credentials"].(string); ok && v != "" {
+		result.Credentials = aws.String(tfMap["credentials"].(string))
 	}
 
 	return result
@@ -1509,9 +1512,12 @@ func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{
 	}
 
 	m := map[string]interface{}{
-		"credentials": aws.ToString(apiObject.Credentials),
-		"host":        aws.ToString(apiObject.Host),
-		"port":        aws.ToInt32(apiObject.Port),
+		"host": aws.ToString(apiObject.Host),
+		"port": aws.ToInt32(apiObject.Port),
+	}
+
+	if v := apiObject.Credentials; v != nil {
+		m["credentials"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

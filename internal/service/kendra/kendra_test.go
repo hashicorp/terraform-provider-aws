@@ -18,6 +18,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_WebCrawler_CrawlDepth":                                                   testAccDataSource_Configuration_WebCrawler_CrawlDepth,
 			"Configuration_WebCrawler_MaxLinksPerPage":                                              testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage,
 			"Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate":                                    testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate,
+			"Configuration_WebCrawler_ProxyConfigurationHostPort":                                   testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort,
 			"Configuration_WebCrawler_UrlExclusionInclusionPatterns":                                testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns,
 			"Configuration_WebCrawler_UrlsSeedUrls":                                                 testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls,
 			"Configuration_WebCrawler_UrlsSiteMaps":                                                 testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps,
