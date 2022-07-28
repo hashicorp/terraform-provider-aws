@@ -319,16 +319,8 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
-		desiredNumber := v.(int)
-		input := &directoryservice.UpdateNumberOfDomainControllersInput{
-			DirectoryId:   aws.String(d.Id()),
-			DesiredNumber: aws.Int64(int64(desiredNumber)),
-		}
-
-		_, err := conn.UpdateNumberOfDomainControllers(input)
-
-		if err != nil {
-			return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", d.Id(), desiredNumber, err)
+		if err := updateNumberOfDomainControllers(conn, d.Id(), v.(int)); err != nil {
+			return err
 		}
 	}
 
@@ -423,16 +415,8 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("desired_number_of_domain_controllers") {
-		desiredNumber := d.Get("desired_number_of_domain_controllers").(int)
-		input := &directoryservice.UpdateNumberOfDomainControllersInput{
-			DirectoryId:   aws.String(d.Id()),
-			DesiredNumber: aws.Int64(int64(desiredNumber)),
-		}
-
-		_, err := conn.UpdateNumberOfDomainControllers(input)
-
-		if err != nil {
-			return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", d.Id(), desiredNumber, err)
+		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int)); err != nil {
+			return err
 		}
 	}
 
@@ -491,6 +475,21 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for Directory Service Directory (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, directoryID string, desiredNumber int) error {
+	input := &directoryservice.UpdateNumberOfDomainControllersInput{
+		DesiredNumber: aws.Int64(int64(desiredNumber)),
+		DirectoryId:   aws.String(directoryID),
+	}
+
+	_, err := conn.UpdateNumberOfDomainControllers(input)
+
+	if err != nil {
+		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
 	}
 
 	return nil
