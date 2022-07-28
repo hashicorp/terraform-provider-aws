@@ -98,6 +98,12 @@ func ResourceDirectory() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"desired_number_of_domain_controllers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(2),
+			},
 			"dns_ip_addresses": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -189,10 +195,11 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	switch directoryType := d.Get("type").(string); directoryType {
 	case directoryservice.DirectoryTypeAdconnector:
 		input := &directoryservice.ConnectDirectoryInput{
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
 			Tags:     Tags(tags.IgnoreAWS()),
 		}
@@ -220,14 +227,14 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.ConnectDirectory(input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
 
 	case directoryservice.DirectoryTypeMicrosoftAd:
 		input := &directoryservice.CreateMicrosoftADInput{
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
 			Tags:     Tags(tags.IgnoreAWS()),
 		}
@@ -252,14 +259,14 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.CreateMicrosoftAD(input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
 
 	case directoryservice.DirectoryTypeSimpleAd:
 		input := &directoryservice.CreateDirectoryInput{
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
 			Tags:     Tags(tags.IgnoreAWS()),
 		}
@@ -287,7 +294,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.CreateDirectory(input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service Directory (%s): %w", directoryType, err)
+			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
@@ -308,6 +315,20 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if err != nil {
 			return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", d.Id(), alias, err)
+		}
+	}
+
+	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
+		desiredNumber := v.(int)
+		input := &directoryservice.UpdateNumberOfDomainControllersInput{
+			DirectoryId:   aws.String(d.Id()),
+			DesiredNumber: aws.Int64(int64(desiredNumber)),
+		}
+
+		_, err := conn.UpdateNumberOfDomainControllers(input)
+
+		if err != nil {
+			return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", d.Id(), desiredNumber, err)
 		}
 	}
 
@@ -353,6 +374,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("connect_settings", nil)
 	}
 	d.Set("description", dir.Description)
+	d.Set("desired_number_of_domain_controllers", dir.DesiredNumberOfDomainControllers)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
 	} else {
@@ -399,6 +421,20 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
+
+	if d.HasChange("desired_number_of_domain_controllers") {
+		desiredNumber := d.Get("desired_number_of_domain_controllers").(int)
+		input := &directoryservice.UpdateNumberOfDomainControllersInput{
+			DirectoryId:   aws.String(d.Id()),
+			DesiredNumber: aws.Int64(int64(desiredNumber)),
+		}
+
+		_, err := conn.UpdateNumberOfDomainControllers(input)
+
+		if err != nil {
+			return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", d.Id(), desiredNumber, err)
+		}
+	}
 
 	if d.HasChange("enable_sso") {
 		if _, ok := d.GetOk("enable_sso"); ok {

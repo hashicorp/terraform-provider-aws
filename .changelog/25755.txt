@@ -13,3 +13,7 @@ resource/aws_directory_service_shared_directory: Add configurable timeouts for D
 ```release-note:enhancement
 resource/aws_directory_service_shared_directory_accepter: Add configurable timeouts for Create and Delete
 ```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Add `desired_number_of_domain_controllers` argument
+```
