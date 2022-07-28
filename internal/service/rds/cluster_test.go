@@ -860,7 +860,7 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1299,7 +1299,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 			testAccPreCheckGlobalCluster(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1333,7 +1333,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 			testAccPreCheckGlobalCluster(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1370,7 +1370,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 			testAccPreCheckGlobalCluster(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
