@@ -140,7 +140,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := &ses.CreateConfigurationSetTrackingOptionsInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			TrackingOptions:      expandSesConfigurationSetTrackingOptions(v.([]interface{})),
+			TrackingOptions:      expandConfigurationSetTrackingOptions(v.([]interface{})),
 		}
 
 		_, err := conn.CreateConfigurationSetTrackingOptions(input)
@@ -240,7 +240,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tracking_options") {
 		input := &ses.UpdateConfigurationSetTrackingOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
-			TrackingOptions:      expandSesConfigurationSetTrackingOptions(d.Get("tracking_options").([]interface{})),
+			TrackingOptions:      expandConfigurationSetTrackingOptions(d.Get("tracking_options").([]interface{})),
 		}
 
 		_, err := conn.UpdateConfigurationSetTrackingOptions(input)
@@ -300,7 +300,7 @@ func flattenConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []inte
 	return []interface{}{m}
 }
 
-func expandSesConfigurationSetTrackingOptions(l []interface{}) *ses.TrackingOptions {
+func expandConfigurationSetTrackingOptions(l []interface{}) *ses.TrackingOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
