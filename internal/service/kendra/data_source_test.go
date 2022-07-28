@@ -720,6 +720,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
 	originalHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
@@ -737,7 +738,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 		CheckDestroy:      testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, originalHost1, originalPort1),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -759,7 +760,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort2(rName, rName2, rName3, rName4, rName5, rName6, updatedHost1, updatedPort1, host2, port2),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort2(rName, rName2, rName3, rName4, rName5, rName6, rName7, updatedHost1, updatedPort1, host2, port2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -776,6 +777,61 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 						"host": host2,
 						"port": strconv.Itoa(port2),
 					}),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicCredentials(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.authentication_configuration.0.basic_authentication.0.credentials", "aws_secretsmanager_secret.test2", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
 				),
@@ -1742,7 +1798,7 @@ resource "aws_iam_role" "test_data_source" {
 `, rName)
 }
 
-func testAccDataSourceConfigWebCrawlerSecretsBase(rName, rName2 string) string {
+func testAccDataSourceConfigWebCrawlerSecretsBase(rName, rName2, rName3 string) string {
 	// Kendra IAM policies: https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -1755,8 +1811,18 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_string = "{\"hello\":\"world\"}"
 }
 
+resource "aws_secretsmanager_secret" "test2" {
+  name                    = %[2]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test2" {
+  secret_id     = aws_secretsmanager_secret.test2.id
+  secret_string = "{\"foo\":\"bar\"}"
+}
+
 resource "aws_iam_role" "test_data_source" {
-  name               = %[2]q
+  name               = %[3]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 
   inline_policy {
@@ -1770,7 +1836,10 @@ resource "aws_iam_role" "test_data_source" {
             "secretsmanager:GetSecretValue"
           ]
           Effect   = "Allow"
-          Resource = aws_secretsmanager_secret.test.id
+          Resource = [
+            aws_secretsmanager_secret.test.id,
+            aws_secretsmanager_secret.test2.id,
+          ]
         },
         {
           Action = [
@@ -1784,7 +1853,7 @@ resource "aws_iam_role" "test_data_source" {
     })
   }
 }
-`, rName, rName2)
+`, rName, rName2, rName3)
 }
 
 func testAccDataSourceConfigExtractionHookBase(rName, rName2, rName3, rName4 string) string {
@@ -2310,10 +2379,10 @@ resource "aws_kendra_data_source" "test" {
 `, rName5, webCrawlerMode))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, host1 string, port1 int) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, host1 string, port1 int) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
-		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5),
+		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5, rName6),
 		fmt.Sprintf(`
 resource "aws_kendra_data_source" "test" {
   depends_on = [
@@ -2345,13 +2414,13 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName6, host1, port1))
+`, rName7, host1, port1))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort2(rName, rName2, rName3, rName4, rName5, rName6, host1 string, port1 int, host2 string, port2 int) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort2(rName, rName2, rName3, rName4, rName5, rName6, rName7, host1 string, port1 int, host2 string, port2 int) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
-		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5),
+		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5, rName6),
 		fmt.Sprintf(`
 resource "aws_kendra_data_source" "test" {
   depends_on = [
@@ -2389,7 +2458,49 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName6, host1, port1, host2, port2))
+`, rName7, host1, port1, host2, port2))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, selectCredentials string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5, rName6),
+		fmt.Sprintf(`
+locals {
+  select_credentials = %[2]q
+}
+
+resource "aws_kendra_data_source" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test
+  ]
+
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      authentication_configuration {
+        basic_authentication {
+          credentials = local.select_credentials == "first" ? aws_secretsmanager_secret.test.arn : aws_secretsmanager_secret.test2.arn
+          host        = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          port        = "123"
+        }
+      }
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName7, selectCredentials))
 }
 
 func testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5 string, crawlDepth int) string {

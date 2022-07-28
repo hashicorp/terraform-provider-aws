@@ -14,6 +14,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"Configuration_S3_DocumentsMetadataConfiguration":                                       testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration,
 			"Configuration_S3_ExclusionInclusionPatternsPrefixes":                                   testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes,
 			"Configuration_WebCrawler_AuthenticationConfigurationBasicHostPort":                     testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicHostPort,
+			"Configuration_WebCrawler_AuthenticationConfigurationCredentials":                       testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicCredentials,
 			"Configuration_WebCrawler_CrawlDepth":                                                   testAccDataSource_Configuration_WebCrawler_CrawlDepth,
 			"Configuration_WebCrawler_MaxLinksPerPage":                                              testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage,
 			"Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate":                                    testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate,
