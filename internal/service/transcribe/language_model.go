@@ -8,17 +8,20 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceLanguageModel() *schema.Resource {
@@ -90,6 +93,12 @@ func ResourceLanguageModel() *schema.Resource {
 	}
 }
 
+const (
+	ResNameLanguageModel = "Language Model"
+
+	propagationTimeout = 2 * time.Minute
+)
+
 func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeConn
 
@@ -110,15 +119,30 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateLanguageModel(ctx, in)
+	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateLanguageModel(ctx, in)
+		},
+		func(err error) (bool, error) {
+			var bre *types.BadRequestException
+			if errors.Is(err, bre) {
+				e := err.(*types.BadRequestException)
+				if tfawserr.ErrMessageContains(err, e.ErrorCode(), e.ErrorMessage()) {
+					return true, err
+				}
+			}
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return diag.Errorf("creating Amazon Transcribe LanguageModel (%s): %s", d.Get("model_name").(string), err)
+		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
-	d.SetId(aws.ToString(out.ModelName))
+	d.SetId(aws.ToString(outputRaw.(*transcribe.CreateLanguageModelOutput).ModelName))
 
 	if _, err := waitLanguageModelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Transcribe LanguageModel (%s) create: %s", d.Id(), err)
+		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameVocabularyFilter, d.Get("model_name").(string), err)
 	}
 
 	return resourceLanguageModelRead(ctx, d, meta)
@@ -140,10 +164,11 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "transcribe",
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/language-model/%s", d.Id()),
+		Resource:  fmt.Sprintf("language-model/%s", d.Id()),
 	}.String()
 
 	d.Set("arn", arn)
@@ -213,8 +238,8 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   modelStatus(types.ModelStatusInProgress),
-		Target:                    modelStatus(types.ModelStatusCompleted),
+		Pending:                   []string{},
+		Target:                    enum.Slice(types.ModelStatusInProgress),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -251,8 +276,8 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	out, err := conn.DescribeLanguageModel(ctx, in)
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	var bre *types.BadRequestException
+	if errors.As(err, &bre) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
