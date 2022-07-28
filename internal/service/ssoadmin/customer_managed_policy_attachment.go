@@ -205,23 +205,21 @@ func ParseCustomerManagedPolicyAttachmentID(id string) (string, string, string, 
 }
 
 func formatPolicyReference(l []interface{}) *ssoadmin.CustomerManagedPolicyReference {
-	n := l[0].(map[string]interface{})
-	p := l[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
 	policyRef := &ssoadmin.CustomerManagedPolicyReference{
-		Name: aws.String(string(n["name"].(string))),
-		Path: aws.String(string(p["path"].(string))),
+		Name: aws.String(string(m["name"].(string))),
+		Path: aws.String(string(m["path"].(string))),
 	}
 
 	return policyRef
 }
 
 func expandPolicyReference(l []interface{}) (string, string) {
-	n := l[0].(map[string]interface{})
-	p := l[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
-	policyName := string(n["name"].(string))
-	policyPath := string(p["path"].(string))
+	policyName := string(m["name"].(string))
+	policyPath := string(m["path"].(string))
 
 	return policyName, policyPath
 }
