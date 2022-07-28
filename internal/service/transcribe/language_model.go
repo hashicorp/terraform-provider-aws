@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -125,11 +125,8 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		},
 		func(err error) (bool, error) {
 			var bre *types.BadRequestException
-			if errors.Is(err, bre) {
-				e := err.(*types.BadRequestException)
-				if tfawserr.ErrMessageContains(err, e.ErrorCode(), e.ErrorMessage()) {
-					return true, err
-				}
+			if errors.As(err, &bre) {
+				return strings.Contains(bre.ErrorMessage(), "Make sure that you have read permission"), err
 			}
 			return false, err
 		},
