@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_iam_role: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:enhancement
+data-source/aws_iam_role: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:enhancement
+resource/aws_iam_user: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:enhancement
+data-source/aws_iam_user: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```

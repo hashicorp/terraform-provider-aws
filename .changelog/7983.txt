@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Mark `enable_ecs_managed_tags` as `ForceNew`
+```

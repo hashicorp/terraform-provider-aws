@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_public_access_block"
 description: |-
@@ -20,8 +20,10 @@ resource "aws_s3_bucket" "example" {
 resource "aws_s3_bucket_public_access_block" "example" {
   bucket = aws_s3_bucket.example.id
 
-  block_public_acls   = true
-  block_public_policy = true
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 ```
 
@@ -48,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.
+`aws_s3_bucket_public_access_block` can be imported by using the bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_public_access_block.example my-bucket

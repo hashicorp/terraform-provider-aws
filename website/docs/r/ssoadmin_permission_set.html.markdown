@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSO Permission Sets can be imported using the `arn` and `instance_arn` separated by a comma (`,`) e.g.
+SSO Permission Sets can be imported using the `arn` and `instance_arn` separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72

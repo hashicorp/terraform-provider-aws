@@ -80,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A Glue Development Endpoint can be imported using the `name`, e.g.
+A Glue Development Endpoint can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_glue_dev_endpoint.example foo

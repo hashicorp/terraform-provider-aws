@@ -53,9 +53,19 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the service action.
 
+## Timeouts
+
+`aws_servicecatalog_service_action` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `3 minutes`)
+- `read` - (Default `10 minutes`)
+- `update` - (Default `3 minutes`)
+- `delete` - (Default `3 minutes`)
+
 ## Import
 
-`aws_servicecatalog_service_action` can be imported using the service action ID, e.g.
+`aws_servicecatalog_service_action` can be imported using the service action ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_service_action.example act-f1w12eperfslh

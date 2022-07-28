@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_endpoint"
 description: |-
@@ -75,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.
+ Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890

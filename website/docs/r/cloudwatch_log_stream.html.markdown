@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_stream"
 description: |-
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.
+Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.,
 
 ```
 $ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234

@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner AutoScaling Configuration Versions can be imported by using the `arn`, e.g.
+App Runner AutoScaling Configuration Versions can be imported by using the `arn`, e.g.,
 
 ```
 $ terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f

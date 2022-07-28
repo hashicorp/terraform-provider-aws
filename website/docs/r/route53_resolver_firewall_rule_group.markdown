@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_firewall_rule_group"
 description: |-
@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver DNS Firewall rule groups can be imported using the Route 53 Resolver DNS Firewall rule group ID, e.g.
+ Route 53 Resolver DNS Firewall rule groups can be imported using the Route 53 Resolver DNS Firewall rule group ID, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_firewall_rule_group.example rslvr-frg-0123456789abcdef

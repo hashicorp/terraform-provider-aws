@@ -57,6 +57,8 @@ issues of each type.
 
 ## Issue Lifecycle
 
+**Note:** For detailed information on how issues are prioritized, see the [prioritization guide](./prioritization.md).
+
 1. The issue is reported.
 
 2. The issue is verified and categorized by a Terraform collaborator.
@@ -66,7 +68,7 @@ issues of each type.
    is usually the AWS service name.
 
 3. An initial triage process determines whether the issue is critical and must
-    be addressed immediately, or can be left open for community discussion.
+   be addressed immediately, or can be left open for community discussion.
 
 4. The issue is addressed in a pull request or commit. The issue number will be
    referenced in the commit message so that the code that fixes it is clearly

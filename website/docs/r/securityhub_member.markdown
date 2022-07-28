@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub members can be imported using their account ID, e.g.
+Security Hub members can be imported using their account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_member.example 123456789012

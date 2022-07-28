@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_capacity_reservation"
 description: |-
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Capacity Reservations can be imported using the `id`, e.g.
+Capacity Reservations can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0

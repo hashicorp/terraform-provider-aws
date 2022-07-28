@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glue_catalog_table: change `partition_index.keys` to list instead of set
+```
+
+```release-note:new-resource
+aws_glue_partition_index
+```

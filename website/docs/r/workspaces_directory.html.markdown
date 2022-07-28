@@ -38,6 +38,7 @@ resource "aws_workspaces_directory" "example" {
     device_type_android    = "ALLOW"
     device_type_chromeos   = "ALLOW"
     device_type_ios        = "ALLOW"
+    device_type_linux      = "DENY"
     device_type_osx        = "ALLOW"
     device_type_web        = "DENY"
     device_type_windows    = "DENY"
@@ -167,6 +168,7 @@ The following arguments are supported:
 * `device_type_android` – (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
 * `device_type_chromeos` – (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
 * `device_type_ios` – (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
+* `device_type_linux` – (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
 * `device_type_osx` – (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
 * `device_type_web` – (Optional) Indicates whether users can access their WorkSpaces through a web browser.
 * `device_type_windows` – (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
@@ -200,7 +202,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.
+Workspaces directory can be imported using the directory ID, e.g.,
 
 ```
 $ terraform import aws_workspaces_directory.main d-4444444444
