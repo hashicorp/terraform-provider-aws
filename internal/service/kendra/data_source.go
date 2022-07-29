@@ -1434,7 +1434,7 @@ func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataCon
 	return []interface{}{m}
 }
 
-// Web Crawler Configuraiton
+// Web Crawler Configuration
 func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
