@@ -42,7 +42,7 @@ jobs:
       - run: .ci/scripts/providerlint.sh ec2
   providerlintb:
     name: 2 of 2
-    needs: [providerlinta, golangci-linta]
+    needs: [providerlinta]
     runs-on: [custom, linux, medium]
     steps:
       - uses: actions/checkout@v3
