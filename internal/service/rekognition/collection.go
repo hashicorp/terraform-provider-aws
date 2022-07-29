@@ -84,7 +84,7 @@ func resourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rekognition.ErrCodeResourceNotFoundException) {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rekognition.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
