@@ -30,10 +30,10 @@ func testAccDataSource_basic(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
@@ -70,10 +70,10 @@ func testAccDataSource_disappears(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
@@ -101,10 +101,10 @@ func testAccDataSource_description(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
@@ -159,10 +159,10 @@ func testAccDataSource_languageCode(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_languageCode(rName, rName2, rName3, rName4, originalLanguageCode),
@@ -202,10 +202,10 @@ func testAccDataSource_roleARN(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_roleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
@@ -248,10 +248,10 @@ func testAccDataSource_schedule(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, originalSchedule),
@@ -290,10 +290,10 @@ func testAccDataSource_tags(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, "key1", "value1"),
@@ -341,10 +341,10 @@ func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictRoleARN(rName, rName2, rName3, rName4, rName5),
@@ -378,10 +378,10 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, "first"),
@@ -428,10 +428,10 @@ func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3AccessControlList(rName, rName2, rName3, rName4, rName5, rName6, "first"),
@@ -484,10 +484,10 @@ func testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testin
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3DocumentsMetadataConfiguration(rName, rName2, rName3, rName4, rName5, rName6, originalS3Prefix),
@@ -538,10 +538,10 @@ func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *te
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationS3ExclusionInclusionPatternsPrefixes1(rName, rName2, rName3, rName4, rName5, rName6),
@@ -602,10 +602,10 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSeedUrls(rName, rName2, rName3, rName4, rName5),
@@ -669,10 +669,10 @@ func testAccDataSource_Configuration_WebCrawler_UrlsWebCrawlerMode(t *testing.T)
 	updatedWebCrawlerMode := string(types.WebCrawlerModeSubdomains)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, originalWebCrawlerMode),
@@ -732,10 +732,10 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	port2 := 456
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
@@ -800,10 +800,10 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationAuthenticationConfigurationBasicCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, "first"),
@@ -855,10 +855,10 @@ func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	updatedCrawlDepth := 4
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationCrawlDepth(rName, rName2, rName3, rName4, rName5, originalCrawlDepth),
@@ -904,10 +904,10 @@ func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
 	updatedMaxLinksPerPage := 110
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxLinksPerPage(rName, rName2, rName3, rName4, rName5, originalMaxLinksPerPage),
@@ -953,10 +953,10 @@ func testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate(t *tes
 	updatedMaxUrlsPerMinuteCrawlRate := 250
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxUrlsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, originalMaxUrlsPerMinuteCrawlRate),
@@ -1005,10 +1005,10 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t 
 	originalPort1 := 123
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
@@ -1070,10 +1070,10 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 	updatedPort1 := 234
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
@@ -1127,10 +1127,10 @@ func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t 
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5),
@@ -1182,10 +1182,10 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps(t *testing.T) {
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5),
@@ -1237,10 +1237,10 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationInlineConfigurations1(rName, rName2, rName3, rName4, rName5, rName6),
@@ -1410,10 +1410,10 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationInvocationCondition(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, originalOperator, originalStringValue),
@@ -1500,10 +1500,10 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationRoleARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
@@ -1576,10 +1576,10 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationS3Bucket(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
@@ -1652,10 +1652,10 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	resourceName := "aws_kendra_data_source.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDataSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_customDocumentEnrichmentConfigurationExtractionHookConfigurationLambdaARN(rName, rName2, rName3, rName4, rName5, rName6, rName7, rName8, rName9, rName10, rName11, "first"),
