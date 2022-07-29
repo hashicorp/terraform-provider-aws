@@ -1044,7 +1044,7 @@ func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfig
 	}
 
 	if v, ok := tfMap["max_content_size_per_page_in_mega_bytes"].(float32); ok {
-		result.MaxContentSizePerPageInMegaBytes = aws.Float32(float32(v))
+		result.MaxContentSizePerPageInMegaBytes = aws.Float32(v)
 	}
 
 	if v, ok := tfMap["max_links_per_page"].(int); ok {
