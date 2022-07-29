@@ -1787,7 +1787,7 @@ resource "aws_api_gateway_rest_api" "test" {
     vpc_endpoint_ids = [%[2]s]
   }
 
-  body              = jsonencode({
+  body = jsonencode({
     swagger = "2.0"
     info = {
       title   = "test"

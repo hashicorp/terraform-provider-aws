@@ -195,7 +195,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
 
 		// Terraform implementation uses the `overwrite` mode by default.
-		// Overwrite mode will delete existing literal properties if they are not explictly set in the OpenAPI definition.
+		// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
 		// The VPC endpoints deletion and immediate recreation can cause a race condition.
 		// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
 		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
