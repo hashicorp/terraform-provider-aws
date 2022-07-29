@@ -1392,15 +1392,15 @@ func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interf
 	}
 
 	if v := apiObject.ExclusionPatterns; v != nil {
-		m["exclusion_patterns"] = flex.FlattenStringListV2(v)
+		m["exclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.InclusionPatterns; v != nil {
-		m["inclusion_patterns"] = flex.FlattenStringListV2(v)
+		m["inclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.InclusionPrefixes; v != nil {
-		m["inclusion_prefixes"] = flex.FlattenStringListV2(v)
+		m["inclusion_prefixes"] = flex.FlattenStringValueSet(v)
 	}
 
 	return []interface{}{m}
@@ -1466,11 +1466,11 @@ func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []
 	}
 
 	if v := apiObject.UrlExclusionPatterns; v != nil {
-		m["url_exclusion_patterns"] = flex.FlattenStringListV2(v)
+		m["url_exclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.UrlInclusionPatterns; v != nil {
-		m["url_inclusion_patterns"] = flex.FlattenStringListV2(v)
+		m["url_inclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	return []interface{}{m}
@@ -1547,7 +1547,7 @@ func flattenSeedUrlConfiguration(apiObject *types.SeedUrlConfiguration) []interf
 	}
 
 	m := map[string]interface{}{
-		"seed_urls":        flex.FlattenStringListV2(apiObject.SeedUrls),
+		"seed_urls":        flex.FlattenStringValueSet(apiObject.SeedUrls),
 		"web_crawler_mode": string(apiObject.WebCrawlerMode),
 	}
 
@@ -1560,7 +1560,7 @@ func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []inte
 	}
 
 	m := map[string]interface{}{
-		"site_maps": flex.FlattenStringListV2(apiObject.SiteMaps),
+		"site_maps": flex.FlattenStringValueSet(apiObject.SiteMaps),
 	}
 
 	return []interface{}{m}
@@ -1683,7 +1683,7 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 	} else if v := apiObject.StringValue; v != nil {
 		m["string_value"] = aws.ToString(v)
 	} else if v := apiObject.StringListValue; v != nil {
-		m["string_list_value"] = flex.FlattenStringListV2(v)
+		m["string_list_value"] = flex.FlattenStringValueSet(v)
 	} else if v := apiObject.LongValue; v != nil {
 		m["long_value"] = aws.ToInt64(v)
 	}
