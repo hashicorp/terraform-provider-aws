@@ -71,8 +71,15 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
   Each version must have a unique name within the Entity Recognizer.
+  If omitted, Terraform will assign a random, unique version name.
+  If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Conflicts with `version_name_prefix`.
+* `version_name_prefix` - (Optional) Creates a unique version name beginning with the specified prefix.
+  Has a maximum length of 37 characters.
+  Can contain upper- and lower-case letters, numbers, and hypen (`-`).
+  Conflicts with `version_name`.
 * `volume_kms_key_id` - (Optional) ID or ARN of a KMS Key used to encrypt storage volumes during job processing.
 * `vpc_config` - (Optional) Configuration parameters for VPC to contain Entity Recognizer resources.
   See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.

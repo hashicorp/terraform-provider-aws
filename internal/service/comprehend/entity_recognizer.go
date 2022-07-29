@@ -3,6 +3,7 @@ package comprehend
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -11,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -189,9 +192,18 @@ func ResourceEntityRecognizer() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"version_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validModelVersionName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validModelVersionName,
+				ConflictsWith: []string{"version_name_prefix"},
+			},
+			"version_name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validModelVersionNamePrefix,
+				ConflictsWith: []string{"version_name"},
 			},
 			"volume_kms_key_id": {
 				Type:             schema.TypeString,
@@ -240,7 +252,10 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 		in.ModelKmsKeyId = aws.String(v)
 	}
 
-	if v, ok := d.Get("version_name").(string); ok && v != "" {
+	versionName := d.GetRawConfig().GetAttr("version_name")
+	if versionName.IsNull() {
+		in.VersionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+	} else if v := versionName.AsString(); v != "" {
 		in.VersionName = aws.String(v)
 	}
 
@@ -258,7 +273,25 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
 	time.Sleep(iamPropagationTimeout)
 
-	out, err := conn.CreateEntityRecognizer(ctx, in)
+	var out *comprehend.CreateEntityRecognizerOutput
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateEntityRecognizer(ctx, in)
+
+		if err != nil {
+			var tmre *types.TooManyRequestsException
+			if errors.As(err, &tmre) {
+				return resource.RetryableError(err)
+			} else {
+				return resource.NonRetryableError(err)
+			}
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		out, err = conn.CreateEntityRecognizer(ctx, in)
+	}
 	if err != nil {
 		return diag.Errorf("creating Amazon Comprehend Entity Recognizer (%s): %s", d.Get("name").(string), err)
 	}
@@ -296,19 +329,14 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("language_code", out.LanguageCode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
+	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
 	d.Set("volume_kms_key_id", out.VolumeKmsKeyId)
 
 	// DescribeEntityRecognizer() doesn't return the model name
-	arn, err := arn.Parse(aws.ToString(out.EntityRecognizerArn))
+	name, err := EntityRecognizerParseARN(aws.ToString(out.EntityRecognizerArn))
 	if err != nil {
 		return diag.Errorf("reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
-	re := regexp.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
-	matches := re.FindStringSubmatch(arn.Resource)
-	if len(matches) != 2 {
-		return diag.Errorf("reading Comprehend Entity Recognizer (%s): unable to parse ARN (%s)", d.Id(), aws.ToString(out.EntityRecognizerArn))
-	}
-	name := matches[1]
 	d.Set("name", name)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {
@@ -356,8 +384,11 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 			in.ModelKmsKeyId = aws.String(v)
 		}
 
-		if v, ok := d.Get("version_name").(string); ok && v != "" {
-			in.VersionName = aws.String(v)
+		if d.HasChange("version_name") {
+			in.VersionName = aws.String(d.Get("version_name").(string))
+		} else if v := d.Get("version_name_prefix").(string); v != "" {
+			versionName := create.Name("", d.Get("version_name_prefix").(string))
+			in.VersionName = aws.String(versionName)
 		}
 
 		if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
@@ -374,7 +405,25 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
 		time.Sleep(iamPropagationTimeout)
 
-		out, err := conn.CreateEntityRecognizer(ctx, in)
+		var out *comprehend.CreateEntityRecognizerOutput
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			var err error
+			out, err = conn.CreateEntityRecognizer(ctx, in)
+
+			if err != nil {
+				var tmre *types.TooManyRequestsException
+				if errors.As(err, &tmre) {
+					return resource.RetryableError(err)
+				} else {
+					return resource.NonRetryableError(err)
+				}
+			}
+
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			out, err = conn.CreateEntityRecognizer(ctx, in)
+		}
 		if err != nil {
 			return diag.Errorf("updating Amazon Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 		}
@@ -422,100 +471,48 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			return nil
 		}
 
-		return diag.Errorf("waiting for Comprehend Entity Recognizer (%s) to be deleted: %s", d.Id(), err)
+		return diag.Errorf("waiting for Comprehend Entity Recognizer (%s) to be stopped: %s", d.Id(), err)
 	}
 
-	log.Printf("[INFO] Deleting Comprehend Entity Recognizer (%s)", d.Id())
-
-	_, err = conn.DeleteEntityRecognizer(ctx, &comprehend.DeleteEntityRecognizerInput{
-		EntityRecognizerArn: aws.String(d.Id()),
-	})
+	name, err := EntityRecognizerParseARN(d.Id())
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
 		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEntityRecognizerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Comprehend Entity Recognizer (%s) to be deleted: %s", d.Id(), err)
+	log.Printf("[INFO] Deleting Comprehend Entity Recognizer (%s)", name)
+
+	versions, err := ListEntityRecognizerVersionsByName(ctx, conn, name)
+	if err != nil {
+		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", name, err)
+	}
+
+	var g multierror.Group
+	for _, v := range versions {
+		v := v
+		g.Go(func() error {
+			_, err = conn.DeleteEntityRecognizer(ctx, &comprehend.DeleteEntityRecognizerInput{
+				EntityRecognizerArn: v.EntityRecognizerArn,
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if !errors.As(err, &nfe) {
+					return fmt.Errorf("deleting version (%s): %w", aws.ToString(v.VersionName), err)
+				}
+			}
+
+			if _, err := waitEntityRecognizerDeleted(ctx, conn, aws.ToString(v.EntityRecognizerArn), d.Timeout(schema.TimeoutDelete)); err != nil {
+				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
+			}
+
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
 
 	return nil
-}
-
-func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
-		Target:     enum.Slice(types.ModelStatusTrained),
-		Refresh:    statusEntityRecognizer(ctx, conn, id),
-		MinTimeout: entityRegcognizerMinInterval,
-		Timeout:    timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
-		var ues *resource.UnexpectedStateError
-		if errors.As(err, &ues) {
-			if ues.State == string(types.ModelStatusInError) {
-				err = errors.New(aws.ToString(out.Message))
-			}
-		}
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusStopRequested),
-		Target:     enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError),
-		Refresh:    statusEntityRecognizer(ctx, conn, id),
-		MinTimeout: entityRegcognizerMinInterval,
-		Timeout:    timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
-		Target:     []string{},
-		Refresh:    statusEntityRecognizer(ctx, conn, id),
-		MinTimeout: entityRegcognizerMinInterval,
-		Timeout:    timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindEntityRecognizerByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
 }
 
 func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id string) (*types.EntityRecognizerProperties, error) {
@@ -541,6 +538,101 @@ func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id s
 	}
 
 	return out.EntityRecognizerProperties, nil
+}
+
+func ListEntityRecognizerVersionsByName(ctx context.Context, conn *comprehend.Client, name string) ([]types.EntityRecognizerProperties, error) {
+	results := []types.EntityRecognizerProperties{}
+
+	input := &comprehend.ListEntityRecognizersInput{
+		Filter: &types.EntityRecognizerFilter{
+			RecognizerName: aws.String(name),
+		},
+	}
+	paginator := comprehend.NewListEntityRecognizersPaginator(conn, input)
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			return []types.EntityRecognizerProperties{}, err
+		}
+		results = append(results, output.EntityRecognizerPropertiesList...)
+	}
+
+	return results, nil
+}
+
+func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
+		Target:       enum.Slice(types.ModelStatusTrained),
+		Refresh:      statusEntityRecognizer(ctx, conn, id),
+		Delay:        entityRegcognizerDelay,
+		PollInterval: entityRegcognizerPollInterval,
+		Timeout:      timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
+		var ues *resource.UnexpectedStateError
+		if errors.As(err, &ues) {
+			if ues.State == string(types.ModelStatusInError) {
+				err = errors.New(aws.ToString(out.Message))
+			}
+		}
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusStopRequested),
+		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError),
+		Refresh:      statusEntityRecognizer(ctx, conn, id),
+		PollInterval: entityRegcognizerPollInterval,
+		Timeout:      timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitEntityRecognizerDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
+		Target:         []string{},
+		Refresh:        statusEntityRecognizer(ctx, conn, id),
+		Delay:          entityRegcognizerDelay,
+		PollInterval:   entityRegcognizerPollInterval,
+		NotFoundChecks: 3,
+		Timeout:        timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusEntityRecognizer(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindEntityRecognizerByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.Status), nil
+	}
 }
 
 func flattenInputDataConfig(apiObject *types.EntityRecognizerInputDataConfig) []interface{} {
@@ -851,4 +943,19 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	}
 
 	return a
+}
+
+func EntityRecognizerParseARN(arnString string) (string, error) {
+	arn, err := arn.Parse(arnString)
+	if err != nil {
+		return "", err
+	}
+	re := regexp.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
+	matches := re.FindStringSubmatch(arn.Resource)
+	if len(matches) != 2 {
+		return "", fmt.Errorf("unable to parse %q", arnString)
+	}
+	name := matches[1]
+
+	return name, nil
 }
