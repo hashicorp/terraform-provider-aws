@@ -31,6 +31,7 @@ func TestAccKendra_serial(t *testing.T) {
 			"CustomDocumentEnrichmentConfiguration_InlineConfigurations":                            testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations,
 			"Description":             testAccDataSource_description,
 			"LanguageCode":            testAccDataSource_languageCode,
+			"Name":                    testAccDataSource_name,
 			"RoleARN":                 testAccDataSource_roleARN,
 			"Schedule":                testAccDataSource_schedule,
 			"TypeCustomCustomizeDiff": testAccDataSource_typeCustomCustomizeDiff,

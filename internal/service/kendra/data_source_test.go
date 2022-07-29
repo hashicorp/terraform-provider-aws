@@ -87,6 +87,47 @@ func testAccDataSource_disappears(t *testing.T) {
 	})
 }
 
+func testAccDataSource_name(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName5),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSource_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

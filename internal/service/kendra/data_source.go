@@ -432,7 +432,6 @@ func ResourceDataSource() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
@@ -736,7 +735,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraConn
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "role_arn", "schedule") {
+	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -761,6 +760,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange("language_code") {
 			input.LanguageCode = aws.String(d.Get("language_code").(string))
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
 		}
 
 		if d.HasChange("role_arn") {
