@@ -2599,7 +2599,8 @@ locals {
 
 resource "aws_kendra_data_source" "test" {
   depends_on = [
-    aws_secretsmanager_secret_version.test
+    aws_secretsmanager_secret_version.test,
+    aws_secretsmanager_secret_version.test2,
   ]
 
   index_id = aws_kendra_index.test.id
