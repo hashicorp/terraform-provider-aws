@@ -132,7 +132,7 @@ resource "aws_api_gateway_rest_api" "example" {
     }
   })
 
-  name = "example"
+  name              = "example"
   put_rest_api_mode = "merge"
 
   endpoint_configuration {
