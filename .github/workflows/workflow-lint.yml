@@ -19,8 +19,3 @@ jobs:
         run: cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
         run: actionlint -shellcheck=
-        with:
-          self-hosted-runner:
-            labels:
-              - custom
-              - medium
