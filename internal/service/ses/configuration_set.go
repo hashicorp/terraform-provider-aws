@@ -164,17 +164,22 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 
 	response, err := conn.DescribeConfigurationSet(configSetInput)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
+		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
-			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
 	if err := d.Set("delivery_options", flattenConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
 		return fmt.Errorf("setting delivery_options: %w", err)
+	}
+
+	if err := d.Set("tracking_options", flattenConfigurationSetTrackingOptions(response.TrackingOptions)); err != nil {
+		return fmt.Errorf("setting tracking_options: %w", err)
 	}
 
 	d.Set("name", response.ConfigurationSet.Name)
@@ -317,4 +322,16 @@ func expandConfigurationSetTrackingOptions(l []interface{}) *ses.TrackingOptions
 	}
 
 	return options
+}
+
+func flattenConfigurationSetTrackingOptions(options *ses.TrackingOptions) []interface{} {
+	if options == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"custom_redirect_domain": aws.StringValue(options.CustomRedirectDomain),
+	}
+
+	return []interface{}{m}
 }
