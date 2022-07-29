@@ -111,7 +111,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/providerlint && go install .
-      - run: .ci/scripts/providerlint.sh licensemanager lightsail location logs macie macie2 mediaconnect mediaconvert medialive mediapackage mediastore memorydb meta mq mwaa neptune networkfirewall networkmanager opensearch opsworks organizations outposts pinpoint pricing qldb quicksight ram rds redshift redshiftdata redshiftserverless resourcegroups resourcegroupstaggingapi rolesanywhere route53 route53domains route53recoverycontrolconfig
+      - run: .ci/scripts/providerlint.sh licensemanager lightsail location logs macie macie2 mediaconnect mediaconvert medialive mediapackage mediastore memorydb meta mq mwaa neptune networkfirewall networkmanager opensearch opsworks organizations outposts pinpoint pricing qldb quicksight ram rds redshift redshiftdata redshiftserverless rekognition resourcegroups resourcegroupstaggingapi rolesanywhere route53 route53domains
   providerlinte:
     name: 5 of 5
     runs-on: ubuntu-latest
@@ -135,4 +135,4 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/providerlint && go install .
-      - run: .ci/scripts/providerlint.sh route53recoveryreadiness route53resolver rum s3 s3control s3outposts sagemaker schemas secretsmanager securityhub serverlessrepo servicecatalog servicediscovery servicequotas ses sfn shield signer simpledb sns sqs ssm ssoadmin storagegateway sts swf synthetics timestreamwrite transcribe transfer waf wafregional wafv2 worklink workspaces xray
+      - run: .ci/scripts/providerlint.sh route53recoverycontrolconfig route53recoveryreadiness route53resolver rum s3 s3control s3outposts sagemaker schemas secretsmanager securityhub serverlessrepo servicecatalog servicediscovery servicequotas ses sfn shield signer simpledb sns sqs ssm ssoadmin storagegateway sts swf synthetics timestreamwrite transcribe transfer waf wafregional wafv2 worklink workspaces xray
