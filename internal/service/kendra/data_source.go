@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -284,9 +285,9 @@ func ResourceDataSource() *schema.Resource {
 																},
 															},
 															"web_crawler_mode": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice(dataSourceWebCrawlerModeValues(types.WebCrawlerMode("").Values()...), false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.WebCrawlerMode](),
 															},
 														},
 													},
@@ -454,10 +455,10 @@ func ResourceDataSource() *schema.Resource {
 				Computed: true,
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(dataSourceTypeValues(types.DataSourceType("").Values()...), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.DataSourceType](),
 			},
 			"updated_at": {
 				Type:     schema.TypeString,
@@ -525,9 +526,9 @@ func documentAttributeConditionSchema() *schema.Schema {
 					return schema
 				}(),
 				"operator": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(dataSourceOperatorValues(types.ConditionOperator("").Values()...), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.ConditionOperator](),
 				},
 			},
 		},
@@ -842,8 +843,8 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
-		Pending:                   dataSourceStatusValues(types.DataSourceStatusCreating),
-		Target:                    dataSourceStatusValues(types.DataSourceStatusActive),
+		Pending:                   enum.Slice(types.DataSourceStatusCreating),
+		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusDataSource(ctx, conn, id, indexId),
 		NotFoundChecks:            20,
@@ -865,8 +866,8 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
 
 	stateConf := &resource.StateChangeConf{
-		Pending:                   dataSourceStatusValues(types.DataSourceStatusUpdating),
-		Target:                    dataSourceStatusValues(types.DataSourceStatusActive),
+		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
+		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
 		Refresh:                   statusDataSource(ctx, conn, id, indexId),
 		NotFoundChecks:            20,
@@ -887,7 +888,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: dataSourceStatusValues(types.DataSourceStatusDeleting),
+		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusDataSource(ctx, conn, id, indexId),
@@ -1689,45 +1690,4 @@ func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []in
 	}
 
 	return []interface{}{m}
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func dataSourceWebCrawlerModeValues(input ...types.WebCrawlerMode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func dataSourceOperatorValues(input ...types.ConditionOperator) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func dataSourceTypeValues(input ...types.DataSourceType) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func dataSourceStatusValues(input ...types.DataSourceStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }
