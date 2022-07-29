@@ -44,4 +44,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: -c .ci/.golangci5.yml
+          args: -c .ci/.golangci2.yml
