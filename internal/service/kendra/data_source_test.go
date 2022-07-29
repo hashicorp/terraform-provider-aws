@@ -987,7 +987,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate(t *tes
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -997,12 +997,12 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
 	originalHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
 	originalPort1 := 123
-	updatedHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_faq"
-	updatedPort1 := 234
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -1011,7 +1011,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 		CheckDestroy:      testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, originalHost1, originalPort1),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1031,7 +1031,72 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, updatedHost1, updatedPort1),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.0.credentials", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
+						"host": originalHost1,
+						"port": strconv.Itoa(originalPort1),
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	originalHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+	originalPort1 := 123
+	updatedHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_faq"
+	updatedPort1 := 234
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckDataSourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, originalHost1, originalPort1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.web_crawler_configuration.0.proxy_configuration.*", map[string]string{
+						"host": originalHost1,
+						"port": strconv.Itoa(originalPort1),
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_data_source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.DataSourceTypeWebcrawler)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, updatedHost1, updatedPort1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -2649,10 +2714,46 @@ resource "aws_kendra_data_source" "test" {
 `, rName5, maxUrlsPerMinuteCrawlRate))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, host1 string, port1 int) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationCredentials(rName, rName2, rName3, rName4, rName5, rName6, rName7, host1 string, port1 int) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
-		testAccDataSourceConfigWebCrawlerBase(rName4),
+		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5, rName6),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  depends_on = [
+    aws_secretsmanager_secret_version.test
+  ]
+
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "WEBCRAWLER"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    web_crawler_configuration {
+      proxy_configuration {
+        credentials = aws_secretsmanager_secret.test.arn
+        host        = %[2]q
+        port        = %[3]d
+      }
+
+      urls {
+        seed_url_configuration {
+          seed_urls = [
+            "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+          ]
+        }
+      }
+    }
+  }
+}
+`, rName7, host1, port1))
+}
+
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationProxyConfigurationHostPort(rName, rName2, rName3, rName4, rName5, rName6, rName7, host1 string, port1 int) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		testAccDataSourceConfigWebCrawlerSecretsBase(rName4, rName5, rName6),
 		fmt.Sprintf(`
 resource "aws_kendra_data_source" "test" {
   index_id = aws_kendra_index.test.id
@@ -2677,7 +2778,7 @@ resource "aws_kendra_data_source" "test" {
     }
   }
 }
-`, rName5, host1, port1))
+`, rName7, host1, port1))
 }
 
 func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5 string) string {
