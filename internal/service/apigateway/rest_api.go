@@ -231,7 +231,7 @@ func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 			PatchOperations: []*apigateway.PatchOperation{},
 		}
 
-		updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output, *input.Mode)
+		updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
 
 		if len(updateInput.PatchOperations) > 0 {
 			_, err := conn.UpdateRestApi(updateInput)
@@ -356,7 +356,7 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.RestApi, mode string) []*apigateway.PatchOperation {
+func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.RestApi) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != aws.StringValue(output.ApiKeySource) {
@@ -639,7 +639,7 @@ func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 				PatchOperations: []*apigateway.PatchOperation{},
 			}
 
-			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output, *input.Mode)
+			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
 
 			if len(updateInput.PatchOperations) > 0 {
 				_, err := conn.UpdateRestApi(updateInput)
