@@ -589,7 +589,7 @@ func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *te
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -608,7 +608,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSeedUrls(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -631,7 +631,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSeedUrls2(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -653,7 +653,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSeedUrls(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_UrlsWebCrawlerMode(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -675,7 +675,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsWebCrawlerMode(t *testing.T)
 		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, originalWebCrawlerMode),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, originalWebCrawlerMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -693,7 +693,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsWebCrawlerMode(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, updatedWebCrawlerMode),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, updatedWebCrawlerMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -938,7 +938,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -959,7 +959,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate(t *tes
 		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxUrlsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, originalMaxUrlsPerMinuteCrawlRate),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxURLsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, originalMaxUrlsPerMinuteCrawlRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -974,7 +974,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxUrlsPerMinuteCrawlRate(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxUrlsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, updatedMaxUrlsPerMinuteCrawlRate),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxURLsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5, updatedMaxUrlsPerMinuteCrawlRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1114,7 +1114,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1133,7 +1133,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t 
 		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1151,7 +1151,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns2(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1169,7 +1169,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlExclusionInclusionPatterns(t 
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps(t *testing.T) {
+func testAccDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1188,7 +1188,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1206,7 +1206,7 @@ func testAccDataSource_Configuration_WebCrawler_UrlsSiteMaps(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5),
+				Config: testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -2425,7 +2425,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName6))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSeedUrls(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2451,7 +2451,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSeedUrls2(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSeedURLs2(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2478,7 +2478,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, webCrawlerMode string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsWebCrawlerMode(rName, rName2, rName3, rName4, rName5, webCrawlerMode string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2687,7 +2687,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5, maxLinksPerPage))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxUrlsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5 string, maxUrlsPerMinuteCrawlRate int) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationMaxURLsPerMinuteCrawlRate(rName, rName2, rName3, rName4, rName5 string, maxUrlsPerMinuteCrawlRate int) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2782,7 +2782,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName7, host1, port1))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2811,7 +2811,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlExclusionInclusionPatterns2(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLExclusionInclusionPatterns2(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2840,7 +2840,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),
@@ -2866,7 +2866,7 @@ resource "aws_kendra_data_source" "test" {
 `, rName5))
 }
 
-func testAccDataSourceConfig_configurationWebCrawlerConfigurationUrlsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccDataSourceConfig_configurationWebCrawlerConfigurationURLsSiteMapsConfiguration2(rName, rName2, rName3, rName4, rName5 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfigBase(rName, rName2, rName3),
 		testAccDataSourceConfigWebCrawlerBase(rName4),

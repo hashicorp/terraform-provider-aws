@@ -1031,7 +1031,7 @@ func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfig
 	}
 
 	result := &types.WebCrawlerConfiguration{
-		Urls: expandUrls(tfMap["urls"].([]interface{})),
+		Urls: expandURLs(tfMap["urls"].([]interface{})),
 	}
 
 	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1131,7 +1131,7 @@ func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
 	return result
 }
 
-func expandUrls(tfList []interface{}) *types.Urls {
+func expandURLs(tfList []interface{}) *types.Urls {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1144,7 +1144,7 @@ func expandUrls(tfList []interface{}) *types.Urls {
 	result := &types.Urls{}
 
 	if v, ok := tfMap["seed_url_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.SeedUrlConfiguration = expandSeedUrlConfiguration(v)
+		result.SeedUrlConfiguration = expandSeedURLConfiguration(v)
 	}
 
 	if v, ok := tfMap["site_maps_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1154,7 +1154,7 @@ func expandUrls(tfList []interface{}) *types.Urls {
 	return result
 }
 
-func expandSeedUrlConfiguration(tfList []interface{}) *types.SeedUrlConfiguration {
+func expandSeedURLConfiguration(tfList []interface{}) *types.SeedUrlConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1442,7 +1442,7 @@ func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []
 
 	m := map[string]interface{}{
 		"crawl_depth": aws.ToInt32(apiObject.CrawlDepth),
-		"urls":        flattenUrls(apiObject.Urls),
+		"urls":        flattenURLs(apiObject.Urls),
 	}
 
 	if v := apiObject.AuthenticationConfiguration; v != nil {
@@ -1523,7 +1523,7 @@ func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{
 	return []interface{}{m}
 }
 
-func flattenUrls(apiObject *types.Urls) []interface{} {
+func flattenURLs(apiObject *types.Urls) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1531,7 +1531,7 @@ func flattenUrls(apiObject *types.Urls) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.SeedUrlConfiguration; v != nil {
-		m["seed_url_configuration"] = flattenSeedUrlConfiguration(v)
+		m["seed_url_configuration"] = flattenSeedURLConfiguration(v)
 	}
 
 	if v := apiObject.SiteMapsConfiguration; v != nil {
@@ -1541,7 +1541,7 @@ func flattenUrls(apiObject *types.Urls) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenSeedUrlConfiguration(apiObject *types.SeedUrlConfiguration) []interface{} {
+func flattenSeedURLConfiguration(apiObject *types.SeedUrlConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
