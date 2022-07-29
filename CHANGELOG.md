@@ -1,5 +1,11 @@
 ## 4.24.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_ses_configuration_set: Add `tracking_options.0.custom_redirect_domain` argument (NOTE: This enhancement is provided as best effort due to testing limitations, i.e., the requirement of a verified domain) ([#26032](https://github.com/hashicorp/terraform-provider-aws/issues/26032))
+
+## 4.24.0 (Unreleased)
+
 FEATURES:
 
 * **New Resource:** `aws_acmpca_permission` ([#12485](https://github.com/hashicorp/terraform-provider-aws/issues/12485))
