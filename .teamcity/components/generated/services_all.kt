@@ -134,6 +134,7 @@ val services = mapOf(
     "redshift" to ServiceSpec("Redshift", vpcLock = true),
     "redshiftdata" to ServiceSpec("Redshift Data"),
     "redshiftserverless" to ServiceSpec("Redshift Serverless"),
+    "rekognition" to ServiceSpec("Rekognition"),
     "resourcegroups" to ServiceSpec("Resource Groups"),
     "resourcegroupstaggingapi" to ServiceSpec("Resource Groups Tagging"),
     "rolesanywhere" to ServiceSpec("Roles Anywhere"),

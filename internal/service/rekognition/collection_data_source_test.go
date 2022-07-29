@@ -2,9 +2,9 @@ package rekognition_test
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/rekognition"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/rekognition"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
