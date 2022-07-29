@@ -27,9 +27,9 @@ var header string
 var configs string
 
 const (
-	filename            = `../../../.semgrep-service-name.yml`
-	filenameCAE         = `../../../.semgrep-caps-aws-ec2.yml`
-	filenameConfigs     = `../../../.semgrep-configs.yml`
+	filename            = `../../../.ci/.semgrep-service-name.yml`
+	filenameCAE         = `../../../.ci/.semgrep-caps-aws-ec2.yml`
+	filenameConfigs     = `../../../.ci/.semgrep-configs.yml`
 	namesDataFile       = "../../../names/names_data.csv"
 	capsDataFile        = "../../../names/caps.csv"
 	maxBadCaps          = 21

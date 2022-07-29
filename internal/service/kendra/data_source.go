@@ -967,15 +967,15 @@ func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguratio
 	}
 
 	if v, ok := tfMap["exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.ExclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.ExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.InclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.InclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["inclusion_prefixes"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.InclusionPrefixes = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.InclusionPrefixes = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	return result
@@ -1059,11 +1059,11 @@ func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfig
 	}
 
 	if v, ok := tfMap["url_exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.UrlExclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.UrlExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["url_inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.UrlInclusionPatterns = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.UrlInclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	return result
@@ -1165,7 +1165,7 @@ func expandSeedUrlConfiguration(tfList []interface{}) *types.SeedUrlConfiguratio
 	}
 
 	result := &types.SeedUrlConfiguration{
-		SeedUrls: flex.ExpandStringSetV2(tfMap["seed_urls"].(*schema.Set)),
+		SeedUrls: flex.ExpandStringValueSet(tfMap["seed_urls"].(*schema.Set)),
 	}
 
 	if v, ok := tfMap["web_crawler_mode"].(string); ok && v != "" {
@@ -1186,7 +1186,7 @@ func expandSiteMapsConfiguration(tfList []interface{}) *types.SiteMapsConfigurat
 	}
 
 	result := &types.SiteMapsConfiguration{
-		SiteMaps: flex.ExpandStringSetV2(tfMap["site_maps"].(*schema.Set)),
+		SiteMaps: flex.ExpandStringValueSet(tfMap["site_maps"].(*schema.Set)),
 	}
 
 	return result
@@ -1344,7 +1344,7 @@ func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttribute
 	} else if v, ok := tfMap["string_value"].(string); ok && v != "" {
 		result.StringValue = aws.String(v)
 	} else if v, ok := tfMap["string_list_value"]; ok && v.(*schema.Set).Len() > 0 {
-		result.StringListValue = flex.ExpandStringSetV2(v.(*schema.Set))
+		result.StringListValue = flex.ExpandStringValueSet(v.(*schema.Set))
 	} else if v, ok := tfMap["long_value"]; ok {
 		// When no value was passed it was interpreted as a 0 leading to errors if other values like DateValue, StringValue, StringListValue were defined
 		// ValidationException: DocumentAttributeValue can only have 1 non-null field, but given value for key <> has too many non-null fields.

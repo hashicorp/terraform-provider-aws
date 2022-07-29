@@ -31,7 +31,7 @@ resource "aws_ce_anomaly_monitor" "test" {
   name         = "AWSCustomAnomalyMonitor"
   monitor_type = "CUSTOM"
 
-  specification = <<JSON
+  monitor_specification = <<JSON
 {
 	"And": null,
 	"CostCategories": null,

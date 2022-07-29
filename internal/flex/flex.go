@@ -18,9 +18,9 @@ func ExpandStringList(configured []interface{}) []*string {
 	return vs
 }
 
-// Takes the result of flatmap.Expand for an array of strings
+// ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
-func ExpandStringListV2(configured []interface{}) []string {
+func ExpandStringValueList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
 	for _, v := range configured {
 		val, ok := v.(string)
@@ -62,6 +62,15 @@ func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return stringMap
 }
 
+// ExpandStringValueMap expands a string map of interfaces to a string map of strings
+func ExpandStringValueMap(m map[string]interface{}) map[string]string {
+	stringMap := make(map[string]string, len(m))
+	for k, v := range m {
+		stringMap[k] = v.(string)
+	}
+	return stringMap
+}
+
 // Expands a map of string to interface to a map of string to *bool
 func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	boolMap := make(map[string]*bool, len(m))
@@ -73,16 +82,15 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
-	return ExpandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List
+	return ExpandStringList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
-// Takes the result of schema.Set of strings and returns a []string
-func ExpandStringSetV2(configured *schema.Set) []string {
-	return ExpandStringListV2(configured.List()) // nosemgrep: helper-schema-Set-extraneous-ExpandStringList-with-List
+func ExpandStringValueSet(configured *schema.Set) []string {
+	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
 func FlattenStringSet(list []*string) *schema.Set {
-	return schema.NewSet(schema.HashString, FlattenStringList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+	return schema.NewSet(schema.HashString, FlattenStringList(list)) // nosemgrep:ci.helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
 func FlattenStringSetV2(list []string) *schema.Set {

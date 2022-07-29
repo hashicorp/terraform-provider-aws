@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
@@ -91,6 +90,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
+
 	if err != nil {
 		return err
 	}
@@ -176,11 +176,10 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 }
 
 func DecodePoolProviderPrincipalTagsID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
+	r := regexp.MustCompile(`(?P<ProviderID>[\w-]+:[0-9a-f-]+):(?P<ProviderName>[[:graph:]]+)`)
+	idParts := r.FindStringSubmatch(id)
 	if len(idParts) <= 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)
 	}
-	providerName := idParts[len(idParts)-1:]
-	userPoolId := idParts[:len(idParts)-1]
-	return strings.Join(userPoolId, ":"), strings.Join(providerName, ""), nil
+	return idParts[1], idParts[2], nil
 }

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -101,11 +101,9 @@ func DataSourceCostCategory() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(0, 1024),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
-							Set: costCategorySplitChargesParameter,
 						},
 						"source": {
 							Type:     schema.TypeString,
@@ -118,12 +116,11 @@ func DataSourceCostCategory() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
-				Set: costCategorySplitCharges,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -151,7 +148,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -159,7 +155,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -179,7 +174,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -187,7 +181,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -217,7 +210,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -225,7 +217,6 @@ func schemaCostCategoryRuleComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -252,7 +243,6 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -260,7 +250,6 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -287,7 +276,6 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -307,7 +295,6 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeSet,
@@ -315,7 +302,6 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -326,25 +312,36 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, &costexplorer.DescribeCostCategoryDefinitionInput{CostCategoryArn: aws.String(d.Get("cost_category_arn").(string))})
+	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
 
 	if err != nil {
 		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
 	}
 
-	d.Set("effective_end", resp.CostCategory.EffectiveEnd)
-	d.Set("effective_start", resp.CostCategory.EffectiveStart)
-	d.Set("name", resp.CostCategory.Name)
-	if err = d.Set("rule", flattenCostCategoryRules(resp.CostCategory.Rules)); err != nil {
+	d.Set("effective_end", costCategory.EffectiveEnd)
+	d.Set("effective_start", costCategory.EffectiveStart)
+	d.Set("name", costCategory.Name)
+	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
 	}
-	d.Set("rule_version", resp.CostCategory.RuleVersion)
-	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(resp.CostCategory.SplitChargeRules)); err != nil {
+	d.Set("rule_version", costCategory.RuleVersion)
+	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
 		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(resp.CostCategory.CostCategoryArn))
+	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
+
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+
+	if err != nil {
+		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
+	}
 
 	return nil
 }

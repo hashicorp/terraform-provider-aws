@@ -13,16 +13,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIPAMPool_cidrIPv4Basic(t *testing.T) {
+func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidr_range := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMProvisionedPoolCIDRDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMProvisionedPoolCIDRDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr_range),

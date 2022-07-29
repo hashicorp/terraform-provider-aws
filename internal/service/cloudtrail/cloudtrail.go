@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceCloudTrail() *schema.Resource { // nosemgrep:cloudtrail-in-func-name
+func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-name
 	return &schema.Resource{
 		Create: resourceCloudTrailCreate,
 		Read:   resourceCloudTrailRead,
@@ -246,7 +246,7 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:cloudtrail-in-func-nam
 	}
 }
 
-func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -344,7 +344,7 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -461,7 +461,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	return nil
 }
 
-func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
@@ -563,7 +563,7 @@ func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error { 
 	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:cloudtrail-in-func-name
+func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.cloudtrail-in-func-name
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())

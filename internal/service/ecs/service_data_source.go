@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceService() *schema.Resource {
@@ -43,12 +44,14 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterArn := d.Get("cluster_arn").(string)
 	serviceName := d.Get("service_name").(string)
@@ -83,6 +86,10 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("launch_type", service.LaunchType)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
+
+	if err := d.Set("tags", KeyValueTags(service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

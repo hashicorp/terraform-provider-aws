@@ -26,9 +26,9 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 			testAccPreCheckTransitGateway(t)
 			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
@@ -60,9 +60,9 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 			testAccPreCheckTransitGateway(t)
 			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
@@ -87,9 +87,9 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 			testAccPreCheckTransitGateway(t)
 			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
@@ -115,9 +115,9 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 			testAccPreCheckTransitGateway(t)
 			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName, 0),

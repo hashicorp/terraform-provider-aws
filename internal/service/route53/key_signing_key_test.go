@@ -32,10 +32,10 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
@@ -73,10 +73,10 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
@@ -97,10 +97,10 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
@@ -151,7 +151,7 @@ func testAccCheckKeySigningKeyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey != nil {
@@ -179,7 +179,7 @@ func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey == nil {

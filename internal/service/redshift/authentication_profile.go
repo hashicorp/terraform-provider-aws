@@ -59,7 +59,7 @@ func resourceAuthenticationProfileCreate(d *schema.ResourceData, meta interface{
 	out, err := conn.CreateAuthenticationProfile(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Authentication Profile (%s): %s", authProfileName, err)
+		return fmt.Errorf("creating Redshift Authentication Profile (%s): %s", authProfileName, err)
 	}
 
 	d.SetId(aws.StringValue(out.AuthenticationProfileName))
@@ -78,7 +78,7 @@ func resourceAuthenticationProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Authentication Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Authentication Profile (%s): %w", d.Id(), err)
 	}
 
 	d.Set("authentication_profile_content", out.AuthenticationProfileContent)
@@ -98,7 +98,7 @@ func resourceAuthenticationProfileUpdate(d *schema.ResourceData, meta interface{
 	_, err := conn.ModifyAuthenticationProfile(input)
 
 	if err != nil {
-		return fmt.Errorf("error modifying Redshift Authentication Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("modifying Redshift Authentication Profile (%s): %w", d.Id(), err)
 	}
 
 	return resourceAuthenticationProfileRead(d, meta)
