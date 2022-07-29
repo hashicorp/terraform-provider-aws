@@ -144,6 +144,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
@@ -819,6 +820,8 @@ func Provider() *schema.Provider {
 			"aws_redshift_orderable_cluster":   redshift.DataSourceOrderableCluster(),
 			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
+
+			"aws_rekognition_collection": rekognition.DataSourceCollection(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
@@ -1832,6 +1835,8 @@ func Provider() *schema.Provider {
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
 			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+
+			"aws_rekognition_collection": rekognition.ResourceCollection(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
