@@ -1962,7 +1962,7 @@ resource "aws_iam_role" "test_data_source" {
           Action = [
             "secretsmanager:GetSecretValue"
           ]
-          Effect   = "Allow"
+          Effect = "Allow"
           Resource = [
             aws_secretsmanager_secret.test.id,
             aws_secretsmanager_secret.test2.id,
@@ -2040,7 +2040,7 @@ resource "aws_iam_role" "test_extraction_hook" {
           Resource = aws_s3_bucket.test_extraction_hook.arn
         },
         {
-          Action = ["lambda:InvokeFunction"]
+          Action   = ["lambda:InvokeFunction"]
           Effect   = "Allow"
           Resource = aws_lambda_function.test.arn
         },
@@ -3178,7 +3178,7 @@ resource "aws_iam_role" "test_extraction_hook2" {
           Resource = aws_s3_bucket.test_extraction_hook.arn
         },
         {
-          Action = ["lambda:InvokeFunction"]
+          Action   = ["lambda:InvokeFunction"]
           Effect   = "Allow"
           Resource = aws_lambda_function.test.arn
         },
@@ -3302,7 +3302,7 @@ resource "aws_kendra_data_source" "test" {
     role_arn = aws_iam_role.test_extraction_hook.arn
 
     post_extraction_hook_configuration {
-      lambda_arn = local.select_lambda_arn == "first" ? aws_lambda_function.test.arn  : aws_lambda_function.test2.arn
+      lambda_arn = local.select_lambda_arn == "first" ? aws_lambda_function.test.arn : aws_lambda_function.test2.arn
       s3_bucket  = aws_s3_bucket.test_extraction_hook.id
 
       invocation_condition {
