@@ -2,7 +2,6 @@ package rekognition
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,7 +62,7 @@ func resourceCollectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	collection, err := conn.CreateCollection(&input)
 	if err != nil {
-		return fmt.Errorf("error creating resource group: %s", err)
+		return fmt.Errorf("error creating rekognition collection: %s", err)
 	}
 
 	if collection == nil {
@@ -85,7 +84,7 @@ func resourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, rekognition.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Rekognition Collection (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -102,7 +101,7 @@ func resourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("collection_id", d.Id())
 	d.Set("collection_arn", arn)
 	d.Set("face_count", collection.FaceCount)
-	d.Set("face_model_version", aws.StringValue(collection.FaceModelVersion))
+	d.Set("face_model_version", collection.FaceModelVersion)
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {

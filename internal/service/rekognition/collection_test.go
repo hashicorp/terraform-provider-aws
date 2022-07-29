@@ -25,7 +25,7 @@ func TestAccRekognitionCollection_Resource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollection_basic(rName),
+				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
@@ -54,7 +54,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollection_tags1(rName, "key1", "value1"),
+				Config: testAccCollectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -67,7 +67,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCollectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -76,7 +76,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCollection_tags1(rName, "key2", "value2"),
+				Config: testAccCollectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -137,18 +137,18 @@ func testAccCheckCollectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCollection_basic(rName string) string {
+func testAccCollectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
-  collection_id        = "%s"
+  collection_id = "%s"
 }
 `, rName)
 }
 
-func testAccCollection_tags1(rName, tag1Key, tag1Value string) string {
+func testAccCollectionConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
-  collection_id        = "%s"
+  collection_id = "%s"
 
   tags = {
     %q = %q
@@ -157,10 +157,10 @@ resource "aws_rekognition_collection" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccGroupConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccCollectionConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
-  collection_id        = "%s"
+  collection_id = "%s"
 
   tags = {
     %q = %q
