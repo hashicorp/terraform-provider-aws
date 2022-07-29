@@ -401,7 +401,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 			if output.EndpointConfiguration != nil {
 				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
 					for _, x := range endpointConfiguration.VpcEndpointIds {
-						if *v == *x {
+						if aws.StringValue(v) == aws.StringValue(x) {
 							break
 						}
 					}
@@ -415,7 +415,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 
 			for _, v := range endpointConfiguration.VpcEndpointIds {
 				for _, x := range output.EndpointConfiguration.VpcEndpointIds {
-					if *v == *x {
+					if aws.StringValue(v) == aws.StringValue(x) {
 						break
 					}
 				}
