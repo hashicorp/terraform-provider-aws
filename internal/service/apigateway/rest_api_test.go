@@ -48,9 +48,10 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 		},
 	})
@@ -77,9 +78,10 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 
 			{
@@ -150,9 +152,10 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
@@ -251,9 +254,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 		},
 	})
@@ -276,9 +280,10 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "HEADER"),
@@ -318,7 +323,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated API key source still overrides
 			{
@@ -362,7 +367,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -391,7 +396,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet"),
@@ -428,7 +433,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated minimum compression size still overrides
 			{
@@ -475,7 +480,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -508,7 +513,7 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_body(rName, "/update"),
@@ -546,7 +551,7 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_description(rName, "description2"),
@@ -581,7 +586,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated description still overrides
 			{
@@ -625,7 +630,7 @@ func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -648,9 +653,10 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, true),
@@ -690,7 +696,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify override can be unset (only for body set to false)
 			{
@@ -734,7 +740,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -768,7 +774,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIds2(rName),
@@ -825,7 +831,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated configuration value still overrides
 			{
@@ -910,7 +916,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideTomergeBody(t *testing.T) {
+func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *testing.T) {
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -985,7 +991,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -1013,7 +1019,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, -1),
@@ -1055,7 +1061,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated minimum compression size still overrides
 			{
@@ -1101,7 +1107,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
@@ -1130,7 +1136,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify updated name still overrides
 			{
@@ -1174,7 +1180,7 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body", "parameters"},
+				ImportStateVerifyIgnore: []string{"body", "parameters", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "ignore"),
@@ -1209,7 +1215,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{"policy", "put_rest_api_mode"},
 			},
 			{
 				Config: testAccRestAPIConfig_updatePolicy(rName),
@@ -1269,7 +1275,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body", "policy"},
+				ImportStateVerifyIgnore: []string{"body", "policy", "put_rest_api_mode"},
 			},
 			// Verify updated body still has override policy
 			{
@@ -1315,7 +1321,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 		},
 	})
