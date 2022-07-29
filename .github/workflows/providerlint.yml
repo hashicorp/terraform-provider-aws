@@ -39,7 +39,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/providerlint && go install .
-      - run: .ci/scripts/providerlint.sh ec2
+      - run: .ci/scripts/providerlint.sh mq
   providerlintb:
     name: 2 of 2
     needs: [providerlinta]
