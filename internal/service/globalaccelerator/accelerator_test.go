@@ -56,6 +56,40 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlobalAcceleratorAccelerator_ipAddressType(t *testing.T) {
+	resourceName := "aws_globalaccelerator_accelerator.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcceleratorConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV6"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
+					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv6"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
