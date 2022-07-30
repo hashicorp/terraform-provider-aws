@@ -56,10 +56,9 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	})
 }
 
-func TestAccGlobalAcceleratorAccelerator_ipAddressType(t *testing.T) {
+func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -68,15 +67,13 @@ func TestAccGlobalAcceleratorAccelerator_ipAddressType(t *testing.T) {
 		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcceleratorConfig_basic(rName),
+				Config: testAccAcceleratorConfig_ipAddressTypeDualStack(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV6"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "DUAL_STACK"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
-					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv6"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -335,11 +332,11 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName)
 }
 
-func testAccAcceleratorConfig_ipAddressTypeIPV6(rName string) string {
+func testAccAcceleratorConfig_ipAddressTypeDualStack(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
-  ip_address_type = "IPV6"
+  ip_address_type = "DUAL_STACK"
 }
 `, rName)
 }
