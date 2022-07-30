@@ -31,7 +31,7 @@ The following arguments are supported:
 * `data_compression_type` - (Optional) Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
 * `nfs_exports` - (Optional) NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `read_only` - (Optional) specifies whether the volume is read-only. Default is false.
-* `record_size_kib` - (Optional) The record size of an OpenZFS volume, in kibibytes (KiB). Valid values are 4, 8, 16, 32, 64, 128, 256, 512, or 1024 KiB. The default is 128 KiB.
+* `record_size_kib` - (Optional) The record size of an OpenZFS volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.
 * `storage_capacity_quota_gib`  - (Optional) The maximum amount of storage in gibibytes (GiB) that the volume can use from its parent.
 * `storage_capacity_reservation_gib`  - (Optional) The amount of storage in gibibytes (GiB) to reserve from the parent volume.
 * `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [User and Group Quotas](#user-and-group-quotas) Below.
