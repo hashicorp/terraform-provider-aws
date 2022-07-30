@@ -301,6 +301,15 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName)
 }
 
+func testAccAcceleratorConfig_ipAddressTypeIPV6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV6"
+}
+`, rName)
+}
+
 func testAccAcceleratorConfig_enabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
