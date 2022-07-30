@@ -45,6 +45,39 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRRepository_tags(t *testing.T) {
+	var v1, v2 ecrpublic.Repository
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecrpublic_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecrpublic.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+				),
+			},
+			{
+				Config: testAccRepositoryConfig_tagsChanged(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 	var v ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -372,6 +405,31 @@ func testAccRepositoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
+}
+`, rName)
+}
+
+func testAccRepositoryConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %q
+
+  tags = {
+    Environment = "production"
+    Usage       = "original"
+  }
+}
+`, rName)
+}
+
+func testAccRepositoryConfig_tagsChanged(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %q
+
+  tags = {
+    Usage = "changed"
+  }
 }
 `, rName)
 }
