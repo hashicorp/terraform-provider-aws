@@ -45,7 +45,7 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepository_tags(t *testing.T) {
+func TestAccECRPublicRepository_tags(t *testing.T) {
 	var v1, v2 ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
