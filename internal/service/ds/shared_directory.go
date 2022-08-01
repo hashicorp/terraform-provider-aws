@@ -120,7 +120,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
-	output, err := findSharedDirectoryByTwoPartKey(ctx, conn, ownerDirID, sharedDirID)
+	output, err := FindSharedDirectory(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())

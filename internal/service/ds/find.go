@@ -176,7 +176,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	return region, nil
 }
 
-func findSharedDirectoryByTwoPartKey(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
+func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
 	input := &directoryservice.DescribeSharedDirectoriesInput{
 		OwnerDirectoryId:   aws.String(ownerDirectoryID),
 		SharedDirectoryIds: aws.StringSlice([]string{sharedDirectoryID}),
