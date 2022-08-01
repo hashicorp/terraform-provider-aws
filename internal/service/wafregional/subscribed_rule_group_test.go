@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccWafRegionalSubscribedRuleGroupDataSource_Basic(t *testing.T) {
+func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
 	if os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
 		t.Skip("Environment variable WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
 	}
@@ -32,39 +32,39 @@ func TestAccWafRegionalSubscribedRuleGroupDataSource_Basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSubscribedRuleGroupDataSourceConfig_Nonexistent,
+				Config:      testAccSubscribedRuleGroupDataSourceConfig_nonexistent,
 				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
 			},
 			{
-				Config: testAccSubscribedRuleGroupDataSourceConfig_Name(ruleGroupName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_name(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config: testAccSubscribedRuleGroupDataSourceConfig_MetricName(metricName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_metricName(metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config: testAccSubscribedRuleGroupDataSourceConfig_NameAndMetricName(ruleGroupName, metricName),
+				Config: testAccSubscribedRuleGroupDataSourceConfig_nameAndMetricName(ruleGroupName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
-				Config:      testAccDataSourceSubscribedRuleGroupDataSourceConfig_NameAndMismatchingMetricName(ruleGroupName),
+				Config:      testAccDataSourceSubscribedRuleGroupDataSourceConfig_nameAndMismatchingMetricName(ruleGroupName),
 				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
 			},
 		},
 	})
 }
 
-func testAccSubscribedRuleGroupDataSourceConfig_Name(name string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 data "aws_wafregional_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -72,7 +72,7 @@ data "aws_wafregional_subscribed_rule_group" "rulegroup" {
 `, name)
 }
 
-func testAccSubscribedRuleGroupDataSourceConfig_MetricName(metricName string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_metricName(metricName string) string {
 	return fmt.Sprintf(`
 data "aws_wafregional_subscribed_rule_group" "rulegroup" {
   metric_name = %[1]q
@@ -80,7 +80,7 @@ data "aws_wafregional_subscribed_rule_group" "rulegroup" {
 `, metricName)
 }
 
-func testAccSubscribedRuleGroupDataSourceConfig_NameAndMetricName(name string, metricName string) string {
+func testAccSubscribedRuleGroupDataSourceConfig_nameAndMetricName(name string, metricName string) string {
 	return fmt.Sprintf(`
 data "aws_wafregional_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -89,7 +89,7 @@ data "aws_wafregional_subscribed_rule_group" "rulegroup" {
 `, name, metricName)
 }
 
-func testAccDataSourceSubscribedRuleGroupDataSourceConfig_NameAndMismatchingMetricName(name string) string {
+func testAccDataSourceSubscribedRuleGroupDataSourceConfig_nameAndMismatchingMetricName(name string) string {
 	return fmt.Sprintf(`
 data "aws_wafregional_subscribed_rule_group" "rulegroup" {
   name = %[1]q
@@ -98,7 +98,7 @@ data "aws_wafregional_subscribed_rule_group" "rulegroup" {
 `, name)
 }
 
-const testAccSubscribedRuleGroupDataSourceConfig_Nonexistent = `
+const testAccSubscribedRuleGroupDataSourceConfig_nonexistent = `
 data "aws_wafregional_subscribed_rule_group" "rulegroup" {
   name = "tf-acc-test-does-not-exist"
 }
