@@ -28,6 +28,9 @@ import (
 
 const (
 	ISO8601UTC = "2006-01-02T15:04:05-07:00"
+
+	// validationExceptionMessageDataSourceSecrets describes the error returned when the IAM permission has not yet propagated
+	validationExceptionMessageDataSourceSecrets = "Secrets Manager throws the exception"
 )
 
 func ResourceDataSource() *schema.Resource {
@@ -632,7 +635,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
 
-			if errors.As(err, &validationException) && strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) {
+			if errors.As(err, &validationException) && (strings.Contains(validationException.ErrorMessage(), validationExceptionMessage) || strings.Contains(validationException.ErrorMessage(), validationExceptionMessageDataSourceSecrets)) {
 				return true, err
 			}
 
