@@ -17,10 +17,10 @@ func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowsDataSourceConfig_filterName(rName1, rName2, rName3),

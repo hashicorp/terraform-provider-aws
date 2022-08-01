@@ -20,10 +20,10 @@ func testAccGraph_basic(t *testing.T) {
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGraphDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphConfig_basic(),
@@ -46,10 +46,10 @@ func testAccGraph_tags(t *testing.T) {
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGraphDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphConfig_tags1("key1", "value1"),
@@ -102,10 +102,10 @@ func testAccGraph_disappears(t *testing.T) {
 	resourceName := "aws_detective_graph.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGraphDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphConfig_basic(),

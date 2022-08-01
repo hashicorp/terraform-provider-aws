@@ -32,9 +32,9 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccVocabularyFiltersPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
@@ -70,9 +70,9 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccVocabularyFiltersPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
@@ -102,9 +102,9 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccVocabularyFiltersPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
@@ -143,9 +143,9 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccVocabularyFiltersPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_tags1(rName, "key1", "value1"),
@@ -191,9 +191,9 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccVocabularyFiltersPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVocabularyFilterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),

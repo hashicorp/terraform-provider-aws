@@ -31,9 +31,9 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
@@ -71,9 +71,9 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
@@ -110,9 +110,9 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, "key1", "value1"),
@@ -158,9 +158,9 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
 			testAccMedicalVocabularyPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.TranscribeEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMedicalVocabularyDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),

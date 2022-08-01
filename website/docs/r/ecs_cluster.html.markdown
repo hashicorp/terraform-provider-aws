@@ -91,7 +91,7 @@ The following arguments are supported:
 * `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `configuration`
 
@@ -128,7 +128,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN that identifies the cluster.
 * `id` - ARN that identifies the cluster.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

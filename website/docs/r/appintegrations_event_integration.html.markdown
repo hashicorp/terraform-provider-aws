@@ -36,7 +36,7 @@ The following arguments are supported:
 * `eventbridge_bus` - (Required) Specifies the EventBridge bus.
 * `event_filter` - (Required) A block that defines the configuration information for the event filter. The Event Filter block is documented below.
 * `name` - (Required) Specifies the name of the Event Integration.
-* `tags` - (Optional) Tags to apply to the Event Integration. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Event Integration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `event_filter` block supports the following arguments:
 
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Event Integration.
 * `id` - The identifier of the Event Integration which is the name of the Event Integration.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -34,7 +34,7 @@ The following arguments are supported:
 * `storage_capacity_quota_gib`  - (Optional) The maximum amount of storage in gibibytes (GiB) that the volume can use from its parent.
 * `storage_capacity_reservation_gib`  - (Optional) The amount of storage in gibibytes (GiB) to reserve from the parent volume.
 * `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [User and Group Quotas](#user-and-group-quotas) Below.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### NFS Exports
 
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
 * `id` - Identifier of the file system, e.g., `fsvol-12345678`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

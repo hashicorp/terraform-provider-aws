@@ -5,6 +5,7 @@ set -o nounset
 
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __parent="$(dirname "$__dir")"
+__root="$(dirname "$__parent")"
 
 CHANGELOG_FILE_NAME="CHANGELOG.md"
 CHANGELOG_TMP_FILE_NAME="CHANGELOG.tmp"
@@ -17,7 +18,7 @@ if [ $TARGET_SHA == $PREVIOUS_RELEASE_SHA ]; then
   exit 0
 fi
 
-PREVIOUS_CHANGELOG=$(sed -n -e "/# ${PREVIOUS_RELEASE_TAG#v}/,\$p" $__parent/$CHANGELOG_FILE_NAME)
+PREVIOUS_CHANGELOG=$(sed -n -e "/# ${PREVIOUS_RELEASE_TAG#v}/,\$p" $__root/$CHANGELOG_FILE_NAME)
 
 if [ -z "$PREVIOUS_CHANGELOG" ]
 then
@@ -27,7 +28,7 @@ fi
 
 CHANGELOG=$($(go env GOPATH)/bin/changelog-build -this-release $TARGET_SHA \
                       -last-release $PREVIOUS_RELEASE_SHA \
-                      -git-dir $__parent \
+                      -git-dir $__root \
                       -entries-dir .changelog \
                       -changelog-template $__dir/changelog.tmpl \
                       -note-template $__dir/release-note.tmpl \
@@ -40,7 +41,7 @@ fi
 
 rm -f $CHANGELOG_TMP_FILE_NAME
 
-sed -n -e "1{/# /p;}" $__parent/$CHANGELOG_FILE_NAME > $CHANGELOG_TMP_FILE_NAME
+sed -n -e "1{/# /p;}" $__root/$CHANGELOG_FILE_NAME > $CHANGELOG_TMP_FILE_NAME
 echo "$CHANGELOG" >> $CHANGELOG_TMP_FILE_NAME
 echo >> $CHANGELOG_TMP_FILE_NAME
 echo "$PREVIOUS_CHANGELOG" >> $CHANGELOG_TMP_FILE_NAME

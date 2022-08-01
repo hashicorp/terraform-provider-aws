@@ -21,10 +21,10 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_basic(t *testing.T) {
 	templateResourceName := "aws_codecommit_approval_rule_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
@@ -48,10 +48,10 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_disappears(t *testing.T) {
 	resourceName := "aws_codecommit_approval_rule_template_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
@@ -71,10 +71,10 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_Disappears_repository(t *t
 	resourceName := "aws_codecommit_approval_rule_template_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codecommit.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckApprovalRuleTemplateAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codecommit.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),

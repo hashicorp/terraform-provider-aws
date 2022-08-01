@@ -1,3 +1,4 @@
+// TODO: Move this to a shared 'types' package.
 package fwprovider
 
 import (

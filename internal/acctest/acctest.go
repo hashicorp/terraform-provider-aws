@@ -69,20 +69,10 @@ func Skip(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// Providers is a static map containing only the main provider instance.
-//
-// Deprecated: Terraform Plugin SDK version 2 uses TestCase.ProviderFactories
-// but supports this value in TestCase.Providers for backwards compatibility.
-// In the future Providers: Providers will be changed to
-// ProviderFactories: ProviderFactories
-var Providers map[string]*schema.Provider
-
-// ProviderFactories is a static map containing only the main provider instance
+// ProtoV5ProviderFactories is a static map containing only the main provider instance
 //
 // Use other ProviderFactories functions, such as FactoriesAlternate,
 // for tests requiring special provider configurations.
-var ProviderFactories map[string]func() (*schema.Provider, error)
-
 var ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 // Provider is the "main" provider instance
@@ -102,20 +92,23 @@ var Provider *schema.Provider
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	var err error
+	Provider, err = provider.New(context.Background())
 
-	Providers = map[string]*schema.Provider{
-		ProviderName: Provider,
+	if err != nil {
+		panic(err)
 	}
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
-	ProviderFactories = map[string]func() (*schema.Provider, error){
-		ProviderName: func() (*schema.Provider, error) { return provider.Provider(), nil }, //nolint:unparam
-	}
+	ProtoV5ProviderFactories = protoV5ProviderFactoriesInit(ProviderName)
+}
 
-	ProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-		ProviderName: func() (tfprotov5.ProviderServer, error) {
+func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
+
+	for _, name := range providerNames {
+		factories[name] = func() (tfprotov5.ProviderServer, error) {
 			providerServerFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
 			if err != nil {
@@ -123,16 +116,22 @@ func init() {
 			}
 
 			return providerServerFactory(), nil
-		},
+		}
 	}
+
+	return factories
 }
 
-// factoriesInit creates ProviderFactories for the provider under testing.
-func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+	ctx := context.Background()
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p := provider.Provider()
+		p, err := provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 			return p, nil
@@ -146,54 +145,49 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 	return factories
 }
 
-// FactoriesInternal creates ProviderFactories for provider configuration testing
-//
-// This should only be used for TestAccProvider_ tests which need to
-// reference the provider instance itself. Other testing should use
-// ProviderFactories or other related functions.
-func FactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{ProviderName})
-}
-
 // FactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
 //
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return factoriesInit(t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
 }
 
-// FactoriesAlternateAccountAndAlternateRegion creates ProviderFactories for cross-account and cross-region configurations
+func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+}
+
+// ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
-func FactoriesAlternateAccountAndAlternateRegion(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
 		ProviderNameSameAccountAlternateRegion,
-	})
+	)
 }
 
-// FactoriesMultipleRegion creates ProviderFactories for the number of region configurations
+// ProtoV5FactoriesMultipleRegions creates ProtoV5ProviderFactories for the specified number of region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
-func FactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[string]func() (*schema.Provider, error) {
-	providerNames := []string{
-		ProviderName,
-		ProviderNameAlternate,
+func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
+	switch n {
+	case 2:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate)
+	case 3:
+		return protoV5ProviderFactoriesInit(ProviderName, ProviderNameAlternate, ProviderNameThird)
+	default:
+		t.Fatalf("invalid number of Region configurations: %d", n)
 	}
 
-	if regions >= 3 {
-		providerNames = append(providerNames, ProviderNameThird)
-	}
-
-	return factoriesInit(providers, providerNames)
+	return nil
 }
 
 // PreCheck verifies and sets required provider testing configuration
@@ -1213,15 +1207,6 @@ provider "aws" {
 }
 `, os.Getenv(conns.EnvVarAccAssumeRoleARN), policy)
 }
-
-const testAccProviderConfig_assumeRoleEmpty = `
-provider "aws" {
-  assume_role {
-  }
-}
-
-data "aws_caller_identity" "current" {}
-` //lintignore:AT004
 
 const testAccProviderConfigBase = `
 data "aws_partition" "provider_test" {}

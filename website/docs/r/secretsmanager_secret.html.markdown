@@ -53,7 +53,7 @@ The following arguments are supported:
 * `force_overwrite_replica_secret` - (Optional) Accepts boolean value to specify whether to overwrite a secret with the same name in the destination Region.
 * `rotation_lambda_arn` - (Optional, **DEPRECATED**) ARN of the Lambda function that can rotate the secret. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
 * `rotation_rules` - (Optional, **DEPRECATED**) Configuration block for the rotation configuration of this secret. Defined below. Use the `aws_secretsmanager_secret_rotation` resource to manage this configuration instead. As of version 2.67.0, removal of this configuration will no longer remove rotation due to supporting the new resource. Either import the new resource and remove the configuration or manually remove rotation.
-* `tags` - (Optional) Key-value map of user-defined tags that are attached to the secret. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of user-defined tags that are attached to the secret. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### replica
 
@@ -72,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the secret.
 * `rotation_enabled` - Whether automatic rotation is enabled for this secret.
 * `replica` - Attributes of a replica are described below.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### replica
 

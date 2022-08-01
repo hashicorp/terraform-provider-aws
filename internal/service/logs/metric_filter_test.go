@@ -20,10 +20,10 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricFilterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rInt),
@@ -113,10 +113,10 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricFilterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rInt),
@@ -136,10 +136,10 @@ func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricFilterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricFilterConfig_basic(rInt),

@@ -22,10 +22,10 @@ func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_basic(rName),
@@ -52,10 +52,10 @@ func TestAccAppRunnerVPCConnector_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_basic(rName),
@@ -74,10 +74,10 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 	resourceName := "aws_apprunner_vpc_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectorConfig_tags1(rName, "key1", "value1"),

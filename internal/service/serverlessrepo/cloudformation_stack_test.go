@@ -30,10 +30,10 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFormationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_basic(stackName, appARN),
@@ -81,10 +81,10 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_basic(stackName, appARN),
@@ -110,10 +110,10 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFormationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_versioned(stackName, appARN, version1),
@@ -166,10 +166,10 @@ func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 	const version = "1.1.36"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFormationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_versionedPaired(stackName, appARN, version),
@@ -192,10 +192,10 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFormationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_tags1(stackName, appARN, "key1", "value1"),
@@ -239,10 +239,10 @@ func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCloudFormationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudFormationStackConfig_updateInitial(stackName, appARN, initialName),

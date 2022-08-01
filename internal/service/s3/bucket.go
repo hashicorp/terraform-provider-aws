@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,6 +29,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	resNameBucket = "Bucket"
 )
 
 func ResourceBucket() *schema.Resource {
@@ -711,11 +717,26 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		bucket = resource.UniqueId()
 	}
 
+	awsRegion := meta.(*conns.AWSClient).Region
+
+	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
+	// current account. It also resets the Bucket ACLs.
+	if awsRegion == endpoints.UsEast1RegionID {
+		_, err := conn.HeadBucket(&s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		})
+		if err == nil {
+			return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
+		}
+	}
+
 	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
-		Bucket:                     aws.String(bucket),
-		ObjectLockEnabledForBucket: aws.Bool(d.Get("object_lock_enabled").(bool)),
+		Bucket: aws.String(bucket),
+		// NOTE: Please, do not add any other fields here unless the field is
+		// supported in *all* AWS partitions (including ISO partitions) and by
+		// 3rd party S3 providers.
 	}
 
 	if acl, ok := d.GetOk("acl"); ok {
@@ -728,7 +749,6 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] S3 bucket %s has default canned ACL %s", bucket, s3.BucketCannedACLPrivate)
 	}
 
-	awsRegion := meta.(*conns.AWSClient).Region
 	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
@@ -743,6 +763,11 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error validating S3 Bucket (%s) name: %w", bucket, err)
 	}
 
+	// S3 Object Lock is not supported on all partitions.
+	if v, ok := d.GetOk("object_lock_enabled"); ok {
+		req.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
+	}
+
 	// S3 Object Lock can only be enabled on bucket creation.
 	objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
@@ -753,7 +778,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.CreateBucket(req)
 
 		if tfawserr.ErrCodeEquals(err, ErrCodeOperationAborted) {
-			return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
+			return resource.RetryableError(err)
 		}
 
 		if err != nil {
@@ -766,7 +791,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.CreateBucket(req)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating S3 Bucket (%s): %w", bucket, err)
+		return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, err)
 	}
 
 	// Assign the bucket name as the resource ID
@@ -928,7 +953,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
+		return names.Error(names.S3, names.ErrActionReading, resNameBucket, d.Id(), err)
 	}
 
 	d.Set("bucket", d.Id())
@@ -1282,7 +1307,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
-		d.Set("object_lock_enabled", false)
+		d.Set("object_lock_enabled", nil)
 		d.Set("object_lock_configuration", nil)
 	}
 

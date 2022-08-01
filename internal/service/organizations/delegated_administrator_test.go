@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,7 +14,6 @@ import (
 )
 
 func testAccDelegatedAdministrator_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -26,9 +24,9 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDelegatedAdministratorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
@@ -50,7 +48,6 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 }
 
 func testAccDelegatedAdministrator_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -60,9 +57,9 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDelegatedAdministratorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
