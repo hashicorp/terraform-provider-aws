@@ -1108,6 +1108,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1117,8 +1118,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["async", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
     record_size_kib = %[5]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
@@ -1140,6 +1143,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1153,8 +1157,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["sync", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
     record_size_kib = %[6]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
