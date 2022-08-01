@@ -160,9 +160,25 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_microsoft(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionEnterprise),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Large"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
 				),
 			},
 			{
@@ -191,9 +207,25 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_microsoftStandard(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "edition", directoryservice.DirectoryEditionStandard),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", "Standard"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
 				),
 			},
 			{
