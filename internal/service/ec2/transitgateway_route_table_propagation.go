@@ -134,7 +134,14 @@ func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, m
 	return nil
 }
 
+// transitGatewayRouteTablePropagationUpdate is used by Transit Gateway attachment resources to modify their route table propagations.
+// The route table ID may be empty (e.g. when the Transit Gateway itself has default route table propagation disabled).
 func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, enable bool) error {
+	if transitGatewayRouteTableID == "" {
+		// Do nothing if no route table was specified.
+		return nil
+	}
+
 	id := TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 

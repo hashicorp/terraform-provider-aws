@@ -134,7 +134,14 @@ func resourceTransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, m
 	return nil
 }
 
+// transitGatewayRouteTableAssociationUpdate is used by Transit Gateway attachment resources to modify their route table associations.
+// The route table ID may be empty (e.g. when the Transit Gateway itself has default route table association disabled).
 func transitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
+	if transitGatewayRouteTableID == "" {
+		// Do nothing if no route table was specified.
+		return nil
+	}
+
 	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
