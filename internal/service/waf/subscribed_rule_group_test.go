@@ -83,7 +83,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 func testAccSubscribedRuleGroupDataSourceConfig_nameAndMetricName(name string, metricName string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
-  name = %[1]q
+  name        = %[1]q
   metric_name = %[2]q
 }
 `, name, metricName)
@@ -92,7 +92,7 @@ data "aws_waf_subscribed_rule_group" "rulegroup" {
 func testAccSubscribedRuleGroupDataSourceConfig_nameAndMismatchingMetricName(name string) string {
 	return fmt.Sprintf(`
 data "aws_waf_subscribed_rule_group" "rulegroup" {
-  name = %[1]q
+  name        = %[1]q
   metric_name = "tf-acc-test-does-not-exist"
 }
 `, name)
