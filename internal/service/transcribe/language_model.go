@@ -329,29 +329,3 @@ func expandInputDataConfig(tfList []interface{}) *types.InputDataConfig {
 
 	return s
 }
-
-func modelStatus(in ...types.ModelStatus) []string {
-	var s []string
-
-	for _, v := range in {
-		s = append(s, string(v))
-	}
-
-	return s
-}
-
-func baseModelNamesSlice(in []types.BaseModelName) (out []string) {
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return
-}
-
-func languageCodeSlice(in []types.LanguageCode) (out []string) {
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return
-}
