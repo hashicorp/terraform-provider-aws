@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccDataSource_basic(t *testing.T) {
+func TestAccKendraDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,7 +29,7 @@ func testAccDataSource_basic(t *testing.T) {
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,7 +58,7 @@ func testAccDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSource_disappears(t *testing.T) {
+func TestAccKendraDataSource_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func testAccDataSource_disappears(t *testing.T) {
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,7 +87,7 @@ func testAccDataSource_disappears(t *testing.T) {
 	})
 }
 
-func testAccDataSource_name(t *testing.T) {
+func TestAccKendraDataSource_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -99,7 +99,7 @@ func testAccDataSource_name(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,7 +128,7 @@ func testAccDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccDataSource_description(t *testing.T) {
+func TestAccKendraDataSource_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -141,7 +141,7 @@ func testAccDataSource_description(t *testing.T) {
 	updatedDescription := "Updated Description"
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -186,7 +186,7 @@ func testAccDataSource_description(t *testing.T) {
 	})
 }
 
-func testAccDataSource_languageCode(t *testing.T) {
+func TestAccKendraDataSource_languageCode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -199,7 +199,7 @@ func testAccDataSource_languageCode(t *testing.T) {
 	updatedLanguageCode := "zh"
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -228,7 +228,7 @@ func testAccDataSource_languageCode(t *testing.T) {
 	})
 }
 
-func testAccDataSource_roleARN(t *testing.T) {
+func TestAccKendraDataSource_roleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -242,7 +242,7 @@ func testAccDataSource_roleARN(t *testing.T) {
 	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -273,7 +273,7 @@ func testAccDataSource_roleARN(t *testing.T) {
 	})
 }
 
-func testAccDataSource_schedule(t *testing.T) {
+func TestAccKendraDataSource_schedule(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -288,7 +288,7 @@ func testAccDataSource_schedule(t *testing.T) {
 	updatedSchedule := "cron(9 10 2 * ? *)"
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -319,7 +319,7 @@ func testAccDataSource_schedule(t *testing.T) {
 	})
 }
 
-func testAccDataSource_tags(t *testing.T) {
+func TestAccKendraDataSource_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -330,7 +330,7 @@ func testAccDataSource_tags(t *testing.T) {
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -370,7 +370,7 @@ func testAccDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
+func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -381,7 +381,7 @@ func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -403,7 +403,7 @@ func testAccDataSource_typeCustomCustomizeDiff(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
+func TestAccKendraDataSource_Configuration_S3_Bucket(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -418,7 +418,7 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 	rName8 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -455,7 +455,7 @@ func testAccDataSource_Configuration_S3_Bucket(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
+func TestAccKendraDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -468,7 +468,7 @@ func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -509,7 +509,7 @@ func testAccDataSource_Configuration_S3_AccessControlList(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testing.T) {
+func TestAccKendraDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -524,7 +524,7 @@ func testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testin
 	updatedS3Prefix := "updated"
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -565,7 +565,7 @@ func testAccDataSource_Configuration_S3_DocumentsMetadataConfiguration(t *testin
 	})
 }
 
-func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *testing.T) {
+func TestAccKendraDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -578,7 +578,7 @@ func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *te
 	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -630,7 +630,7 @@ func testAccDataSource_Configuration_S3_ExclusionInclusionPatternsPrefixes(t *te
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -642,7 +642,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -694,7 +694,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsSeedURLs(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -709,7 +709,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T)
 	originalWebCrawlerMode := string(types.WebCrawlerModeHostOnly)
 	updatedWebCrawlerMode := string(types.WebCrawlerModeSubdomains)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -750,7 +750,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsWebCrawlerMode(t *testing.T)
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicHostPort(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicHostPort(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -772,7 +772,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	host2 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_experience"
 	port2 := 456
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -826,7 +826,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicCredentials(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasicCredentials(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -840,7 +840,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	rName7 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -881,7 +881,7 @@ func testAccDataSource_Configuration_WebCrawler_AuthenticationConfigurationBasic
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -895,7 +895,7 @@ func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	originalCrawlDepth := 5
 	updatedCrawlDepth := 4
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -930,7 +930,7 @@ func testAccDataSource_Configuration_WebCrawler_CrawlDepth(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -944,7 +944,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
 	originalMaxLinksPerPage := 100
 	updatedMaxLinksPerPage := 110
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -979,7 +979,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxLinksPerPage(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -993,7 +993,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *tes
 	originalMaxUrlsPerMinuteCrawlRate := 200
 	updatedMaxUrlsPerMinuteCrawlRate := 250
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1028,7 +1028,7 @@ func testAccDataSource_Configuration_WebCrawler_MaxURLsPerMinuteCrawlRate(t *tes
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1045,7 +1045,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t 
 	originalHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
 	originalPort1 := 123
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1091,7 +1091,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationCredentials(t 
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1110,7 +1110,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 	updatedHost1 := "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_faq"
 	updatedPort1 := 234
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1155,7 +1155,7 @@ func testAccDataSource_Configuration_WebCrawler_ProxyConfigurationHostPort(t *te
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1167,7 +1167,7 @@ func testAccDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t 
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1210,7 +1210,7 @@ func testAccDataSource_Configuration_WebCrawler_URLExclusionInclusionPatterns(t 
 	})
 }
 
-func testAccDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
+func TestAccKendraDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1222,7 +1222,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1264,7 +1264,7 @@ func testAccDataSource_Configuration_WebCrawler_URLsSiteMaps(t *testing.T) {
 	})
 }
 
-func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
+func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1277,7 +1277,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 	rName6 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1426,7 +1426,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_InlineConfiguration
 	})
 }
 
-func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition(t *testing.T) {
+func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_InvocationCondition(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1450,7 +1450,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1521,7 +1521,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	})
 }
 
-func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN(t *testing.T) {
+func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_RoleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1540,7 +1540,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1597,7 +1597,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	})
 }
 
-func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket(t *testing.T) {
+func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_S3Bucket(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1616,7 +1616,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1673,7 +1673,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 	})
 }
 
-func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_LambdaARN(t *testing.T) {
+func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfiguration_LambdaARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1692,7 +1692,7 @@ func testAccDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHookConfi
 
 	resourceName := "aws_kendra_data_source.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

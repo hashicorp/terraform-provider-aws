@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccExperience_basic(t *testing.T) {
+func TestAccKendraExperience_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -25,7 +25,7 @@ func testAccExperience_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -58,7 +58,7 @@ func testAccExperience_basic(t *testing.T) {
 	})
 }
 
-func testAccExperience_disappears(t *testing.T) {
+func TestAccKendraExperience_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -66,7 +66,7 @@ func testAccExperience_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -88,7 +88,7 @@ func testAccExperience_disappears(t *testing.T) {
 	})
 }
 
-func testAccExperience_Description(t *testing.T) {
+func TestAccKendraExperience_Description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -96,7 +96,7 @@ func testAccExperience_Description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -144,7 +144,7 @@ func testAccExperience_Description(t *testing.T) {
 	})
 }
 
-func testAccExperience_Name(t *testing.T) {
+func TestAccKendraExperience_Name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -153,7 +153,7 @@ func testAccExperience_Name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -191,7 +191,7 @@ func testAccExperience_Name(t *testing.T) {
 	})
 }
 
-func testAccExperience_roleARN(t *testing.T) {
+func TestAccKendraExperience_roleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -199,7 +199,7 @@ func testAccExperience_roleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -237,7 +237,7 @@ func testAccExperience_roleARN(t *testing.T) {
 	})
 }
 
-func testAccExperience_Configuration_ContentSourceConfiguration_DirectPutContent(t *testing.T) {
+func TestAccKendraExperience_Configuration_ContentSourceConfiguration_DirectPutContent(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -245,7 +245,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_DirectPutContent
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -291,7 +291,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_DirectPutContent
 	})
 }
 
-func testAccExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *testing.T) {
+func TestAccKendraExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -299,7 +299,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -329,7 +329,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_FaqIDs(t *testin
 	})
 }
 
-func testAccExperience_Configuration_ContentSourceConfiguration_updateFaqIDs(t *testing.T) {
+func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -337,7 +337,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_updateFaqIDs(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -377,7 +377,7 @@ func testAccExperience_Configuration_ContentSourceConfiguration_updateFaqIDs(t *
 	})
 }
 
-func testAccExperience_Configuration_UserIdentityConfiguration(t *testing.T) {
+func TestAccKendraExperience_Configuration_UserIdentityConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -390,7 +390,7 @@ func testAccExperience_Configuration_UserIdentityConfiguration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -418,7 +418,7 @@ func testAccExperience_Configuration_UserIdentityConfiguration(t *testing.T) {
 	})
 }
 
-func testAccExperience_Configuration_ContentSourceConfigurationAndUserIdentityConfiguration(t *testing.T) {
+func TestAccKendraExperience_Configuration_ContentSourceConfigurationAndUserIdentityConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -431,7 +431,7 @@ func testAccExperience_Configuration_ContentSourceConfigurationAndUserIdentityCo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -461,7 +461,7 @@ func testAccExperience_Configuration_ContentSourceConfigurationAndUserIdentityCo
 	})
 }
 
-func testAccExperience_Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved(t *testing.T) {
+func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIdentityConfigurationRemoved(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -474,7 +474,7 @@ func testAccExperience_Configuration_ContentSourceConfigurationWithUserIdentityC
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
@@ -514,7 +514,7 @@ func testAccExperience_Configuration_ContentSourceConfigurationWithUserIdentityC
 	})
 }
 
-func testAccExperience_Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved(t *testing.T) {
+func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentSourceConfigurationRemoved(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -527,7 +527,7 @@ func testAccExperience_Configuration_UserIdentityConfigurationWithContentSourceC
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_experience.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
