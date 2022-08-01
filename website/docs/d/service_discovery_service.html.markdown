@@ -36,8 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 * `dns_config` - A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
 * `health_check_config` - A complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `health_check_custom_config` -  A complex type that contains settings for ECS managed health checks.
-* `tags` - A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### dns_config
 
