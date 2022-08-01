@@ -191,11 +191,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Provider returns a *schema.Provider.
-func Provider() *schema.Provider {
-	// TODO: Move the validation to this, requires conditional schemas
-	// TODO: Move the configuration to this, requires validation
-
+// New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
+// The provider instance is fully configured once the `ConfigureContextFunc` has been called.
+func New(_ context.Context) (*schema.Provider, error) {
 	// The actual provider
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
@@ -740,7 +738,7 @@ func Provider() *schema.Provider {
 			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
 			"aws_location_tracker":             location.DataSourceTracker(),
 
-			"aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),
@@ -2119,7 +2117,7 @@ func Provider() *schema.Provider {
 		return providerConfigure(ctx, d, terraformVersion)
 	}
 
-	return provider
+	return provider, nil
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {

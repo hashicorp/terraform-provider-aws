@@ -92,7 +92,12 @@ var Provider *schema.Provider
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	var err error
+	Provider, err = provider.New(context.Background())
+
+	if err != nil {
+		panic(err)
+	}
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
@@ -117,11 +122,16 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 	return factories
 }
 
-func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+	ctx := context.Background()
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p := provider.Provider()
+		p, err := provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 			return p, nil
@@ -140,8 +150,8 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return factoriesInit(t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
