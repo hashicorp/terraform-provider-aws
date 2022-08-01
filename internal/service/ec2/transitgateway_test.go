@@ -658,6 +658,12 @@ func testAccCheckTransitGatewayRecreated(i, j *ec2.TransitGateway) resource.Test
 
 func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+
+		if transitGatewayRouteTableID == "" {
+			return errors.New("EC2 Transit Gateway Association Default Route Table empty")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		var transitGatewayAttachmentID string
@@ -668,7 +674,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
 
-		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfresource.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Association not found")
@@ -684,6 +690,12 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 
 func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
+
+		if transitGatewayRouteTableID == "" {
+			return nil
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		var transitGatewayAttachmentID string
@@ -694,7 +706,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
 
-		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfresource.NotFound(err) {
 			return nil
@@ -708,34 +720,14 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		var transitGatewayAttachmentID string
-		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
-		case *ec2.TransitGatewayVpcAttachment:
-			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
-		case *ec2.TransitGatewayConnect:
-			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
-		}
-
-		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
-
-		if tfresource.NotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return errors.New("EC2 Transit Gateway Route Table Propagation enabled")
-	}
-}
-
 func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
+
+		if transitGatewayRouteTableID == "" {
+			return errors.New("EC2 Transit Gateway Propagation Default Route Table empty")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		var transitGatewayAttachmentID string
@@ -746,7 +738,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
 
-		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), transitGatewayAttachmentID)
+		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfresource.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
@@ -757,6 +749,38 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(transitGateway *ec2.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId)
+
+		if transitGatewayRouteTableID == "" {
+			return nil
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		var transitGatewayAttachmentID string
+		switch transitGatewayAttachment := transitGatewayAttachment.(type) {
+		case *ec2.TransitGatewayVpcAttachment:
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+		case *ec2.TransitGatewayConnect:
+			transitGatewayAttachmentID = aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId)
+		}
+
+		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return errors.New("EC2 Transit Gateway Route Table Propagation enabled")
 	}
 }
 
