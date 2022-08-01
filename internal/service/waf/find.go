@@ -16,8 +16,8 @@ func FindSubscribedRuleGroupByNameOrMetricName(conn *waf.WAF, name string, metri
 		return nil, errors.New("must specify either name or metricName")
 	}
 
-	hasName, _ := strconv.ParseBool(name)
-	hasMetricName, _ := strconv.ParseBool(metricName)
+	hasName := name != ""
+	hasMetricName := metricName != ""
 	hasMatch := false
 
 	input := &waf.ListSubscribedRuleGroupsInput{}
@@ -57,7 +57,7 @@ func FindSubscribedRuleGroupByNameOrMetricName(conn *waf.WAF, name string, metri
 			}
 
 			matchingRuleGroup = ruleGroup
-			hasMatch, _ = strconv.ParseBool(aws.StringValue(matchingRuleGroup.RuleGroupId))
+			hasMatch = true
 		}
 
 		if output.NextMarker == nil {
