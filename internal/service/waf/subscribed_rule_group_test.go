@@ -29,6 +29,7 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

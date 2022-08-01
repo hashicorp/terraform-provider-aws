@@ -30,6 +30,7 @@ func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_nonexistent,
