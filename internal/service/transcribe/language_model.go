@@ -42,10 +42,10 @@ func ResourceLanguageModel() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"base_model_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(baseModelNamesSlice(types.BaseModelName("").Values()), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.BaseModelName](),
 			},
 			"input_data_config": {
 				Type:     schema.TypeList,
@@ -55,10 +55,10 @@ func ResourceLanguageModel() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_access_role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 						},
 						"s3_uri": {
 							Type:     schema.TypeString,
@@ -75,10 +75,10 @@ func ResourceLanguageModel() *schema.Resource {
 				},
 			},
 			"language_code": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(languageCodeSlice(types.LanguageCode("").Values()), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.LanguageCode](),
 			},
 			"model_name": {
 				Type:     schema.TypeString,
@@ -157,7 +157,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Transcribe LanguageModel (%s): %s", d.Id(), err)
+		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameLanguageModel, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -174,12 +174,12 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("model_name", out.ModelName)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {
-		return diag.Errorf("setting input data config: %s", err)
+		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("listing tags for Transcribe LanguageModel (%s): %s", d.Id(), err)
+		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameLanguageModel, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -188,11 +188,11 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
+		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	return nil
@@ -205,7 +205,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Transcribe LanguageModel (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
+			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameLanguageModel, d.Id(), err)
 		}
 	}
 
@@ -227,7 +227,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Transcribe LanguageModel (%s): %s", d.Id(), err)
+		return names.DiagError(names.Transcribe, names.ErrActionDeleting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	return nil
