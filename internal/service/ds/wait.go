@@ -70,7 +70,7 @@ func waitDomainControllerCreated(conn *directoryservice.DirectoryService, direct
 
 func waitDomainControllerDeleted(conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{directoryservice.DomainControllerStatusActive, directoryservice.DomainControllerStatusDeleting},
+		Pending: []string{directoryservice.DomainControllerStatusDeleting},
 		Target:  []string{},
 		Refresh: statusDomainController(conn, directoryID, domainControllerID),
 		Timeout: timeout,

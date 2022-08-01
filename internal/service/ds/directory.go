@@ -34,6 +34,7 @@ func ResourceDirectory() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -311,7 +312,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
-		if err := updateNumberOfDomainControllers(conn, d.Id(), v.(int)); err != nil {
+		if err := updateNumberOfDomainControllers(conn, d.Id(), v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
@@ -401,7 +402,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DSConn
 
 	if d.HasChange("desired_number_of_domain_controllers") {
-		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int)); err != nil {
+		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
 	}
@@ -497,16 +498,65 @@ func enableSSO(conn *directoryservice.DirectoryService, directoryID string) erro
 	return nil
 }
 
-func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, directoryID string, desiredNumber int) error {
+func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, directoryID string, desiredNumber int, timeout time.Duration) error {
+	oldDomainControllers, err := FindDomainControllers(conn, &directoryservice.DescribeDomainControllersInput{
+		DirectoryId: aws.String(directoryID),
+	})
+
+	if err != nil {
+		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
+	}
+
 	input := &directoryservice.UpdateNumberOfDomainControllersInput{
 		DesiredNumber: aws.Int64(int64(desiredNumber)),
 		DirectoryId:   aws.String(directoryID),
 	}
 
-	_, err := conn.UpdateNumberOfDomainControllers(input)
+	_, err = conn.UpdateNumberOfDomainControllers(input)
 
 	if err != nil {
 		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
+	}
+
+	newDomainControllers, err := FindDomainControllers(conn, &directoryservice.DescribeDomainControllersInput{
+		DirectoryId: aws.String(directoryID),
+	})
+
+	if err != nil {
+		return fmt.Errorf("reading Directory Service Directory (%s) domain controllers: %w", directoryID, err)
+	}
+
+	var wait []string
+
+	for _, v := range newDomainControllers {
+		domainControllerID := aws.StringValue(v.DomainControllerId)
+		isNew := true
+
+		for _, v := range oldDomainControllers {
+			if aws.StringValue(v.DomainControllerId) == domainControllerID {
+				isNew = false
+
+				if aws.StringValue(v.Status) != directoryservice.DomainControllerStatusActive {
+					wait = append(wait, domainControllerID)
+				}
+			}
+		}
+
+		if isNew {
+			wait = append(wait, domainControllerID)
+		}
+	}
+
+	for _, v := range wait {
+		if len(newDomainControllers) > len(oldDomainControllers) {
+			if _, err = waitDomainControllerCreated(conn, directoryID, v, timeout); err != nil {
+				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) create: %w", directoryID, v, err)
+			}
+		} else {
+			if _, err := waitDomainControllerDeleted(conn, directoryID, v, timeout); err != nil {
+				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) delete: %w", directoryID, v, err)
+			}
+		}
 	}
 
 	return nil

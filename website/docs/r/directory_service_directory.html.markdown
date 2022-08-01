@@ -169,6 +169,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_directory_service_directory` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `60 minutes`) Used for directory creation
+- `update` - (Default `60 minutes`) Used for directory update
 - `delete` - (Default `60 minutes`) Used for directory deletion
 
 ## Import
