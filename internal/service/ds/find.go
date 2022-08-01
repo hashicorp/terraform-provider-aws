@@ -61,6 +61,69 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
+func FindDomainControllerByTwoPartKey(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
+	input := &directoryservice.DescribeDomainControllersInput{
+		DirectoryId:         aws.String(directoryID),
+		DomainControllerIds: aws.StringSlice([]string{domainControllerID}),
+	}
+
+	output, err := FindDomainControllers(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	domainController := output[0]
+
+	if status := aws.StringValue(domainController.Status); status == directoryservice.DomainControllerStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return domainController, nil
+}
+
+func FindDomainControllers(conn *directoryservice.DirectoryService, input *directoryservice.DescribeDomainControllersInput) ([]*directoryservice.DomainController, error) {
+	var output []*directoryservice.DomainController
+
+	err := conn.DescribeDomainControllersPages(input, func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DomainControllers {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
 	input := &directoryservice.DescribeRegionsInput{
 		DirectoryId: aws.String(directoryID),
