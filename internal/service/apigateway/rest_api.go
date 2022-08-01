@@ -284,7 +284,6 @@ func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", api.Description)
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
-	//d.Set("put_rest_api_mode", api. modeConfigOrDefault(d))
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
