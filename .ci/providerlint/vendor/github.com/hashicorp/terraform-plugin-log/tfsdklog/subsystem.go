@@ -225,9 +225,9 @@ func SubsystemError(ctx context.Context, subsystem, msg string, additionalFields
 //
 //   configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo', '...', 'bar', '...' }`   -> omitted
-//   log2 = `{ msg = "...", fields = { 'bar', '...' }`                 -> printed
-//   log3 = `{ msg = "...", fields = { 'baz`', '...', 'boo', '...' }`  -> omitted
+//   log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
+//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
+//   log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
 //
 func SubsystemOmitLogWithFieldKeys(ctx context.Context, subsystem string, keys ...string) context.Context {
 	lOpts := logging.GetSDKSubsystemTFLoggerOpts(ctx, subsystem)
@@ -293,9 +293,9 @@ func SubsystemOmitLogWithMessageStrings(ctx context.Context, subsystem string, m
 //
 //   configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo', '***', 'bar', '...' }`   -> masked value
-//   log2 = `{ msg = "...", fields = { 'bar', '...' }`                 -> as-is value
-//   log3 = `{ msg = "...", fields = { 'baz`', '***', 'boo', '...' }`  -> masked value
+//   log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
+//   log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
 //
 func SubsystemMaskFieldValuesWithFieldKeys(ctx context.Context, subsystem string, keys ...string) context.Context {
 	lOpts := logging.GetSDKSubsystemTFLoggerOpts(ctx, subsystem)
@@ -305,9 +305,55 @@ func SubsystemMaskFieldValuesWithFieldKeys(ctx context.Context, subsystem string
 	return logging.SetSDKSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
 
+// SubsystemMaskAllFieldValuesRegexes returns a new context.Context that has a modified logger
+// that masks (replaces) with asterisks (`***`) all field value substrings,
+// matching one of the given *regexp.Regexp.
+//
+// Each call to this function is additive:
+// the regexp to mask by are added to the existing configuration.
+//
+// Example:
+//
+//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//
+//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
+//
+func SubsystemMaskAllFieldValuesRegexes(ctx context.Context, subsystem string, expressions ...*regexp.Regexp) context.Context {
+	lOpts := logging.GetSDKSubsystemTFLoggerOpts(ctx, subsystem)
+
+	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts)
+
+	return logging.SetSDKSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
+}
+
+// SubsystemMaskAllFieldValuesStrings returns a new context.Context that has a modified logger
+// that masks (replaces) with asterisks (`***`) all field value substrings,
+// equal to one of the given strings.
+//
+// Each call to this function is additive:
+// the regexp to mask by are added to the existing configuration.
+//
+// Example:
+//
+//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//
+//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
+//
+func SubsystemMaskAllFieldValuesStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
+	lOpts := logging.GetSDKSubsystemTFLoggerOpts(ctx, subsystem)
+
+	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts)
+
+	return logging.SetSDKSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
+}
+
 // SubsystemMaskMessageRegexes returns a new context.Context that has a modified logger
-// that masks (replaces) with asterisks (`***`) all message substrings matching one
-// of the given strings.
+// that masks (replaces) with asterisks (`***`) all message substrings,
+// matching one of the given *regexp.Regexp.
 //
 // Each call to this function is additive:
 // the regexp to mask by are added to the existing configuration.
@@ -329,8 +375,8 @@ func SubsystemMaskMessageRegexes(ctx context.Context, subsystem string, expressi
 }
 
 // SubsystemMaskMessageStrings returns a new context.Context that has a modified logger
-// that masks (replace) with asterisks (`***`) all message substrings equal to one
-// of the given strings.
+// that masks (replace) with asterisks (`***`) all message substrings,
+// equal to one of the given strings.
 //
 // Each call to this function is additive:
 // the string to mask by are added to the existing configuration.
@@ -339,9 +385,9 @@ func SubsystemMaskMessageRegexes(ctx context.Context, subsystem string, expressi
 //
 //   configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
+//   log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
+//   log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
+//   log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
 //
 func SubsystemMaskMessageStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
 	lOpts := logging.GetSDKSubsystemTFLoggerOpts(ctx, subsystem)
@@ -349,4 +395,16 @@ func SubsystemMaskMessageStrings(ctx context.Context, subsystem string, matching
 	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts)
 
 	return logging.SetSDKSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
+}
+
+// SubsystemMaskLogRegexes is a shortcut to invoke SubsystemMaskMessageRegexes and SubsystemMaskAllFieldValuesRegexes using the same input.
+// Refer to those functions for details.
+func SubsystemMaskLogRegexes(ctx context.Context, subsystem string, expressions ...*regexp.Regexp) context.Context {
+	return SubsystemMaskMessageRegexes(SubsystemMaskAllFieldValuesRegexes(ctx, subsystem, expressions...), subsystem, expressions...)
+}
+
+// SubsystemMaskLogStrings is a shortcut to invoke SubsystemMaskMessageStrings and SubsystemMaskAllFieldValuesStrings using the same input.
+// Refer to those functions for details.
+func SubsystemMaskLogStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
+	return SubsystemMaskMessageStrings(SubsystemMaskAllFieldValuesStrings(ctx, subsystem, matchingStrings...), subsystem, matchingStrings...)
 }

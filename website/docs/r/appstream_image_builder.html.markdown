@@ -50,7 +50,7 @@ The following arguments are optional:
 * `image_arn` - (Optional, Required if `image_name` not provided) ARN of the public, private, or shared image to use.
 * `image_name` - (Optional, Required if `image_arn` not provided) Name of the image used to create the image builder.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoint`
 
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
 * `id` - The name of the image builder.
 * `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

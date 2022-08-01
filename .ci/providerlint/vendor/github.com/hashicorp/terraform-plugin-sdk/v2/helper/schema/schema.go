@@ -311,11 +311,32 @@ type Schema struct {
 	// "parent_block_name.0.child_attribute_name".
 	RequiredWith []string
 
-	// Deprecated indicates the message to include in a warning diagnostic to
-	// practitioners when this attribute is configured. Typically this is used
-	// to signal that this attribute will be removed in the future and provide
-	// next steps to the practitioner, such as using a different attribute,
-	// different resource, or if it should just be removed.
+	// Deprecated defines warning diagnostic details to display to
+	// practitioners configuring this attribute or block. The warning
+	// diagnostic summary is automatically set to "Argument is deprecated"
+	// along with configuration source file and line information.
+	//
+	// This warning diagnostic is only displayed during Terraform's validation
+	// phase when this field is a non-empty string, when the attribute is
+	// Required or Optional, and if the practitioner configuration attempts to
+	// set the attribute value to a known value. It cannot detect practitioner
+	// configuration values that are unknown ("known after apply").
+	//
+	// This field has no effect when the attribute is Computed-only (read-only;
+	// not Required or Optional) and a practitioner attempts to reference
+	// this attribute value in their configuration. There is a Terraform
+	// feature request to support this type of functionality:
+	//
+	//     https://github.com/hashicorp/terraform/issues/7569
+	//
+	// Set this field to a practitioner actionable message such as:
+	//
+	//     - "Configure other_attribute instead. This attribute will be removed
+	//       in the next major version of the provider."
+	//     - "Remove this attribute's configuration as it no longer is used and
+	//       the attribute will be removed in the next major version of the
+	//       provider."
+	//
 	Deprecated string
 
 	// ValidateFunc allows individual fields to define arbitrary validation

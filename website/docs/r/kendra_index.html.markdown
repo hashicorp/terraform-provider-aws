@@ -85,7 +85,7 @@ The following arguments are supported:
 * `user_group_resolution_configuration` - (Optional) A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. To configure this, see [UserGroupResolutionConfiguration](https://docs.aws.amazon.com/kendra/latest/dg/API_UserGroupResolutionConfiguration.html). Documented below.
 * `user_token_configurations` - (Optional) A block that specifies the user token configuration. Documented below.
 * `tags` - (Optional) Tags to apply to the Index. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `capacity_units` block supports the following arguments:
 
@@ -140,7 +140,7 @@ In addition to all arguments above, the following attributes are exported:
 * `index_statistics` - A block that provides information about the number of FAQ questions and answers and the number of text documents indexed. Documented below.
 * `status` - The current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updated_at` - The Unix datetime that the index was last updated.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `document_metadata_configuration_updates` block supports the following attributes:
 
