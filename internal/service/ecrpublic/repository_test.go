@@ -46,7 +46,7 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 }
 
 func TestAccECRPublicRepository_tags(t *testing.T) {
-	var v1, v2 ecrpublic.Repository
+	var v ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecrpublic_repository.test"
 
@@ -57,21 +57,33 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_tags(rName),
+				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+					testAccCheckRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccRepositoryConfig_tagsChanged(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					testAccCheckRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -404,40 +416,40 @@ func testAccCheckRepositoryDestroy(s *terraform.State) error {
 func testAccRepositoryConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
 }
 `, rName)
 }
 
-func testAccRepositoryConfig_tags(rName string) string {
+func testAccRepositoryConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
 
   tags = {
-    Environment = "production"
-    Usage       = "original"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccRepositoryConfig_tagsChanged(rName string) string {
+func testAccRepositoryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
 
   tags = {
-    Usage = "changed"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccRepositoryConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   force_destroy   = true
 }
 `, rName)
