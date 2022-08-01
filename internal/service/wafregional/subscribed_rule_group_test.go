@@ -12,17 +12,17 @@ import (
 )
 
 func TestAccWafRegionalSubscribedRuleGroupDataSource_Basic(t *testing.T) {
-	if os.Getenv("AWS_WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
-		t.Skip("Environment variable AWS_WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
+	if os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
+		t.Skip("Environment variable WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
 	}
 
-	ruleGroupName := os.Getenv("AWS_WAF_SUBSCRIBED_RULE_GROUP_NAME")
+	ruleGroupName := os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_NAME")
 
-	if os.Getenv("AWS_WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME") == "" {
-		t.Skip("Environment variable AWS_WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME is not set")
+	if os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME") == "" {
+		t.Skip("Environment variable WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME is not set")
 	}
 
-	metricName := os.Getenv("AWS_WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME")
+	metricName := os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME")
 
 	datasourceName := "data.aws_wafregional_subscribed_rule_group.rulegroup"
 
