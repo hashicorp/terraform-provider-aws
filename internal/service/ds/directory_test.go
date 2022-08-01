@@ -32,9 +32,25 @@ func TestAccDSDirectory_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_basic(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "SimpleAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
 				),
 			},
 			{
