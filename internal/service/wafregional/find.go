@@ -57,7 +57,7 @@ func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *wafreg
 			if hasMetricName && respMetricName != metricName {
 				continue
 			}
-			if hasName && hasMetricName && (name != respName || metricName != metricName) {
+			if hasName && hasMetricName && (name != respName || metricName != respMetricName) {
 				continue
 			}
 			// Previous conditionals catch all non-matches
