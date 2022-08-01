@@ -1,9 +1,9 @@
 package waf
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindSubscribedRuleGroupByNameOrMetricName(conn *waf.WAF, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
+func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.WAF, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
 	if name == "" && metricName == "" {
 		return nil, errors.New("must specify either name or metricName")
 	}
@@ -25,7 +25,7 @@ func FindSubscribedRuleGroupByNameOrMetricName(conn *waf.WAF, name string, metri
 	matchingRuleGroup := &waf.SubscribedRuleGroupSummary{}
 
 	for {
-		output, err := conn.ListSubscribedRuleGroups(input)
+		output, err := conn.ListSubscribedRuleGroupsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, waf.ErrCodeNonexistentItemException) {
 			return nil, &resource.NotFoundError{

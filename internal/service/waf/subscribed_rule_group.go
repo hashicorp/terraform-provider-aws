@@ -1,12 +1,14 @@
 package waf
 
 import (
-	"fmt"
+	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -15,7 +17,7 @@ const (
 
 func DataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubscribedRuleGroupRead,
+		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,49 +32,30 @@ func DataSourceSubscribedRuleGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubscribedRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFConn
-	name, nameOk := d.GetOk("name")
-	metricName, metricNameOk := d.GetOk("metric_name")
+	name, nameOk := d.Get("name").(string)
+	metricName, metricNameOk := d.Get("metric_name").(string)
 
-	rules := make([]*waf.SubscribedRuleGroupSummary, 0)
-	// ListSubscribedRuleGroupsInput does not have a name parameter for filtering
-	input := &waf.ListSubscribedRuleGroupsInput{}
-	for {
-		output, err := conn.ListSubscribedRuleGroups(input)
-		if err != nil {
-			return fmt.Errorf("error reading WAF Rules Groups: %s", err)
-		}
-		for _, rule := range output.RuleGroups {
-			if nameOk && aws.StringValue(rule.Name) != name {
-				continue
-			}
-			if metricNameOk && aws.StringValue(rule.MetricName) != metricName {
-				continue
-			}
-
-			rules = append(rules, rule)
+	// Error out if string-assertion fails for either name or metricName
+	if !nameOk || !metricNameOk {
+		if !nameOk {
+			name = DSNameSubscribedRuleGroup
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
+		err := errors.New("unable to read attributes")
+		return names.DiagError(names.WAF, names.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
-	if len(rules) == 0 {
-		return fmt.Errorf("WAF Subscribed Rule Group not found for name %s and metricName %s", name, metricName)
+	output, err := FindSubscribedRuleGroupByNameOrMetricName(ctx, conn, name, metricName)
+
+	if err != nil {
+		return names.DiagError(names.WAF, names.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
-	if len(rules) > 1 {
-		return fmt.Errorf("multiple WAF Rule Groups found for name %s and metricName %s", name, metricName)
-	}
-
-	rule := rules[0]
-
-	d.SetId(aws.StringValue(rule.RuleGroupId))
-	d.Set("metric_name", aws.StringValue(rule.MetricName))
-	d.Set("name", aws.StringValue(rule.Name))
+	d.SetId(aws.StringValue(output.RuleGroupId))
+	d.Set("metric_name", aws.StringValue(output.MetricName))
+	d.Set("name", aws.StringValue(output.Name))
 
 	return nil
 }

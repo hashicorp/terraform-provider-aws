@@ -33,7 +33,7 @@ func TestAccWafSubscribedRuleGroupDataSource_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_Nonexistent,
-				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
+				ExpectError: regexp.MustCompile(`no matches found`),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_Name(ruleGroupName),
@@ -58,7 +58,7 @@ func TestAccWafSubscribedRuleGroupDataSource_Basic(t *testing.T) {
 			},
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_NameAndMismatchingMetricName(ruleGroupName),
-				ExpectError: regexp.MustCompile(`WAF Subscribed Rule Group not found`),
+				ExpectError: regexp.MustCompile(`no matches found`),
 			},
 		},
 	})
