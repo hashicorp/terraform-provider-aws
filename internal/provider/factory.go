@@ -12,7 +12,12 @@ import (
 // ProtoV5ProviderServerFactory returns a muxed terraform-plugin-go protocol v5 provider factory function.
 // This factory function is suitable for use with the terraform-plugin-go Serve function.
 func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.ProviderServer, error) {
-	primary := Provider()
+	primary, err := New(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
 	servers := []func() tfprotov5.ProviderServer{
 		primary.GRPCProvider,
 		providerserver.NewProtocol5(fwprovider.New(primary)),
