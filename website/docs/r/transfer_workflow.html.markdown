@@ -31,7 +31,7 @@ The following arguments are supported:
 * `description` - (Optional) A textual description for the workflow.
 * `on_exception_steps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.
 * `steps` - (Required) Specifies the details for the steps that are in the specified workflow. See Workflow Steps below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Workflow Steps
 
@@ -92,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Workflow ARN.
 * `id` - The Workflow id.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -134,6 +134,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
+			"preserve_host_header": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -282,6 +287,9 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "routing.http.drop_invalid_header_fields.enabled":
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.preserve_host_header.enabled":
+			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_deletion_protection", protectionEnabled)
