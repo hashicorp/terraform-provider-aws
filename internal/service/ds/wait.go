@@ -49,6 +49,44 @@ func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string, ti
 	return nil, err
 }
 
+func waitDomainControllerCreated(conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directoryservice.DomainControllerStatusCreating},
+		Target:  []string{directoryservice.DomainControllerStatusActive},
+		Refresh: statusDomainController(conn, directoryID, domainControllerID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDomainControllerDeleted(conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directoryservice.DomainControllerStatusActive, directoryservice.DomainControllerStatusDeleting},
+		Target:  []string{},
+		Refresh: statusDomainController(conn, directoryID, domainControllerID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},

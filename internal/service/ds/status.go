@@ -41,6 +41,22 @@ func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id stri
 	}
 }
 
+func statusDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainController(conn, directoryID, domainControllerID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegion(ctx, conn, directoryID, regionName)

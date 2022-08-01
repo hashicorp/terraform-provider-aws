@@ -61,7 +61,7 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
-func FindDomainControllerByTwoPartKey(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
+func FindDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
 	input := &directoryservice.DescribeDomainControllersInput{
 		DirectoryId:         aws.String(directoryID),
 		DomainControllerIds: aws.StringSlice([]string{domainControllerID}),
