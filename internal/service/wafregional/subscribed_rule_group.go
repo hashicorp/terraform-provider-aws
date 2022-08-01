@@ -54,8 +54,8 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(output.RuleGroupId))
-	d.Set("metric_name", aws.StringValue(output.MetricName))
-	d.Set("name", aws.StringValue(output.Name))
+	d.Set("metric_name", output.MetricName)
+	d.Set("name", output.Name)
 
 	return nil
 }
