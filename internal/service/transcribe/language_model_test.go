@@ -30,7 +30,7 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccLanguageModelsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,6 +54,54 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 	})
 }
 
+func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var languageModel types.LanguageModel
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transcribe_language_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
+			testAccLanguageModelsPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLanguageModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLanguageModelConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccLanguageModelConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccLanguageModelConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -67,7 +115,7 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccPreCheck(t)
+			testAccLanguageModelsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,7 +179,7 @@ func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageM
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccLanguageModelsPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
 
 	input := &transcribe.ListLanguageModelsInput{}
@@ -160,7 +208,7 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_iam_role" "example" {
+resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
@@ -188,6 +236,12 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.id
+  key    = "transcribe/test1.txt"
+  source = "test-fixtures/language_model_test1.txt"
+}
 `, rName)
 }
 
@@ -207,8 +261,53 @@ resource "aws_transcribe_language_model" "test" {
   language_code = "en-US"
 
   tags = {
-    ENVIRONMENT = "development"
+    tag1 = "value1"
   }
 }
 `, rName))
+}
+
+func testAccLanguageModelConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccLanguageModelBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_language_model" "test" {
+  model_name      = %[1]q
+  base_model_name = "NarrowBand"
+
+  input_data_config {
+    data_access_role_arn = aws_iam_role.test.arn
+    s3_uri               = "s3://${aws_s3_bucket.test.id}/transcribe/"
+  }
+
+  language_code = "en-US"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, key1, value1))
+}
+
+func testAccLanguageModelConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccLanguageModelBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_transcribe_language_model" "test" {
+  model_name      = %[1]q
+  base_model_name = "NarrowBand"
+
+  input_data_config {
+    data_access_role_arn = aws_iam_role.test.arn
+    s3_uri               = "s3://${aws_s3_bucket.test.id}/transcribe/"
+  }
+
+  language_code = "en-US"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, key1, value1, key2, value2))
 }

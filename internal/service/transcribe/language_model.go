@@ -36,11 +36,14 @@ func ResourceLanguageModel() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(90 * time.Minute),
-			Delete: schema.DefaultTimeout(90 * time.Minute),
+			Create: schema.DefaultTimeout(600 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"base_model_name": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -235,8 +238,8 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    enum.Slice(types.ModelStatusInProgress),
+		Pending:                   enum.Slice(types.ModelStatusInProgress),
+		Target:                    enum.Slice(types.ModelStatusCompleted),
 		Refresh:                   statusLanguageModel(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -300,7 +303,10 @@ func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
 	m := map[string]interface{}{
 		"data_access_role_arn": apiObjects.DataAccessRoleArn,
 		"s3_uri":               apiObjects.S3Uri,
-		"tuning_data_s3_uri":   apiObjects.TuningDataS3Uri,
+	}
+
+	if aws.ToString(apiObjects.TuningDataS3Uri) != "" {
+		m["tuning_data_s3_uri"] = apiObjects.TuningDataS3Uri
 	}
 
 	return []interface{}{m}
