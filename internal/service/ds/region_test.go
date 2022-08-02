@@ -49,6 +49,84 @@ func TestAccDSRegion_basic(t *testing.T) {
 	})
 }
 
+func TestAccDSRegion_disappears(t *testing.T) {
+	var v directoryservice.RegionDescription
+	resourceName := "aws_directory_service_region.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckRegionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionConfig_basic(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRegion(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDSRegion_tags(t *testing.T) {
+	var v directoryservice.RegionDescription
+	resourceName := "aws_directory_service_region.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckRegionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionConfig_tags1(rName, domainName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRegionConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccRegionConfig_tags1(rName, domainName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRegionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
@@ -181,4 +259,41 @@ resource "aws_directory_service_region" "test" {
   }
 }
 `)
+}
+
+func testAccRegionConfig_tags1(rName, domain, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_directory_service_region" "test" {
+  directory_id = aws_directory_service_directory.test.id
+  region_name  = data.aws_region.secondary.name
+
+  vpc_settings {
+    vpc_id     = aws_vpc.secondary.id
+    subnet_ids = aws_subnet.secondary[*].id
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccRegionConfig_tags2(rName, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_directory_service_region" "test" {
+  directory_id = aws_directory_service_directory.test.id
+  region_name  = data.aws_region.secondary.name
+
+  vpc_settings {
+    vpc_id     = aws_vpc.secondary.id
+    subnet_ids = aws_subnet.secondary[*].id
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
