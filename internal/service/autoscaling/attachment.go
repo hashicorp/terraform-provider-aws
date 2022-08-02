@@ -18,18 +18,6 @@ func ResourceAttachment() *schema.Resource {
 		Delete: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"autoscaling_group_name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-
-			"elb": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-
 			"alb_target_group_arn": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
@@ -37,7 +25,16 @@ func ResourceAttachment() *schema.Resource {
 				Deprecated:    "Use lb_target_group_arn instead",
 				ConflictsWith: []string{"lb_target_group_arn"},
 			},
-
+			"autoscaling_group_name": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
+			"elb": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 			"lb_target_group_arn": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
