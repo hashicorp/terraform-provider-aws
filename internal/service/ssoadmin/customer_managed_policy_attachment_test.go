@@ -254,40 +254,40 @@ resource "aws_ssoadmin_permission_set" "test" {
 }
 
 resource "aws_iam_policy" "test_foo" {
-	name        = %q
-	path        = "/"
-	description = "My test policy"
-	policy = jsonencode({
-	  Version = "2012-10-17"
-	  Statement = [
-		{
-		  Action = [
-			"ec2:Describe*",
-		  ]
-		  Effect   = "Allow"
-		  Resource = "*"
+  name        = %q
+  path        = "/"
+  description = "My test policy"
+  policy 	  = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
+	  {
+	    Action = [
+		  "ec2:Describe*",
+		]
+		Effect   = "Allow"
+		Resource = "*"
 		},
 	  ]
 	})
   }
 
-  resource "aws_iam_policy" "test_bar" {
-	name        = %q
-	path        = "/"
-	description = "My test policy"
-	policy = jsonencode({
-	  Version = "2012-10-17"
-	  Statement = [
-		{
-		  Action = [
-			"ec2:Describe*",
-		  ]
-		  Effect   = "Allow"
-		  Resource = "*"
-		},
-	  ]
-	})
-  }
+resource "aws_iam_policy" "test_bar" {
+  name        = %q
+  path        = "/"
+  description = "My test policy"
+  policy 	  = jsonencode({
+    Version   = "2012-10-17"
+    Statement = [
+  	{
+  	  Action = [
+  		"ec2:Describe*",
+  	  ]
+  	  Effect   = "Allow"
+  	  Resource = "*"
+  	},
+    ]
+  })
+}
 
 `, rName, rNameFoo, rNameBar)
 }
@@ -302,11 +302,8 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
   customer_managed_policy_reference {
 	name = aws_iam_policy.test_foo.name
 	path = "/"
-  }
-  
+  }  
 }
-
-
 `)
 }
 
@@ -315,13 +312,13 @@ func testAccCustomerManagedPolicyAttachmentConfig_forceNew(rName string, rNameFo
 		testAccCustomerManagedPolicyAttachmentBaseConfig(rName, rNameFoo, rNameBar),
 		`
 resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
-	instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
-	permission_set_arn = aws_ssoadmin_permission_set.test.arn
-	customer_managed_policy_reference {
-		name = aws_iam_policy.test_bar.name
-		path = "/"
-	  }
-	}
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
+  customer_managed_policy_reference {
+	name = aws_iam_policy.test_bar.name
+	path = "/"
+  }
+}
 `)
 }
 
@@ -330,31 +327,31 @@ func testAccCustomerManagedPolicyAttachmentConfig_multiple(rName string, rNameFo
 		testAccCustomerManagedPolicyAttachmentConfig_basic(rName, rNameFoo, rNameBar),
 		fmt.Sprintf(`
 resource "aws_ssoadmin_customer_managed_policy_attachment" "other" {
-	instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
-	permission_set_arn = aws_ssoadmin_permission_set.test.arn
-	customer_managed_policy_reference {
-		name = aws_iam_policy.test_other.name
-		path = "/"
-	  }
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
+  customer_managed_policy_reference {
+	name = aws_iam_policy.test_other.name
+	path = "/"
+  }
 }
 
 resource "aws_iam_policy" "test_other" {
-	name        = %q
-	path        = "/"
-	description = "My other test policy"
-	policy = jsonencode({
-	  Version = "2012-10-17"
-	  Statement = [
-		{
-		  Action = [
-			"ec2:Describe*",
-		  ]
-		  Effect   = "Allow"
-		  Resource = "*"
-		},
-	  ]
-	})
-  }
+  name        = %q
+  path        = "/"
+  description = "My other test policy"
+  policy      = jsonencode({
+	Version   = "2012-10-17"
+	Statement = [
+	  {
+	    Action = [
+		  "ec2:Describe*",
+		]
+		Effect   = "Allow"
+		Resource = "*"
+	  },
+	]
+  })
+}
 `, rNameOther),
 	)
 }
