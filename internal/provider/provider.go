@@ -2118,6 +2118,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 	}
 
 	providerData := &conns.AWSClient{
+		// TODO: This should be generated.
+
+		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
 		ServiceDataMap: map[string]intf.ServiceData{
 			"meta": meta.ServiceData,
 		},

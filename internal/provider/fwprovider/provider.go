@@ -311,6 +311,8 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 	var diags diag.Diagnostics
 	dataSources := make(map[string]tfsdk.DataSourceType)
 
+	// TODO Better error messages.
+	// TODO Wrap the returned type to add standard context, logging etc.
 	for serviceID, data := range p.Primary.ServiceData(ctx) {
 		dsTypes, err := data.DataSourceTypes(ctx)
 

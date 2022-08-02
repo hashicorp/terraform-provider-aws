@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 )
 
+// TODO: This can all be generated.
+
 var sd = &serviceData{}
 
 func registerDataSourceTypeFactory(name string, factory func(context.Context) (tfsdk.DataSourceType, error)) {
