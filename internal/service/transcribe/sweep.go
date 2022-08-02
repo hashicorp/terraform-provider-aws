@@ -17,8 +17,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_transcribe_language_models", &resource.Sweeper{
-		Name: "aws_transcribe_language_models",
+	resource.AddTestSweepers("aws_transcribe_language_model", &resource.Sweeper{
+		Name: "aws_transcribe_language_model",
 		F:    sweepLanguageModels,
 		Dependencies: []string{
 			"aws_s3_bucket",

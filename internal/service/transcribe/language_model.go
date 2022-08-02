@@ -142,7 +142,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.ToString(outputRaw.(*transcribe.CreateLanguageModelOutput).ModelName))
 
 	if _, err := waitLanguageModelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameVocabularyFilter, d.Get("model_name").(string), err)
+		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
 	return resourceLanguageModelRead(ctx, d, meta)

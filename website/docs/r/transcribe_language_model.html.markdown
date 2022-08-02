@@ -84,9 +84,9 @@ resource "aws_transcribe_language_model" "example" {
 
 The following arguments are required:
 
-* `base_model_name` - (Required) Name of reference base model
+* `base_model_name` - (Required) Name of reference base model.
 * `input_data_config` - (Required) The input data config for the LanguageModel. See [Input Data Config](#input-data-config) for more details.
-* `language_code` - (Required) The language code you selected for your vocabulary filter. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
+* `language_code` - (Required) The language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
 * `model_name` - (Required) The model name.
 
 ### Input Data Config
