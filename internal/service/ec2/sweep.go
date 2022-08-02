@@ -1650,111 +1650,6 @@ func sweepSubnets(region string) error {
 	return nil
 }
 
-func sweepTransitGatewayPeeringAttachments(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
-	var sweeperErrs *multierror.Error
-
-	err = conn.DescribeTransitGatewayPeeringAttachmentsPages(input,
-		func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
-			for _, transitGatewayPeeringAttachment := range page.TransitGatewayPeeringAttachments {
-				if aws.StringValue(transitGatewayPeeringAttachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
-					continue
-				}
-
-				id := aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
-
-				input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
-					TransitGatewayAttachmentId: aws.String(id),
-				}
-
-				log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
-				_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
-
-				if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
-					continue
-				}
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-
-				if err := WaitForTransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
-					sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-			}
-			return !lastPage
-		})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving EC2 Transit Gateway Peering Attachments: %s", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepTransitGatewayMulticastDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
-
-	err = conn.DescribeTransitGatewayMulticastDomainsPages(input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.TransitGatewayMulticastDomains {
-			if aws.StringValue(v.State) == ec2.TransitGatewayMulticastDomainStateDeleted {
-				continue
-			}
-
-			r := ResourceTransitGatewayMulticastDomain()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
-	}
-
-	return nil
-}
-
 func sweepTransitGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
@@ -1891,6 +1786,100 @@ func sweepTransitGatewayConnects(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Transit Gateway Connects (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTransitGatewayMulticastDomains(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeTransitGatewayMulticastDomainsPages(input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayMulticastDomains {
+			if aws.StringValue(v.State) == ec2.TransitGatewayMulticastDomainStateDeleted {
+				continue
+			}
+
+			r := ResourceTransitGatewayMulticastDomain()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTransitGatewayPeeringAttachments(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EC2Conn
+	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.DescribeTransitGatewayPeeringAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayPeeringAttachments {
+			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
+				continue
+			}
+
+			r := ResourceTransitGatewayPeeringAttachment()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Peering Attachments (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Peering Attachments (%s): %w", region, err)
 	}
 
 	return nil

@@ -143,7 +143,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
 	if err := d.Set("tags", KeyValueTags(transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	associations, err := FindTransitGatewayMulticastDomainAssociations(conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
@@ -151,11 +151,11 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
+		return diag.Errorf("listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("associations", flattenTransitGatewayMulticastDomainAssociations(associations)); err != nil {
-		return diag.Errorf("error setting associations: %s", err)
+		return diag.Errorf("setting associations: %s", err)
 	}
 
 	members, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
@@ -167,11 +167,11 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
+		return diag.Errorf("listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("members", flattenTransitGatewayMulticastGroups(members)); err != nil {
-		return diag.Errorf("error setting members: %s", err)
+		return diag.Errorf("setting members: %s", err)
 	}
 
 	sources, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
@@ -183,11 +183,11 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
+		return diag.Errorf("listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("sources", flattenTransitGatewayMulticastGroups(sources)); err != nil {
-		return diag.Errorf("error setting sources: %s", err)
+		return diag.Errorf("setting sources: %s", err)
 	}
 
 	return nil

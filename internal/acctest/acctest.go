@@ -816,12 +816,12 @@ func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
 func ConfigAlternateAccountProvider() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
-provider "awsalternate" {
-  access_key = %[1]q
-  profile    = %[2]q
-  secret_key = %[3]q
+provider %[1]q {
+  access_key = %[2]q
+  profile    = %[3]q
+  secret_key = %[4]q
 }
-`, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+`, ProviderNameAlternate, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
 }
 
 // Deprecated: Use ConfigMultipleRegionProvider instead
