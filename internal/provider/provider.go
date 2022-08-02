@@ -2116,11 +2116,17 @@ func New(_ context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
+	providerData := &conns.AWSClient{}
+
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc.
+	provider.SetMeta(providerData)
+
 	return provider, nil
 }
 
 // configure ensures that the provider is fully configured.
-func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
 	terraformVersion := provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -2210,7 +2216,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	return config.Client(ctx)
+	return config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
 }
 
 func assumeRoleSchema() *schema.Schema {
