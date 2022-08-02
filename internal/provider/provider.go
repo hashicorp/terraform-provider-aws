@@ -2115,13 +2115,15 @@ func New(_ context.Context) (*schema.Provider, error) {
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
 			terraformVersion = "0.11+compatible"
 		}
-		return providerConfigure(ctx, d, terraformVersion)
+
+		return configure(ctx, provider, d, terraformVersion)
 	}
 
 	return provider, nil
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+// configure ensures that the provider is fully configured.
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
 		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
