@@ -21,13 +21,13 @@ func FindRegexMatchSetByID(conn *wafregional.WAFRegional, id string) (*waf.Regex
 }
 
 func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *wafregional.WAFRegional, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
-	if name == "" && metricName == "" {
-		return nil, errors.New("must specify either name or metricName")
-	}
-
 	hasName := name != ""
 	hasMetricName := metricName != ""
 	hasMatch := false
+
+	if !hasName && !hasMetricName {
+		return nil, errors.New("must specify either name or metricName")
+	}
 
 	input := &waf.ListSubscribedRuleGroupsInput{}
 

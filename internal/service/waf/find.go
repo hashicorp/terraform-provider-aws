@@ -12,13 +12,13 @@ import (
 )
 
 func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.WAF, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
-	if name == "" && metricName == "" {
-		return nil, errors.New("must specify either name or metricName")
-	}
-
 	hasName := name != ""
 	hasMetricName := metricName != ""
 	hasMatch := false
+
+	if !hasName && !hasMetricName {
+		return nil, errors.New("must specify either name or metricName")
+	}
 
 	input := &waf.ListSubscribedRuleGroupsInput{}
 
