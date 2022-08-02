@@ -266,7 +266,7 @@ func regionalConn(client *conns.AWSClient, regionName string) (*directoryservice
 	return directoryservice.New(sess), nil
 }
 
-const regionIDSeparator = ","
+const regionIDSeparator = "," // nosemgrep:ci.ds-in-const-name,ci.ds-in-var-name
 
 func RegionCreateResourceID(directoryID, regionName string) string {
 	parts := []string{directoryID, regionName}
