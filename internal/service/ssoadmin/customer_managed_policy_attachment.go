@@ -181,6 +181,10 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 
 	})
 
+	if tfresource.TimedOut(err) {
+		_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
+	}
+
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			return nil
@@ -208,8 +212,8 @@ func formatPolicyReference(l []interface{}) *ssoadmin.CustomerManagedPolicyRefer
 	m := l[0].(map[string]interface{})
 
 	policyRef := &ssoadmin.CustomerManagedPolicyReference{
-		Name: aws.String(string(m["name"].(string))),
-		Path: aws.String(string(m["path"].(string))),
+		Name: aws.String(m["name"].(string)),
+		Path: aws.String(m["path"].(string)),
 	}
 
 	return policyRef
@@ -218,8 +222,8 @@ func formatPolicyReference(l []interface{}) *ssoadmin.CustomerManagedPolicyRefer
 func expandPolicyReference(l []interface{}) (string, string) {
 	m := l[0].(map[string]interface{})
 
-	policyName := string(m["name"].(string))
-	policyPath := string(m["path"].(string))
+	policyName := m["name"].(string)
+	policyPath := m["path"].(string)
 
 	return policyName, policyPath
 }
