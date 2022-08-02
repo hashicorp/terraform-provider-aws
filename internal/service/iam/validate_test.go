@@ -105,7 +105,7 @@ func TestValidRolePolicyRoleName(t *testing.T) {
 			Value: "role/S3Access",
 		},
 		{
-			Value:    "arn:aws:iam::123456789012:role/S3Access",
+			Value:    "arn:aws:iam::123456789012:role/S3Access", // lintignore:AWSAT005
 			ErrCount: 1,
 		},
 	}
