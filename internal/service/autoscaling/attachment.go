@@ -157,38 +157,32 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancersInput{
+		lbName := v.(string)
+		input := &autoscaling.DetachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    []*string{aws.String(v.(string))},
+			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		log.Printf("[INFO] Deleting ELB %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancers(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: %w", asgName, v.(string), err)
+		if _, err := conn.DetachLoadBalancers(input); err != nil {
+			return fmt.Errorf("detaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
 		}
 	}
 
+	var targetGroupARN string
 	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancerTargetGroupsInput{
-			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
-		}
-
-		log.Printf("[INFO] Deleting ALB Target Group %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
-		}
+		targetGroupARN = v.(string)
+	} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		targetGroupARN = v.(string)
 	}
 
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancerTargetGroupsInput{
+	if targetGroupARN != "" {
+		input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
+			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		log.Printf("[INFO] Deleting LB Target Group %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
+		if _, err := conn.DetachLoadBalancerTargetGroups(input); err != nil {
+			return fmt.Errorf("detaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
 
