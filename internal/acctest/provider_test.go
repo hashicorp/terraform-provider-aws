@@ -912,11 +912,12 @@ data "aws_caller_identity" "current" {}
 ` //lintignore:AT004
 
 const testAccProviderConfigBase = `
-data "aws_partition" "provider_test" {}
+data "aws_region" "provider_test" {}
 
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
+# Required to initialize the provider.
+data "aws_service" "provider_test" {
+  region     = data.aws_region.provider_test.name
+  service_id = "s3"
 }
 `
 
