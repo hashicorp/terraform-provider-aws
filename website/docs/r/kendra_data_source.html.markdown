@@ -310,10 +310,6 @@ resource "aws_kendra_data_source" "example" {
 
 ```terraform
 resource "aws_kendra_data_source" "example" {
-  depends_on = [
-    aws_secretsmanager_secret_version.example
-  ]
-
   index_id = aws_kendra_index.example.id
   name     = "example"
   type     = "WEBCRAWLER"
