@@ -622,7 +622,7 @@ func flattenDirectoryConnectSettingsDescription(apiObject *directoryservice.Dire
 	return tfMap
 }
 
-func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings {
+func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.DirectoryVpcSettings { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -640,7 +640,7 @@ func expandDirectoryVpcSettings(tfMap map[string]interface{}) *directoryservice.
 	return apiObject
 }
 
-func flattenDirectoryVpcSettings(apiObject *directoryservice.DirectoryVpcSettings) map[string]interface{} {
+func flattenDirectoryVpcSettings(apiObject *directoryservice.DirectoryVpcSettings) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -658,7 +658,7 @@ func flattenDirectoryVpcSettings(apiObject *directoryservice.DirectoryVpcSetting
 	return tfMap
 }
 
-func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.DirectoryVpcSettingsDescription) map[string]interface{} {
+func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.DirectoryVpcSettingsDescription) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
