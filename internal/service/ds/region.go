@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,10 +32,17 @@ func ResourceRegion() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(180 * time.Minute),
+			Update: schema.DefaultTimeout(90 * time.Minute),
 			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
+			"desired_number_of_domain_controllers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(2),
+			},
 			"directory_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -114,6 +122,12 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err := UpdateTagsWithContext(ctx, regionConn, directoryID, nil, tags); err != nil {
 			return diag.Errorf("adding Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
+
+		if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
+			if err := updateNumberOfDomainControllers(regionConn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
 
 	return resourceRegionRead(ctx, d, meta)
@@ -185,13 +199,19 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange("tags_all") {
-		conn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	conn, err := regionalConn(meta.(*conns.AWSClient), regionName)
 
-		if err != nil {
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("desired_number_of_domain_controllers") {
+		if err := updateNumberOfDomainControllers(conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
 		}
+	}
 
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTagsWithContext(ctx, conn, directoryID, o, n); err != nil {
