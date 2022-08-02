@@ -206,6 +206,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
+			"preserve_host_header": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -499,6 +506,13 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
+			})
+		}
+
+		if d.HasChange("preserve_host_header") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.preserve_host_header.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("preserve_host_header").(bool))),
 			})
 		}
 
@@ -885,6 +899,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.preserve_host_header.enabled":
+			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB Preserve Host Header Enabled: %t", preserveHostHeaderEnabled)
+			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)

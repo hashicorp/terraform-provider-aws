@@ -288,13 +288,19 @@ func testAccPreCheckKeySigningKey(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
-		testAccProviderRoute53KeySigningKey = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderRoute53KeySigningKey, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		testAccRecordConfig_config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderRoute53KeySigningKey.Configure(context.Background(), terraform.NewResourceConfigRaw(testAccRecordConfig_config))
+		diags := testAccProviderRoute53KeySigningKey.Configure(ctx, terraform.NewResourceConfigRaw(testAccRecordConfig_config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
