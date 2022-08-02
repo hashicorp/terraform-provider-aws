@@ -2109,21 +2109,21 @@ func New(_ context.Context) (*schema.Provider, error) {
 	}
 
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
-
-		return configure(ctx, provider, d, terraformVersion)
+		return configure(ctx, provider, d)
 	}
 
 	return provider, nil
 }
 
 // configure ensures that the provider is fully configured.
-func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	terraformVersion := provider.TerraformVersion
+	if terraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's missing it's 0.10 or 0.11
+		terraformVersion = "0.11+compatible"
+	}
+
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
 		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
