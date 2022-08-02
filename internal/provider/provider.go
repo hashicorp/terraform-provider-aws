@@ -2127,7 +2127,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
-		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
@@ -2151,18 +2150,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
-	if v, ok := d.GetOk("max_retries"); ok {
-		config.MaxRetries = v.(int)
-	}
-
-	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("shared_credentials_file"); ok {
-		config.SharedCredentialsFiles = []string{v.(string)}
-	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
-		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -2175,16 +2164,30 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
 	}
 
-	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
-		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("max_retries"); ok {
+		config.MaxRetries = v.(int)
+	}
+
+	if v, ok := d.GetOk("shared_credentials_file"); ok {
+		config.SharedCredentialsFiles = []string{v.(string)}
+	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
@@ -2436,17 +2439,17 @@ func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.Assu
 	return &assumeRole
 }
 
-func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	defaultConfig := &tftags.DefaultConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		defaultConfig.Tags = tftags.New(v)
 	}
+
 	return defaultConfig
 }
 
