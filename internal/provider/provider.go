@@ -2167,8 +2167,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
-		return nil, diag.FromErr(err)
+	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
+		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		config.Endpoints = endpoints
 	}
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -2474,42 +2480,55 @@ func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
 	return ignoreConfig
 }
 
-func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
-	for _, endpointsSetI := range endpointsSetList {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		for _, hclKey := range names.Aliases() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
-				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				out[serviceKey] = endpoints[hclKey].(string)
-			}
-		}
+func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+	if len(tfList) == 0 {
+		return nil, nil
 	}
 
-	for _, service := range names.ProviderPackages() {
-		if out[service] != "" {
+	endpoints := make(map[string]string)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		envvar := names.EnvVar(service)
-		if envvar != "" {
-			if v := os.Getenv(envvar); v != "" {
-				out[service] = v
-				continue
+		for _, alias := range names.Aliases() {
+			pkg, err := names.ProviderPackageForAlias(alias)
+
+			if err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
 			}
-		}
-		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
-			if v := os.Getenv(envvarDeprecated); v != "" {
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
-				out[service] = v
+
+			if endpoints[pkg] == "" {
+				if v := tfMap[alias].(string); v != "" {
+					endpoints[pkg] = v
+				}
 			}
 		}
 	}
 
-	return nil
+	for _, pkg := range names.ProviderPackages() {
+		if endpoints[pkg] != "" {
+			continue
+		}
+
+		envVar := names.EnvVar(pkg)
+		if envVar != "" {
+			if v := os.Getenv(envVar); v != "" {
+				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+				endpoints[pkg] = v
+			}
+		}
+	}
+
+	return endpoints, nil
 }

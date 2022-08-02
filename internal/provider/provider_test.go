@@ -18,9 +18,7 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 	endpoints["sts"] = "https://sts.fake.test"
 
-	results := make(map[string]string)
-
-	err := expandEndpoints([]interface{}{endpoints}, results)
+	results, err := expandEndpoints([]interface{}{endpoints})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -76,9 +74,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results := make(map[string]string)
-
-		err := expandEndpoints([]interface{}{endpoints}, results)
+		results, err := expandEndpoints([]interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}
@@ -153,9 +149,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) {
 			endpoints[k] = v
 		}
 
-		results := make(map[string]string)
-
-		err := expandEndpoints([]interface{}{endpoints}, results)
+		results, err := expandEndpoints([]interface{}{endpoints})
 		if err != nil {
 			t.Fatalf("Unexpected error: %s", err)
 		}
