@@ -2180,8 +2180,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
-	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
@@ -2409,47 +2409,41 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
-	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
-	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
 		assumeRole.WebIdentityTokenFile = v
 	}
 
