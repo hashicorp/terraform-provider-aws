@@ -358,6 +358,67 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	})
 }
 
+func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
+	var ds directoryservice.DirectoryDescription
+	resourceName := "aws_directory_service_directory.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", "Enterprise"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Large"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MicrosoftAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+			{
+				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "4"),
+				),
+			},
+			{
+				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
@@ -593,5 +654,25 @@ resource "aws_directory_service_directory" "test" {
   }
 }
 `, domain, alias),
+	)
+}
+
+func testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domain string, desiredNumber int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  desired_number_of_domain_controllers = %[2]d
+}
+`, domain, desiredNumber),
 	)
 }
