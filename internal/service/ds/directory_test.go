@@ -258,10 +258,26 @@ func TestAccDSDirectory_connector(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_connector(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
+					resource.TestCheckResourceAttrSet(resourceName, "alias"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "connect_settings.0.customer_dns_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.customer_username", "Administrator"),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "connect_settings.0.connect_ips.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ADConnector"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "0"),
 				),
 			},
 			{
@@ -295,10 +311,25 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_alias(rName, domainName, alias),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttr(resourceName, "alias", alias),
+					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "dns_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "edition", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttr(resourceName, "size", "Small"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "SimpleAD"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
 				),
 			},
 			{
@@ -313,7 +344,6 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Config: testAccDirectoryConfig_sso(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "true"),
 				),
 			},
@@ -321,7 +351,6 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
