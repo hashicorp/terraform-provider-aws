@@ -3734,7 +3734,7 @@ resource "aws_iam_role" "r" {
             "s3:PutObjectAcl",
           ]
           Effect   = "Allow"
-          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
+          Resource = [aws_s3_bucket.b.arn, "${aws_s3_bucket.b.arn}/*"]
         },
       ]
     })

@@ -177,7 +177,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = "%[1]s"
-  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
