@@ -50,41 +50,32 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancersInput{
+		lbName := v.(string)
+		input := &autoscaling.AttachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    []*string{aws.String(v.(string))},
+			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		log.Printf("[INFO] registering asg %s with ELBs %s", asgName, v.(string))
-
-		if _, err := conn.AttachLoadBalancers(attachOpts); err != nil {
-			return fmt.Errorf("Failure attaching AutoScaling Group %s with Elastic Load Balancer: %s: %s", asgName, v.(string), err)
+		if _, err := conn.AttachLoadBalancers(input); err != nil {
+			return fmt.Errorf("attaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
 		}
 	}
 
+	var targetGroupARN string
 	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancerTargetGroupsInput{
-			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
-		}
-
-		log.Printf("[INFO] registering asg %s with ALB Target Group %s", asgName, v.(string))
-
-		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return fmt.Errorf("failure attaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
-		}
+		targetGroupARN = v.(string)
+	} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		targetGroupARN = v.(string)
 	}
 
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancerTargetGroupsInput{
+	if targetGroupARN != "" {
+		input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
+			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		log.Printf("[INFO] registering asg %s with LB Target Group %s", asgName, v.(string))
-
-		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return fmt.Errorf("failure attaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
+		if _, err := conn.AttachLoadBalancerTargetGroups(input); err != nil {
+			return fmt.Errorf("attaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
 
