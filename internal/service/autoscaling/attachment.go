@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAttachment() *schema.Resource {
@@ -89,62 +90,58 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
-	// Retrieve the ASG properties to get list of associated ELBs
-	asg, err := getGroup(asgName, conn)
+	asg, err := FindGroupByName(conn, asgName)
 
-	if err != nil {
-		return err
-	}
-	if asg == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Group (%s): %w", asgName, err)
+	}
+
 	if v, ok := d.GetOk("elb"); ok {
 		found := false
-		for _, i := range asg.LoadBalancerNames {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("elb", v.(string))
+		lbName := v.(string)
+
+		for _, v := range asg.LoadBalancerNames {
+			if aws.StringValue(v) == lbName {
+				d.Set("elb", lbName)
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
+			log.Printf("[WARN] Association for %s was not found in ASG association", lbName)
 			d.SetId("")
 		}
 	}
 
+	var key, targetGroupARN string
 	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		found := false
-		for _, i := range asg.TargetGroupARNs {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("alb_target_group_arn", v.(string))
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
-			d.SetId("")
-		}
+		key = "alb_target_group_arn"
+		targetGroupARN = v.(string)
+	} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+		key = "lb_target_group_arn"
+		targetGroupARN = v.(string)
 	}
 
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
+	if targetGroupARN != "" {
 		found := false
-		for _, i := range asg.TargetGroupARNs {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("lb_target_group_arn", v.(string))
+
+		for _, v := range asg.TargetGroupARNs {
+			if aws.StringValue(v) == targetGroupARN {
+				d.Set(key, targetGroupARN)
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
+			log.Printf("[WARN] Association for %s was not found in ASG association", targetGroupARN)
 			d.SetId("")
 		}
 	}
