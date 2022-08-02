@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -2116,7 +2117,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	providerData := &conns.AWSClient{}
+	providerData := &conns.AWSClient{
+		ServiceDataMap: map[string]intf.ServiceData{
+			"meta": meta.ServiceData,
+		},
+	}
 
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc.

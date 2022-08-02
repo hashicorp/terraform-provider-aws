@@ -2,11 +2,12 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -14,12 +15,12 @@ import (
 // The provider instance is fully configured once the `Configure` method has been called.
 func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
 	return &provider{
-		Primary: primary,
+		Primary: primary.Meta().(intf.ProviderData),
 	}
 }
 
 type provider struct {
-	Primary interface{ Meta() interface{} }
+	Primary intf.ProviderData
 }
 
 // GetSchema returns the schema for this provider's configuration.
@@ -310,15 +311,22 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 	var diags diag.Diagnostics
 	dataSources := make(map[string]tfsdk.DataSourceType)
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
+	for serviceID, data := range p.Primary.ServiceData(ctx) {
+		dsTypes, err := data.DataSourceTypes(ctx)
 
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+		if err != nil {
+			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
+			return nil, diags
+		}
+
+		for name, dsType := range dsTypes {
+			if _, ok := dataSources[name]; ok {
+				diags.AddError(fmt.Sprintf("service (%s) data source (%s) already registered", serviceID, name), "")
+			} else {
+				dataSources[name] = dsType
+			}
+		}
 	}
-
-	dataSources["aws_arn"] = t
 
 	return dataSources, diags
 }
