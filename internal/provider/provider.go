@@ -2132,7 +2132,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
-		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
@@ -2174,6 +2173,10 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -2446,26 +2449,25 @@ func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
 
 	defaultConfig := &tftags.DefaultConfig{}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
 		defaultConfig.Tags = tftags.New(v)
 	}
 
 	return defaultConfig
 }
 
-func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["keys"].(*schema.Set); ok {
+	if v, ok := tfMap["keys"].(*schema.Set); ok {
 		ignoreConfig.Keys = tftags.New(v.List())
 	}
 
-	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
 		ignoreConfig.KeyPrefixes = tftags.New(v.List())
 	}
 
