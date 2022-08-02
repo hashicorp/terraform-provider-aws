@@ -1768,6 +1768,57 @@ func FindGroupByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.G
 	return output, nil
 }
 
+func findInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.InstanceRefresh, error) {
+	output, err := FindInstanceRefreshes(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindInstanceRefreshes(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) ([]*autoscaling.InstanceRefresh, error) {
+	var output []*autoscaling.InstanceRefresh
+
+	err := describeInstanceRefreshesPages(conn, input, func(page *autoscaling.DescribeInstanceRefreshesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceRefreshes {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findLoadBalancerStates(conn *autoscaling.AutoScaling, name string) ([]*autoscaling.LoadBalancerState, error) {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(name),
@@ -1840,6 +1891,47 @@ func findLoadBalancerTargetGroupStates(conn *autoscaling.AutoScaling, name strin
 	return output, nil
 }
 
+func findScalingActivities(conn *autoscaling.AutoScaling, input *autoscaling.DescribeScalingActivitiesInput) ([]*autoscaling.Activity, error) {
+	var output []*autoscaling.Activity
+
+	err := conn.DescribeScalingActivitiesPages(input, func(page *autoscaling.DescribeScalingActivitiesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Activities {
+			if v == nil {
+				continue
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findScalingActivitiesByName(conn *autoscaling.AutoScaling, name string) ([]*autoscaling.Activity, error) {
+	input := &autoscaling.DescribeScalingActivitiesInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	return findScalingActivities(conn, input)
+}
+
 func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
 	input := &autoscaling.DescribeWarmPoolInput{
 		AutoScalingGroupName: aws.String(name),
@@ -1873,57 +1965,6 @@ func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.Desc
 
 	if output == nil || output.WarmPoolConfiguration == nil {
 		return nil, tfresource.NewEmptyResultError(name)
-	}
-
-	return output, nil
-}
-
-func findInstanceRefresh(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) (*autoscaling.InstanceRefresh, error) {
-	output, err := FindInstanceRefreshes(conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
-func FindInstanceRefreshes(conn *autoscaling.AutoScaling, input *autoscaling.DescribeInstanceRefreshesInput) ([]*autoscaling.InstanceRefresh, error) {
-	var output []*autoscaling.InstanceRefresh
-
-	err := describeInstanceRefreshesPages(conn, input, func(page *autoscaling.DescribeInstanceRefreshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.InstanceRefreshes {
-			if v == nil {
-				continue
-			}
-
-			output = append(output, v)
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
