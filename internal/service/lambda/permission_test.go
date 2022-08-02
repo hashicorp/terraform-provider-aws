@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -346,7 +345,7 @@ func TestAccLambdaPermission_statementIDPrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", "AllowExecutionWithStatementIdPrefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "statement_id", "AllowExecutionWithStatementIdPrefix-"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", "AllowExecutionWithStatementIdPrefix-"),
 				),
 			},

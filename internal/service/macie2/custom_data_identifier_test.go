@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
@@ -32,7 +31,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "regex", regex),
@@ -63,7 +62,7 @@ func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -91,7 +90,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -116,7 +115,7 @@ func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_namePrefix(namePrefix, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
@@ -148,7 +147,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_complete(bucketName, regex, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
@@ -158,7 +157,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_complete(bucketName, regex, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
@@ -189,7 +188,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_completeTags(bucketName, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
