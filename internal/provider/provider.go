@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -2373,9 +2374,7 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	}
-
-	if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
@@ -2387,16 +2386,8 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := tfMap["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
@@ -2407,30 +2398,12 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 		assumeRole.SessionName = v
 	}
 
-	if tagMapRaw, ok := tfMap["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
-		assumeRole.Tags = make(map[string]string)
-
-		for k, vRaw := range tagMapRaw {
-			v, ok := vRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.Tags[k] = v
-		}
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+		assumeRole.Tags = flex.ExpandStringValueMap(v)
 	}
 
-	if transitiveTagKeySet, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
-		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
-			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
-		}
+	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
 	return &assumeRole
