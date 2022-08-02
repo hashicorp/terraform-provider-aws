@@ -2155,24 +2155,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedConfigFiles = l
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v := d.Get("shared_credentials_file").(string); v != "" {
-		config.SharedCredentialsFiles = []string{v}
-	}
-
-	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedCredentialsFiles = l
+	if v, ok := d.GetOk("shared_credentials_file"); ok {
+		config.SharedCredentialsFiles = []string{v.(string)}
+	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -2189,16 +2179,12 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		return nil, diag.FromErr(err)
 	}
 
-	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
-		}
+	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
-		}
+	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
