@@ -2174,8 +2174,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedCredentialsFiles = l
 	}
 
-	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
+	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
 	}
 
@@ -2363,27 +2363,31 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
+func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+	if tfMap == nil {
+		return nil
+	}
+
 	assumeRole := awsbase.AssumeRole{}
 
-	if v, ok := m["duration"].(string); ok && v != "" {
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap["external_id"].(string); ok && v != "" {
 		assumeRole.ExternalID = v
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+	if policyARNSet, ok := tfMap["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
 		for _, policyARNRaw := range policyARNSet.List() {
 			policyARN, ok := policyARNRaw.(string)
 
@@ -2395,15 +2399,15 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 		}
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
+	if tagMapRaw, ok := tfMap["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
 		assumeRole.Tags = make(map[string]string)
 
 		for k, vRaw := range tagMapRaw {
@@ -2417,7 +2421,7 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 		}
 	}
 
-	if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
+	if transitiveTagKeySet, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
 		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
 			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
 
