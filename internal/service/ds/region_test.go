@@ -127,6 +127,52 @@ func TestAccDSRegion_tags(t *testing.T) {
 	})
 }
 
+func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
+	var v directoryservice.RegionDescription
+	resourceName := "aws_directory_service_region.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckRegionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "4"),
+				),
+			},
+			{
+				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRegionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRegionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
 
@@ -296,4 +342,20 @@ resource "aws_directory_service_region" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccRegionConfig_desiredNumberOfDomainControllers(rName, domain string, desiredNumber int) string {
+	return acctest.ConfigCompose(testAccRegionConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_directory_service_region" "test" {
+  directory_id = aws_directory_service_directory.test.id
+  region_name  = data.aws_region.secondary.name
+
+  vpc_settings {
+    vpc_id     = aws_vpc.secondary.id
+    subnet_ids = aws_subnet.secondary[*].id
+  }
+
+  desired_number_of_domain_controllers = %[1]d
+}
+`, desiredNumber))
 }
