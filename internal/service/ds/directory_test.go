@@ -33,7 +33,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
@@ -84,7 +84,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,7 +112,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -128,7 +128,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -137,7 +137,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -161,7 +161,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_microsoft(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
@@ -208,7 +208,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_microsoftStandard(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
@@ -259,7 +259,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_connector(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "1"),
@@ -312,7 +312,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_alias(rName, domainName, alias),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttr(resourceName, "alias", alias),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
@@ -343,14 +343,14 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_sso(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "true"),
 				),
 			},
 			{
 				Config: testAccDirectoryConfig_ssoModified(rName, domainName, alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 				),
 			},
@@ -373,7 +373,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttrSet(resourceName, "access_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "alias"),
 					resource.TestCheckResourceAttr(resourceName, "connect_settings.#", "0"),
@@ -404,14 +404,14 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "4"),
 				),
 			},
 			{
 				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServiceDirectoryExists(resourceName, &ds),
+					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
 				),
 			},
@@ -443,7 +443,7 @@ func testAccCheckDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckServiceDirectoryExists(n string, v *directoryservice.DirectoryDescription) resource.TestCheckFunc {
+func testAccCheckDirectoryExists(n string, v *directoryservice.DirectoryDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
