@@ -156,6 +156,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading Directory Service Region (%s): %s", d.Id(), err)
 	}
 
+	d.Set("desired_number_of_domain_controllers", region.DesiredNumberOfDomainControllers)
 	d.Set("directory_id", region.DirectoryId)
 	d.Set("region_name", region.RegionName)
 	if region.VpcSettings != nil {
