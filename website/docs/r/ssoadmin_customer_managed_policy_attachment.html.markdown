@@ -60,7 +60,7 @@ The following arguments are supported:
 
 ### Customer Managed Policy Reference
 
-The `customer_managed_policy_reference` config block describes a customer managed IAM policy. You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your specified permission set. 
+The `customer_managed_policy_reference` config block describes a customer managed IAM policy. You must have an IAM policy that matches the name and path in each AWS account where you want to deploy your specified permission set.
 
 * `name` - (Required, Forces new resource) Name of the customer managed IAM Policy to be attached.
 * `path` - (Optional, Forces new resource) The path to the IAM policy to be attached. The default is `/`. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) for more information.
