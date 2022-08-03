@@ -307,7 +307,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("alias"); ok {
 		if err := createAlias(conn, d.Id(), v.(string)); err != nil {
-			return nil
+			return err
 		}
 	}
 
