@@ -189,10 +189,10 @@ resource "aws_s3_bucket_policy" "test" {
             "Service" : "macie.${data.aws_partition.current.dns_suffix}"
           },
           "Action" : "s3:GetBucketLocation",
-          "Resource" : "${aws_s3_bucket.test.arn}",
+          "Resource" : aws_s3_bucket.test.arn,
           "Condition" : {
             "StringEquals" : {
-              "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+              "aws:SourceAccount" : data.aws_caller_identity.current.account_id
             },
             "ArnLike" : {
               "aws:SourceArn" : [
