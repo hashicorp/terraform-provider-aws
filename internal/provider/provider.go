@@ -416,6 +416,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_acmpca_certificate_authority": acmpca.DataSourceCertificateAuthority(),
 			"aws_acmpca_certificate":           acmpca.DataSourceCertificate(),
 
+			"aws_amp_workspace": amp.DataSourceWorkspace(),
+
 			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
 			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
 			"aws_api_gateway_export":      apigateway.DataSourceExport(),
