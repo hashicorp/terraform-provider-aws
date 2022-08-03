@@ -185,3 +185,39 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
+func FindAttachmentByLoadBalancerName(conn *autoscaling.AutoScaling, asgName, loadBalancerName string) error {
+	asg, err := FindGroupByName(conn, asgName)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range asg.LoadBalancerNames {
+		if aws.StringValue(v) == loadBalancerName {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
+	}
+}
+
+func FindAttachmentByTargetGroupARN(conn *autoscaling.AutoScaling, asgName, targetGroupARN string) error {
+	asg, err := FindGroupByName(conn, asgName)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range asg.TargetGroupARNs {
+		if aws.StringValue(v) == targetGroupARN {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
+	}
+}
