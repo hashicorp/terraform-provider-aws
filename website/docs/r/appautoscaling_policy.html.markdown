@@ -225,7 +225,7 @@ The `target_tracking_scaling_policy_configuration` `customized_metric_specificat
 The `target_tracking_scaling_policy_configuration` `predefined_metric_specification` configuration block supports the following arguments:
 
 * `predefined_metric_type` - (Required) The metric type.
-* `resource_label` - (Optional) Reserved for future use. Must be less than or equal to 1023 characters in length.
+* `resource_label` - (Optional) Reserved for future use if the `predefined_metric_type` is not `ALBRequestCountPerTarget`. If the `predefined_metric_type` is `ALBRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
 
 ## Attributes Reference
 

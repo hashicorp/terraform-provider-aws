@@ -65,7 +65,7 @@ The following arguments are optional:
 * `server_name` - (Optional) Host name of the server.
 * `service_access_role` - (Optional) ARN used by the service access IAM role for dynamodb endpoints.
 * `ssl_mode` - (Optional, Default: none) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) User name to be used to login to the endpoint database.
 
 ### elasticsearch_settings
@@ -181,7 +181,7 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `endpoint_arn` - ARN for the endpoint.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -22,10 +22,10 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
@@ -52,10 +52,10 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
@@ -74,10 +74,10 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPipelineDefinitionDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd"),

@@ -19,7 +19,7 @@ resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "www.example.com"
   type    = "A"
-  ttl     = "300"
+  ttl     = 300
   records = [aws_eip.lb.public_ip]
 }
 ```
@@ -32,7 +32,7 @@ resource "aws_route53_record" "www-dev" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "www"
   type    = "CNAME"
-  ttl     = "5"
+  ttl     = 5
 
   weighted_routing_policy {
     weight = 10
@@ -46,7 +46,7 @@ resource "aws_route53_record" "www-live" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "www"
   type    = "CNAME"
-  ttl     = "5"
+  ttl     = 5
 
   weighted_routing_policy {
     weight = 90
@@ -167,7 +167,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the record.
 * `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
-
 
 ## Import
 

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_flow_log
 
-Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
+Provides a VPC/Subnet/ENI/Transit Gateway/Transit Gateway Attachment Flow Log to capture IP traffic for a specific network
 interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
 
 ## Example Usage
@@ -119,6 +119,8 @@ The following arguments are supported:
 * `log_destination` - (Optional) The ARN of the logging destination.
 * `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group.
 * `subnet_id` - (Optional) Subnet ID to attach to
+* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
+* `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
 * `vpc_id` - (Optional) VPC ID to attach to
 * `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
 * `max_aggregation_interval` - (Optional) The maximum interval of time
@@ -126,7 +128,7 @@ The following arguments are supported:
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
   minutes). Default: `600`.
 * `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### destination_options
 
@@ -142,7 +144,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

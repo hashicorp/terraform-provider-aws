@@ -51,8 +51,8 @@ type CoreNetworkPolicySegment struct {
 	AllowFilter                 interface{} `json:"allow-filter,omitempty"`
 	DenyFilter                  interface{} `json:"deny-filter,omitempty"`
 	EdgeLocations               interface{} `json:"edge-locations,omitempty"`
-	IsolateAttachments          bool        `json:"isolate-attachments,omitempty"`
-	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance,omitempty"`
+	IsolateAttachments          bool        `json:"isolate-attachments"`
+	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance"`
 }
 
 type CoreNetworkPolicyCoreNetworkConfiguration struct {

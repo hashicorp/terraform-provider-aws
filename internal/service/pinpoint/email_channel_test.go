@@ -24,10 +24,10 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailChannelConfig_fromAddress(domain, address1),
@@ -67,10 +67,10 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailChannelConfig_configurationSet(domain, address, rName),
@@ -97,10 +97,10 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailChannelConfig_noRole(domain, address, rName),
@@ -126,10 +126,10 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEmailChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailChannelConfig_fromAddress(domain, address),

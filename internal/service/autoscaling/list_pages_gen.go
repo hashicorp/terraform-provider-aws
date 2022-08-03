@@ -29,7 +29,6 @@ func describeInstanceRefreshesPagesWithContext(ctx context.Context, conn *autosc
 	}
 	return nil
 }
-
 func describeLoadBalancerTargetGroupsPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancerTargetGroupsInput, fn func(*autoscaling.DescribeLoadBalancerTargetGroupsOutput, bool) bool) error {
 	return describeLoadBalancerTargetGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func describeLoadBalancerTargetGroupsPagesWithContext(ctx context.Context, conn 
 	}
 	return nil
 }
-
 func describeLoadBalancersPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLoadBalancersInput, fn func(*autoscaling.DescribeLoadBalancersOutput, bool) bool) error {
 	return describeLoadBalancersPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -71,7 +69,6 @@ func describeLoadBalancersPagesWithContext(ctx context.Context, conn *autoscalin
 	}
 	return nil
 }
-
 func describeWarmPoolPages(conn *autoscaling.AutoScaling, input *autoscaling.DescribeWarmPoolInput, fn func(*autoscaling.DescribeWarmPoolOutput, bool) bool) error {
 	return describeWarmPoolPagesWithContext(context.Background(), conn, input, fn)
 }

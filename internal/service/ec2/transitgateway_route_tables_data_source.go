@@ -46,7 +46,7 @@ func dataSourceTransitGatewayRouteTablesRead(d *schema.ResourceData, meta interf
 	output, err := FindTransitGatewayRouteTables(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Tables: %w", err)
+		return fmt.Errorf("reading EC2 Transit Gateway Route Tables: %w", err)
 	}
 
 	var routeTableIDs []string

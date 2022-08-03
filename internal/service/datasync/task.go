@@ -64,6 +64,24 @@ func ResourceTask() *schema.Resource {
 					},
 				},
 			},
+			"includes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.FilterType_Values(), false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -208,6 +226,10 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Excludes = expandFilterRules(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("includes"); ok {
+		input.Includes = expandFilterRules(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
 	}
@@ -255,6 +277,9 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
 		return fmt.Errorf("error setting excludes: %w", err)
 	}
+	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
+		return fmt.Errorf("error setting includes: %w", err)
+	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
@@ -298,6 +323,10 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChanges("excludes") {
 			input.Excludes = expandFilterRules(d.Get("excludes").([]interface{}))
+		}
+
+		if d.HasChanges("includes") {
+			input.Includes = expandFilterRules(d.Get("includes").([]interface{}))
 		}
 
 		if d.HasChanges("name") {

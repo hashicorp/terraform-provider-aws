@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	awsTagKeyPrefix                             = `aws:` // nosemgrep:aws-in-const-name,aws-in-var-name
+	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
 	RDSTagKeyPrefix                             = `rds:`
@@ -37,7 +37,7 @@ type IgnoreConfig struct {
 type KeyValueTags map[string]*TagData
 
 // IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:aws-in-func-name
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
 	result := make(KeyValueTags)
 
 	for k, v := range tags {

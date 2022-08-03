@@ -29,7 +29,6 @@ func listByteMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input
 	}
 	return nil
 }
-
 func listGeoMatchSetsPages(conn *waf.WAF, input *waf.ListGeoMatchSetsInput, fn func(*waf.ListGeoMatchSetsOutput, bool) bool) error {
 	return listGeoMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -50,7 +49,6 @@ func listGeoMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input 
 	}
 	return nil
 }
-
 func listIPSetsPages(conn *waf.WAF, input *waf.ListIPSetsInput, fn func(*waf.ListIPSetsOutput, bool) bool) error {
 	return listIPSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -71,7 +69,6 @@ func listIPSetsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.L
 	}
 	return nil
 }
-
 func listRateBasedRulesPages(conn *waf.WAF, input *waf.ListRateBasedRulesInput, fn func(*waf.ListRateBasedRulesOutput, bool) bool) error {
 	return listRateBasedRulesPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -92,7 +89,6 @@ func listRateBasedRulesPagesWithContext(ctx context.Context, conn *waf.WAF, inpu
 	}
 	return nil
 }
-
 func listRegexMatchSetsPages(conn *waf.WAF, input *waf.ListRegexMatchSetsInput, fn func(*waf.ListRegexMatchSetsOutput, bool) bool) error {
 	return listRegexMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -113,7 +109,6 @@ func listRegexMatchSetsPagesWithContext(ctx context.Context, conn *waf.WAF, inpu
 	}
 	return nil
 }
-
 func listRegexPatternSetsPages(conn *waf.WAF, input *waf.ListRegexPatternSetsInput, fn func(*waf.ListRegexPatternSetsOutput, bool) bool) error {
 	return listRegexPatternSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -134,7 +129,6 @@ func listRegexPatternSetsPagesWithContext(ctx context.Context, conn *waf.WAF, in
 	}
 	return nil
 }
-
 func listRuleGroupsPages(conn *waf.WAF, input *waf.ListRuleGroupsInput, fn func(*waf.ListRuleGroupsOutput, bool) bool) error {
 	return listRuleGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -155,7 +149,6 @@ func listRuleGroupsPagesWithContext(ctx context.Context, conn *waf.WAF, input *w
 	}
 	return nil
 }
-
 func listRulesPages(conn *waf.WAF, input *waf.ListRulesInput, fn func(*waf.ListRulesOutput, bool) bool) error {
 	return listRulesPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -176,7 +169,6 @@ func listRulesPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.Li
 	}
 	return nil
 }
-
 func listSizeConstraintSetsPages(conn *waf.WAF, input *waf.ListSizeConstraintSetsInput, fn func(*waf.ListSizeConstraintSetsOutput, bool) bool) error {
 	return listSizeConstraintSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -197,7 +189,6 @@ func listSizeConstraintSetsPagesWithContext(ctx context.Context, conn *waf.WAF, 
 	}
 	return nil
 }
-
 func listSQLInjectionMatchSetsPages(conn *waf.WAF, input *waf.ListSqlInjectionMatchSetsInput, fn func(*waf.ListSqlInjectionMatchSetsOutput, bool) bool) error {
 	return listSQLInjectionMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -218,7 +209,6 @@ func listSQLInjectionMatchSetsPagesWithContext(ctx context.Context, conn *waf.WA
 	}
 	return nil
 }
-
 func listWebACLsPages(conn *waf.WAF, input *waf.ListWebACLsInput, fn func(*waf.ListWebACLsOutput, bool) bool) error {
 	return listWebACLsPagesWithContext(context.Background(), conn, input, fn)
 }
@@ -239,7 +229,6 @@ func listWebACLsPagesWithContext(ctx context.Context, conn *waf.WAF, input *waf.
 	}
 	return nil
 }
-
 func listXSSMatchSetsPages(conn *waf.WAF, input *waf.ListXssMatchSetsInput, fn func(*waf.ListXssMatchSetsOutput, bool) bool) error {
 	return listXSSMatchSetsPagesWithContext(context.Background(), conn, input, fn)
 }

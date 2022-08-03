@@ -1,7 +1,7 @@
 ---
 subcategory: "DocDB (DocumentDB)"
 layout: "aws"
-page_title: "AWS: aws_docdb"
+page_title: "AWS: aws_docdb_global_cluster"
 description: |-
   Manages a DocDB Global Cluster
 ---

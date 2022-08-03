@@ -507,7 +507,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.RestoreFromClusterSnapshot(backupInput)
 
 		if err != nil {
-			return fmt.Errorf("error restoring Redshift Cluster (%s) from snapshot: %w", clusterID, err)
+			return fmt.Errorf("restoring Redshift Cluster (%s) from snapshot: %w", clusterID, err)
 		}
 
 		d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
@@ -535,18 +535,18 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.CreateCluster(input)
 
 		if err != nil {
-			return fmt.Errorf("error creating Redshift Cluster (%s): %w", clusterID, err)
+			return fmt.Errorf("creating Redshift Cluster (%s): %w", clusterID, err)
 		}
 
 		d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
 	}
 
 	if _, err := waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster (%s) create: %w", d.Id(), err)
 	}
 
 	if _, err := waitClusterRelocationStatusResolved(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolution: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolution: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -584,7 +584,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Cluster (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Cluster (%s): %w", d.Id(), err)
 	}
 
 	loggingStatus, err := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
@@ -592,7 +592,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Cluster (%s) logging status: %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Cluster (%s) logging status: %w", d.Id(), err)
 	}
 
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
@@ -616,7 +616,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
-		return fmt.Errorf("error setting cluster_nodes: %w", err)
+		return fmt.Errorf("setting cluster_nodes: %w", err)
 	}
 	d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
@@ -634,7 +634,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("kms_key_id", rsc.KmsKeyId)
 	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
-		return fmt.Errorf("error setting logging: %w", err)
+		return fmt.Errorf("setting logging: %w", err)
 	}
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
@@ -644,7 +644,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
 	if err := d.Set("snapshot_copy", flattenSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
-		return fmt.Errorf("error setting snapshot_copy: %w", err)
+		return fmt.Errorf("setting snapshot_copy: %w", err)
 	}
 
 	d.Set("dns_name", nil)
@@ -687,11 +687,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -782,15 +782,15 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyCluster(input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying Redshift Cluster (%s): %w", d.Id(), err)
+			return fmt.Errorf("modifying Redshift Cluster (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
 		}
 
 		if _, err := waitClusterRelocationStatusResolved(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolution: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Redshift Cluster (%s) Availability Zone Relocation Status resolution: %w", d.Id(), err)
 		}
 	}
 
@@ -819,11 +819,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyClusterIamRoles(input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying Redshift Cluster (%s) IAM roles: %w", d.Id(), err)
+			return fmt.Errorf("modifying Redshift Cluster (%s) IAM roles: %w", d.Id(), err)
 		}
 
 		if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -837,7 +837,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyAquaConfiguration(input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying Redshift Cluster (%s) Aqua Configuration: %w", d.Id(), err)
+			return fmt.Errorf("modifying Redshift Cluster (%s) Aqua Configuration: %w", d.Id(), err)
 		}
 
 		if d.Get("apply_immediately").(bool) {
@@ -854,15 +854,15 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			)
 
 			if err != nil {
-				return fmt.Errorf("error rebooting Redshift Cluster (%s): %w", d.Id(), err)
+				return fmt.Errorf("rebooting Redshift Cluster (%s): %w", d.Id(), err)
 			}
 
 			if _, err := waitClusterRebooted(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for Redshift Cluster (%s) Rebooted: %w", d.Id(), err)
+				return fmt.Errorf("waiting for Redshift Cluster (%s) Rebooted: %w", d.Id(), err)
 			}
 
 			if _, err := waitClusterAquaApplied(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for Redshift Cluster (%s) Aqua Configuration update: %w", d.Id(), err)
+				return fmt.Errorf("waiting for Redshift Cluster (%s) Aqua Configuration update: %w", d.Id(), err)
 			}
 		}
 	}
@@ -878,11 +878,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyCluster(input)
 
 		if err != nil {
-			return fmt.Errorf("error relocating Redshift Cluster (%s): %w", d.Id(), err)
+			return fmt.Errorf("relocating Redshift Cluster (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waitClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Redshift Cluster (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -899,7 +899,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("error disabling Redshift Cluster (%s) snapshot copy: %w", d.Id(), err)
+				return fmt.Errorf("disabling Redshift Cluster (%s) snapshot copy: %w", d.Id(), err)
 			}
 		}
 	}
@@ -926,7 +926,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				)
 
 				if err != nil {
-					return fmt.Errorf("error disabling Redshift Cluster (%s) logging: %w", d.Id(), err)
+					return fmt.Errorf("disabling Redshift Cluster (%s) logging: %w", d.Id(), err)
 				}
 			}
 		}
@@ -936,7 +936,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -974,11 +974,11 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Cluster (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Cluster (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Redshift Cluster (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Redshift Cluster (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -1023,7 +1023,7 @@ func enableLogging(conn *redshift.Redshift, clusterID string, tfMap map[string]i
 	)
 
 	if err != nil {
-		return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %w", clusterID, err)
+		return fmt.Errorf("enabling Redshift Cluster (%s) logging: %w", clusterID, err)
 	}
 
 	return nil
@@ -1046,7 +1046,7 @@ func enableSnapshotCopy(conn *redshift.Redshift, clusterID string, tfMap map[str
 	_, err := conn.EnableSnapshotCopy(input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling Redshift Cluster (%s) snapshot copy: %w", clusterID, err)
+		return fmt.Errorf("enabling Redshift Cluster (%s) snapshot copy: %w", clusterID, err)
 	}
 
 	return nil

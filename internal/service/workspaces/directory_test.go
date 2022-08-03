@@ -33,9 +33,9 @@ func testAccDirectory_basic(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_basic(rName, domain),
@@ -100,9 +100,9 @@ func testAccDirectory_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_basic(rName, domain),
@@ -131,9 +131,9 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_subnetIDs(rName, domain),
@@ -166,9 +166,9 @@ func testAccDirectory_tags(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_tags1(rName, domain, "key1", "value1"),
@@ -219,9 +219,9 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_selfServicePermissions(rName, domain),
@@ -254,9 +254,9 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_workspaceAccessProperties(rName, domain),
@@ -293,9 +293,9 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_workspaceCreationProperties(rName, domain),
@@ -329,9 +329,9 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
@@ -374,10 +374,10 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck:        acctest.ErrorCheck(t, workspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDirectoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_ipGroupIdsCreate(rName, domain),

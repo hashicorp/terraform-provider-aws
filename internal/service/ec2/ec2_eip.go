@@ -564,7 +564,7 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 		return nil
 	})
 
-	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
+	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.DescribeAddresses(input)
 	}
 

@@ -22,10 +22,10 @@ func TestAccECRRepository_basic(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_basic(rName),
@@ -55,10 +55,10 @@ func TestAccECRRepository_tags(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_tags(rName),
@@ -88,10 +88,10 @@ func TestAccECRRepository_immutability(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_immutability(rName),
@@ -116,10 +116,10 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, true),
@@ -167,10 +167,10 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 	kmsKeyDataSourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryConfig_encryptionKMSDefaultkey(rName),
@@ -212,10 +212,10 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 	resourceName := "aws_ecr_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Test that the addition of the default encryption_configuration doesn't recreation in the next step
@@ -323,7 +323,7 @@ func testAccCheckRepositoryRepositoryURL(resourceName, repositoryName string) re
 	}
 }
 
-func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ecr-in-func-name
+func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was not recreated")
@@ -333,7 +333,7 @@ func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFun
 	}
 }
 
-func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ecr-in-func-name
+func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was recreated")

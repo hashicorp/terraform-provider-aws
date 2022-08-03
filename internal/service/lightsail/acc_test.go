@@ -32,11 +32,6 @@ var testAccProviderLightsailDomain *schema.Provider
 // testAccProviderLightsailDomainConfigure ensures the provider is only configured once
 var testAccProviderLightsailDomainConfigure sync.Once
 
-// Prevent panic with acctest.CheckResourceDisappears
-func init() {
-	testAccProviderLightsailDomain = provider.Provider()
-}
-
 // testAccPreCheckDomain verifies AWS credentials and that Lightsail Domains is supported
 func testAccPreCheckDomain(t *testing.T) {
 	acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
@@ -50,11 +45,19 @@ func testAccPreCheckDomain(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderLightsailDomainConfigure.Do(func() {
+		ctx := context.Background()
+		var err error
+		testAccProviderLightsailDomain, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderLightsailDomain.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderLightsailDomain.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
