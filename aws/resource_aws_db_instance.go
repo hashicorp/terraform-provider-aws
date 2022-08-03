@@ -660,9 +660,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] DB Instance Replica create configuration: %#v", opts)
-		var err error
-		// Retry for IAM eventual consistency
-		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err = conn.CreateDBInstanceReadReplica(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
