@@ -1,4 +1,16 @@
 ```release-note:enhancement
+resource/aws_internet_gateway: Allow customizable timeouts
+```
+
+```release-note:enhancement
+resource/aws_internet_gateway_attachment: Allow customizable timeouts
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket: Allow customizable timeouts
+```
+
+```release-note:enhancement
 data-source/aws_ebs_default_kms_key: Allow customizable read timeout
 ```
 
@@ -280,4 +292,20 @@ data-source/aws_customer_gateway: Allow customizable read timeout
 
 ```release-note:enhancement
 data-source/aws_vpn_gateway: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_alb: Allow customizable read timeout
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Allow customizable read timeout
 ```

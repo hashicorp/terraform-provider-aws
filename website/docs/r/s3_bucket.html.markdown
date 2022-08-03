@@ -724,6 +724,15 @@ In addition to all arguments above, the following attributes are exported:
 * `website_endpoint` - The website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - The domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `20m`)
+- `read` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `60m`)
+
 ## Import
 
 S3 bucket can be imported using the `bucket`, e.g.,

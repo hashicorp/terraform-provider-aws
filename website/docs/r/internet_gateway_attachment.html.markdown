@@ -38,6 +38,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC and Internet Gateway separated by a colon.
 
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
