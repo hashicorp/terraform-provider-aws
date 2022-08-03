@@ -1,3 +1,0 @@
-plugin "aws" {
-  enabled = true
-}

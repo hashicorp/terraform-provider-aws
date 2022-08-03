@@ -88,7 +88,7 @@ The following arguments are supported:
 
 ### `snapshot_delivery_properties`
 
-* `delivery_frequency` - (Optional) - The frequency with which AWS Config recurringly delivers configuration snapshots. e.g. `One_Hour` or `Three_Hours`. Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
+* `delivery_frequency` - (Optional) - The frequency with which AWS Config recurringly delivers configuration snapshotsE.g., `One_Hour` or `Three_Hours`. Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
 
 ## Attributes Reference
 
@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Delivery Channel can be imported using the name, e.g.
+Delivery Channel can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_delivery_channel.foo example

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_connection_notification"
 description: |-
@@ -65,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.
+VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.,
 
 ```
 $ terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263

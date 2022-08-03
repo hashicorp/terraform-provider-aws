@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_device_fleet"
 description: |-
-  Provides a Sagemaker Device Fleet resource.
+  Provides a SageMaker Device Fleet resource.
 ---
 
 # Resource: aws_sagemaker_device_fleet
 
-Provides a Sagemaker Device Fleet resource.
+Provides a SageMaker Device Fleet resource.
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ The following arguments are supported:
 * `output_config` - (Required) Specifies details about the repository. see [Output Config](#output-config) details below.
 * `description` - (Optional) A description of the fleet.
 * `enable_iot_role_alias` - (Optional) Whether to create an AWS IoT Role Alias during device fleet creation. The name of the role alias generated will match this pattern: "SageMakerEdge-{DeviceFleetName}".
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Output Config
 
@@ -47,11 +47,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the Device Fleet.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Device Fleet.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Sagemaker Device Fleets can be imported using the `name`, e.g.
+SageMaker Device Fleets can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_device_fleet.example my-fleet

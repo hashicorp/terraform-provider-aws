@@ -81,7 +81,7 @@ No additional attributes are exported.
 
 ## Import
 
-Pinpoint Event Stream can be imported using the `application-id`, e.g.
+Pinpoint Event Stream can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_event_stream.stream application-id

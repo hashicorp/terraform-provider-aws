@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Chime Voice Connector Origination can be imported using the `voice_connector_id`, e.g.
+Chime Voice Connector Origination can be imported using the `voice_connector_id`, e.g.,
 
 ```
 $ terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4

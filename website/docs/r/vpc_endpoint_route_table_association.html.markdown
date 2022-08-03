@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_route_table_association"
 description: |-
@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rtb-bbbbbbbb

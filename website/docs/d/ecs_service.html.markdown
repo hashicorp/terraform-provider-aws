@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
 description: |-
@@ -36,3 +36,4 @@ In addition to all arguments above, the following attributes are exported:
 * `launch_type` - The launch type for the ECS Service
 * `scheduling_strategy` - The scheduling strategy for the ECS Service
 * `task_definition` - The family for the latest ACTIVE revision
+* `tags` - Resource tags.
