@@ -1709,9 +1709,7 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 
 // When an RDS Instance is added in a separate apply from the creation of the source instance, and the
 // parameter group is changed on the replica, it can sometimes lead to the API trying to reboot the instance
-//
-//	whenanother "management operation" is in progress:
-//
+//  whenanother "management operation" is in progress:
 // InvalidDBInstanceState: Instance cannot currently reboot due to an in-progress management operation
 // https://github.com/hashicorp/terraform-provider-aws/issues/11905
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
