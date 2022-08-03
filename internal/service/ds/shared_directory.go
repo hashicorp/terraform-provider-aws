@@ -134,8 +134,10 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
 
+	d.Set("directory_id", output.OwnerDirectoryId)
 	d.Set("method", output.ShareMethod)
 	d.Set("notes", output.ShareNotes)
+	d.Set("shared_directory_id", output.SharedDirectoryId)
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
