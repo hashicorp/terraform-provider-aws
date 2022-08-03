@@ -30,7 +30,7 @@ func waitDirectoryCreated(conn *directoryservice.DirectoryService, id string, ti
 	return nil, err
 }
 
-func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
+func waitDirectoryDeleted(conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
 		Target:  []string{},
