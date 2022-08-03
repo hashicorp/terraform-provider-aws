@@ -67,7 +67,7 @@ func TestAccDSRegion_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_basic(rName, domainName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRegion(), resourceName),
 				),
@@ -95,7 +95,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_tags1(rName, domainName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -108,7 +108,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 			},
 			{
 				Config: testAccRegionConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -117,7 +117,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 			},
 			{
 				Config: testAccRegionConfig_tags1(rName, domainName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -145,7 +145,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
 				),
@@ -156,15 +156,8 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 4),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "4"),
-				),
-			},
-			{
 				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
 				),

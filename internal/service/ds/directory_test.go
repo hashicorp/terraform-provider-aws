@@ -403,14 +403,14 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 			},
 			{
 				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 4),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "4"),
 				),
 			},
 			{
 				Config: testAccDirectoryConfig_desiredNumberOfDomainControllers(rName, domainName, 3),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(resourceName, &ds),
 					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "3"),
 				),
