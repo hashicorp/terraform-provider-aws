@@ -2918,7 +2918,7 @@ func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	return opts
 }
 
-//Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
+// Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
 func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	specs := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
 	for _, v := range ips {
