@@ -229,7 +229,7 @@ resource "aws_macie2_classification_export_configuration" "test" {
   ]
   s3_destination {
     bucket_name = aws_s3_bucket.test.bucket
-    key_prefix  = %[1]q == "" ? null : %[1]q
+    key_prefix  = (%[1]q == "") ? null : %[1]q
     kms_key_arn = aws_kms_key.test.arn
   }
 }
