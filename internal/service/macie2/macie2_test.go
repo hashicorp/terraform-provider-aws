@@ -13,6 +13,9 @@ func TestAccMacie2_serial(t *testing.T) {
 			"finding_and_status":           testAccAccount_WithFindingAndStatus,
 			"disappears":                   testAccAccount_disappears,
 		},
+		"ClassificationExportConfiguration": {
+			"basic": testAccClassificationExportConfiguration_basic,
+		},
 		"ClassificationJob": {
 			"basic":          testAccClassificationJob_basic,
 			"name_generated": testAccClassificationJob_Name_Generated,
