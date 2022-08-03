@@ -1683,13 +1683,14 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
