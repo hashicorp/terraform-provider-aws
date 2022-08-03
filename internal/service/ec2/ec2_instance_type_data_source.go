@@ -1,6 +1,8 @@
 package ec2
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -10,6 +12,10 @@ import (
 func DataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceInstanceTypeRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"auto_recovery_supported": {
