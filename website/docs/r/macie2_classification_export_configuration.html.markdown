@@ -31,7 +31,7 @@ resource "aws_macie2_classification_export_configuration" "example" {
 
 The following arguments are supported:
 
-* `s3_destination` - (Required) Configuration block for an S3 Destination. Defined below
+* `s3_destination` - (Required) Configuration block for a S3 Destination. Defined below
 
 ### s3_destination Configuration Block
 
