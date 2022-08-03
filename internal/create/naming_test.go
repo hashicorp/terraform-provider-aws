@@ -8,7 +8,7 @@ func strPtr(str string) *string {
 	return &str
 }
 
-func TestHasResourceUniqueIdPlusAdditionalSuffix(t *testing.T) {
+func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -48,7 +48,7 @@ func TestHasResourceUniqueIdPlusAdditionalSuffix(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got := HasResourceUniqueIdPlusAdditionalSuffix(testCase.Input, "suffix")
+			got := hasResourceUniqueIDPlusAdditionalSuffix(testCase.Input, "suffix")
 
 			if got != testCase.Expected {
 				t.Errorf("got %t, expected %t", got, testCase.Expected)

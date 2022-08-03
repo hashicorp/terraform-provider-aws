@@ -26,8 +26,8 @@ func NameWithSuffix(name string, namePrefix string, nameSuffix string) string {
 	return resource.UniqueId() + nameSuffix
 }
 
-// HasResourceUniqueIdPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
-func HasResourceUniqueIdPlusAdditionalSuffix(s string, additionalSuffix string) bool {
+// hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
+func hasResourceUniqueIDPlusAdditionalSuffix(s string, additionalSuffix string) bool {
 	re := regexp.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", resource.UniqueIDSuffixLength, additionalSuffix))
 	return re.MatchString(s)
 }
@@ -39,14 +39,14 @@ func HasResourceUniqueIdPlusAdditionalSuffix(s string, additionalSuffix string) 
 //
 // An expected usage might be:
 //
-//   d.Set("name_prefix", naming.NamePrefixFromName(d.Id()))
+//   d.Set("name_prefix", create.NamePrefixFromName(d.Id()))
 //
 func NamePrefixFromName(name string) *string {
 	return NamePrefixFromNameWithSuffix(name, "")
 }
 
 func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
-	if !HasResourceUniqueIdPlusAdditionalSuffix(name, nameSuffix) {
+	if !hasResourceUniqueIDPlusAdditionalSuffix(name, nameSuffix) {
 		return nil
 	}
 
