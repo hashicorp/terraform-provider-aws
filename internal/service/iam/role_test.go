@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -104,7 +103,7 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 				Config: testAccRoleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -131,7 +130,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(resourceName, &conf),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
 				),
 			},
