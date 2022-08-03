@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,7 +96,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.ShareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionCreating, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
@@ -111,19 +112,19 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	output, err := findSharedDirectoryByIDs(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())
+		create.LogNotFoundRemoveState(names.DS, create.ErrActionReading, ResourceNameSharedDirectory, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
@@ -133,7 +134,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return names.DiagError(names.DS, names.ErrActionSetting, ResourceNameSharedDirectory, d.Id(), err)
+			return create.DiagError(names.DS, create.ErrActionSetting, ResourceNameSharedDirectory, d.Id(), err)
 		}
 	} else {
 		d.Set("target", nil)
@@ -157,13 +158,13 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionDeleting, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResourceNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)

@@ -270,7 +270,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionCreating, resourceLFTags, input.String(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionCreating, resourceLFTags, input.String(), err)
 	}
 
 	diags := diag.Diagnostics{}
@@ -281,10 +281,10 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			diags = names.AddWarning(
+			diags = create.AddWarning(
 				diags,
 				names.LakeFormation,
-				names.ErrActionCreating,
+				create.ErrActionCreating,
 				resourceLFTags,
 				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.StringValue(v.LFTag.CatalogId), aws.StringValue(v.LFTag.TagKey), aws.StringValueSlice(v.LFTag.TagValues)),
 				awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), nil),
@@ -295,7 +295,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 			return append(diags,
 				diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  names.ProblemStandardMessage(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
+					Summary:  create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, resourceLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
 				},
 			)
 		}
@@ -333,12 +333,12 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.GetResourceLFTags(input)
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionReading, resourceLFTags, d.Id(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionReading, resourceLFTags, d.Id(), err)
 	}
 
 	if len(output.LFTagOnDatabase) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagOnDatabase)); err != nil {
-			return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+			return create.DiagError(names.LakeFormation, create.ErrActionSetting, resourceLFTags, d.Id(), err)
 		}
 	}
 
@@ -349,14 +349,14 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			if err := d.Set("lf_tag", flattenLFTagPairs(v.LFTags)); err != nil {
-				return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+				return create.DiagError(names.LakeFormation, create.ErrActionSetting, resourceLFTags, d.Id(), err)
 			}
 		}
 	}
 
 	if len(output.LFTagsOnTable) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagsOnTable)); err != nil {
-			return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+			return create.DiagError(names.LakeFormation, create.ErrActionSetting, resourceLFTags, d.Id(), err)
 		}
 	}
 
@@ -417,7 +417,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionDeleting, resourceLFTags, d.Id(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionDeleting, resourceLFTags, d.Id(), err)
 	}
 
 	return nil
