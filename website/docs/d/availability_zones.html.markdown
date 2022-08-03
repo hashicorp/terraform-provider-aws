@@ -98,3 +98,9 @@ In addition to all arguments above, the following attributes are exported:
 * `zone_ids` - A list of the Availability Zone IDs available to the account.
 
 Note that the indexes of Availability Zone names and IDs correspond.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

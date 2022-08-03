@@ -50,3 +50,9 @@ The following arguments are supported:
 ## Attributes Reference
 
 See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for details on the returned attributes - they are identical.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

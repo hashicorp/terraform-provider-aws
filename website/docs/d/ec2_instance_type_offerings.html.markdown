@@ -50,3 +50,9 @@ In addition to all arguments above, the following attributes are exported:
 * `location_types` - List of location types.
 
 Note that the indexes of Instance Type Offering instance types, locations and location types correspond.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

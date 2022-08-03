@@ -68,3 +68,9 @@ In addition to all arguments above, the following attributes are exported:
 * `static_sources_support` - Whether to enable support for statically configuring multicast group sources for the EC2 Transit Gateway Multicast Domain.
 * `tags` - Key-value tags for the EC2 Transit Gateway Multicast Domain.
 * `transit_gateway_id` - EC2 Transit Gateway identifier.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

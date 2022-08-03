@@ -84,3 +84,9 @@ data "aws_subnets" "selected" {
 ## Attributes Reference
 
 * `ids` - A list of all the subnet ids found.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

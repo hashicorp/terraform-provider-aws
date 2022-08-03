@@ -90,3 +90,9 @@ The following attribute is additionally exported:
 * `association_id` - The association ID for the the IPv4 CIDR block.
 * `cidr_block` - The CIDR block for the association.
 * `state` - The State of the association.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

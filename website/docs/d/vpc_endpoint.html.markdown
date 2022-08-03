@@ -69,3 +69,9 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - The DNS name.
 * `hosted_zone_id` - The ID of the private hosted zone.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

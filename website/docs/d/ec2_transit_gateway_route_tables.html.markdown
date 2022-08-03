@@ -46,3 +46,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table identifiers.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

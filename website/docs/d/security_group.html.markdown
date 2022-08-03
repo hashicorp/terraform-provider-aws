@@ -72,3 +72,9 @@ The following fields are also exported:
 * `arn` - The computed ARN of the security group.
 
 ~> **Note:** The [default security group for a VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#DefaultSecurityGroup) has the name `default`.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

@@ -71,3 +71,9 @@ which take the following arguments:
 
 * `id` - AWS Region.
 * `ids` - A list of all the network ACL ids found.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

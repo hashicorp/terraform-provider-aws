@@ -42,3 +42,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Instance Type.
 * `instance_type` - EC2 Instance Type.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

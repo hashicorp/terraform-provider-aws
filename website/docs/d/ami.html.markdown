@@ -129,3 +129,9 @@ interpolation.
 * `ena_support` - Specifies whether enhanced networking with ENA is enabled.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

@@ -100,3 +100,9 @@ connection in the peer VPC over the VPC peering connection.
 #### CIDR block set Attributes Reference
 
 * `cidr_block` - A CIDR block associated to the VPC of the specific VPC Peering Connection.
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)

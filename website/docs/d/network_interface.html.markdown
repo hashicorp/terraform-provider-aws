@@ -66,3 +66,9 @@ Elastic Network Interfaces can be imported using the `id`, e.g.,
 ```
 $ terraform import aws_network_interface.test eni-12345
 ```
+
+## Timeouts
+
+[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20m`)
