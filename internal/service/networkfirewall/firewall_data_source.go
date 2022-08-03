@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -99,6 +101,7 @@ func DataSourceFirewall() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{"arn", "name"},
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"subnet_change_protection": {
 				Type:     schema.TypeBool,
@@ -156,11 +159,11 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall (%s): %w", d.Id(), err))
+		return diag.Errorf("reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Firewall == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall (%s): empty output", d.Id()))
+		return diag.Errorf("reading NetworkFirewall Firewall (%s): empty output", d.Id())
 	}
 
 	firewall := output.Firewall
@@ -178,11 +181,11 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("vpc_id", firewall.VpcId)
 
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
+		return diag.Errorf("setting subnet_mappings: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(aws.StringValue(firewall.FirewallArn))

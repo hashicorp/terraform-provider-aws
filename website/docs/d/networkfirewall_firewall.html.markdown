@@ -3,16 +3,16 @@ subcategory: "Network Firewall"
 layout: "aws"
 page_title: "AWS: aws_networkfirewall_firewall"
 description: |-
-  Provides an AWS Network Firewall Firewall resource.
+  Retrieve information about an AWS Network Firewall Firewall resource.
 ---
 
-# Resource: aws_networkfirewall_firewall
+# Data Source: aws_networkfirewall_firewall
 
-Provides an AWS Network Firewall Firewall Resource
+Retrieve information about a firewall.
 
 ## Example Usage
 
-By arn
+### Find firewall policy by Amazon Resource Name (ARN)
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
@@ -20,7 +20,7 @@ data "aws_networkfirewall_firewall" "example" {
 }
 ```
 
-By name
+### Find firewall policy by Name
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
@@ -28,7 +28,7 @@ data "aws_networkfirewall_firewall" "example" {
 }
 ```
 
-By Both
+### Find firewall policy by Amazon Resource Name (ARN) and Name
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
@@ -39,21 +39,21 @@ data "aws_networkfirewall_firewall" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** either `arn` or `name` or both are required.
+One or more of the following arguments are required:
 
-The following arguments are supported:
-
-* `arn` - The Amazon Resource Name (ARN) that identifies the resource policy.
-* `name` - A friendly name of the firewall.
+* `arn` - The Amazon Resource Name (ARN) of the firewall.
+* `name` - The descriptive name of the firewall.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) that identifies the resource policy.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - The Amazon Resource Name (ARN) of the firewall.
 * `delete_protection` - A boolean flag indicating whether it is possible to delete the firewall.
-* `description` - A friendly description of the firewall.
-* `encryption_configuration` - AWS Key Management (KMS) encryption settings for the firewall.
-    * `key_id` - The ID of the AWS Key Management (KMS) customer managed key.
-    * `type` - The type of the AWS Key Management (KMS) key use by the firewall.
+* `description` - A description of the firewall.
+* `encryption_configuration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
+    * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
+    * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
 * `firewall_policy_arn` - The Amazon Resource Name (ARN) of the VPC Firewall policy.
 * `firewall_policy_change_protection` - A boolean flag indicating whether it is possible to change the associated firewall policy.
 * `firewall_status` - Nested list of information about the current status of the firewall.
@@ -63,7 +63,7 @@ The following arguments are supported:
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
-* `name` - A friendly name of the firewall.
+* `name` - The descriptive name of the firewall.
 * `subnet_change_protection` - A boolean flag indicating whether it is possible to change the associated subnet(s).
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
     * `subnet_id` - The unique identifier for the subnet.

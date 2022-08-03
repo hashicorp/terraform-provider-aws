@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNetworkFirewallFirewallDataSource_basic(t *testing.T) {
+func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -25,7 +25,7 @@ func TestAccNetworkFirewallFirewallDataSource_basic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDataSourceConfig_basic(rName),
+				Config: testAccFirewallDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
@@ -97,7 +97,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 	})
 }
 
-func TestAccNetworkFirewallFirewallDataSource_both(t *testing.T) {
+func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -111,7 +111,7 @@ func TestAccNetworkFirewallFirewallDataSource_both(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDataSourceConfig_both(rName),
+				Config: testAccFirewallDataSourceConfig_arnandname(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
@@ -179,7 +179,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 `, rName)
 }
 
-func testAccFirewallDataSourceConfig_basic(rName string) string {
+func testAccFirewallDataSourceConfig_arn(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFirewallDataSourceDependenciesConfig(rName),
 		fmt.Sprintf(`
@@ -221,7 +221,7 @@ data "aws_networkfirewall_firewall" "test" {
 `, rName))
 }
 
-func testAccFirewallDataSourceConfig_both(rName string) string {
+func testAccFirewallDataSourceConfig_arnandname(rName string) string {
 	return acctest.ConfigCompose(
 		testAccFirewallDataSourceDependenciesConfig(rName),
 		fmt.Sprintf(`
