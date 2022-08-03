@@ -112,17 +112,6 @@ func testAccCheckClassificationExportConfigurationExists(resourceName string, ma
 	}
 }
 
-func testAccCheckClassificationExportConfigurationNotExists(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return nil
-		}
-
-		return fmt.Errorf("Not expecting but found: %s", resourceName)
-	}
-}
-
 func testAccClassificationExportConfigurationConfig_basic(prefix string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
