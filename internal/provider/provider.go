@@ -948,6 +948,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_accessanalyzer_archive_rule": accessanalyzer.ResourceArchiveRule(),
 
 			"aws_account_alternate_contact": account.ResourceAlternateContact(),
+			"aws_account_primary_contact":   account.ResourcePrimaryContact(),
 
 			"aws_acm_certificate":            acm.ResourceCertificate(),
 			"aws_acm_certificate_validation": acm.ResourceCertificateValidation(),
