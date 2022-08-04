@@ -760,7 +760,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
-			"aws_networkfirewall_firewall": networkfirewall.DataSourceFirewall(),
+			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
 			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
 
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
