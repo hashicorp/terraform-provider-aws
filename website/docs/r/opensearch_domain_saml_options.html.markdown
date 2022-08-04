@@ -81,8 +81,8 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `update` - (Default: `180m`)
-* `delete` - (Default: `90m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
