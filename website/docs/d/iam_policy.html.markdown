@@ -32,8 +32,12 @@ data "aws_iam_policy" "example" {
 ## Argument Reference
 
 * `arn` - (Optional) The ARN of the IAM policy.
+  Conflicts with `name` and `path_prefix`.
 * `name` - (Optional) The name of the IAM policy.
-* `path_prefix` - (Optional) The prefix of the path to the IAM policy. Defaults to a slash (`/`).
+  Conflicts with `arn`.
+* `path_prefix` - (Optional) The prefix of the path to the IAM policy.
+  Defaults to a slash (`/`).
+  Conflicts with `arn`.
 
 ## Attributes Reference
 

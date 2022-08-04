@@ -189,11 +189,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_gamelift_game_server_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10 minutes`) How long to wait for the GameLift Game Server Group to be created.
-* `delete` - (Default `30 minutes`) How long to wait for the GameLift Game Server Group to be deleted.
+* `create` - (Default `10m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

@@ -212,12 +212,20 @@ const (
 )
 
 const (
+	DefaultSnapshotImportRoleName = "vmimport"
+)
+
+const (
 	LaunchTemplateVersionDefault = "$Default"
 	LaunchTemplateVersionLatest  = "$Latest"
 )
 
 const (
 	SriovNetSupportSimple = "simple"
+)
+
+const (
+	TargetStorageTierStandard = "standard"
 )
 
 func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
@@ -228,4 +236,28 @@ func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
 	}
 
 	return slice
+}
+
+const (
+	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
+	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
+)
+
+func outsideIPAddressType_Values() []string {
+	return []string{
+		OutsideIPAddressTypePrivateIPv4,
+		OutsideIPAddressTypePublicIPv4,
+	}
+}
+
+const (
+	securityGroupRuleTypeEgress  = "egress"
+	securityGroupRuleTypeIngress = "ingress"
+)
+
+func securityGroupRuleType_Values() []string {
+	return []string{
+		securityGroupRuleTypeEgress,
+		securityGroupRuleTypeIngress,
+	}
 }

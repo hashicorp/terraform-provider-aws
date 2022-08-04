@@ -412,6 +412,8 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TF_ACC` | Enables Go tests containing `resource.Test()` and `resource.ParallelTest()`. |
 | `TF_ACC_ASSUME_ROLE_ARN` | Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |
+| `WAF_SUBSCRIBED_RULE_GROUP_NAME` | Subscribed rule group name for WAF testing. Should be set to the name of an existing subscribed rule group within the account. |
+| `WAF_SUBSCRIBED_RULE_GROUP_METRIC_NAME` | The name of the metric measured by the subscribed rule group used for WAF testing. Required as the rule group name is not a unique identifier. |
 
 ## Label Dictionary
 

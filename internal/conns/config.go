@@ -6,7 +6,11 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -23,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
@@ -81,6 +86,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
+		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
@@ -188,12 +194,36 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
+	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
+		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
+			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
+		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
+			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.RolesAnywhereConn = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
+			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.Route53DomainsConn = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
 			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
 		} else if partition == endpoints.AwsPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
+		}
+	})
+
+	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
+		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
+			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
 	})
 
@@ -438,6 +468,20 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		switch r.Operation.Name {
+		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DeleteContainerService":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
+				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

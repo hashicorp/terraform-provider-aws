@@ -343,7 +343,7 @@ func modifyVPCPeeringConnectionOptions(conn *ec2.EC2, d *schema.ResourceData, vp
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
-	err := resource.Retry(VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
 		if err != nil {

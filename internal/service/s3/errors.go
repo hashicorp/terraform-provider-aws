@@ -28,3 +28,7 @@ const (
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
 	ErrCodeXNotImplemented = "XNotImplemented"
 )
+
+const (
+	ErrMessageBucketAlreadyExists = "bucket already exists"
+)

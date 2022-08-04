@@ -60,6 +60,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints. See below.
 * `application_settings` - (Optional) Settings for application settings persistence.
 * `description` - (Optional) Description for the AppStream stack.
 * `display_name` - (Optional) Stack name to display.
@@ -68,6 +69,11 @@ The following arguments are optional:
 * `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
 * `storage_connectors` - (Optional) Configuration block for the storage connectors to enable. See below.
 * `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled. See below.
+
+### `access_endpoints`
+
+* `endpoint_type` - (Required) The type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
+* `vpce_id` - (Optional) The ID of the VPC in which the interface endpoint is used.
 
 ### `storage_connectors`
 

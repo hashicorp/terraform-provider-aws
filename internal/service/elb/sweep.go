@@ -23,7 +23,7 @@ func init() {
 func sweepLoadBalancers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).ELBConn
 

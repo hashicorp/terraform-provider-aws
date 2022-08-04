@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_lightsail_container_service
+```
+
+```release-note:new-resource
+aws_lightsail_container_service_deployment_version
+```

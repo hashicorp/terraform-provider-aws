@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,6 +16,10 @@ import (
 func DataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceEBSVolumeRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -93,7 +98,7 @@ func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := FindEBSVolumes(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Volumes: %w", err)
+		return fmt.Errorf("reading EBS Volumes: %w", err)
 	}
 
 	if len(output) < 1 {

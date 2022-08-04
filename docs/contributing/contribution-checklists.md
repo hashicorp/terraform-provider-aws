@@ -138,16 +138,16 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNameGeneratedConfig(),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
-          create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+          acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
         ),
       },
@@ -166,16 +166,16 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
   resourceName := "aws_service_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-    CheckDestroy:      testAccCheckThingDestroy,
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheckThingDestroy,
     Steps: []resource.TestStep{
       {
         Config: testAccThingNamePrefixConfig("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
-          create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+          acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),
       },
@@ -238,7 +238,7 @@ d.Set("name", resp.Name)
 d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(aws.StringValue(resp.Name), ".fifo"))
 ```
 
-There are also functions `create.TestCheckResourceAttrNameWithSuffixGenerated` and `create.TestCheckResourceAttrNameWithSuffixFromPrefix` for use in tests.
+There are also functions `acctest.CheckResourceAttrNameWithSuffixGenerated` and `acctest.CheckResourceAttrNameWithSuffixFromPrefix` for use in tests.
 
 ## Adding Resource Policy Support
 
@@ -465,10 +465,10 @@ More details about this code generation, including fixes for potential error mes
     resourceName := "aws_eks_cluster.test"
 
     resource.ParallelTest(t, resource.TestCase{
-      PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-      ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		  ProviderFactories: acctest.ProviderFactories,
-      CheckDestroy:      testAccCheckClusterDestroy,
+      PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+      ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+      ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+      CheckDestroy:             testAccCheckClusterDestroy,
       Steps: []resource.TestStep{
         {
           Config: testAccClusterConfigTags1(rName, "key1", "value1"),
@@ -551,13 +551,13 @@ More details about this code generation, including fixes for potential error mes
 - In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the arguments reference:
 
   ```markdown
-  * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
   ```
 
 - In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the attributes reference:
 
   ```markdown
-  * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+  * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
   ```
 
 ## Adding Resource Filtering Support
@@ -740,11 +740,11 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-    ErrorCheck:        acctest.ErrorCheck(t, {Service}.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{Service}TagDestroy,
-		Steps: []resource.TestStep{
+    PreCheck:                 func() { acctest.PreCheck(t) },
+    ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+    CheckDestroy:             testAccCheck{Service}TagDestroy,
+    Steps: []resource.TestStep{
 			{
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(

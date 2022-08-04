@@ -24,13 +24,13 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_RootCertificate(domain),
+				Config: testAccCertificateConfig_root(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -67,13 +67,13 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_SubordinateCertificate(domain),
+				Config: testAccCertificateConfig_subordinate(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -110,13 +110,13 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_EndEntityCertificate(domain, acctest.TLSPEMEscapeNewlines(csr)),
+				Config: testAccCertificateConfig_endEntity(domain, acctest.TLSPEMEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -153,13 +153,13 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_Validity_EndDate(domain, acctest.TLSPEMEscapeNewlines(csr), later),
+				Config: testAccCertificateConfig_validityEndDate(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -196,13 +196,13 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	later := time.Now().Add(time.Minute * 10).Unix()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_Validity_Absolute(domain, acctest.TLSPEMEscapeNewlines(csr), later),
+				Config: testAccCertificateConfig_validityAbsolute(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
@@ -290,7 +290,7 @@ func testAccCheckCertificateExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCertificateConfig_RootCertificate(domain string) string {
+func testAccCertificateConfig_root(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
@@ -323,7 +323,7 @@ data "aws_partition" "current" {}
 `, domain)
 }
 
-func testAccCertificateConfig_SubordinateCertificate(domain string) string {
+func testAccCertificateConfig_subordinate(domain string) string {
 	return acctest.ConfigCompose(
 		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
@@ -356,7 +356,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, domain))
 }
 
-func testAccCertificateConfig_EndEntityCertificate(domain, csr string) string {
+func testAccCertificateConfig_endEntity(domain, csr string) string {
 	return acctest.ConfigCompose(
 		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
@@ -375,7 +375,7 @@ resource "aws_acmpca_certificate" "test" {
 `, csr))
 }
 
-func testAccCertificateConfig_Validity_EndDate(domain, csr, expiry string) string {
+func testAccCertificateConfig_validityEndDate(domain, csr, expiry string) string {
 	return acctest.ConfigCompose(
 		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`
@@ -394,7 +394,7 @@ resource "aws_acmpca_certificate" "test" {
 `, csr, expiry))
 }
 
-func testAccCertificateConfig_Validity_Absolute(domain, csr string, expiry int64) string {
+func testAccCertificateConfig_validityAbsolute(domain, csr string, expiry int64) string {
 	return acctest.ConfigCompose(
 		testAccCertificateBaseRootCAConfig(domain),
 		fmt.Sprintf(`

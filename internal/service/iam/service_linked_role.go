@@ -115,7 +115,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		err = roleUpdateTags(conn, roleName, nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Service Linked Role (%s): %s", d.Id(), err)
 			return resourceServiceLinkedRoleRead(d, meta)
 		}
@@ -207,7 +207,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		err := roleUpdateTags(conn, roleName, o, n)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Service Linked Role (%s): %s", d.Id(), err)
 			return resourceServiceLinkedRoleRead(d, meta)
 		}

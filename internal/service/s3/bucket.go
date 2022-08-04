@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -28,6 +29,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	resNameBucket = "Bucket"
 )
 
 func ResourceBucket() *schema.Resource {
@@ -36,6 +42,13 @@ func ResourceBucket() *schema.Resource {
 		Read:                 resourceBucketRead,
 		Update:               resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Read:   schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -711,11 +724,26 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		bucket = resource.UniqueId()
 	}
 
+	awsRegion := meta.(*conns.AWSClient).Region
+
+	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
+	// current account. It also resets the Bucket ACLs.
+	if awsRegion == endpoints.UsEast1RegionID {
+		_, err := conn.HeadBucket(&s3.HeadBucketInput{
+			Bucket: aws.String(bucket),
+		})
+		if err == nil {
+			return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
+		}
+	}
+
 	log.Printf("[DEBUG] S3 bucket create: %s", bucket)
 
 	req := &s3.CreateBucketInput{
-		Bucket:                     aws.String(bucket),
-		ObjectLockEnabledForBucket: aws.Bool(d.Get("object_lock_enabled").(bool)),
+		Bucket: aws.String(bucket),
+		// NOTE: Please, do not add any other fields here unless the field is
+		// supported in *all* AWS partitions (including ISO partitions) and by
+		// 3rd party S3 providers.
 	}
 
 	if acl, ok := d.GetOk("acl"); ok {
@@ -728,7 +756,6 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] S3 bucket %s has default canned ACL %s", bucket, s3.BucketCannedACLPrivate)
 	}
 
-	awsRegion := meta.(*conns.AWSClient).Region
 	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
@@ -743,17 +770,22 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error validating S3 Bucket (%s) name: %w", bucket, err)
 	}
 
+	// S3 Object Lock is not supported on all partitions.
+	if v, ok := d.GetOk("object_lock_enabled"); ok {
+		req.ObjectLockEnabledForBucket = aws.Bool(v.(bool))
+	}
+
 	// S3 Object Lock can only be enabled on bucket creation.
 	objectLockConfiguration := expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
 	if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
 		req.ObjectLockEnabledForBucket = aws.Bool(true)
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.CreateBucket(req)
 
 		if tfawserr.ErrCodeEquals(err, ErrCodeOperationAborted) {
-			return resource.RetryableError(fmt.Errorf("error creating S3 Bucket (%s), retrying: %w", bucket, err))
+			return resource.RetryableError(err)
 		}
 
 		if err != nil {
@@ -766,7 +798,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.CreateBucket(req)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating S3 Bucket (%s): %w", bucket, err)
+		return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, err)
 	}
 
 	// Assign the bucket name as the resource ID
@@ -781,7 +813,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		// Retry due to S3 eventual consistency
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			terr := BucketUpdateTags(conn, d.Id(), o, n)
 			return nil, terr
 		}, s3.ErrCodeNoSuchBucket)
@@ -815,13 +847,13 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.IsNewResource() {
 			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
-				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning)
+				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return fmt.Errorf("error updating (new) S3 Bucket (%s) Versioning: %w", d.Id(), err)
 				}
 			}
 		} else {
-			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v)); err != nil {
+			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("error updating S3 Bucket (%s) Versioning: %w", d.Id(), err)
 			}
 		}
@@ -893,7 +925,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(bucketCreatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -928,7 +960,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
+		return names.Error(names.S3, names.ErrActionReading, resNameBucket, d.Id(), err)
 	}
 
 	d.Set("bucket", d.Id())
@@ -936,7 +968,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource
-	pol, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	pol, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -963,7 +995,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the Grant ACL.
 	// In the event grants are not configured on the bucket, the API returns an empty array
-	apResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	apResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketAcl(&s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -991,7 +1023,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the CORS
-	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketCors(&s3.GetBucketCorsInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1006,7 +1038,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -1019,7 +1051,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the website configuration
-	wsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	wsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketWebsite(&s3.GetBucketWebsiteInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1057,7 +1089,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the versioning configuration
 
-	versioningResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	versioningResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketVersioning(&s3.GetBucketVersioningInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1084,7 +1116,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the acceleration status
 
-	accelerateResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	accelerateResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketAccelerateConfiguration(&s3.GetBucketAccelerateConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1110,7 +1142,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the request payer configuration.
 
-	payerResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	payerResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1134,7 +1166,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Read the logging configuration if configured outside this resource
-	loggingResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	loggingResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketLogging(&s3.GetBucketLoggingInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1163,7 +1195,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the lifecycle configuration
 
-	lifecycleResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	lifecycleResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1192,7 +1224,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the bucket replication configuration if configured outside this resource
 
-	replicationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	replicationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketReplication(&s3.GetBucketReplicationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1222,7 +1254,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Read the bucket server side encryption configuration
 
-	encryptionResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	encryptionResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1250,7 +1282,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Object Lock configuration.
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetObjectLockConfiguration(&s3.GetObjectLockConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1282,12 +1314,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error setting object_lock_configuration: %w", err)
 		}
 	} else {
-		d.Set("object_lock_enabled", false)
+		d.Set("object_lock_enabled", nil)
 		d.Set("object_lock_configuration", nil)
 	}
 
 	// Add the region as an attribute
-	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return s3manager.GetBucketRegionWithClient(context.Background(), conn, d.Id(), func(r *request.Request) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
@@ -1361,7 +1393,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return BucketListTags(conn, d.Id())
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1499,7 +1531,7 @@ func websiteEndpoint(client *conns.AWSClient, d *schema.ResourceData) (*S3Websit
 
 	// Lookup the region for this bucket
 
-	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return client.S3Conn.GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
@@ -1558,7 +1590,7 @@ func resourceBucketInternalAccelerationUpdate(conn *s3.S3, d *schema.ResourceDat
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfiguration(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1577,7 +1609,7 @@ func resourceBucketInternalACLUpdate(conn *s3.S3, d *schema.ResourceData) error 
 		ACL:    aws.String(acl),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAcl(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1589,7 +1621,7 @@ func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error
 
 	if len(rawCors) == 0 {
 		// Delete CORS
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(d.Id()),
 			})
@@ -1643,7 +1675,7 @@ func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketCors(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1663,7 +1695,7 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 		return nil
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.GetBucketAcl(&s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1687,7 +1719,7 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 		},
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAcl(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1843,7 +1875,7 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1873,7 +1905,7 @@ func resourceBucketInternalLoggingUpdate(conn *s3.S3, d *schema.ResourceData) er
 		BucketLoggingStatus: loggingStatus,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketLogging(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1887,7 +1919,7 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 		ObjectLockConfiguration: expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutObjectLockConfiguration(req)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1902,7 +1934,7 @@ func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) err
 	}
 
 	if policy == "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
 				Bucket: aws.String(d.Id()),
 			})
@@ -1920,7 +1952,7 @@ func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) err
 		Policy: aws.String(policy),
 	}
 
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBucketPolicy(params)
 		if tfawserr.ErrCodeEquals(err, ErrCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -1974,7 +2006,7 @@ func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema
 		ReplicationConfiguration: expandBucketReplicationConfiguration(replicationConfiguration),
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBucketReplication(input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, ErrCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
@@ -2002,7 +2034,7 @@ func resourceBucketInternalRequestPayerUpdate(conn *s3.S3, d *schema.ResourceDat
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketRequestPayment(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -2062,7 +2094,7 @@ func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+		d.Timeout(schema.TimeoutUpdate),
 		func() (interface{}, error) {
 			return conn.PutBucketEncryption(input)
 		},
@@ -2073,13 +2105,13 @@ func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, 
 	return err
 }
 
-func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration) error {
+func resourceBucketInternalVersioningUpdate(conn *s3.S3, bucket string, versioningConfig *s3.VersioningConfiguration, timeout time.Duration) error {
 	input := &s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: versioningConfig,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(timeout, func() (interface{}, error) {
 		return conn.PutBucketVersioning(input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -2094,7 +2126,7 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketWebsite(input)
 		}, s3.ErrCodeNoSuchBucket)
 
@@ -2118,7 +2150,7 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 		WebsiteConfiguration: websiteConfig,
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketWebsite(input)
 	}, s3.ErrCodeNoSuchBucket)
 

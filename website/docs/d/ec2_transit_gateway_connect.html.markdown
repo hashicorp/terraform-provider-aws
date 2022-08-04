@@ -51,3 +51,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect
 * `transit_gateway_id` - EC2 Transit Gateway identifier
 * `transport_attachment_id` - The underlaying VPC attachment
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

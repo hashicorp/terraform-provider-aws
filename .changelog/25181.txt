@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cognito_user_pool_client: Add `enable_propagate_additional_user_context_data` argument
+```
+
+```release-note:enhancement
+data-source/aws_cognito_user_pool_client: Add `enable_propagate_additional_user_context_data` argument
+```

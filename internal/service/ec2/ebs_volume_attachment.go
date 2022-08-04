@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -178,40 +177,6 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
-}
-
-func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("attachment.device"),
-					Values: []*string{aws.String(name)},
-				},
-				{
-					Name:   aws.String("attachment.instance-id"),
-					Values: []*string{aws.String(instanceID)},
-				},
-			},
-		}
-
-		resp, err := conn.DescribeVolumes(request)
-		if err != nil {
-			return nil, "failed", err
-		}
-
-		if len(resp.Volumes) > 0 {
-			v := resp.Volumes[0]
-			for _, a := range v.Attachments {
-				if aws.StringValue(a.InstanceId) == instanceID {
-					return a, aws.StringValue(a.State), nil
-				}
-			}
-		}
-		// assume detached if volume count is 0
-		return 42, ec2.VolumeAttachmentStateDetached, nil
-	}
 }
 
 func volumeAttachmentID(name, volumeID, instanceID string) string {

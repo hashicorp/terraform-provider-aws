@@ -21,7 +21,7 @@ it's better to use `aws_ami_launch_permission` instead.
 
 ```terraform
 # Create an AMI that will start a machine whose root device is backed by
-# an EBS volume populated from a snapshot. It is assumed that such a snapshot
+# an EBS volume populated from a snapshot. We assume that such a snapshot
 # already exists with the id "snap-xxxxxxxx".
 resource "aws_ami" "example" {
   name                = "terraform-example"
@@ -54,7 +54,7 @@ The following arguments are supported:
   attached to created instances. The structure of this block is described below.
 * `ephemeral_block_device` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tpm_support` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
@@ -100,14 +100,6 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) A name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 40 mins) Used when creating the AMI
-* `update` - (Defaults to 40 mins) Used when updating the AMI
-* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -124,7 +116,15 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Indicates whether the image has public launch permissions.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

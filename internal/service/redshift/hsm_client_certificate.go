@@ -63,7 +63,7 @@ func resourceHSMClientCertificateCreate(d *schema.ResourceData, meta interface{}
 
 	out, err := conn.CreateHsmClientCertificate(&input)
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Hsm Client Certificate (%s): %s", certIdentifier, err)
+		return fmt.Errorf("creating Redshift Hsm Client Certificate (%s): %s", certIdentifier, err)
 	}
 
 	d.SetId(aws.StringValue(out.HsmClientCertificate.HsmClientCertificateIdentifier))
@@ -84,7 +84,7 @@ func resourceHSMClientCertificateRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Hsm Client Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Hsm Client Certificate (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -104,11 +104,11 @@ func resourceHSMClientCertificateRead(d *schema.ResourceData, meta interface{}) 
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func resourceHSMClientCertificateUpdate(d *schema.ResourceData, meta interface{}
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Redshift Hsm Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Hsm Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

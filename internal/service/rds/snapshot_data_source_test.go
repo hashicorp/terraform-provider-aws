@@ -18,12 +18,12 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckSnapshotDataSourceConfig(rInt),
+				Config: testAccSnapshotDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
 				),
@@ -46,7 +46,7 @@ func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotDataSourceConfig(rInt int) string {
+func testAccSnapshotDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"

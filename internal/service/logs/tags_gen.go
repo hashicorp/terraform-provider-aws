@@ -2,22 +2,28 @@
 package logs
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsLogGroup(input)
+	output, err := conn.ListTagsLogGroupWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -41,7 +47,10 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -51,10 +60,10 @@ func UpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string, oldTagsM
 			Tags:         aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagLogGroup(input)
+		_, err := conn.UntagLogGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -64,10 +73,10 @@ func UpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string, oldTagsM
 			Tags:         Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagLogGroup(input)
+		_, err := conn.TagLogGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
