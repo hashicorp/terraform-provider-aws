@@ -1810,11 +1810,11 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("error deleting DB Instance (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitDBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for RDS DB Instance (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
