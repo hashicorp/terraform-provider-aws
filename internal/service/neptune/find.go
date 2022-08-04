@@ -78,7 +78,6 @@ func findGlobalClusterByARN(ctx context.Context, conn *neptune.Neptune, dbCluste
 					return gc, nil
 				}
 			}
-
 		}
 
 		if output.Marker == nil {
