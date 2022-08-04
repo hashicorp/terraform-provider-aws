@@ -24,7 +24,8 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -33,19 +34,19 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_basic(sdkacctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterInstanceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccCheckClusterInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 				),
 			},
 			{
@@ -58,12 +59,38 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterInstanceConfig_modified(sdkacctest.RandInt()),
+				Config: testAccClusterInstanceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterInstance_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -75,8 +102,8 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -85,7 +112,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_basic(rInt),
+				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 				),
@@ -95,7 +122,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 					// Get Database Instance into deleting state
 					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 					input := &rds.DeleteDBInstanceInput{
-						DBInstanceIdentifier: aws.String(fmt.Sprintf("tf-cluster-instance-%d", rInt)),
+						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
 					}
 					_, err := conn.DeleteDBInstance(input)
@@ -103,7 +130,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 						t.Fatalf("error deleting Database Instance: %s", err)
 					}
 				},
-				Config:  testAccClusterInstanceConfig_basic(rInt),
+				Config:  testAccClusterInstanceConfig_basic(rName),
 				Destroy: true,
 			},
 		},
@@ -116,7 +143,8 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,10 +154,9 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_az(sdkacctest.RandInt()),
+				Config: testAccClusterInstanceConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 				),
 			},
@@ -248,33 +275,6 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 					"apply_immediately",
 					"identifier_prefix",
 				},
-			},
-		},
-	})
-}
-
-// https://github.com/hashicorp/terraform/issues/5350
-func TestAccRDSClusterInstance_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_basic(sdkacctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterInstance(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1079,7 +1079,7 @@ func testAccCheckClusterInstanceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
+		if rs.Type != "aws_rds_cluster_instance" {
 			continue
 		}
 
@@ -1099,17 +1099,16 @@ func testAccCheckClusterInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
-// Add some random to the name, to avoid collision
-func testAccClusterInstanceConfig_basic(n int) string {
+func testAccClusterInstanceConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.default.engine
-  engine_version             = aws_rds_cluster.default.engine_version
+  engine                     = aws_rds_cluster.test.engine
+  engine_version             = aws_rds_cluster.test.engine_version
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
 }
 
-resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%[1]d"
+resource "aws_rds_cluster" "test" {
+  cluster_identifier = %[1]q
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
@@ -1120,17 +1119,21 @@ resource "aws_rds_cluster" "default" {
   master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
+`, rName))
+}
 
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier              = "tf-cluster-instance-%[1]d"
-  cluster_identifier      = aws_rds_cluster.default.id
+func testAccClusterInstanceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_parameter_group_name = aws_db_parameter_group.bar.name
+  db_parameter_group_name = aws_db_parameter_group.test.name
   promotion_tier          = "3"
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%[1]d"
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -1138,46 +1141,23 @@ resource "aws_db_parameter_group" "bar" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterInstanceConfig_modified(n int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%[1]d"
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.default.engine
-  engine_version             = aws_rds_cluster.default.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier                 = "tf-cluster-instance-%[1]d"
-  cluster_identifier         = aws_rds_cluster.default.id
+func testAccClusterInstanceConfig_modified(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier                 = %[1]q
+  cluster_identifier         = aws_rds_cluster.test.id
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  db_parameter_group_name    = aws_db_parameter_group.bar.name
+  db_parameter_group_name    = aws_db_parameter_group.test.name
   auto_minor_version_upgrade = false
   promotion_tier             = "3"
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%[1]d"
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -1185,46 +1165,23 @@ resource "aws_db_parameter_group" "bar" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, n))
+`, rName))
 }
 
-func testAccClusterInstanceConfig_az(n int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%[1]d"
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.default.engine
-  engine_version             = aws_rds_cluster.default.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier              = "tf-cluster-instance-%[1]d"
-  cluster_identifier      = aws_rds_cluster.default.id
+func testAccClusterInstanceConfig_az(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_parameter_group_name = aws_db_parameter_group.bar.name
+  db_parameter_group_name = aws_db_parameter_group.test.name
   promotion_tier          = "3"
   availability_zone       = data.aws_availability_zones.available.names[0]
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%[1]d"
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -1232,12 +1189,8 @@ resource "aws_db_parameter_group" "bar" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, n))
+`, rName))
 }
 
 func testAccClusterInstanceConfig_namePrefix(n int) string {
