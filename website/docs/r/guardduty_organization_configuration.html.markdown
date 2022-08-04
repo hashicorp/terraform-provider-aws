@@ -32,6 +32,13 @@ resource "aws_guardduty_organization_configuration" "example" {
         enable = true
       }
     }
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          auto_enable = true
+        }
+      }
+    }
   }
 }
 ```
@@ -48,6 +55,7 @@ The following arguments are supported:
 
 * `s3_logs` - (Optional) Enable S3 Protection automatically for new member accounts.
 * `kubernetes` - (Optional) Enable Kubernetes Audit Logs Monitoring automatically for new member accounts.
+* `malware_protection` - (Optional) Enable Malware Protection automatically for new member accounts.
 
 ### S3 Logs
 
@@ -66,6 +74,24 @@ The following arguments are supported:
 The `audit_logs` block supports the following:
 
 * `enable` - (Required) If true, enables Kubernetes audit logs as a data source for [Kubernetes protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html).
+  Defaults to `true`.
+
+### Malware Protection
+`malware_protection` block supports the following:
+
+* `scan_ec2_instance_with_findings` - (Required) Configure whether [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) for EC2 instances with findings should be auto-enabled for new members joining the organization.
+   See [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) below for more details.
+
+#### Scan EC2 instance with findings
+The `scan_ec2_instance_with_findings` block supports the following:
+
+* `ebs_volumes` - (Required) Configure whether scanning EBS volumes should be auto-enabled for new members joining the organization
+  See [EBS volumes](#ebs-volumes) below for more details.
+
+#### EBS volumes
+The `ebs_volumes` block supports the following:
+
+* `auto_enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) for all new accounts joining the organization.
   Defaults to `true`.
 
 ## Attributes Reference

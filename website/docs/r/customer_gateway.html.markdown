@@ -36,7 +36,7 @@ The following arguments are supported:
 * `ip_address` - (Required) The IPv4 address for the customer gateway device's outside interface.
 * `type` - (Required) The type of customer gateway. The only type AWS
   supports at this time is "ipsec.1".
-* `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The amazon-assigned ID of the gateway.
 * `arn` - The ARN of the customer gateway.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

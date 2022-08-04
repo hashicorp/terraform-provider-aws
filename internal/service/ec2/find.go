@@ -3710,6 +3710,87 @@ func FindTransitGatewayMulticastGroupSourceByThreePartKey(conn *ec2.EC2, multica
 	return nil, tfresource.NewEmptyResultError(input)
 }
 
+func FindTransitGatewayPeeringAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) (*ec2.TransitGatewayPeeringAttachment, error) {
+	output, err := FindTransitGatewayPeeringAttachments(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil || output[0].AccepterTgwInfo == nil || output[0].RequesterTgwInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayPeeringAttachments(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) ([]*ec2.TransitGatewayPeeringAttachment, error) {
+	var output []*ec2.TransitGatewayPeeringAttachment
+
+	err := conn.DescribeTransitGatewayPeeringAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayPeeringAttachments {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPeeringAttachmentByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+		TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayPeeringAttachment(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpc-attachments.html#vpc-attachment-lifecycle.
+	switch state := aws.StringValue(output.State); state {
+	case ec2.TransitGatewayAttachmentStateDeleted,
+		ec2.TransitGatewayAttachmentStateFailed,
+		ec2.TransitGatewayAttachmentStateRejected:
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayPrefixListReference(conn *ec2.EC2, input *ec2.GetTransitGatewayPrefixListReferencesInput) (*ec2.TransitGatewayPrefixListReference, error) {
 	output, err := FindTransitGatewayPrefixListReferences(conn, input)
 
@@ -3830,6 +3911,24 @@ func FindTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destinat
 	return nil, &resource.NotFoundError{}
 }
 
+func FindTransitGatewayRouteTable(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) (*ec2.TransitGatewayRouteTable, error) {
+	output, err := FindTransitGatewayRouteTables(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
 	var output []*ec2.TransitGatewayRouteTable
 
@@ -3861,47 +3960,192 @@ func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGate
 	return output, nil
 }
 
-func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
-	if transitGatewayRouteTableID == "" {
-		return nil, nil
+func FindTransitGatewayRouteTableByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
+	input := &ec2.DescribeTransitGatewayRouteTablesInput{
+		TransitGatewayRouteTableIds: aws.StringSlice([]string{id}),
 	}
 
-	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("transit-gateway-attachment-id"),
-				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
-			},
-		},
+	output, err := FindTransitGatewayRouteTable(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayRouteTableStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayRouteTableId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	input := &ec2.GetTransitGatewayRouteTableAssociationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	var result *ec2.TransitGatewayRouteTablePropagation
+	output, err := FindTransitGatewayRouteTableAssociation(conn, input)
 
-	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayAssociationStateDisassociated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func FindTransitGatewayRouteTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTableAssociationsInput) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	output, err := FindTransitGatewayRouteTableAssociations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayRouteTableAssociations(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTableAssociationsInput) ([]*ec2.TransitGatewayRouteTableAssociation, error) {
+	var output []*ec2.TransitGatewayRouteTableAssociation
+
+	err := conn.GetTransitGatewayRouteTableAssociationsPages(input, func(page *ec2.GetTransitGatewayRouteTableAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
-			if transitGatewayRouteTablePropagation == nil {
-				continue
-			}
-
-			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
-				result = transitGatewayRouteTablePropagation
-				return false
+		for _, v := range page.Associations {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return output, nil
+}
+
+func FindTransitGatewayRouteTablePropagationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := FindTransitGatewayRouteTablePropagation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayPropagationStateDisabled {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func FindTransitGatewayRouteTablePropagation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTablePropagationsInput) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	output, err := FindTransitGatewayRouteTablePropagations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayRouteTablePropagations(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTablePropagationsInput) ([]*ec2.TransitGatewayRouteTablePropagation, error) {
+	var output []*ec2.TransitGatewayRouteTablePropagation
+
+	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayRouteTablePropagations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindTransitGatewayVPCAttachment(conn *ec2.EC2, input *ec2.DescribeTransitGatewayVpcAttachmentsInput) (*ec2.TransitGatewayVpcAttachment, error) {
@@ -3973,7 +4217,6 @@ func FindTransitGatewayVPCAttachmentByID(conn *ec2.EC2, id string) (*ec2.Transit
 			Message:     state,
 			LastRequest: input,
 		}
-
 	}
 
 	// Eventual consistency check.

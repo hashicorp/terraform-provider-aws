@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -369,13 +370,13 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	}
 
 	if !d.IsNewResource() && trail == nil {
-		names.LogNotFoundRemoveState(names.CloudTrail, names.ErrActionReading, resTrail, d.Id())
+		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && trail == nil {
-		return names.Error(names.CloudTrail, names.ErrActionReading, resTrail, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -113,11 +114,11 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 
 	out, err := conn.CreateVocabularyFilter(ctx, in)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), err)
+		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), err)
 	}
 
 	if out == nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), errors.New("empty output"))
+		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyFilterName))
@@ -137,7 +138,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -161,7 +162,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -169,11 +170,11 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	return nil
@@ -198,7 +199,7 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating Transcribe VocabularyFilter (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateVocabularyFilter(ctx, in)
 		if err != nil {
-			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameVocabularyFilter, d.Id(), err)
+			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameVocabularyFilter, d.Id(), err)
 		}
 	}
 
@@ -228,7 +229,7 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 			return nil
 		}
 
-		return names.DiagError(names.Transcribe, names.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	return nil

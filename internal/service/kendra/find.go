@@ -11,6 +11,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindDataSourceByID(ctx context.Context, conn *kendra.Client, id, indexId string) (*kendra.DescribeDataSourceOutput, error) {
+	in := &kendra.DescribeDataSourceInput{
+		Id:      aws.String(id),
+		IndexId: aws.String(indexId),
+	}
+
+	out, err := conn.DescribeDataSource(ctx, in)
+
+	var resourceNotFoundException *types.ResourceNotFoundException
+	if errors.As(err, &resourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
 func FindFaqByID(ctx context.Context, conn *kendra.Client, id, indexId string) (*kendra.DescribeFaqOutput, error) {
 	in := &kendra.DescribeFaqInput{
 		Id:      aws.String(id),

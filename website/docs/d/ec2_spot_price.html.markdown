@@ -44,3 +44,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - AWS Region.
 * `spot_price` - The most recent Spot Price value for the given instance type and AZ.
 * `spot_price_timestamp` - The timestamp at which the Spot Price value was published.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

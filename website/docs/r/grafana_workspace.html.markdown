@@ -58,7 +58,7 @@ The following arguments are optional:
 * `organizational_units` - (Optional) The Amazon Organizations organizational units that the workspace is authorized to use data sources from.
 * `role_arn` - (Optional) The IAM role ARN that the workspace assumes.
 * `stack_set_name` - (Optional) The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
 * `grafana_version` - The version of Grafana running on the workspace.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

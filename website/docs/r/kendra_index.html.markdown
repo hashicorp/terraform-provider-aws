@@ -85,7 +85,7 @@ The following arguments are supported:
 * `user_group_resolution_configuration` - (Optional) A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. To configure this, see [UserGroupResolutionConfiguration](https://docs.aws.amazon.com/kendra/latest/dg/API_UserGroupResolutionConfiguration.html). Documented below.
 * `user_token_configurations` - (Optional) A block that specifies the user token configuration. Documented below.
 * `tags` - (Optional) Tags to apply to the Index. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `capacity_units` block supports the following arguments:
 
@@ -120,13 +120,13 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `user_name_attribute_field` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 40 mins) Used when creating the index.
-* `delete` - (Defaults to 40 mins) Used when deleting the index.
-* `update` - (Defaults to 40 mins) Used when updating the index.
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
+* `update` - (Default `40m`)
 
 ## Attributes Reference
 
@@ -140,7 +140,7 @@ In addition to all arguments above, the following attributes are exported:
 * `index_statistics` - A block that provides information about the number of FAQ questions and answers and the number of text documents indexed. Documented below.
 * `status` - The current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updated_at` - The Unix datetime that the index was last updated.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `document_metadata_configuration_updates` block supports the following attributes:
 

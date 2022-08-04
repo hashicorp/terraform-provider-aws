@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -230,7 +231,7 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
 
 	}
 

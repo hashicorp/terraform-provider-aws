@@ -87,6 +87,26 @@ func TestAccEC2InstancesDataSource_empty(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstancesDataSource_timeout(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstancesDataSourceConfig_timeout(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
+					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
+				),
+			},
+		},
+	})
+}
+
 func testAccInstancesDataSourceConfig_ids(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -172,4 +192,32 @@ data "aws_instances" "test" {
   }
 }
 `, rName)
+}
+
+func testAccInstancesDataSourceConfig_timeout(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  count         = 2
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instances" "test" {
+  filter {
+    name   = "instance-id"
+    values = aws_instance.test[*].id
+  }
+
+  timeouts {
+    read = "60m"
+  }
+}
+`, rName))
 }

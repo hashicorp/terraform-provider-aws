@@ -34,14 +34,14 @@ The following arguments are supported:
 * `language_code` - (Required) The language code of the vocabulary entries. For a list of languages and their corresponding language codes, see [What is Amazon Transcribe?](https://docs.aws.amazon.com/transcribe/latest/dg/transcribe-whatis.html). Valid Values are `ar-AE`, `de-CH`, `de-DE`, `en-AB`, `en-AU`, `en-GB`, `en-IE`, `en-IN`, `en-US`, `en-WL`, `es-ES`, `es-US`, `fr-CA`, `fr-FR`, `hi-IN`, `it-IT`, `ja-JP`, `ko-KR`, `pt-BR`, `pt-PT`, `zh-CN`.
 * `name` - (Required) A unique name of the custom vocabulary. Must not be more than 140 characters.
 * `tags` - (Optional) Tags to apply to the vocabulary. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the vocabulary.
-* `delete` - (Defaults to 100 mins) Used when deleting the vocabulary. From the [documentation on adding custom vocabularies](https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html), deletes can take about 90 minutes.
+* `create` - (Default `5m`)
+* `delete` - (Default `100m`)
 
 ## Attributes Reference
 
@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 separated by a colon (`:`).
 * `last_modified_time` - The timestamp when the custom vocabulary was last modified.
 * `state` - The current state of the custom vocabulary. Valid values are `CREATION_IN_PROGRESS`, `ACTIVE`, `CREATION_FAILED`, `DELETE_IN_PROGRESS`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vocabulary_id` - The identifier of the custom vocabulary.
 
 ## Import

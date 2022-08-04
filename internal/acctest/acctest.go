@@ -92,7 +92,12 @@ var Provider *schema.Provider
 var testAccProviderConfigure sync.Once
 
 func init() {
-	Provider = provider.Provider()
+	var err error
+	Provider, err = provider.New(context.Background())
+
+	if err != nil {
+		panic(err)
+	}
 
 	// Always allocate a new provider instance each invocation, otherwise gRPC
 	// ProviderConfigure() can overwrite configuration during concurrent testing.
@@ -117,11 +122,16 @@ func protoV5ProviderFactoriesInit(providerNames ...string) map[string]func() (tf
 	return factories
 }
 
-func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+func factoriesInit(t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
+	ctx := context.Background()
 	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p := provider.Provider()
+		p, err := provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
 			return p, nil
@@ -140,8 +150,8 @@ func factoriesInit(providers *[]*schema.Provider, providerNames []string) map[st
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(providers, []string{
+func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return factoriesInit(t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
@@ -294,6 +304,36 @@ func CheckResourceAttrRegionalHostnameService(resourceName, attributeName, servi
 		hostname := fmt.Sprintf("%s.%s.%s", serviceName, Region(), PartitionDNSSuffix())
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// CheckResourceAttrNameFromPrefix verifies that the state attribute value matches name generated from given prefix
+func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixFromPrefix(resourceName, attributeName, prefix, "")
+}
+
+// Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
+func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, resource.UniqueIDSuffixLength, suffix))
+}
+
+// CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
+func CheckResourceAttrNameWithSuffixFromPrefix(resourceName string, attributeName string, prefix string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeMatch := resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// CheckResourceAttrNameGenerated verifies that the state attribute value matches name automatically generated without prefix
+func CheckResourceAttrNameGenerated(resourceName string, attributeName string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
+}
+
+// CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
+func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(resource.UniqueIdPrefix, suffix))(s)
 	}
 }
 
@@ -806,12 +846,12 @@ func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
 func ConfigAlternateAccountProvider() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
-provider "awsalternate" {
-  access_key = %[1]q
-  profile    = %[2]q
-  secret_key = %[3]q
+provider %[1]q {
+  access_key = %[2]q
+  profile    = %[3]q
+  secret_key = %[4]q
 }
-`, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+`, ProviderNameAlternate, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
 }
 
 // Deprecated: Use ConfigMultipleRegionProvider instead
@@ -1199,11 +1239,12 @@ provider "aws" {
 }
 
 const testAccProviderConfigBase = `
-data "aws_partition" "provider_test" {}
+data "aws_region" "provider_test" {}
 
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
+# Required to initialize the provider.
+data "aws_service" "provider_test" {
+  region     = data.aws_region.provider_test.name
+  service_id = "s3"
 }
 `
 

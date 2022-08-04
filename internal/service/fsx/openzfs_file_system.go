@@ -156,6 +156,12 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"record_size_kib": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      128,
+							ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+						},
 						"user_and_group_quotas": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -613,6 +619,10 @@ func expandOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCreateR
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
 		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
@@ -639,6 +649,10 @@ func expandOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.UpdateOp
 
 	if v, ok := conf["read_only"].(bool); ok {
 		out.ReadOnly = aws.Bool(v)
+	}
+
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
 	}
 
 	if v, ok := conf["user_and_group_quotas"]; ok {
@@ -774,6 +788,9 @@ func flattenOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
 	}
 	if rs.OpenZFSConfiguration.ReadOnly != nil {
 		m["read_only"] = aws.BoolValue(rs.OpenZFSConfiguration.ReadOnly)
+	}
+	if rs.OpenZFSConfiguration.RecordSizeKiB != nil {
+		m["record_size_kib"] = aws.Int64Value(rs.OpenZFSConfiguration.RecordSizeKiB)
 	}
 	if rs.OpenZFSConfiguration.UserAndGroupQuotas != nil {
 		m["user_and_group_quotas"] = flattenOpenzfsFileUserAndGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)
