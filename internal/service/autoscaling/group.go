@@ -2195,7 +2195,7 @@ func statusGroupCapacity(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2c
 		err = cb(nASG, nELB)
 
 		if err != nil {
-			return struct{ err error }{err: err}, groupCapacityInProgress, nil
+			return struct{ err error }{err: err}, groupCapacityInProgress, nil //nolint:nilerr // err indicates why capacity is not satisfied
 		}
 
 		return struct{}{}, groupCapacitySatisfied, nil
