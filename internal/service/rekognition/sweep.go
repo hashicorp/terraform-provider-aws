@@ -22,7 +22,7 @@ func init() {
 	})
 }
 
-func sweepCollections(region string) error{
+func sweepCollections(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
