@@ -19,7 +19,7 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceAPIKeyConfig_basic(rName),
