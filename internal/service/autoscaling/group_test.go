@@ -580,8 +580,9 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	})
 }
 
-func TestAccAutoScalingGroup_withErrorPlacementGroupNotSupportedOnInstanceType(t *testing.T) {
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+func TestAccAutoScalingGroup_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -589,15 +590,16 @@ func TestAccAutoScalingGroup_withErrorPlacementGroupNotSupportedOnInstanceType(t
 		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withErrorPlacementGroupNotSupportedOnInstanceType(randName),
+				Config:      testAccGroupConfig_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(rName),
 				ExpectError: regexp.MustCompile(`Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withErrorWrongInstanceArchitecture(t *testing.T) {
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitecture(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -605,17 +607,18 @@ func TestAccAutoScalingGroup_withErrorWrongInstanceArchitecture(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t4g.micro"),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro"),
 				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withNoErrorProperInstanceArchitecture(t *testing.T) {
+func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitecture(t *testing.T) {
 	var group autoscaling.Group
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
 
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -623,17 +626,18 @@ func TestAccAutoScalingGroup_withNoErrorProperInstanceArchitecture(t *testing.T)
 		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t2.micro"),
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists("aws_autoscaling_group.bar", &group),
+					testAccCheckGroupExists(resourceName, &group),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAutoScalingGroup_withErrorMissingInstanceCapabilities(t *testing.T) {
-	randName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+func TestAccAutoScalingGroup_withScalingActivityErrorMissingInstanceCapabilities(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
@@ -641,7 +645,7 @@ func TestAccAutoScalingGroup_withErrorMissingInstanceCapabilities(t *testing.T) 
 		CheckDestroy:             testAccCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withErrorWrongInstanceArchitecture(randName, "t3.micro"),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t3.micro"),
 				ExpectError: regexp.MustCompile(`Enhanced networking with the Elastic Network Adapter \(ENA\) is required for the .* instance type. Ensure that you are using an AMI that is enabled for ENA`),
 			},
 		},
@@ -3852,32 +3856,16 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withErrorPlacementGroupNotSupportedOnInstanceType(name string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150603"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "t2.micro"
-}
-
+func testAccGroupConfig_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name     = "%s"
+  name     = %[1]q
   strategy = "cluster"
 }
 
-resource "aws_autoscaling_group" "bar" {
+resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
-  name                      = "%s"
+  name                      = %[1]q
   max_size                  = 1
   min_size                  = 1
   health_check_grace_period = 300
@@ -3887,39 +3875,22 @@ resource "aws_autoscaling_group" "bar" {
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   placement_group           = aws_placement_group.test.name
   wait_for_capacity_timeout = "2m"
-
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "Name"
+    value               = %[1]q
     propagate_at_launch = true
   }
 }
-`, name, name)
+`, rName))
 }
 
-func testAccGroupConfig_withErrorWrongInstanceArchitecture(name, instance_type string) string {
-	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() +
-		fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-  most_recent = true
-  owners      = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20150603"]
-  }
-}
-
-resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.test_ami.id
-  instance_type = "%s"
-}
-
-resource "aws_autoscaling_group" "bar" {
+func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, instanceType), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
-  name                      = "%s"
+  name                      = %[1]q
   max_size                  = 1
   min_size                  = 1
   health_check_grace_period = 300
@@ -3928,16 +3899,15 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   wait_for_capacity_timeout = "2m"
-
-  launch_configuration = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "Name"
+    value               = %[1]q
     propagate_at_launch = true
   }
 }
-`, instance_type, name)
+`, rName))
 }
 
 func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {
