@@ -75,12 +75,8 @@ func findGlobalClusterByARN(ctx context.Context, conn *neptune.Neptune, dbCluste
 				}
 
 				if aws.StringValue(gcm.DBClusterArn) == dbClusterARN {
-					log.Printf("found global cluster %s", gc)
 					return gc, nil
-				} else {
-					log.Printf("failed to find the global cluster still, %s, %s", dbClusterARN, aws.StringValue(gc.GlobalClusterArn))
 				}
-
 			}
 
 		}
