@@ -1,7 +1,7 @@
 ---
 subcategory: "AMP (Managed Prometheus)"
 layout: "aws"
-page_title: "AWS: aws_amp_workspace"
+page_title: "AWS: aws_prometheus_workspace"
 description: |-
   Gets information on an Amazon Managed Prometheus workspace.
 ---
