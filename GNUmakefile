@@ -115,7 +115,7 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
+	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
