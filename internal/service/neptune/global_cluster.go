@@ -218,7 +218,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for neptune Global Cluster (%s) update: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for Neptune Global Cluster (%s) update: %w", d.Id(), err))
 	}
 
 	return resourceGlobalClusterRead(ctx, d, meta)
