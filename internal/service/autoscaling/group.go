@@ -851,8 +851,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	maxSize := d.Get("max_size").(int)
 	minSize := d.Get("min_size").(int)
 	desiredCapacity := d.Get("desired_capacity").(int)
-	minELBCapacity := d.Get("min_elb_capacity").(int)
-	waitForELBCapacity := d.Get("wait_for_elb_capacity").(int)
 
 	if twoPhases {
 		createInput.MaxSize = aws.Int64(0)
@@ -996,8 +994,8 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("want at least %d healthy instances in Auto Scaling Group, have %d", minSize, nASG)
 				}
 
-				minELBCapacity := minELBCapacity
-				if waitForELBCapacity > 0 {
+				minELBCapacity := d.Get("min_elb_capacity").(int)
+				if waitForELBCapacity := d.Get("wait_for_elb_capacity").(int); waitForELBCapacity > 0 {
 					minELBCapacity = waitForELBCapacity
 				}
 
@@ -1012,10 +1010,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
 			}
 		}
-	}
-
-	if err := waitForASGCapacity(d, meta, CapacitySatisfiedCreate); err != nil {
-		return err
 	}
 
 	if v, ok := d.GetOk("suspended_processes"); ok && v.(*schema.Set).Len() > 0 {
@@ -1491,8 +1485,32 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if shouldWaitForCapacity {
-		if err := waitForASGCapacity(d, meta, CapacitySatisfiedUpdate); err != nil {
-			return fmt.Errorf("error waiting for Auto Scaling Group Capacity: %w", err)
+		if v, ok := d.GetOk("wait_for_capacity_timeout"); ok {
+			if v, _ := time.ParseDuration(v.(string)); v > 0 {
+				// On update all targets are specific.
+				f := func(nASG, nELB int) error {
+					minSize := d.Get("min_size").(int)
+					if desiredCapacity := d.Get("desired_capacity").(int); desiredCapacity > minSize {
+						minSize = desiredCapacity
+					}
+
+					if nASG != minSize {
+						return fmt.Errorf("want exactly %d healthy instances in Auto Scaling Group, have %d", minSize, nASG)
+					}
+
+					if waitForELBCapacity := d.Get("wait_for_elb_capacity").(int); waitForELBCapacity > 0 {
+						if nELB != waitForELBCapacity {
+							return fmt.Errorf("want exactly %d healthy instances registered to Load Balancer, have %d", waitForELBCapacity, nELB)
+						}
+					}
+
+					return nil
+				}
+
+				if err := waitGroupCapacitySatisfied(conn, meta.(*conns.AWSClient).ELBConn, meta.(*conns.AWSClient).ELBV2Conn, d.Id(), f, v); err != nil {
+					return fmt.Errorf("waiting for Auto Scaling Group (%s) capacity satisfied: %w", d.Id(), err)
+				}
+			}
 		}
 	}
 
