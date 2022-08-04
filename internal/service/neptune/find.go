@@ -3,11 +3,12 @@ package neptune
 import (
 	"context"
 	"errors"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"log"
 )
 
 func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {

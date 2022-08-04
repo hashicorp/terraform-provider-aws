@@ -3,7 +3,7 @@ subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_global_cluster"
 description: |-
-Provides an Neptune Global Cluster Resource
+  Provides an Neptune Global Cluster Resource
 ---
 
 # Resource: aws_neptune_global_cluster

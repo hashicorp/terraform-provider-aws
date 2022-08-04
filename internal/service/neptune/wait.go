@@ -2,12 +2,12 @@ package neptune
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (

@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/neptune"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -362,7 +362,7 @@ func waitForGlobalClusterUpdate(ctx context.Context, conn *neptune.Neptune, glob
 
 func waitForGlobalClusterRemoval(ctx context.Context, conn *neptune.Neptune, dbClusterIdentifier string, timeout time.Duration) error {
 	var globalCluster *neptune.GlobalCluster
-	stillExistsErr := errors.New(ErrNeptuneClusterStillAttachedToGlobalCluster)
+	stillExistsErr := errors.New(ErrClusterStillAttachedToGlobalCluster)
 
 	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		var err error
