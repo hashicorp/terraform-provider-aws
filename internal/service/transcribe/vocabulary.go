@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,17 +112,17 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateVocabulary(ctx, in)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
+		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
 	}
 
 	if out == nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
+		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
 
 	if _, err := waitVocabularyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
 	}
 
 	return resourceVocabularyRead(ctx, d, meta)
@@ -139,7 +140,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -157,7 +158,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -166,11 +167,11 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
 	}
 
 	return nil
@@ -196,11 +197,11 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		log.Printf("[DEBUG] Updating Transcribe Vocabulary (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateVocabulary(ctx, in)
 		if err != nil {
-			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
+			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
 		}
 
 		if _, err := waitVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return names.DiagError(names.Transcribe, names.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
+			return create.DiagError(names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
 		}
 	}
 
@@ -230,11 +231,11 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
 	}
 
 	if _, err := waitVocabularyDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
 	}
 
 	return nil

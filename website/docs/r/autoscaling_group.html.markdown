@@ -686,11 +686,9 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
 ## Timeouts
 
-`autoscaling_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `10 minutes`) Used for destroying ASG.
-
+- `delete` - (Default `10m`)
 
 ## Waiting for Capacity
 

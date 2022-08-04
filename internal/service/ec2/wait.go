@@ -2167,12 +2167,6 @@ const (
 	dhcpOptionSetDeletedTimeout = 3 * time.Minute
 )
 
-const (
-	internetGatewayAttachedTimeout = 4 * time.Minute
-	internetGatewayDeletedTimeout  = 10 * time.Minute
-	internetGatewayDetachedTimeout = 15 * time.Minute
-)
-
 func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{ec2.AttachmentStatusAttaching},

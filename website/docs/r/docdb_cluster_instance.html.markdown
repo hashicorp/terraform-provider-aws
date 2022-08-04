@@ -94,13 +94,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_docdb_cluster_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `90 minutes`) Used for Creating Instances, Replicas, and
+- `create` - (Default `90m`)
 restoring from Snapshots
-- `update` - (Default `90 minutes`) Used for Database modifications
-- `delete` - (Default `90 minutes`) Used for destroying databases. This includes
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 the time required to take snapshots
 
 ## Import

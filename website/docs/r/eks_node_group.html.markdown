@@ -188,12 +188,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_eks_node_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `60 minutes`) How long to wait for the EKS Node Group to be created.
-* `update` - (Default `60 minutes`) How long to wait for the EKS Node Group to be updated. Note that the `update` timeout is used separately for both configuration and version update operations.
-* `delete` - (Default `60 minutes`) How long to wait for the EKS Node Group to be deleted.
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 

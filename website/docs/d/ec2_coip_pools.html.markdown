@@ -42,3 +42,9 @@ which take the following arguments:
 
 * `id` - AWS Region.
 * `pool_ids` - Set of COIP Pool Identifiers
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

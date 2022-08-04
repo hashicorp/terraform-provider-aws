@@ -82,11 +82,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_memorydb_cluster` provides the following [timeout configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `120 minutes`) Used when creating a cluster.
-- `update` - (Default `120 minutes`) Used when updating a cluster.
-- `delete` - (Default `120 minutes`) Used when deleting a cluster.
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 

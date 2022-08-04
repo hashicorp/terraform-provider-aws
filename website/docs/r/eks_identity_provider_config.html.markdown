@@ -54,10 +54,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_eks_identity_provider_config` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `40 minutes`) How long to wait for the EKS Identity Provider Configuration to be associated.
-* `delete` - (Default `40 minutes`) How long to wait for the EKS Identity Provider Configuration to be disassociated.
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
 
 ## Import
 

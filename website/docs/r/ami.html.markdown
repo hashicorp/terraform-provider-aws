@@ -100,14 +100,6 @@ Nested `ephemeral_block_device` blocks have the following structure:
 * `virtual_name` - (Required) A name for the ephemeral device, of the form "ephemeralN" where
   *N* is a volume number starting from zero.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 40 mins) Used when creating the AMI
-* `update` - (Defaults to 40 mins) Used when updating the AMI
-* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -125,6 +117,14 @@ In addition to all arguments above, the following attributes are exported:
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Indicates whether the image has public launch permissions.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

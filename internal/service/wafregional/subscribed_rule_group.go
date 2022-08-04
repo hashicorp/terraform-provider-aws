@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,13 +45,13 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 		}
 
 		err := errors.New("unable to read attributes")
-		return names.DiagError(names.WAFRegional, names.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
+		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
 	output, err := FindSubscribedRuleGroupByNameOrMetricName(ctx, conn, name, metricName)
 
 	if err != nil {
-		return names.DiagError(names.WAFRegional, names.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
+		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
 	d.SetId(aws.StringValue(output.RuleGroupId))

@@ -176,11 +176,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_security_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `10m`) How long to wait for a security group to be created.
-- `delete` - (Default `15m`) How long to retry on `DependencyViolation` errors during security group deletion from lingering ENIs left by certain AWS services such as Elastic Load Balancing. NOTE: Lambda ENIs can take up to 45 minutes to delete, which is not affected by changing this customizable timeout (in version 2.31.0 and later of the Terraform AWS Provider) unless it is increased above 45 minutes.
+- `create` - (Default `10m`)
+- `delete` - (Default `15m`)
 
 ## Import
 

@@ -128,4 +128,10 @@ interpolation.
 * `platform_details` - The platform details associated with the billing code of the AMI.
 * `ena_support` - Specifies whether enhanced networking with ENA is enabled.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
+
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
