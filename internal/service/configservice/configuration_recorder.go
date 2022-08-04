@@ -102,24 +102,24 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Configuration Recorder", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Recorder", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
 	}
 
 	numberOfRecorders := len(out.ConfigurationRecorders)
 	if !d.IsNewResource() && numberOfRecorders < 1 {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Configuration Recorder", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && numberOfRecorders < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Recorder", d.Id(), errors.New("none found"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), errors.New("none found"))
 	}
 
 	if numberOfRecorders > 1 {

@@ -138,23 +138,23 @@ func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error
 
 	out, err := conn.DescribeDeliveryChannels(&input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchDeliveryChannelException) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Delivery Channel", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Delivery Channel", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Delivery Channel", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Delivery Channel", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {

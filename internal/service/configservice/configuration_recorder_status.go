@@ -82,24 +82,24 @@ func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interf
 	}
 	statusOut, err := conn.DescribeConfigurationRecorderStatus(&statusInput)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Configuration Recorder Status", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Recorder Status", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), err)
 	}
 
 	numberOfStatuses := len(statusOut.ConfigurationRecordersStatus)
 	if !d.IsNewResource() && numberOfStatuses < 1 {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Configuration Recorder Status", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && numberOfStatuses < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Recorder Status", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), errors.New("not found after creation"))
 	}
 
 	if numberOfStatuses > 1 {

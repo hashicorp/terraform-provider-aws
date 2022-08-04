@@ -168,13 +168,13 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 
 	res, err := conn.DescribeConfigurationAggregators(req)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationAggregatorException) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Configuration Aggregator", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Aggregator", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
@@ -184,7 +184,7 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 	}
 
 	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Configuration Aggregator", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]

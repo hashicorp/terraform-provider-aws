@@ -22,7 +22,6 @@ import (
 const (
 	// Maximum amount of time to wait for Config service eventual consistency on deletion
 	remediationConfigurationDeletionTimeout = 2 * time.Minute
-	ResNameRemediationConfiguration         = "Remediation Configuration"
 )
 
 func ResourceRemediationConfiguration() *schema.Resource {
@@ -204,7 +203,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Remediation Configuration", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
@@ -215,7 +214,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)

@@ -193,7 +193,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 	}
 
 	if d.IsNewResource() && rule == nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Organization Managed Rule", d.Id(), errors.New("empty rule after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {

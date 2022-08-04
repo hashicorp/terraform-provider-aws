@@ -90,13 +90,13 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Aggregate Authorization", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Aggregate Authorization", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -108,13 +108,13 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if !d.IsNewResource() && aggregationAuthorization == nil {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, "Aggregate Authorization", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && aggregationAuthorization == nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, "Aggregate Authorization", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)

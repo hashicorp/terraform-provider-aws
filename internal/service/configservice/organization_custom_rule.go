@@ -126,10 +126,6 @@ func ResourceOrganizationCustomRule() *schema.Resource {
 	}
 }
 
-const (
-	ResNameOrganizationCustomRule = "Organization Custom Rule"
-)
-
 func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	name := d.Get("name").(string)
