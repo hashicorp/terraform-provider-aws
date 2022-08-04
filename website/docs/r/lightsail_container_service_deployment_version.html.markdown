@@ -101,9 +101,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_lightsail_container_service_deployment_version` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `30m`)
+* `create` - (Default `30m`)
 
 ## Import
 

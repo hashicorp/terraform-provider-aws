@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -89,7 +88,7 @@ func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 				Config: testAccNodeGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "node_group_name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "node_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "terraform-"),
 				),
 			},
@@ -117,7 +116,7 @@ func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 				Config: testAccNodeGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "tf-acc-test-prefix-"),
 				),
 			},

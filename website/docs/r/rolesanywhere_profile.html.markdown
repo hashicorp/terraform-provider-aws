@@ -13,8 +13,6 @@ Terraform resource for managing a Roles Anywhere Profile.
 ## Example Usage
 
 ```terraform
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "test" {
   name = "test"
   path = "/"
@@ -22,9 +20,13 @@ resource "aws_iam_role" "test" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole",
+      Action = [
+        "sts:AssumeRole",
+        "sts:TagSession",
+        "sts:SetSourceIdentity"
+      ]
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = "rolesanywhere.amazonaws.com",
       }
       Effect = "Allow"
       Sid    = ""
@@ -50,7 +52,7 @@ The following arguments are supported:
 * `require_instance_properties` - (Optional) Specifies whether instance properties are required in [CreateSession](https://docs.aws.amazon.com/rolesanywhere/latest/APIReference/API_CreateSession.html) requests with this profile.
 * `role_arns` - (Required) A list of IAM roles that this profile can assume
 * `session_policy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -58,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the Profile
 * `id` - The Profile ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

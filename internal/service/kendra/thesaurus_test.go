@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccThesaurus_basic(t *testing.T) {
+func TestAccKendraThesaurus_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -24,7 +24,7 @@ func testAccThesaurus_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -58,7 +58,7 @@ func testAccThesaurus_basic(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_disappears(t *testing.T) {
+func TestAccKendraThesaurus_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -66,7 +66,7 @@ func testAccThesaurus_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -88,7 +88,7 @@ func testAccThesaurus_disappears(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_tags(t *testing.T) {
+func TestAccKendraThesaurus_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -96,7 +96,7 @@ func testAccThesaurus_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -140,7 +140,7 @@ func testAccThesaurus_tags(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_description(t *testing.T) {
+func TestAccKendraThesaurus_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -148,7 +148,7 @@ func testAccThesaurus_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -188,7 +188,7 @@ func testAccThesaurus_description(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_name(t *testing.T) {
+func TestAccKendraThesaurus_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -197,7 +197,7 @@ func testAccThesaurus_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -230,7 +230,7 @@ func testAccThesaurus_name(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_roleARN(t *testing.T) {
+func TestAccKendraThesaurus_roleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -238,7 +238,7 @@ func testAccThesaurus_roleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -271,7 +271,7 @@ func testAccThesaurus_roleARN(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_sourceS3Path(t *testing.T) {
+func TestAccKendraThesaurus_sourceS3Path(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -279,7 +279,7 @@ func testAccThesaurus_sourceS3Path(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)

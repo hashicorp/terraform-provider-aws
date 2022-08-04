@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -18,6 +19,11 @@ import (
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLoadBalancerRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -130,6 +136,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 			},
 
 			"drop_invalid_header_fields": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
+			"preserve_host_header": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -282,6 +293,9 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "routing.http.drop_invalid_header_fields.enabled":
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.preserve_host_header.enabled":
+			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			d.Set("enable_deletion_protection", protectionEnabled)

@@ -1087,7 +1087,7 @@ resource "aws_appautoscaling_policy" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["${aws_appautoscaling_policy.test.arn}"]
+  alarm_actions       = [aws_appautoscaling_policy.test.arn]
   alarm_name          = %[1]q
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "5"
@@ -1098,7 +1098,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
 
   dimensions = {
-    ClusterName = "${aws_ecs_cluster.test.name}"
+    ClusterName = aws_ecs_cluster.test.name
   }
 }
 `, rName)
@@ -1136,7 +1136,7 @@ resource "aws_appautoscaling_policy" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["${aws_appautoscaling_policy.test.arn}"]
+  alarm_actions       = [aws_appautoscaling_policy.test.arn]
   alarm_name          = %[1]q
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "5"
@@ -1147,7 +1147,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
 
   dimensions = {
-    ClusterName = "${aws_ecs_cluster.test.name}"
+    ClusterName = aws_ecs_cluster.test.name
   }
 }
 `, rName)

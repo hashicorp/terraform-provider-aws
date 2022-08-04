@@ -1,9 +1,8 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -11,11 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTransitGatewayRouteTableRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -30,7 +34,7 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -51,46 +55,26 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayRouteTableIds = []*string{aws.String(v.(string))}
+		input.TransitGatewayRouteTableIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
-	output, err := conn.DescribeTransitGatewayRouteTables(input)
+	transitGatewayRouteTable, err := FindTransitGatewayRouteTable(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %w", err)
+		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway Route Table", err)
 	}
-
-	if output == nil || len(output.TransitGatewayRouteTables) == 0 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
-	}
-
-	if len(output.TransitGatewayRouteTables) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: multiple results found, try adjusting search criteria")
-	}
-
-	transitGatewayRouteTable := output.TransitGatewayRouteTables[0]
-
-	if transitGatewayRouteTable == nil {
-		return errors.New("error reading EC2 Transit Gateway Route Table: empty result")
-	}
-
-	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
-	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
-
-	if err := d.Set("tags", KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
 	d.SetId(aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -98,8 +82,14 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
+	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
+	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
+	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
+
+	if err := d.Set("tags", KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
+	}
 
 	return nil
 }

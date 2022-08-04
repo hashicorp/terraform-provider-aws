@@ -81,3 +81,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the selected prefix list.
 * `name` - The name of the selected prefix list.
 * `cidr_blocks` - The list of CIDR blocks for the AWS service associated with the prefix list.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

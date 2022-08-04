@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccFaq_basic(t *testing.T) {
+func TestAccKendraFaq_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,7 +29,7 @@ func testAccFaq_basic(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +62,7 @@ func testAccFaq_basic(t *testing.T) {
 	})
 }
 
-func testAccFaq_description(t *testing.T) {
+func TestAccKendraFaq_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -75,7 +75,7 @@ func testAccFaq_description(t *testing.T) {
 	description := "example description for kendra faq"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,7 +97,7 @@ func testAccFaq_description(t *testing.T) {
 	})
 }
 
-func testAccFaq_fileFormat(t *testing.T) {
+func TestAccKendraFaq_fileFormat(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -110,7 +110,7 @@ func testAccFaq_fileFormat(t *testing.T) {
 	fileFormat := string(types.FaqFileFormatCsv)
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -132,7 +132,7 @@ func testAccFaq_fileFormat(t *testing.T) {
 	})
 }
 
-func testAccFaq_languageCode(t *testing.T) {
+func TestAccKendraFaq_languageCode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -145,7 +145,7 @@ func testAccFaq_languageCode(t *testing.T) {
 	languageCode := "en"
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -167,7 +167,7 @@ func testAccFaq_languageCode(t *testing.T) {
 	})
 }
 
-func testAccFaq_tags(t *testing.T) {
+func TestAccKendraFaq_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -179,7 +179,7 @@ func testAccFaq_tags(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -219,7 +219,7 @@ func testAccFaq_tags(t *testing.T) {
 	})
 }
 
-func testAccFaq_disappears(t *testing.T) {
+func TestAccKendraFaq_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -231,7 +231,7 @@ func testAccFaq_disappears(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_faq.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

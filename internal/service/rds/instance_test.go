@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -225,7 +224,7 @@ func TestAccRDSInstance_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_namePrefix(identifierPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -260,7 +259,7 @@ func TestAccRDSInstance_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
 			},
@@ -831,7 +830,7 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -867,7 +866,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
 			},
@@ -1839,7 +1838,7 @@ func TestAccRDSInstance_S3Import_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &snap),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -1872,7 +1871,7 @@ func TestAccRDSInstance_S3Import_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &snap),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
 			},
@@ -1952,7 +1951,7 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -1989,7 +1988,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
 			},

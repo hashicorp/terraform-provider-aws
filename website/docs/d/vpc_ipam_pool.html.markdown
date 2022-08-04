@@ -73,3 +73,9 @@ The following attribute is additionally exported:
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `source_ipam_pool_id` - The ID of the source IPAM pool.
 * `tags` - A map of tags to assigned to the resource.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -360,8 +360,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 1,
       "action": {
         "association-method": "tag",
-        "tag-value-of-key": "segment",
-        "require-acceptance": false
+        "tag-value-of-key": "segment"
       },
       "conditions": [
         {
@@ -442,8 +441,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 72,
       "action": {
         "association-method": "constant",
-        "segment": "GoodSegmentSpecification",
-        "require-acceptance": false
+        "segment": "GoodSegmentSpecification"
       },
       "conditions": [
         {

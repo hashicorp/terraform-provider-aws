@@ -48,3 +48,9 @@ data "aws_security_groups" "test" {
 * `vpc_ids` - The VPC IDs of the matched security groups. The data source's tag or filter *will span VPCs* unless the `vpc-id` filter is also used.
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-groups.html
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
