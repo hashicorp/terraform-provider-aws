@@ -108,13 +108,13 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 		DomainOwner: aws.String(domainOwner),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResDomainPermissionsPolicy, d.Id())
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeArtifact, create.ErrActionReading, ResDomainPermissionsPolicy, d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)

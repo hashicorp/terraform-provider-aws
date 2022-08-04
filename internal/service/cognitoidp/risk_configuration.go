@@ -313,7 +313,7 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 	riskConfig, err := FindRiskConfigurationById(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResRiskConfiguration, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameRiskConfiguration, d.Id())
 		d.SetId("")
 		return nil
 	}

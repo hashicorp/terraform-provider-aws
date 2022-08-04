@@ -151,13 +151,13 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResPoolRolesAttachment, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResPoolRolesAttachment, d.Id(), err)
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)

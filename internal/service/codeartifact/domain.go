@@ -111,13 +111,13 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(domainOwner),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeArtifact, create.ErrActionReading, ResDomain, d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)

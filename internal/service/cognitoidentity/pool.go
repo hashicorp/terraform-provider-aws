@@ -175,13 +175,13 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResPool, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResPool, d.Id(), err)
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{

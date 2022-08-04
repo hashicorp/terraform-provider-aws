@@ -883,13 +883,13 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDistribution(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResDistribution, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResDistribution, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

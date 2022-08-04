@@ -156,13 +156,13 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	webhook, err := GetWebhook(conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResWebhook, d.Id())
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodePipeline, create.ErrActionReading, ResWebhook, d.Id(), err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition

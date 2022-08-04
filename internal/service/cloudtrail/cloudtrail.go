@@ -370,13 +370,13 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error { //
 	}
 
 	if !d.IsNewResource() && trail == nil {
-		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, resTrail, d.Id())
+		create.LogNotFoundRemoveState(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && trail == nil {
-		return create.Error(names.CloudTrail, create.ErrActionReading, resTrail, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
 	}
 
 	log.Printf("[DEBUG] CloudTrail received: %s", trail)

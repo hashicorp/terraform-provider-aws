@@ -107,13 +107,13 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	connection, err := FindConnectionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CodeStarConnections, create.ErrActionReading, ResConnection, d.Id())
+		create.LogNotFoundRemoveState(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeStarConnections, create.ErrActionReading, ResConnection, d.Id(), err)
+		return create.Error(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id(), err)
 	}
 
 	arn := aws.StringValue(connection.ConnectionArn)

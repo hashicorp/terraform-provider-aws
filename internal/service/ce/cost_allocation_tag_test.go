@@ -66,7 +66,7 @@ func testAccCheckCostAllocationTagExists(resourceName string, output *costexplor
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResCostAllocationTag, resourceName, errors.New("not found in state"))
+			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResNameCostAllocationTag, resourceName, errors.New("not found in state"))
 		}
 
 		ctx := context.TODO()

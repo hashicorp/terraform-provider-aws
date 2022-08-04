@@ -97,23 +97,23 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.GetPublicKey(request)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResPublicKey, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResPublicKey, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResPublicKey, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResPublicKey, d.Id(), errors.New("empty response after creation"))
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig

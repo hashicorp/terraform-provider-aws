@@ -356,13 +356,13 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResUserPoolClient, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResUserPoolClient, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id(), err)
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)

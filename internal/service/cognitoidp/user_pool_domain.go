@@ -108,25 +108,25 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 		Domain: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResUserPoolDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResUserPoolDomain, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), err)
 	}
 
 	desc := domain.DomainDescription
 
 	if !d.IsNewResource() && desc.Status == nil {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResUserPoolDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && desc.Status == nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResUserPoolDomain, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("domain", d.Id())

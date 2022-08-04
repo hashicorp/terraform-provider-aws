@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	ResourceNameSharedDirectoryAccepter = "Shared Directory Accepter"
+	ResNameSharedDirectoryAccepter = "Shared Directory Accepter"
 )
 
 func ResourceSharedDirectoryAccepter() *schema.Resource {
@@ -68,11 +68,11 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AcceptSharedDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionCreating, ResourceNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
+		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
 	}
 
 	if output == nil || output.SharedDirectory == nil {
-		return create.DiagError(names.DS, create.ErrActionCreating, ResourceNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
+		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("shared_directory_id").(string))
@@ -82,7 +82,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	_, err = waitDirectoryShared(ctx, conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionWaitingForCreation, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForCreation, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	return resourceSharedDirectoryAccepterRead(ctx, d, meta)
@@ -94,7 +94,7 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	dir, err := findDirectoryByID(conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionReading, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	d.Set("method", dir.ShareMethod)
@@ -132,13 +132,13 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionDeleting, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	err = waitDirectoryDeleted(conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	return nil

@@ -67,13 +67,13 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDashboard(&params)
 	if !d.IsNewResource() && IsDashboardNotFoundErr(err) {
-		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResDashboard, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudWatch, create.ErrActionReading, ResDashboard, d.Id(), err)
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)

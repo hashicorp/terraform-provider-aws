@@ -140,13 +140,13 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.GetRepository(input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
-		create.LogNotFoundRemoveState(names.CodeCommit, create.ErrActionReading, ResRepository, d.Id())
+		create.LogNotFoundRemoveState(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeCommit, create.ErrActionReading, ResRepository, d.Id(), err)
+		return create.Error(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)

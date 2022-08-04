@@ -239,13 +239,13 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(owner),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResRepository, d.Id())
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeArtifact, create.ErrActionReading, ResRepository, d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Repository.Arn)

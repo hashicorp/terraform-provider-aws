@@ -48,13 +48,13 @@ func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, 
 	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResCostAllocationTag, d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResCostAllocationTag, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id(), err)
 	}
 
 	d.Set("tag_key", costAllocTag.TagKey)
@@ -98,7 +98,7 @@ func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface
 	_, err := conn.UpdateCostAllocationTagsStatusWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResCostAllocationTag, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostAllocationTag, d.Id(), err)
 	}
 
 	return nil

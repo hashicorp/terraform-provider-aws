@@ -221,24 +221,24 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeStacks(input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
-		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResStack, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFormation, create.ErrActionReading, ResStack, d.Id(), err)
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), err)
 	}
 
 	stacks := resp.Stacks
 	if !d.IsNewResource() && len(stacks) < 1 {
-		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResStack, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && len(stacks) < 1 {
-		return create.Error(names.CloudFormation, create.ErrActionReading, ResStack, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("not found after creation"))
 	}
 
 	stack := stacks[0]
@@ -249,7 +249,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		return create.Error(names.CloudFormation, create.ErrActionReading, ResStack, d.Id(), errors.New("status delete complete after creation"))
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("status delete complete after creation"))
 	}
 
 	tInput := cloudformation.GetTemplateInput{

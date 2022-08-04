@@ -136,23 +136,23 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	reportGroup, err := FindReportGroupByARN(conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodeBuild, create.ErrActionReading, ResReportGroup, d.Id(), err)
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && reportGroup == nil {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if reportGroup == nil {
-		return create.Error(names.CodeBuild, create.ErrActionReading, ResReportGroup, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)

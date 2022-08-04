@@ -539,13 +539,13 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, resPipeline, d.Id())
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodePipeline, create.ErrActionReading, resPipeline, d.Id(), err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata

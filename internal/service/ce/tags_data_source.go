@@ -113,7 +113,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
 	d.Set("tags", flex.FlattenStringList(resp.Tags))

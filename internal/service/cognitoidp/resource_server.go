@@ -122,23 +122,23 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.DescribeResourceServer(params)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResResourceServer, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResResourceServer, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResResourceServer, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResResourceServer, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)

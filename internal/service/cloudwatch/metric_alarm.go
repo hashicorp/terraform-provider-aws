@@ -356,23 +356,23 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := FindMetricAlarmByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResMetricAlarm, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudWatch, create.ErrActionReading, ResMetricAlarm, d.Id(), err)
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && resp == nil {
-		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResMetricAlarm, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if resp == nil {
-		return create.Error(names.CloudWatch, create.ErrActionReading, ResMetricAlarm, d.Id(), errors.New("not found after create"))
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), errors.New("not found after create"))
 	}
 
 	log.Printf("[DEBUG] Reading CloudWatch Metric Alarm: %s", d.Id())

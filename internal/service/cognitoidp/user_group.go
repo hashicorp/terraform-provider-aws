@@ -104,13 +104,13 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGroup(params)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResUserGroup, d.Get("name").(string))
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string))
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResUserGroup, d.Get("name").(string), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
 	}
 
 	d.Set("description", resp.Group.Description)

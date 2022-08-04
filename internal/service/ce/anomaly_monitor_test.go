@@ -231,7 +231,7 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
 
 	}
 

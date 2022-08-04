@@ -76,13 +76,13 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResOriginAccessIdentity, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResOriginAccessIdentity, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

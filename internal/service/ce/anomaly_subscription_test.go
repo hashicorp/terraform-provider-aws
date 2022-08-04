@@ -351,7 +351,7 @@ func testAccCheckAnomalySubscriptionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResAnomalySubscription, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalySubscription, rs.Primary.ID, errors.New("still exists"))
 
 	}
 	return nil
