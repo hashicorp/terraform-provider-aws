@@ -109,11 +109,8 @@ func FindGlobalClusterById(ctx context.Context, conn *neptune.Neptune, globalClu
 			if gc == nil {
 				continue
 			}
-			log.Printf("[DEBUG] Found random Neptune Global Cluster (%s): %s", aws.StringValue(gc.GlobalClusterIdentifier), gc)
 
 			if aws.StringValue(gc.GlobalClusterIdentifier) == aws.StringValue(input.GlobalClusterIdentifier) {
-				log.Printf("[DEBUG] This did match Neptune Global Cluster (%s): %s", aws.StringValue(input.GlobalClusterIdentifier), gc)
-
 				return gc, nil
 			}
 		}
