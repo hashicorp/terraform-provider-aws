@@ -1558,57 +1558,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-
-	input := &rds.DeleteDBInstanceInput{
-		DBInstanceIdentifier:   aws.String(d.Id()),
-		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
-	}
-
-	if d.Get("skip_final_snapshot").(bool) {
-		input.SkipFinalSnapshot = aws.Bool(true)
-	} else {
-		input.SkipFinalSnapshot = aws.Bool(false)
-
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
-			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
-		} else {
-			return fmt.Errorf("final_snapshot_identifier is required when skip_final_snapshot is false")
-		}
-	}
-
-	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstance(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
-	}
-
-	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("error deleting DB Instance (%s): %w", d.Id(), err)
-	}
-
-	if _, err := waitDBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func waitUntilDBInstanceAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceInstanceUpdatePendingStates,
-		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceDBInstanceStateRefreshFunc(id, conn),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
 func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
@@ -1870,6 +1819,57 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceInstanceRead(d, meta)
+}
+
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).RDSConn
+
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier:   aws.String(d.Id()),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	} else {
+		input.SkipFinalSnapshot = aws.Bool(false)
+
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
+		} else {
+			return fmt.Errorf("final_snapshot_identifier is required when skip_final_snapshot is false")
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
+	_, err := conn.DeleteDBInstance(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return nil
+	}
+
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting DB Instance (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waitDBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func waitUntilDBInstanceAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceInstanceUpdatePendingStates,
+		Target:     []string{"available", "storage-optimization"},
+		Refresh:    resourceDBInstanceStateRefreshFunc(id, conn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 // resourceDBInstanceRetrieve fetches DBInstance information from the AWS
