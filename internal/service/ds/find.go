@@ -184,6 +184,13 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 
 	output, err := conn.DescribeSharedDirectoriesWithContext(ctx, input)
 
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
