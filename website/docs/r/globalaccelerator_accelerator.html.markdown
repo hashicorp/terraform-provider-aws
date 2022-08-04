@@ -63,11 +63,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_globalaccelerator_accelerator` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be updated.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

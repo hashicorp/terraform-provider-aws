@@ -88,3 +88,9 @@ In addition to all arguments above, the following attributes are exported:
 * `supported_ip_address_types` - The supported IP address types.
 * `tags` - A map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

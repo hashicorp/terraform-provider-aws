@@ -52,14 +52,6 @@ The following arguments are supported:
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 40 mins) Used when creating the AMI
-* `update` - (Defaults to 40 mins) Used when updating the AMI
-* `delete` - (Defaults to 90 mins) Used when deregistering the AMI
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -70,3 +62,11 @@ In addition to all arguments above, the following attributes are exported:
 This resource also exports a full set of attributes corresponding to the arguments of the
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)

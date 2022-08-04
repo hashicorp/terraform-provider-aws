@@ -109,9 +109,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_transcribe_language_model` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `600m`)
+* `create` - (Default `600m`)
 
 ## Import
 

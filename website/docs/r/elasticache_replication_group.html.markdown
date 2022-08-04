@@ -242,12 +242,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_elasticache_replication_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `60m`) How long to wait for a replication group to be created.
-* `delete` - (Default `40m`) How long to wait for a replication group to be deleted.
-* `update` - (Default `40m`) How long to wait for replication group settings to be updated. This is also separately used for adding/removing replicas and online resize operation completion, if necessary.
+* `create` - (Default `60m`)
+* `delete` - (Default `40m`)
+* `update` - (Default `40m`)
 
 ## Import
 

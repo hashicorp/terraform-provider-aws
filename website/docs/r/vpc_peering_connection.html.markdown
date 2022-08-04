@@ -131,15 +131,6 @@ to the remote VPC.
 instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
 connection.
 
-### Timeouts
-
-`aws_vpc_peering_connection` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `1 minute`) Used for creating a peering connection
-- `update` - (Default `1 minute`) Used for peering connection modifications
-- `delete` - (Default `1 minute`) Used for destroying peering connections
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -153,6 +144,15 @@ In addition to all arguments above, the following attributes are exported:
 If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
+
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
