@@ -635,23 +635,6 @@ func TestAccAutoScalingGroup_withNoScalingActivityErrorCorrectInstanceArchitectu
 	})
 }
 
-func TestAccAutoScalingGroup_withScalingActivityErrorMissingInstanceCapabilities(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t3.micro"),
-				ExpectError: regexp.MustCompile(`Enhanced networking with the Elastic Network Adapter \(ENA\) is required for the .* instance type. Ensure that you are using an AMI that is enabled for ENA`),
-			},
-		},
-	})
-}
-
 func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	var group autoscaling.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
