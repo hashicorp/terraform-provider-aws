@@ -636,7 +636,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
 
 		if err != nil {
-			return fmt.Errorf("creating RDS DB Instance (read replica): %w", err)
+			return fmt.Errorf("creating RDS DB Instance (read replica) (%s): %w", identifier, err)
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
@@ -874,32 +874,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		if tfresource.TimedOut(err) {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 		}
+
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %w", err)
+			return fmt.Errorf("creating RDS DB Instance (restore from S3) (%s): %w", identifier, err)
 		}
-
-		d.SetId(identifier)
-
-		log.Printf("[INFO] DB Instance ID: %s", d.Id())
-
-		log.Println("[INFO] Waiting for DB Instance to be available")
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    resourceInstanceCreatePendingStates,
-			Target:     []string{"available", "storage-optimization"},
-			Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return err
-		}
-
-		return resourceInstanceRead(d, meta)
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -1101,7 +1079,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %w", err)
+			return fmt.Errorf("creating RDS DB Instance (restore from snapshot) (%s): %w", identifier, err)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		if input := expandRestoreToPointInTime(v.([]interface{})); input != nil {
@@ -1196,8 +1174,9 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
 
 			_, err := conn.RestoreDBInstanceToPointInTime(input)
+
 			if err != nil {
-				return fmt.Errorf("error creating DB Instance: %w", err)
+				return fmt.Errorf("creating RDS DB Instance (restore to point-in-time) (%s): %w", identifier, err)
 			}
 		}
 	} else {
@@ -1367,13 +1346,11 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		if tfresource.TimedOut(err) {
 			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 		}
+
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
-				opts.MasterUserPassword = aws.String("********")
-				return fmt.Errorf("Error creating DB Instance: %w, %+v", err, opts)
-			}
-			return fmt.Errorf("Error creating DB Instance: %w", err)
+			return fmt.Errorf("creating RDS DB Instance (%s): %w", identifier, err)
 		}
+
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(createdDBInstanceOutput.DBInstance.CACertificateIdentifier) {
 			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
@@ -1383,19 +1360,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(identifier)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceInstanceCreatePendingStates,
-		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := waitDBInstanceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for RDS DB Instance (%s) create: %w", d.Id(), err)
 	}
 
 	if requiresModifyDbInstance {
@@ -1922,23 +1888,6 @@ func resourceDBInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.State
 
 		return v, aws.StringValue(v.DBInstanceStatus), nil
 	}
-}
-
-// Database instance status: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html
-var resourceInstanceCreatePendingStates = []string{
-	"backing-up",
-	"configuring-enhanced-monitoring",
-	"configuring-iam-database-auth",
-	"configuring-log-exports",
-	"creating",
-	"maintenance",
-	"modifying",
-	"rebooting",
-	"renaming",
-	"resetting-master-credentials",
-	"starting",
-	"stopping",
-	"upgrading",
 }
 
 var resourceInstanceUpdatePendingStates = []string{

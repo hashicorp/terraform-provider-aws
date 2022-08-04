@@ -150,6 +150,40 @@ func waitDBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN str
 	return nil, err
 }
 
+func waitDBInstanceCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		// http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html.
+		Pending: []string{
+			InstanceStatusBackingUp,
+			InstanceStatusConfiguringEnhancedMonitoring,
+			InstanceStatusConfiguringIAMDatabaseAuth,
+			InstanceStatusConfiguringLogExports,
+			InstanceStatusCreating,
+			InstanceStatusMaintenance,
+			InstanceStatusModifying,
+			InstanceStatusRebooting,
+			InstanceStatusRenaming,
+			InstanceStatusResettingMasterCredentials,
+			InstanceStatusStarting,
+			InstanceStatusStopping,
+			InstanceStatusUpgrading,
+		},
+		Target:     []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
+		Refresh:    statusDBInstance(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{

@@ -27,16 +27,22 @@ const (
 	InstanceStatusAvailable                     = "available"
 	InstanceStatusBackingUp                     = "backing-up"
 	InstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	InstanceStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
 	InstanceStatusConfiguringLogExports         = "configuring-log-exports"
 	InstanceStatusCreating                      = "creating"
 	InstanceStatusDeleting                      = "deleting"
 	InstanceStatusIncompatibleParameters        = "incompatible-parameters"
 	InstanceStatusIncompatibleRestore           = "incompatible-restore"
+	InstanceStatusMaintenance                   = "maintenance"
 	InstanceStatusModifying                     = "modifying"
+	InstanceStatusRebooting                     = "rebooting"
+	InstanceStatusRenaming                      = "renaming"
+	InstanceStatusResettingMasterCredentials    = "resetting-master-credentials"
 	InstanceStatusStarting                      = "starting"
 	InstanceStatusStopping                      = "stopping"
 	InstanceStatusStorageFull                   = "storage-full"
 	InstanceStatusStorageOptimization           = "storage-optimization"
+	InstanceStatusUpgrading                     = "upgrading"
 )
 
 const (
