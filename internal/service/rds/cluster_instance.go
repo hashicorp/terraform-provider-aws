@@ -334,20 +334,8 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
-	// reuse db_instance refresh func
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
-		Target:     []string{"available"},
-		Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := waitDBClusterInstanceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for RDS Cluster Instance (%s) create: %w", d.Id(), err)
 	}
 
 	// See also: resource_aws_db_instance.go
@@ -503,126 +491,90 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
-	requestUpdate := false
 
-	req := &rds.ModifyDBInstanceInput{
-		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-		DBInstanceIdentifier: aws.String(d.Id()),
-	}
-
-	if d.HasChange("db_parameter_group_name") {
-		req.DBParameterGroupName = aws.String(d.Get("db_parameter_group_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("instance_class") {
-		req.DBInstanceClass = aws.String(d.Get("instance_class").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("monitoring_role_arn") {
-		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
-		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-
-		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		if d.HasChange("db_parameter_group_name") {
+			input.DBParameterGroupName = aws.String(d.Get("db_parameter_group_name").(string))
 		}
 
-		requestUpdate = true
-	}
+		if d.HasChange("instance_class") {
+			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+		}
 
-	if d.HasChange("preferred_backup_window") {
-		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("monitoring_role_arn") {
+			input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+		}
 
-	if d.HasChange("preferred_maintenance_window") {
-		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		requestUpdate = true
-	}
+		if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
+			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
-	if d.HasChange("monitoring_interval") {
-		req.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("auto_minor_version_upgrade") {
-		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("copy_tags_to_snapshot") {
-		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("promotion_tier") {
-		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("publicly_accessible") {
-		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("ca_cert_identifier") {
-		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-		requestUpdate = true
-	}
-
-	log.Printf("[DEBUG] Send DB Instance Modification request: %#v", requestUpdate)
-	if requestUpdate {
-		log.Printf("[DEBUG] DB Instance Modification request: %#v", req)
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-			_, err := conn.ModifyDBInstance(req)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
+			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+				input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBInstance(req)
+
+			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+				input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			}
 		}
+
+		if d.HasChange("preferred_backup_window") {
+			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("preferred_maintenance_window") {
+			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		}
+
+		if d.HasChange("monitoring_interval") {
+			input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
+		}
+
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		}
+
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
+		if d.HasChange("promotion_tier") {
+			input.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		}
+
+		if d.HasChange("publicly_accessible") {
+			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		}
+
+		if d.HasChange("ca_cert_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		}
+
+		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.ModifyDBInstance(input)
+			},
+			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
-			return fmt.Errorf("error modifying RDS Cluster Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		// reuse db_instance refresh func
-		stateConf := &resource.StateChangeConf{
-			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
-			Target:     []string{"available"},
-			Refresh:    resourceDBInstanceStateRefreshFunc(d.Id(), conn),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
+		if _, err := waitDBClusterInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return err
-		}
-
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS Cluster Instance (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating RDS Cluster Instance (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -637,49 +589,25 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
-	_, err := tfresource.RetryWhen(
-		d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteDBInstance(input)
 		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+		rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting")
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("error deleting RDS Cluster Instance (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS Cluster Instance (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitDBClusterInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster Instance (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for RDS Cluster Instance (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-var resourceClusterInstanceCreateUpdatePendingStates = []string{
-	"backing-up",
-	"configuring-enhanced-monitoring",
-	"configuring-iam-database-auth",
-	"configuring-log-exports",
-	"creating",
-	"maintenance",
-	"modifying",
-	"rebooting",
-	"renaming",
-	"resetting-master-credentials",
-	"starting",
-	"storage-optimization",
-	"upgrading",
 }
 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {

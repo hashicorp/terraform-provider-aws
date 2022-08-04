@@ -1820,56 +1820,13 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// resourceDBInstanceRetrieve fetches DBInstance information from the AWS
-// API. It returns an error if there is a communication problem or unexpected
-// error with AWS. When the DBInstance is not found, it returns no error and a
-// nil pointer.
-func resourceDBInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
-	opts := rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
-	}
-
-	log.Printf("[DEBUG] DB Instance describe configuration: %#v", opts)
-
-	resp, err := conn.DescribeDBInstances(&opts)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("Error retrieving DB Instances: %w", err)
-	}
-
-	if len(resp.DBInstances) != 1 || resp.DBInstances[0] == nil || aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) != id {
-		return nil, nil
-	}
-
-	return resp.DBInstances[0], nil
-}
-
-func resourceInstanceImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceInstanceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
-}
-
-func resourceDBInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := resourceDBInstanceRetrieve(id, conn)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if v == nil {
-			return nil, "", nil
-		}
-
-		return v, aws.StringValue(v.DBInstanceStatus), nil
-	}
 }
 
 func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointInTimeInput {
