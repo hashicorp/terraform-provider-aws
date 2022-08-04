@@ -1443,133 +1443,117 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	v, err := FindDBInstanceByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DB Instance (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DB Instance (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading RDS DB Instance (%s): %w", d.Id(), err)
 	}
 
-	d.Set("db_name", v.DBName)
-	d.Set("name", v.DBName)
-	d.Set("identifier", v.DBInstanceIdentifier)
-	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
-	d.Set("resource_id", v.DbiResourceId)
-	d.Set("username", v.MasterUsername)
-	d.Set("deletion_protection", v.DeletionProtection)
-	d.Set("engine", v.Engine)
 	d.Set("allocated_storage", v.AllocatedStorage)
-	d.Set("iops", v.Iops)
-	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+	arn := aws.StringValue(v.DBInstanceArn)
+	d.Set("arn", arn)
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
-	d.Set("storage_type", v.StorageType)
-	d.Set("instance_class", v.DBInstanceClass)
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_window", v.PreferredBackupWindow)
-	d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
-	d.Set("license_model", v.LicenseModel)
-	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
-	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
-	d.Set("publicly_accessible", v.PubliclyAccessible)
-	d.Set("multi_az", v.MultiAZ)
-	d.Set("kms_key_id", v.KmsKeyId)
-	d.Set("port", v.DbInstancePort)
-	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
-	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
-	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
-	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
+	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
+	d.Set("character_set_name", v.CharacterSetName)
+	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
+	d.Set("db_name", v.DBName)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
-	d.Set("character_set_name", v.CharacterSetName)
-	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
-	d.Set("timezone", v.Timezone)
-
-	dbSetResourceDataEngineVersionFromInstance(d, v)
-
-	if len(v.DBParameterGroups) > 0 {
-		d.Set("parameter_group_name", v.DBParameterGroups[0].DBParameterGroupName)
-	}
-
-	if v.Endpoint != nil {
-		d.Set("port", v.Endpoint.Port)
-		d.Set("address", v.Endpoint.Address)
-		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
-		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
-			d.Set("endpoint",
-				fmt.Sprintf("%s:%d", *v.Endpoint.Address, *v.Endpoint.Port))
-		}
-	}
-
-	d.Set("status", v.DBInstanceStatus)
-	d.Set("storage_encrypted", v.StorageEncrypted)
-	if v.OptionGroupMemberships != nil {
-		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
-	}
-
-	d.Set("monitoring_interval", v.MonitoringInterval)
-	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
-
-	if err := d.Set("enabled_cloudwatch_logs_exports", flex.FlattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
-	}
-
-	d.Set("domain", "")
-	d.Set("domain_iam_role_name", "")
+	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		d.Set("domain", v.DomainMemberships[0].Domain)
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
+	} else {
+		d.Set("domain", nil)
+		d.Set("domain_iam_role_name", nil)
+	}
+	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
+	d.Set("engine", v.Engine)
+	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
+	d.Set("identifier", v.DBInstanceIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
+	d.Set("instance_class", v.DBInstanceClass)
+	d.Set("iops", v.Iops)
+	d.Set("kms_key_id", v.KmsKeyId)
+	if v.LatestRestorableTime != nil {
+		d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
+	} else {
+		d.Set("latest_restorable_time", nil)
+	}
+	d.Set("license_model", v.LicenseModel)
+	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
+	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
+	d.Set("monitoring_interval", v.MonitoringInterval)
+	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
+	d.Set("multi_az", v.MultiAZ)
+	d.Set("name", v.DBName)
+	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
+	if len(v.OptionGroupMemberships) > 0 && v.OptionGroupMemberships[0] != nil {
+		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
+	}
+	if len(v.DBParameterGroups) > 0 && v.DBParameterGroups[0] != nil {
+		d.Set("parameter_group_name", v.DBParameterGroups[0].DBParameterGroupName)
+	}
+	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
+	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
+	d.Set("port", v.DbInstancePort)
+	d.Set("publicly_accessible", v.PubliclyAccessible)
+	d.Set("replica_mode", v.ReplicaMode)
+	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
+	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set("resource_id", v.DbiResourceId)
+	var securityGroupNames []string
+	for _, v := range v.DBSecurityGroups {
+		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
+	}
+	d.Set("security_group_names", securityGroupNames)
+	d.Set("status", v.DBInstanceStatus)
+	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_type", v.StorageType)
+	d.Set("timezone", v.Timezone)
+	d.Set("username", v.MasterUsername)
+	var vpcSecurityGroupIDs []string
+	for _, v := range v.VpcSecurityGroups {
+		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
+	}
+	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+
+	if v.Endpoint != nil {
+		d.Set("address", v.Endpoint.Address)
+		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
+			d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
+		}
+		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
+		d.Set("port", v.Endpoint.Port)
 	}
 
-	arn := aws.StringValue(v.DBInstanceArn)
-	d.Set("arn", arn)
+	dbSetResourceDataEngineVersionFromInstance(d, v)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for RDS DB Instance (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	// Create an empty schema.Set to hold all vpc security group ids
-	ids := &schema.Set{
-		F: schema.HashString,
-	}
-	for _, v := range v.VpcSecurityGroups {
-		ids.Add(*v.VpcSecurityGroupId)
-	}
-	d.Set("vpc_security_group_ids", ids)
-
-	d.Set("security_group_names", flattenDBSecurityGroups(v.DBSecurityGroups))
-
-	// replica things
-	var replicas []string
-	for _, v := range v.ReadReplicaDBInstanceIdentifiers {
-		replicas = append(replicas, *v)
-	}
-	if err := d.Set("replicas", replicas); err != nil {
-		return fmt.Errorf("Error setting replicas attribute: %#v, error: %w", replicas, err)
-	}
-
-	d.Set("replica_mode", v.ReplicaMode)
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
-
-	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
-
-	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 
 	return nil
 }
