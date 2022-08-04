@@ -380,14 +380,11 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
 
 		if err != nil {
-			return fmt.Errorf("error modifying RDS Cluster Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return fmt.Errorf("error waiting for RDS Cluster Instance (%s) to be available: %w", d.Id(), err)
+		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -396,18 +393,14 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
 		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
 
 		if err != nil {
-			return fmt.Errorf("error rebooting RDS Cluster Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("rebooting RDS Cluster Instance (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return fmt.Errorf("error waiting for RDS Cluster Instance (%s) to be available: %w", d.Id(), err)
+		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
 		}
 	}
 

@@ -35,6 +35,7 @@ const (
 	InstanceStatusIncompatibleRestore           = "incompatible-restore"
 	InstanceStatusMaintenance                   = "maintenance"
 	InstanceStatusModifying                     = "modifying"
+	InstanceStatusMovingToVPC                   = "moving-to-vpc"
 	InstanceStatusRebooting                     = "rebooting"
 	InstanceStatusRenaming                      = "renaming"
 	InstanceStatusResettingMasterCredentials    = "resetting-master-credentials"

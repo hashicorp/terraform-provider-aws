@@ -1367,34 +1367,31 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
 
-		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		log.Printf("[INFO] Modifying RDS DB Instance: %s", modifyDbInstanceInput)
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
+
 		if err != nil {
-			return fmt.Errorf("error modifying DB Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
+		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	if requiresRebootDbInstance {
-		rebootDbInstanceInput := &rds.RebootDBInstanceInput{
+		input := &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
-		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
+		_, err := conn.RebootDBInstance(input)
+
 		if err != nil {
-			return fmt.Errorf("error rebooting DB Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("rebooting RDS DB Instance (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
+		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -1743,13 +1740,11 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("modifying DB Instance %s: %w", d.Id(), err)
+			return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %w", d.Id(), err)
+		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -1825,19 +1820,6 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func waitUntilDBInstanceAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceInstanceUpdatePendingStates,
-		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceDBInstanceStateRefreshFunc(id, conn),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
 // resourceDBInstanceRetrieve fetches DBInstance information from the AWS
 // API. It returns an error if there is a communication problem or unexpected
 // error with AWS. When the DBInstance is not found, it returns no error and a
@@ -1888,24 +1870,6 @@ func resourceDBInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.State
 
 		return v, aws.StringValue(v.DBInstanceStatus), nil
 	}
-}
-
-var resourceInstanceUpdatePendingStates = []string{
-	"backing-up",
-	"configuring-enhanced-monitoring",
-	"configuring-iam-database-auth",
-	"configuring-log-exports",
-	"creating",
-	"maintenance",
-	"modifying",
-	"moving-to-vpc",
-	"rebooting",
-	"renaming",
-	"resetting-master-credentials",
-	"starting",
-	"stopping",
-	"storage-full",
-	"upgrading",
 }
 
 func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointInTimeInput {
