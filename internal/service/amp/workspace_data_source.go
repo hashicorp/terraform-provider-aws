@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -58,14 +56,7 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(workspaceID)
 
-	workspaceARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   prometheusservice.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
-	}.String()
-	d.Set("arn", workspaceARN)
+	d.Set("arn", workspace.Arn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set("alias", workspace.Alias)
 	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
