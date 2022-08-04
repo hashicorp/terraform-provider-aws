@@ -69,13 +69,13 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### Timeouts
+## Timeouts
 
-`aws_db_proxy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for creating DB proxies.
-- `update` - (Default `30 minutes`) Used for modifying DB proxies.
-- `delete` - (Default `60 minutes`) Used for destroying DB proxies.
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `60m`)
 
 ## Import
 

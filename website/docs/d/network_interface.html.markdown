@@ -59,16 +59,8 @@ Additionally, the following attributes are exported:
 * `public_dns_name` - The public DNS name.
 * `public_ip` - The address of the Elastic IP address bound to the network interface.
 
-## Import
-
-Elastic Network Interfaces can be imported using the `id`, e.g.,
-
-```
-$ terraform import aws_network_interface.test eni-12345
-```
-
 ## Timeouts
 
-[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
 - `read` - (Default `20m`)

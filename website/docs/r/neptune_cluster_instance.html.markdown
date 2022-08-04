@@ -80,12 +80,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_neptune_cluster_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `90 minutes`) How long to wait for creating instances to become available.
-- `update` - (Default `90 minutes`) How long to wait for updating instances to complete updates.
-- `delete` - (Default `90 minutes`) How long to wait for deleting instances to become fully deleted.
+- `create` - (Default `90m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 

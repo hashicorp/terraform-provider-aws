@@ -95,6 +95,6 @@ In addition to the attributes above, the following attributes are exported:
 
 ## Timeouts
 
-[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
 - `read` - (Default `20m`)

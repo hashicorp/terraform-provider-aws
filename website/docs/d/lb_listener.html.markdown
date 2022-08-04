@@ -53,6 +53,6 @@ See the [LB Listener Resource](/docs/providers/aws/r/lb_listener.html) for detai
 
 ## Timeouts
 
-[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
 - `read` - (Default `20m`)

@@ -55,6 +55,6 @@ This resource also exports a full set of attributes corresponding to the argumen
 
 ## Timeouts
 
-[Timeout](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
 - `read` - (Default `20m`)

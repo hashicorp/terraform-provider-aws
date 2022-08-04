@@ -38,13 +38,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_servicecatalog_portfolio` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `30 minutes`)
-- `delete` - (Default `30 minutes`)
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

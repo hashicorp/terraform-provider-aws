@@ -60,10 +60,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_client_vpn_route` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `1 minute`) Used for route creation
-- `delete` - (Default `1 minute`) Used for route deletion
+- `create` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 

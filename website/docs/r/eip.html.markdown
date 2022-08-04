@@ -132,11 +132,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_eip` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `read` - (Default `15 minutes`) How long to wait querying for information about EIPs.
-- `update` - (Default `5 minutes`) How long to wait for an EIP to be updated.
-- `delete` - (Default `3 minutes`) How long to wait for an EIP to be deleted.
+- `read` - (Default `15m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

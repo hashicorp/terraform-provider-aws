@@ -76,9 +76,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_db_snapshot_copy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
+- `create` - (Default `20m`)
 
 ## Import
 

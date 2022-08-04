@@ -334,13 +334,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_msk_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `120 minutes`) How long to wait for the MSK Cluster to be created.
-* `update` - (Default `120 minutes`) How long to wait for the MSK Cluster to be updated.
+* `create` - (Default `120m`)
+* `update` - (Default `120m`)
 Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
-* `delete` - (Default `120 minutes`) How long to wait for the MSK Cluster to be deleted.
+* `delete` - (Default `120m`)
 
 ## Import
 

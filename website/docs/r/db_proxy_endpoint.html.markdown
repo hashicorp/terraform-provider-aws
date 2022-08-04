@@ -42,13 +42,13 @@ In addition to all arguments above, the following attributes are exported:
 * `is_default` - Indicates whether this endpoint is the default endpoint for the associated DB proxy.
 * `vpc_id` - The VPC ID of the DB proxy endpoint.
 
-### Timeouts
+## Timeouts
 
-`aws_db_proxy_endpoint` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for creating DB proxy endpoint.
-- `update` - (Default `30 minutes`) Used for modifying DB proxy endpoint.
-- `delete` - (Default `60 minutes`) Used for destroying DB proxy endpoint.
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `60m`)
 
 ## Import
 

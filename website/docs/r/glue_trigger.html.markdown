@@ -162,11 +162,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_glue_trigger` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `5m`) How long to wait for a trigger to be created.
-- `delete` - (Default `5m`) How long to wait for a trigger to be deleted.
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

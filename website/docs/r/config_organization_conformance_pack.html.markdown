@@ -111,12 +111,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_conformance_pack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating conformance pack
-- `update` - (Default `10 minutes`) Used for conformance pack modifications
-- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
