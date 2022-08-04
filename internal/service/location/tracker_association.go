@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -70,11 +71,11 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 	out, err := conn.AssociateTrackerConsumerWithContext(ctx, in)
 	if err != nil {
-		return names.DiagError(names.Location, names.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), err)
+		return create.DiagError(names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return names.DiagError(names.Location, names.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", trackerName, consumerArn))
@@ -87,7 +88,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
-		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	err = FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
@@ -99,7 +100,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	d.Set("consumer_arn", trackerAssociationId.ConsumerARN)
@@ -115,7 +116,7 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
-		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	_, err = conn.DisassociateTrackerConsumerWithContext(ctx, &locationservice.DisassociateTrackerConsumerInput{
@@ -128,7 +129,7 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return names.DiagError(names.Location, names.ErrActionDeleting, ResNameTrackerAssociation, d.Id(), err)
+		return create.DiagError(names.Location, create.ErrActionDeleting, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	return nil
