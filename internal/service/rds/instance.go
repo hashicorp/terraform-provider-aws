@@ -629,10 +629,17 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbInstance = true
 		}
 
-		output, err := conn.CreateDBInstanceReadReplica(&opts)
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.CreateDBInstanceReadReplica(&opts)
+			},
+			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+
 		if err != nil {
-			return fmt.Errorf("Error creating DB Instance: %w", err)
+			return fmt.Errorf("creating RDS DB Instance (read replica): %w", err)
 		}
+
+		output := outputRaw.(*rds.CreateDBInstanceReadReplicaOutput)
 
 		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
