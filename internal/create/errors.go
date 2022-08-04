@@ -1,4 +1,4 @@
-package names
+package create
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings
 func ProblemStandardMessage(service, action, resource, id string, gotError error) string {
-	hf, err := FullHumanFriendly(service)
+	hf, err := names.FullHumanFriendly(service)
 
 	if err != nil {
 		return fmt.Sprintf("finding human-friendly name for service (%s) while creating error (%s, %s, %s, %s): %s", service, action, resource, id, gotError, err)
@@ -58,13 +59,13 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 
 // ErrorSetting returns an errors.Error with a standardized error message when setting
 // arguments and attributes values.
-func ErrorSetting(service, resource, id, argument string, gotError error) error {
+func SettingError(service, resource, id, argument string, gotError error) error {
 	return errors.New(ProblemStandardMessage(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError))
 }
 
-// DiagErrorSetting returns an errors.Error with a standardized error message when setting
+// DiagSettingError returns an errors.Error with a standardized error message when setting
 // arguments and attributes values.
-func DiagErrorSetting(service, resource, id, argument string, gotError error) diag.Diagnostics {
+func DiagSettingError(service, resource, id, argument string, gotError error) diag.Diagnostics {
 	return DiagError(service, fmt.Sprintf("%s %s", ErrActionSetting, argument), resource, id, gotError)
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -101,13 +102,13 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPoolProviderPrincipalTag, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPoolProviderPrincipalTag, d.Id(), err)
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ret.IdentityPoolId)
