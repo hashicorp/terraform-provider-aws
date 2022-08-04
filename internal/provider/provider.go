@@ -416,8 +416,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_acmpca_certificate_authority": acmpca.DataSourceCertificateAuthority(),
 			"aws_acmpca_certificate":           acmpca.DataSourceCertificate(),
 
-			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
-
 			"aws_api_gateway_api_key":     apigateway.DataSourceAPIKey(),
 			"aws_api_gateway_domain_name": apigateway.DataSourceDomainName(),
 			"aws_api_gateway_export":      apigateway.DataSourceExport(),
@@ -794,6 +792,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_outposts_sites":                  outposts.DataSourceSites(),
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
+
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
