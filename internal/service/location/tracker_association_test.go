@@ -18,31 +18,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestTrackerAssociationParseId(t *testing.T) {
+func TestTrackerAssociationParseID(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
-		Expected tflocation.TrackerAssociationId
+		Expected tflocation.TrackerAssociationID
 		Error    bool
 	}{
 		{
 			TestName: "empty",
 			Input:    "",
-			Expected: tflocation.TrackerAssociationId{},
+			Expected: tflocation.TrackerAssociationID{},
 			Error:    true,
 		},
 		{
 			TestName: "no pipe",
-			Input:    "trackerNameConsumerArn",
-			Expected: tflocation.TrackerAssociationId{},
+			Input:    "trackerNameConsumerARN",
+			Expected: tflocation.TrackerAssociationID{},
 			Error:    true,
 		},
 		{
 			TestName: "valid",
-			Input:    "trackerName|consumerArn",
-			Expected: tflocation.TrackerAssociationId{
+			Input:    "trackerName|consumerARN",
+			Expected: tflocation.TrackerAssociationID{
 				TrackerName: "trackerName",
-				ConsumerArn: "consumerArn",
+				ConsumerARN: "consumerARN",
 			},
 			Error: false,
 		},
@@ -53,7 +53,7 @@ func TestTrackerAssociationParseId(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tflocation.TrackerAssociationParseId(testCase.Input)
+			got, err := tflocation.TrackerAssociationParseID(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -127,13 +127,13 @@ func testAccCheckTrackerAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		trackerAssociationId, err := tflocation.TrackerAssociationParseId(rs.Primary.ID)
+		trackerAssociationId, err := tflocation.TrackerAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return names.Error(names.Location, names.ErrActionCheckingDestroyed, tflocation.ResNameTrackerAssociation, rs.Primary.ID, err)
 		}
 
-		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerArn(context.TODO(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerArn)
+		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(context.TODO(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 		if err != nil {
 			if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
@@ -159,7 +159,7 @@ func testAccCheckTrackerAssociationExists(name string) resource.TestCheckFunc {
 			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, name, errors.New("not set"))
 		}
 
-		trackerAssociationId, err := tflocation.TrackerAssociationParseId(rs.Primary.ID)
+		trackerAssociationId, err := tflocation.TrackerAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, name, err)
@@ -167,7 +167,7 @@ func testAccCheckTrackerAssociationExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
 
-		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerArn(context.TODO(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerArn)
+		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(context.TODO(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 		if err != nil {
 			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, rs.Primary.ID, err)

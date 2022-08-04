@@ -85,12 +85,12 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LocationConn
 
-	trackerAssociationId, err := TrackerAssociationParseId(d.Id())
+	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
 		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
-	err = FindTrackerAssociationByTrackerNameAndConsumerArn(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerArn)
+	err = FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Location TrackerAssociation (%s) not found, removing from state", d.Id())
@@ -102,7 +102,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
-	d.Set("consumer_arn", trackerAssociationId.ConsumerArn)
+	d.Set("consumer_arn", trackerAssociationId.ConsumerARN)
 	d.Set("tracker_name", trackerAssociationId.TrackerName)
 
 	return nil
@@ -113,13 +113,13 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 
-	trackerAssociationId, err := TrackerAssociationParseId(d.Id())
+	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
 		return names.DiagError(names.Location, names.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	_, err = conn.DisassociateTrackerConsumerWithContext(ctx, &locationservice.DisassociateTrackerConsumerInput{
-		ConsumerArn: aws.String(trackerAssociationId.ConsumerArn),
+		ConsumerArn: aws.String(trackerAssociationId.ConsumerARN),
 		TrackerName: aws.String(trackerAssociationId.TrackerName),
 	})
 
@@ -134,8 +134,8 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-// FindTrackerAssociationByTrackerNameAndConsumerArn returns an error if an association for specified tracker and consumer cannot be found
-func FindTrackerAssociationByTrackerNameAndConsumerArn(ctx context.Context, conn *locationservice.LocationService, trackerName, consumerArn string) error {
+// FindTrackerAssociationByTrackerNameAndConsumerARN returns an error if an association for specified tracker and consumer cannot be found
+func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn *locationservice.LocationService, trackerName, consumerARN string) error {
 	in := &locationservice.ListTrackerConsumersInput{
 		TrackerName: aws.String(trackerName),
 	}
@@ -147,7 +147,7 @@ func FindTrackerAssociationByTrackerNameAndConsumerArn(ctx context.Context, conn
 		}
 
 		for _, arn := range page.ConsumerArns {
-			if aws.StringValue(arn) == consumerArn {
+			if aws.StringValue(arn) == consumerARN {
 				found = true
 				return false
 			}
@@ -169,16 +169,16 @@ func FindTrackerAssociationByTrackerNameAndConsumerArn(ctx context.Context, conn
 	return nil
 }
 
-type TrackerAssociationId struct {
+type TrackerAssociationID struct {
 	TrackerName string
-	ConsumerArn string
+	ConsumerARN string
 }
 
-func TrackerAssociationParseId(id string) (TrackerAssociationId, error) {
+func TrackerAssociationParseID(id string) (TrackerAssociationID, error) {
 	idParts := strings.Split(id, "|")
 	if len(idParts) != 2 {
-		return TrackerAssociationId{}, fmt.Errorf("please make sure the ID is in the form TRACKERNAME|CONSUMERARN")
+		return TrackerAssociationID{}, fmt.Errorf("please make sure the ID is in the form TRACKERNAME|CONSUMERARN")
 	}
 
-	return TrackerAssociationId{idParts[0], idParts[1]}, nil
+	return TrackerAssociationID{idParts[0], idParts[1]}, nil
 }
