@@ -458,12 +458,12 @@ resource "aws_neptune_global_cluster" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  engine              = "neptune"
-  engine_version      = "1.2.0.0"
-  skip_final_snapshot = true
+  cluster_identifier                   = %[1]q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.0"
+  skip_final_snapshot                  = true
   neptune_cluster_parameter_group_name = "default.neptune1.2"
-  global_cluster_identifier = aws_neptune_global_cluster.test.id
+  global_cluster_identifier            = aws_neptune_global_cluster.test.id
 }
 `, rName)
 }
@@ -471,10 +471,10 @@ resource "aws_neptune_cluster" "test" {
 func testAccGlobalClusterConfig_sourceDBIdentifier(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  engine              = "neptune"
-  engine_version      = "1.2.0.0"
-  skip_final_snapshot = true
+  cluster_identifier                   = %[1]q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.0"
+  skip_final_snapshot                  = true
   neptune_cluster_parameter_group_name = "default.neptune1.2"
 
   # global_cluster_identifier cannot be Computed
@@ -494,11 +494,11 @@ resource "aws_neptune_global_cluster" "test" {
 func testAccGlobalClusterConfig_sourceDBIdentifierStorageEncrypted(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  engine              = "neptune"
-  engine_version      = "1.2.0.0"
-  skip_final_snapshot = true
-  storage_encrypted   = true
+  cluster_identifier                   = %[1]q
+  engine                               = "neptune"
+  engine_version                       = "1.2.0.0"
+  skip_final_snapshot                  = true
+  storage_encrypted                    = true
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   # global_cluster_identifier cannot be Computed
 
