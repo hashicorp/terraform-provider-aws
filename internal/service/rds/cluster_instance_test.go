@@ -96,6 +96,59 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterInstance_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+			{
+				Config: testAccClusterInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterInstanceConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1160,6 +1213,61 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  cluster_identifier      = aws_rds_cluster.test.id
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_parameter_group_name = aws_db_parameter_group.test.name
+  promotion_tier          = "3"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora5.6"
+
+  parameter {
+    name         = "back_log"
+    value        = "32767"
+    apply_method = "pending-reboot"
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccClusterInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  cluster_identifier      = aws_rds_cluster.test.id
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_parameter_group_name = aws_db_parameter_group.test.name
+  promotion_tier          = "3"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora5.6"
+
+  parameter {
+    name         = "back_log"
+    value        = "32767"
+    apply_method = "pending-reboot"
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccClusterInstanceConfig_az(rName string) string {
