@@ -664,7 +664,7 @@ func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error 
 func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
 	}
 
 	mesh := parts[0]
@@ -779,7 +779,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 	mRouteRewrite := vHttpRouteRewrite[0].(map[string]interface{})
 	routeRewrite := &appmesh.HttpGatewayRouteRewrite{}
 
-	if vRouteHostnameRewrite, ok := mRouteRewrite["hostname"].([]interface{}); ok {
+	if vRouteHostnameRewrite, ok := mRouteRewrite["hostname"].([]interface{}); ok && len(vRouteHostnameRewrite) > 0 && vRouteHostnameRewrite[0] != nil {
 		mRouteHostnameRewrite := vRouteHostnameRewrite[0].(map[string]interface{})
 		routeHostnameRewrite := &appmesh.GatewayRouteHostnameRewrite{}
 		if vDefaultTargetHostname, ok := mRouteHostnameRewrite["default_target_hostname"].(string); ok && vDefaultTargetHostname != "" {
@@ -788,7 +788,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		routeRewrite.Hostname = routeHostnameRewrite
 	}
 
-	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok {
+	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
 		mRoutePrefixRewrite := vRoutePrefixRewrite[0].(map[string]interface{})
 		routePrefixRewrite := &appmesh.HttpGatewayRoutePrefixRewrite{}
 		if vDefaultPrefix, ok := mRoutePrefixRewrite["default_prefix"].(string); ok && vDefaultPrefix != "" {

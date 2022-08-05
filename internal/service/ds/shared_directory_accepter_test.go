@@ -9,26 +9,25 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_shared_directory_accepter.test"
 
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckSharedDirectoryAccepterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckSharedDirectoryAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSharedDirectoryAccepterConfig_basic(rName, domainName),
@@ -58,11 +57,11 @@ func testAccCheckSharedDirectoryAccepterExists(name string) resource.TestCheckFu
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("not found"))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("no ID is set"))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, name, errors.New("no ID is set"))
 		}
 
 		ownerId := rs.Primary.Attributes["owner_directory_id"]
@@ -75,19 +74,19 @@ func testAccCheckSharedDirectoryAccepterExists(name string) resource.TestCheckFu
 		})
 
 		if err != nil {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, err)
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, name, err)
 		}
 
 		if len(out.SharedDirectories) < 1 {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("not found"))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, name, errors.New("not found"))
 		}
 
 		if aws.StringValue(out.SharedDirectories[0].SharedDirectoryId) != sharedId {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("shared directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].SharedDirectoryId), sharedId))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("shared directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].SharedDirectoryId), sharedId))
 		}
 
 		if aws.StringValue(out.SharedDirectories[0].OwnerDirectoryId) != ownerId {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("owner directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].OwnerDirectoryId), ownerId))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("owner directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].OwnerDirectoryId), ownerId))
 		}
 
 		return nil

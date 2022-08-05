@@ -10,7 +10,7 @@ description: |-
 
 Provides a DynamoDB table resource
 
-~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+~> **Note:** We recommend using `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
 
 ## DynamoDB Table attributes
 
@@ -22,6 +22,8 @@ Only define attributes on the table object that are going to be used as:
 The DynamoDB API expects attribute structure (name and type) to be passed along when creating or updating GSI/LSIs or creating the initial table. In these cases it expects the Hash / Range keys to be provided. Because these get re-used in numerous places (i.e the table's range key could be a part of one or more GSIs), they are stored on the table object to prevent duplication and increase consistency. If you add attributes here that are not used in these scenarios it can cause an infinite loop in planning.
 
 ## Example Usage
+
+### Basic Example
 
 The following dynamodb table description models the table and GSI shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
@@ -98,6 +100,67 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
+### Replica Tagging
+
+You can manage global table replicas' tags in various ways. This example shows using `replica.*.propagate_tags` for the first replica and the `aws_dynamodb_tag` resource for the other.
+
+```terraform
+provider "aws" {
+  region = "us-west-2"
+}
+
+provider "awsalternate" {
+  region = "us-east-1"
+}
+
+provider "awsthird" {
+  region = "us-east-2"
+}
+
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "example" {
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "TestTableHashKey"
+  name             = "example-13281"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  replica {
+    region_name    = data.aws_region.third.name
+    propagate_tags = true
+  }
+
+  tags = {
+    Architect = "Eleanor"
+    Zone      = "SW"
+  }
+}
+
+resource "aws_dynamodb_tag" "example" {
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
+  key          = "Architect"
+  value        = "Gigi"
+}
+```
+
 ## Argument Reference
 
 Required arguments:
@@ -122,7 +185,7 @@ Optional arguments:
 * `stream_enabled` - (Optional) Whether Streams are enabled.
 * `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
 * `table_class` - (Optional) Storage class of the table. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
-* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Configuration block for TTL. See below.
 * `write_capacity` - (Optional) Number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 
@@ -155,7 +218,8 @@ Optional arguments:
 ### `replica`
 
 * `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
-* `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica.
+* `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `propagate_tags` - (Optional) Whether to propagate the main table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from main to replica. In other words, tag drift on a replica will not trigger an update. Tag changes on the main table, whether from drift or configuration changes, are propagated to replicas.
 * `region_name` - (Required) Region name of the replica.
 
 ### `server_side_encryption`
@@ -176,17 +240,17 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Name of the table
 * `stream_arn` - ARN of the Table Stream. Only available when `stream_enabled = true`
 * `stream_label` - Timestamp, in ISO 8601 format, for this stream. Note that this timestamp is not a unique identifier for the stream on its own. However, the combination of AWS customer ID, table name and this field is guaranteed to be unique. It can be used for creating CloudWatch Alarms. Only available when `stream_enabled = true`
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 ~> **Note:** There are a variety of default timeouts set internally. If you set a shorter custom timeout than one of the defaults, the custom timeout will not be respected as the longer of the custom or internal default will be used.
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 30 mins) Used when creating the table
-* `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index and Replica update
-* `delete` - (Defaults to 10 mins) Used when deleting the table
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +17,12 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 		Create: resourceInternetGatewayAttachmentCreate,
 		Read:   resourceInternetGatewayAttachmentRead,
 		Delete: resourceInternetGatewayAttachmentDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +48,7 @@ func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interf
 	igwID := d.Get("internet_gateway_id").(string)
 	vpcID := d.Get("vpc_id").(string)
 
-	if err := attachInternetGateway(conn, igwID, vpcID); err != nil {
+	if err := attachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -90,7 +97,7 @@ func resourceInternetGatewayAttachmentDelete(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	if err := detachInternetGateway(conn, igwID, vpcID); err != nil {
+	if err := detachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return err
 	}
 

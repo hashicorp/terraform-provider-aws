@@ -12,12 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ResourceNameSharedDirectoryAccepter = "Shared Directory Accepter"
+	ResNameSharedDirectoryAccepter = "Shared Directory Accepter"
 )
 
 func ResourceSharedDirectoryAccepter() *schema.Resource {
@@ -67,11 +68,11 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AcceptSharedDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
+		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
 	}
 
 	if output == nil || output.SharedDirectory == nil {
-		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
+		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("shared_directory_id").(string))
@@ -81,7 +82,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	_, err = waitDirectoryShared(ctx, conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionWaitingForCreation, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForCreation, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	return resourceSharedDirectoryAccepterRead(ctx, d, meta)
@@ -93,7 +94,7 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	dir, err := findDirectoryByID(conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	d.Set("method", dir.ShareMethod)
@@ -131,13 +132,13 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	err = waitDirectoryDeleted(conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectoryAccepter, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	return nil

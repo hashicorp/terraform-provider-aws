@@ -19,10 +19,10 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel),
@@ -45,10 +45,10 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, licenseModel, preferredOption),

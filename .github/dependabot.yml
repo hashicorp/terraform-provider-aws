@@ -12,14 +12,14 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "gomod"
-    directory: "/tools/providerlint"
+    directory: "/.ci/providerlint"
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
     schedule:
       interval: "daily"
   - package-ecosystem: "gomod"
-    directory: "/tools"
+    directory: "/.ci/tools"
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"

@@ -13,9 +13,9 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
@@ -360,8 +360,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 1,
       "action": {
         "association-method": "tag",
-        "tag-value-of-key": "segment",
-        "require-acceptance": false
+        "tag-value-of-key": "segment"
       },
       "conditions": [
         {
@@ -442,8 +441,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       "rule-number": 72,
       "action": {
         "association-method": "constant",
-        "segment": "GoodSegmentSpecification",
-        "require-acceptance": false
+        "segment": "GoodSegmentSpecification"
       },
       "conditions": [
         {

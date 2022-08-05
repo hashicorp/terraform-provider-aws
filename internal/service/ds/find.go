@@ -48,7 +48,7 @@ func findDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
-func findSharedDirectoryByIDs(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryId string, sharedDirectoryId string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ds-in-func-name
+func findSharedDirectoryByIDs(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryId string, sharedDirectoryId string) (*directoryservice.SharedDirectory, error) { // nosemgrep:ci.ds-in-func-name
 	input := &directoryservice.DescribeSharedDirectoriesInput{
 		OwnerDirectoryId:   aws.String(ownerDirectoryId),
 		SharedDirectoryIds: []*string{aws.String(sharedDirectoryId)},

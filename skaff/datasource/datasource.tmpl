@@ -176,7 +176,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
-		return names.DiagError(names.{{ .Service }}, names.ErrActionReading, DSName{{ .DataSource }}, name, err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Set the ID
@@ -214,19 +214,19 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return names.DiagError(names.{{ .Service }}, names.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return names.DiagError(names.{{ .Service }}, names.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return names.DiagError(names.{{ .Service }}, names.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	d.Set("policy", p)
@@ -242,7 +242,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return names.DiagError(names.{{ .Service }}, names.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Return nil

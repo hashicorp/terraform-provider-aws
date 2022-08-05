@@ -21,10 +21,10 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPolicyConfig_basic(rName),
@@ -59,10 +59,10 @@ func TestAccECRRepositoryPolicy_IAM_basic(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPolicyConfig_iamRole(rName),
@@ -87,10 +87,10 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
@@ -119,10 +119,10 @@ func TestAccECRRepositoryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPolicyConfig_basic(rName),
@@ -141,10 +141,10 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRepositoryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPolicyConfig_basic(rName),

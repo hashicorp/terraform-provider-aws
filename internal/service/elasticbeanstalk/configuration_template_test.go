@@ -18,10 +18,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) 
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_basic(sdkacctest.RandString(5)),
@@ -37,10 +37,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_vpc(sdkacctest.RandString(5)),
@@ -56,10 +56,10 @@ func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_setting(sdkacctest.RandString(5)),

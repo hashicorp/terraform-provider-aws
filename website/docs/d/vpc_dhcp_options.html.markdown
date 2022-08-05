@@ -60,3 +60,9 @@ For more information about filtering, see the [EC2 API documentation](https://do
 * `ntp_servers` - List of NTP servers.
 * `tags` - A map of tags assigned to the resource.
 * `owner_id` - The ID of the AWS account that owns the DHCP options set.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

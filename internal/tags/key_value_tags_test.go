@@ -291,7 +291,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:aws-in-func-name
+func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	testCases := []struct {
 		name string
 		tags KeyValueTags

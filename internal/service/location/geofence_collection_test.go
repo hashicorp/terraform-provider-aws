@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,10 +23,10 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionConfig_basic(rName),
@@ -54,10 +55,10 @@ func TestAccLocationGeofenceCollection_disappears(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionConfig_basic(rName),
@@ -76,10 +77,10 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionConfig_description(rName, "description1"),
@@ -109,10 +110,10 @@ func TestAccLocationGeofenceCollection_kmsKeyID(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionConfig_kmsKeyID(rName),
@@ -135,10 +136,10 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 	resourceName := "aws_location_geofence_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGeofenceCollectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGeofenceCollectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeofenceCollectionConfig_tags1(rName, "key1", "value1"),
@@ -194,7 +195,7 @@ func testAccCheckGeofenceCollectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return names.Error(names.Location, names.ErrActionCheckingDestroyed, tflocation.ResNameGeofenceCollection, rs.Primary.ID, errors.New("not destroyed"))
+		return create.Error(names.Location, create.ErrActionCheckingDestroyed, tflocation.ResNameGeofenceCollection, rs.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
@@ -204,11 +205,11 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not found"))
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
@@ -217,7 +218,7 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 		})
 
 		if err != nil {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, rs.Primary.ID, err)
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, rs.Primary.ID, err)
 		}
 
 		return nil

@@ -20,10 +20,10 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),
@@ -51,10 +51,10 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_tags1(rName, "key1", "value1"),
@@ -97,10 +97,10 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHumanTaskUIDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),

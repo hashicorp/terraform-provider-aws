@@ -24,10 +24,10 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_instance(rName),
@@ -60,10 +60,10 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_cluster(rName),
@@ -96,10 +96,10 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProxyTargetConfig_instance(rName),

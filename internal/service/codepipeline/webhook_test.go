@@ -29,9 +29,9 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
@@ -99,9 +99,9 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_ipAuth(rName, githubToken),
@@ -134,9 +134,9 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_unauthenticated(rName, githubToken),
@@ -167,9 +167,9 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_tags(rName, "tag1value", "tag2value", githubToken),
@@ -231,9 +231,9 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),
@@ -260,9 +260,9 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckSupported(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName, githubToken),

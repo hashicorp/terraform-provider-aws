@@ -91,3 +91,9 @@ In addition to the argument above, the following attributes are exported:
 * `total_instance_storage` - The total size of the instance disks, in GB.
 * `valid_cores` - List of the valid number of cores that can be configured for the instance type.
 * `valid_threads_per_core` - List of the valid number of threads per core that can be configured for the instance type.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

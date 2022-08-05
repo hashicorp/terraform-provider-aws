@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,7 +22,6 @@ import (
 const (
 	// Maximum amount of time to wait for Config service eventual consistency on deletion
 	remediationConfigurationDeletionTimeout = 2 * time.Minute
-	ResNameRemediationConfiguration         = "Remediation Configuration"
 )
 
 func ResourceRemediationConfiguration() *schema.Resource {
@@ -180,7 +180,7 @@ func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", inputs)
 	_, err := conn.PutRemediationConfigurations(&inputs)
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
+		return create.Error(names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
 	}
 
 	d.SetId(name)
@@ -203,7 +203,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
@@ -214,7 +214,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
@@ -232,11 +232,11 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
 
 	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return nil
@@ -275,7 +275,7 @@ func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return nil

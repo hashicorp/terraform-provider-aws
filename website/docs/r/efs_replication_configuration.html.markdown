@@ -68,12 +68,12 @@ In addition to all arguments above, the following attributes are exported:
 * `destination[0].file_system_id` - The fs ID of the replica.
 * `destination[0].status` - The status of the replication.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10 minutes`) Used when creating the replication configuration.
-* `delete` - (Default `20 minutes`) Used when deleting the replication configuration.
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
