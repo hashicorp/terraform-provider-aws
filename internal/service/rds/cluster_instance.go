@@ -24,6 +24,7 @@ func ResourceClusterInstance() *schema.Resource {
 		Read:   resourceClusterInstanceRead,
 		Update: resourceClusterInstanceUpdate,
 		Delete: resourceClusterInstanceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,11 +36,78 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			// apply_immediately is used to determine when the update modifications take place.
+			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+			"apply_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"cluster_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"db_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"db_subnet_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"dbi_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      EngineAurora,
+				ValidateFunc: validEngine(),
+			},
+			"engine_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -56,160 +124,35 @@ func ResourceClusterInstance() *schema.Resource {
 				ConflictsWith: []string{"identifier"},
 				ValidateFunc:  validIdentifierPrefix,
 			},
-
-			"db_subnet_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"writer": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"publicly_accessible": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"engine": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      "aurora",
-				ValidateFunc: validEngine(),
-			},
-
-			"engine_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"db_parameter_group_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			// apply_immediately is used to determine when the update modifications
-			// take place.
-			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"dbi_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-
-			"monitoring_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"preferred_maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v interface{}) string {
-					if v != nil {
-						value := v.(string)
-						return strings.ToLower(value)
-					}
-					return ""
-				},
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
-			},
-
-			"preferred_backup_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidOnceADayWindowFormat,
-			},
-
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
 			},
-
-			"promotion_tier": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-
-			"availability_zone": {
+			"monitoring_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
-
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-
 			"performance_insights_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"performance_insights_retention_period": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -223,20 +166,49 @@ func ResourceClusterInstance() *schema.Resource {
 					),
 				),
 			},
-
-			"copy_tags_to_snapshot": {
+			"port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"preferred_backup_window": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
+			},
+			"preferred_maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					if v != nil {
+						value := v.(string)
+						return strings.ToLower(value)
+					}
+					return ""
+				},
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+			},
+			"promotion_tier": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"ca_cert_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"writer": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
