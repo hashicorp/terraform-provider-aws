@@ -589,7 +589,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	cluster := d.Get("cluster").(string)
 
-	service, err := FindServiceByIDWaitForActive(context.TODO(), conn, d.Id(), cluster)
+	service, err := FindServiceByIDWaitForActive(context.Background(), conn, d.Id(), cluster)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
@@ -1117,7 +1117,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECSConn
 
-	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
+	service, err := FindServiceNoTagsByID(context.Background(), conn, d.Id(), d.Get("cluster").(string))
 	if tfresource.NotFound(err) {
 		return nil
 	}

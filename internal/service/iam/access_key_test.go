@@ -137,7 +137,7 @@ func testAccCheckAccessKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		_, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			return nil
 		}
@@ -163,7 +163,7 @@ func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		accessKey, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		accessKey, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}

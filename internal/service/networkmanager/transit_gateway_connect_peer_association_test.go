@@ -115,7 +115,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationDestroy(s *terraform.State)
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, connectPeerARN)
+		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, connectPeerARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -150,7 +150,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, connectPeerARN)
+		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, connectPeerARN)
 
 		if err != nil {
 			return err

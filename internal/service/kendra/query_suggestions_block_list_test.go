@@ -326,7 +326,7 @@ func testAccCheckQuerySuggestionsBlockListDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -360,7 +360,7 @@ func testAccCheckQuerySuggestionsBlockListExists(name string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra QuerySuggestionsBlockList: %s", err.Error())

@@ -306,7 +306,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *docdb.G
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
-		cluster, err := tfdocdb.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
+		cluster, err := tfdocdb.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -334,7 +334,7 @@ func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		globalCluster, err := tfdocdb.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
+		globalCluster, err := tfdocdb.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
 			continue
@@ -368,7 +368,7 @@ func testAccCheckGlobalClusterDisappears(globalCluster *docdb.GlobalCluster) res
 			return err
 		}
 
-		return tfdocdb.WaitForGlobalClusterDeletion(context.TODO(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfdocdb.GlobalClusterDeleteTimeout)
+		return tfdocdb.WaitForGlobalClusterDeletion(context.Background(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfdocdb.GlobalClusterDeleteTimeout)
 	}
 }
 
