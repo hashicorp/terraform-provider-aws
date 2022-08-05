@@ -184,7 +184,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	username := d.Get("user").(string)
 
-	key, err := FindAccessKey(context.TODO(), conn, username, d.Id())
+	key, err := FindAccessKey(context.Background(), conn, username, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
 		d.SetId("")

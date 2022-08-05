@@ -476,7 +476,7 @@ func DeleteUserLoginProfile(conn *iam.IAM, username string) error {
 }
 
 func DeleteUserAccessKeys(conn *iam.IAM, username string) error {
-	accessKeys, err := FindAccessKeys(context.TODO(), conn, username)
+	accessKeys, err := FindAccessKeys(context.Background(), conn, username)
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error listing access keys for IAM User (%s): %w", username, err)
 	}
