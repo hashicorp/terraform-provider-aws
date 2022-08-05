@@ -152,7 +152,7 @@ func waitDBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN str
 
 func waitDBInstanceCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
 	stateConf := &resource.StateChangeConf{
-		// http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Status.html.
+		// https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,

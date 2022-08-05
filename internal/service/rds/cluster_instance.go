@@ -442,12 +442,28 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		}
+
+		if d.HasChange("ca_cert_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		}
+
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
 		if d.HasChange("db_parameter_group_name") {
 			input.DBParameterGroupName = aws.String(d.Get("db_parameter_group_name").(string))
 		}
 
 		if d.HasChange("instance_class") {
 			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+		}
+
+		if d.HasChange("monitoring_interval") {
+			input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
 		}
 
 		if d.HasChange("monitoring_role_arn") {
@@ -474,28 +490,12 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		}
 
-		if d.HasChange("monitoring_interval") {
-			input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
-		}
-
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		}
-
-		if d.HasChange("copy_tags_to_snapshot") {
-			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		}
-
 		if d.HasChange("promotion_tier") {
 			input.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
 		}
 
 		if d.HasChange("publicly_accessible") {
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-		}
-
-		if d.HasChange("ca_cert_identifier") {
-			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		}
 
 		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)

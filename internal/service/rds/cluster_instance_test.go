@@ -412,7 +412,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -425,7 +425,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
 			},
@@ -441,21 +441,21 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
 				),
 			},
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
 			},
@@ -468,7 +468,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -482,7 +482,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
@@ -498,7 +498,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
@@ -511,7 +511,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -525,7 +525,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
@@ -541,7 +541,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 				),
 			},
 		},
@@ -553,7 +553,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -567,7 +567,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 				),
 			},
 			{
@@ -582,7 +582,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
@@ -595,7 +595,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora"
@@ -609,7 +609,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -631,7 +631,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL2(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-mysql"
@@ -646,7 +646,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL2(t *testin
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL2(rName, engine, engineVersion),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -668,7 +668,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-postgresql"
@@ -682,7 +682,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraPostgresql(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -704,7 +704,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -719,7 +719,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 				),
@@ -742,7 +742,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora"
@@ -756,7 +756,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -782,7 +782,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL2(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -798,7 +798,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL2(t *testi
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL2(rName, engine, engineVersion),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 				),
@@ -821,7 +821,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKe
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-mysql"
@@ -836,7 +836,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL2_defaultKe
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL2(rName, engine, engineVersion),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -862,7 +862,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -875,7 +875,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsRetentionPeriod(rName, 731),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
 				),
@@ -892,7 +892,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsRetentionPeriod(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
@@ -900,7 +900,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsRetentionPeriod(rName, 155),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
 				),
@@ -914,7 +914,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -929,7 +929,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 				),
@@ -952,7 +952,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	resourceName := "aws_rds_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	engine := "aurora-postgresql"
@@ -966,7 +966,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 			{
 				Config: testAccClusterInstanceConfig_performanceInsightsEnabledAuroraPostgresql(rName, engine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
@@ -1349,7 +1349,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -1375,20 +1375,6 @@ EOF
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
   role       = aws_iam_role.test.name
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1400,35 +1386,21 @@ resource "aws_rds_cluster_instance" "test" {
   monitoring_interval = %[2]d
   monitoring_role_arn = aws_iam_role.test.arn
 }
-`, rName, monitoringInterval)
+`, rName, monitoringInterval))
 }
 
 func testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = aws_rds_cluster.test.id
   identifier         = %[1]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_monitoringRoleARN(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -1456,20 +1428,6 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
 }
 
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
 resource "aws_rds_cluster_instance" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 
@@ -1479,7 +1437,7 @@ resource "aws_rds_cluster_instance" "test" {
   monitoring_interval = 5
   monitoring_role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine string) string {
