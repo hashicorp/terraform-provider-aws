@@ -292,7 +292,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
+	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
@@ -305,7 +305,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
@@ -334,9 +334,9 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
-	rNameSuffix := sdkacctest.RandInt()
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -345,9 +345,9 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rNameSuffix, true),
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
@@ -361,11 +361,47 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rNameSuffix, false),
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
+					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+	certificateDataSourceName := "data.aws_rds_certificate.latest"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_caCertificateID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certificateDataSourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -951,42 +987,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 	})
 }
 
-func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dbInstance rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster_instance.test"
-	dataSourceName := "data.aws_rds_certificate.latest"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_caCertificateID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-		},
-	})
-}
-
 func testAccPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -1304,6 +1304,46 @@ resource "aws_db_parameter_group" "test" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
+}
+`, rName))
+}
+
+func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately   = true
+  cluster_identifier  = aws_rds_cluster.test.id
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  publicly_accessible = %[2]t
+}
+`, rName, publiclyAccessible))
+}
+
+func testAccClusterInstanceConfig_copyTagsToSnapshot(rName string, copy bool) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier            = %[1]q
+  cluster_identifier    = aws_rds_cluster.test.id
+  instance_class        = data.aws_rds_orderable_db_instance.test.instance_class
+  promotion_tier        = "3"
+  copy_tags_to_snapshot = %[2]t
+}
+`, rName, copy))
+}
+
+func testAccClusterInstanceConfig_caCertificateID(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_rds_certificate" "latest" {
+  latest_valid_till = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately  = true
+  cluster_identifier = aws_rds_cluster.test.id
+  identifier         = %[1]q
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  ca_cert_identifier = data.aws_rds_certificate.latest.id
 }
 `, rName))
 }
@@ -1656,89 +1696,4 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_retention_period = %[2]d
 }
 `, rName, performanceInsightsRetentionPeriod)
-}
-
-func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  apply_immediately   = true
-  cluster_identifier  = aws_rds_cluster.test.id
-  identifier          = %[1]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  publicly_accessible = %[2]t
-}
-`, rName, publiclyAccessible)
-}
-
-func testAccClusterInstanceConfig_copyTagsToSnapshot(n int, f bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%[1]d"
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
-  database_name       = "mydb"
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.default.engine
-  engine_version             = aws_rds_cluster.default.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier            = "tf-cluster-instance-%[1]d"
-  cluster_identifier    = aws_rds_cluster.default.id
-  instance_class        = data.aws_rds_orderable_db_instance.test.instance_class
-  promotion_tier        = "3"
-  copy_tags_to_snapshot = %t
-}
-`, n, f))
-}
-
-func testAccClusterInstanceConfig_caCertificateID(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  master_username     = "foo"
-  master_password     = "mustbeeightcharacters"
-  skip_final_snapshot = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.test.engine
-  engine_version             = aws_rds_cluster.test.engine_version
-  preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
-}
-
-data "aws_rds_certificate" "latest" {
-  latest_valid_till = true
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  apply_immediately  = true
-  cluster_identifier = aws_rds_cluster.test.id
-  identifier         = %[1]q
-  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
-  ca_cert_identifier = data.aws_rds_certificate.latest.id
-}
-`, rName)
 }

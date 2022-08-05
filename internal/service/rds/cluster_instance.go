@@ -365,7 +365,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	dbc, err := FindDBClusterByID(conn, dbClusterID)
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS Cluster (%s): %w", dbClusterID, err)
+		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
 	}
 
 	for _, m := range dbc.DBClusterMembers {
