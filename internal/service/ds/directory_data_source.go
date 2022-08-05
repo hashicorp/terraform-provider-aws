@@ -151,6 +151,8 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", dir.Description)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
+	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.OwnerDirectoryDescription.DnsIpAddrs))
 	} else {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
 	}
