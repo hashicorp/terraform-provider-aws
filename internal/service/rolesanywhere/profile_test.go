@@ -123,7 +123,7 @@ func testAccCheckProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfrolesanywhere.FindProfileByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfrolesanywhere.FindProfileByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -153,7 +153,7 @@ func testAccCheckProfileExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
 
-		_, err := tfrolesanywhere.FindProfileByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfrolesanywhere.FindProfileByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Profile: %s", err.Error())
