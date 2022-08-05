@@ -49,11 +49,12 @@ func ResourceClusterInstance() *schema.Resource {
 				ValidateFunc:  validIdentifier,
 			},
 			"identifier_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifierPrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"identifier"},
+				ValidateFunc:  validIdentifierPrefix,
 			},
 
 			"db_subnet_group_name": {

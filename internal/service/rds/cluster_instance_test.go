@@ -173,13 +173,13 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterInstance_namePrefix(t *testing.T) {
+func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var v rds.DBInstance
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -189,12 +189,12 @@ func TestAccRDSClusterInstance_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_namePrefix(rInt),
+				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccCheckClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("tf-test-%d", rInt)),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-cluster-instance-")),
+					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -210,12 +210,13 @@ func TestAccRDSClusterInstance_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterInstance_generatedName(t *testing.T) {
+func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -225,11 +226,16 @@ func TestAccRDSClusterInstance_generatedName(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_generatedName(sdkacctest.RandInt()),
+				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccCheckClusterInstanceAttributes(&v),
-					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
+					resource.TestCheckResourceAttrWith(resourceName, "identifier", func(value string) error {
+						if !strings.HasPrefix(value, "tf-") {
+							return fmt.Errorf("incorrect format: %s", value)
+						}
+						return nil
+					}),
+					resource.TestCheckNoResourceAttr(resourceName, "identifier_prefix"),
 				),
 			},
 			{
@@ -1036,20 +1042,6 @@ func testAccPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersi
 	}
 }
 
-func testAccCheckClusterInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *v.Engine != "aurora" && *v.Engine != "aurora-postgresql" && *v.Engine != "aurora-mysql" {
-			return fmt.Errorf("bad engine, expected \"aurora\", \"aurora-mysql\" or \"aurora-postgresql\": %#v", *v.Engine)
-		}
-
-		if !strings.HasPrefix(*v.DBClusterIdentifier, "tf-aurora-cluster") {
-			return fmt.Errorf("Bad Cluster Identifier prefix:\nexpected: %s\ngot: %s", "tf-aurora-cluster", *v.DBClusterIdentifier)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckClusterInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1193,69 +1185,49 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
-func testAccClusterInstanceConfig_namePrefix(n int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccClusterInstanceConfig_identifierPrefix(rName, identifierPrefix string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.test.engine
   engine_version             = aws_rds_cluster.test.engine_version
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
 }
 
-resource "aws_rds_cluster_instance" "test" {
-  identifier_prefix  = "tf-cluster-instance-"
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
-}
-
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "tf-aurora-cluster-%[1]d"
+  cluster_identifier   = %[1]q
   master_username      = "root"
   master_password      = "password"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-rds-cluster-instance-name-prefix"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-instance-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-instance-name-prefix-b"
-  }
+resource "aws_rds_cluster_instance" "test" {
+  identifier_prefix  = %[2]q
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "tf-test-%[1]d"
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
-`, n))
+`, rName, identifierPrefix))
 }
 
-func testAccClusterInstanceConfig_generatedName(n int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccClusterInstanceConfig_identifierGenerated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = aws_rds_cluster.test.engine
   engine_version             = aws_rds_cluster.test.engine_version
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  master_username      = "root"
+  master_password      = "password"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
 }
 
 resource "aws_rds_cluster_instance" "test" {
@@ -1263,47 +1235,11 @@ resource "aws_rds_cluster_instance" "test" {
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "tf-aurora-cluster-%[1]d"
-  master_username      = "root"
-  master_password      = "password"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot  = true
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-rds-cluster-instance-generated-name"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-instance-generated-name-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-instance-generated-name-b"
-  }
-}
-
 resource "aws_db_subnet_group" "test" {
-  name       = "tf-test-%[1]d"
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
-`, n))
+`, rName))
 }
 
 func testAccClusterInstanceConfig_kmsKey(n int) string {
