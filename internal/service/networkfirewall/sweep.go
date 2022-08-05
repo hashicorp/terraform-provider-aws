@@ -102,7 +102,7 @@ func sweepFirewalls(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).NetworkFirewallConn
-	ctx := context.TODO()
+	ctx := context.Background()
 	input := &networkfirewall.ListFirewallsInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
 
@@ -153,7 +153,7 @@ func sweepLoggingConfigurations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).NetworkFirewallConn
-	ctx := context.TODO()
+	ctx := context.Background()
 	input := &networkfirewall.ListFirewallsInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
 
