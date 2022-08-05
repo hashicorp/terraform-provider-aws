@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_availability_zones"
 description: |-
@@ -27,7 +27,7 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# e.g. Create subnets in the first two available availability zones
+# e.g., Create subnets in the first two available availability zones
 
 resource "aws_subnet" "primary" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -98,3 +98,9 @@ In addition to all arguments above, the following attributes are exported:
 * `zone_ids` - A list of the Availability Zone IDs available to the account.
 
 Note that the indexes of Availability Zone names and IDs correspond.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

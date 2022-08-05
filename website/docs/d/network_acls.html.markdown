@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_acls"
 description: |-
@@ -70,4 +70,10 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the network ACL ids found. This data source will fail if none are found.
+* `ids` - A list of all the network ACL ids found.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

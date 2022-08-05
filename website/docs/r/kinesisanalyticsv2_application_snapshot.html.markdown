@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application_snapshot"
 description: |-
@@ -35,9 +35,16 @@ In addition to all arguments above, the following attributes are exported:
 * `application_version_id` - The current application version ID when the snapshot was created.
 * `snapshot_creation_timestamp` - The timestamp of the application snapshot.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.
+`aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.,
 
 ```
 $ terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot

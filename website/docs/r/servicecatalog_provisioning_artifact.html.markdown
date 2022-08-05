@@ -25,7 +25,7 @@ resource "aws_servicecatalog_provisioning_artifact" "example" {
   name         = "example"
   product_id   = aws_servicecatalog_product.example.id
   type         = "CLOUD_FORMATION_TEMPLATE"
-  template_url = "https://${aws_s3_bucket.example.bucket_regional_domain_name}/${aws_s3_bucket_object.example.key}"
+  template_url = "https://${aws_s3_bucket.example.bucket_regional_domain_name}/${aws_s3_object.example.key}"
 }
 ```
 
@@ -55,9 +55,18 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Provisioning Artifact identifier and product identifier separated by a colon.
 * `status` - Status of the provisioning artifact.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
+
 ## Import
 
-`aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID and product ID separated by a colon, e.g.
+`aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID and product ID separated by a colon, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3

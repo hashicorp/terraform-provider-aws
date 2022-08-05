@@ -115,17 +115,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dx_gateway_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for creating the association
-- `update` - (Default `30 minutes`) Used for updating the association
-- `delete` - (Default `30 minutes`) Used for destroying the association
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
 Direct Connect gateway associations can be imported using `dx_gateway_id` together with `associated_gateway_id`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432

@@ -42,7 +42,7 @@ No additional attributes are exported.
 
 ## Import
 
-Pinpoint Baidu Channel can be imported using the `application-id`, e.g.
+Pinpoint Baidu Channel can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_baidu_channel.channel application-id

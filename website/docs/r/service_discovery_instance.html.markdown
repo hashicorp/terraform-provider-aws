@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Discovery"
+subcategory: "Cloud Map"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_instance"
 description: |-
@@ -92,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Discovery Instance can be imported using the service ID and instance ID, e.g.
+Service Discovery Instance can be imported using the service ID and instance ID, e.g.,
 
 ```
 $ terraform import aws_service_discovery_instance.example 0123456789/i-0123

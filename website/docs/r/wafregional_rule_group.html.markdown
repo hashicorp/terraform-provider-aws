@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_rule_group"
 description: |-
@@ -40,7 +40,7 @@ The following arguments are supported:
 * `name` - (Required) A friendly name of the rule group
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
 * `activated_rule` - (Optional) A list of activated rules, see below
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -49,7 +49,7 @@ The following arguments are supported:
 #### Arguments
 
 * `action` - (Required) Specifies the action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule.
-    * `type` - (Required) e.g. `BLOCK`, `ALLOW`, or `COUNT`
+    * `type` - (Required) e.g., `BLOCK`, `ALLOW`, or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/wafregional_rule.html)
 * `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`](/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
@@ -60,11 +60,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional Rule Group.
 * `arn` - The ARN of the WAF Regional Rule Group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-WAF Regional Rule Group can be imported using the id, e.g.
+WAF Regional Rule Group can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_wafregional_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

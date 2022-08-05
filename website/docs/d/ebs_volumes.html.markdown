@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_volumes"
 description: |-
@@ -67,3 +67,9 @@ data "aws_ebs_volumes" "ten_or_twenty_gb_volumes" {
 * `id` - AWS Region.
 * `ids` - A set of all the EBS Volume IDs found. This data source will fail if
   no volumes match the provided criteria.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

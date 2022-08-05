@@ -29,5 +29,5 @@ data "aws_storagegateway_local_disk" "test" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `disk_id` - The disk identifier. e.g. `pci-0000:03:00.0-scsi-0:0:0:0`
-* `id` - The disk identifier. e.g. `pci-0000:03:00.0-scsi-0:0:0:0`
+* `disk_id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
+* `id` - The disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`

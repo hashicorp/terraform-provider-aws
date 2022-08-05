@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_lifecycle_policy"
 description: |-
@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Lifecycle Policy can be imported using the name of the repository, e.g.
+ECR Lifecycle Policy can be imported using the name of the repository, e.g.,
 
 ```
 $ terraform import aws_ecr_lifecycle_policy.example tf-example

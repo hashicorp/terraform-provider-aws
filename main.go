@@ -5,27 +5,37 @@ import (
 	"flag"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/terraform-providers/terraform-provider-aws/aws"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func main() {
-	var debugMode bool
-
-	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
 	flag.Parse()
 
-	opts := &plugin.ServeOpts{ProviderFunc: aws.Provider}
+	serverFactory, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
-	if debugMode {
-		err := plugin.Debug(context.Background(), "registry.terraform.io/hashicorp/aws", opts)
-
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		return
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	plugin.Serve(opts)
+	var serveOpts []tf5server.ServeOpt
+
+	if *debugFlag {
+		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
+	}
+
+	logFlags := log.Flags()
+	logFlags = logFlags &^ (log.Ldate | log.Ltime)
+	log.SetFlags(logFlags)
+
+	err = tf5server.Serve(
+		"registry.terraform.io/hashicorp/aws",
+		serverFactory,
+		serveOpts...,
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }

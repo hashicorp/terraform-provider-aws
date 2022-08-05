@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift security groups can be imported using the `name`, e.g.
+Redshift security groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_security_group.testgroup1 redshift_test_group

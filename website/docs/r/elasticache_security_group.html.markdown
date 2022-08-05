@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache Security Groups can be imported by name, e.g.
+ElastiCache Security Groups can be imported by name, e.g.,
 
 ```
 $ terraform import aws_elasticache_security_group.my_ec_security_group ec-security-group-1

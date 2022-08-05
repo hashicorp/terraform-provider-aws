@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_distribution_configuration: Add `fast_launch_configuration` argument to the `distribution` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_distribution_configuration: Add `fast_launch_configuration` attribute to the `distribution` configuration block
+```

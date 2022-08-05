@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_emr_cluster: Add `gp3` EBS volume support
+```
+
+```release-note:enhancement
+resource/aws_emr_cluster: Add `core_instance_group.ebs_config.throughput` and `master_instance_group.ebs_config.throughput` arguments
+```

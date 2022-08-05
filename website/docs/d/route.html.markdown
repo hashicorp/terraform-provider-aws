@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route"
 description: |-
@@ -44,6 +44,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `carrier_gateway_id` - (Optional) EC2 Carrier Gateway ID of the Route belonging to the Route Table.
+* `core_network_arn` - (Optional) Core network ARN of the Route belonging to the Route Table.
 * `destination_cidr_block` - (Optional) CIDR block of the Route belonging to the Route Table.
 * `destination_ipv6_cidr_block` - (Optional) IPv6 CIDR block of the Route belonging to the Route Table.
 * `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the Route belonging to the Route Table.
@@ -59,3 +60,9 @@ The following arguments are optional:
 ## Attributes Reference
 
 All of the argument attributes are also exported as result attributes when there is data available. For example, the `vpc_peering_connection_id` field will be empty when the route is attached to a Network Interface.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

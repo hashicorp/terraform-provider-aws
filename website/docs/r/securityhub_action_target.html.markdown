@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub custom action can be imported using the action target ARN e.g.
+Security Hub custom action can be imported using the action target ARN e.g.,
 
 ```sh
 $ terraform import aws_securityhub_action_target.example arn:aws:securityhub:eu-west-1:312940875350:action/custom/a
