@@ -151,6 +151,8 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", dir.Description)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
+	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.OwnerDirectoryDescription.DnsIpAddrs))
 	} else {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
 	}
@@ -159,8 +161,10 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", dir.Name)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
-	} else {
+	} else if dir.VpcSettings != nil {
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
+	} else {
+		d.Set("security_group_id", nil)
 	}
 	d.Set("short_name", dir.ShortName)
 	d.Set("size", dir.Size)
