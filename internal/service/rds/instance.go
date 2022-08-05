@@ -626,6 +626,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
+		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstanceReadReplica(&input)
@@ -707,7 +708,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); !ok {
-
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "allocated_storage": required field is not set`, dbName)
 		}
 		if _, ok := d.GetOk("engine"); !ok {
@@ -720,33 +720,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "username": required field is not set`, dbName)
 		}
 
-		s3_bucket := v.([]interface{})[0].(map[string]interface{})
-		opts := rds.RestoreDBInstanceFromS3Input{
-			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBName:                  aws.String(dbName),
-			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:    aws.String(identifier),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                  aws.String(d.Get("engine").(string)),
-			EngineVersion:           aws.String(d.Get("engine_version").(string)),
-			S3BucketName:            aws.String(s3_bucket["bucket_name"].(string)),
-			S3Prefix:                aws.String(s3_bucket["bucket_prefix"].(string)),
-			S3IngestionRoleArn:      aws.String(s3_bucket["ingestion_role"].(string)),
-			MasterUsername:          aws.String(d.Get("username").(string)),
-			MasterUserPassword:      aws.String(d.Get("password").(string)),
-			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
-			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                    Tags(tags.IgnoreAWS()),
-		}
-
-		if attr, ok := d.GetOk("multi_az"); ok {
-			opts.MultiAZ = aws.Bool(attr.(bool))
-		}
-
 		if _, ok := d.GetOk("character_set_name"); ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "character_set_name" doesn't work with with restores"`, dbName)
 		}
@@ -754,109 +727,133 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "timezone" doesn't work with with restores"`, dbName)
 		}
 
-		attr := d.Get("backup_retention_period")
-		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
-
-		if attr, ok := d.GetOk("maintenance_window"); ok {
-			opts.PreferredMaintenanceWindow = aws.String(attr.(string))
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input := &rds.RestoreDBInstanceFromS3Input{
+			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
+			DBName:                  aws.String(dbName),
+			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:                  aws.String(d.Get("engine").(string)),
+			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			MasterUsername:          aws.String(d.Get("username").(string)),
+			MasterUserPassword:      aws.String(d.Get("password").(string)),
+			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
+			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
+			S3Prefix:                aws.String(tfMap["bucket_prefix"].(string)),
+			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
+			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
+			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			Tags:                    Tags(tags.IgnoreAWS()),
 		}
 
-		if attr, ok := d.GetOk("backup_window"); ok {
-			opts.PreferredBackupWindow = aws.String(attr.(string))
+		if v, ok := d.GetOk("availability_zone"); ok {
+			input.AvailabilityZone = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("license_model"); ok {
-			opts.LicenseModel = aws.String(attr.(string))
-		}
-		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			opts.DBParameterGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("backup_window"); ok {
+			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			opts.DBSecurityGroups = flex.ExpandStringSet(attr)
-		}
-		if attr, ok := d.GetOk("storage_type"); ok {
-			opts.StorageType = aws.String(attr.(string))
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
-			opts.DBSubnetGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("iops"); ok {
+			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if attr, ok := d.GetOk("iops"); ok {
-			opts.Iops = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("port"); ok {
-			opts.Port = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("license_model"); ok {
+			input.LicenseModel = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("availability_zone"); ok {
-			opts.AvailabilityZone = aws.String(attr.(string))
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
-			opts.MonitoringRoleArn = aws.String(attr.(string))
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			input.MonitoringInterval = aws.Int64(int64(v.(int)))
 		}
 
-		if attr, ok := d.GetOk("monitoring_interval"); ok {
-			opts.MonitoringInterval = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			input.MonitoringRoleArn = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("option_group_name"); ok {
-			opts.OptionGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("multi_az"); ok {
+			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
-		if attr, ok := d.GetOk("kms_key_id"); ok {
-			opts.KmsKeyId = aws.String(attr.(string))
+		if v, ok := d.GetOk("option_group_name"); ok {
+			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
-			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			opts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("performance_insights_enabled"); ok {
+			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
 
-		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			opts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
-			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
-		var err error
-		// Retry for IAM eventual consistency
-		err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-			_, err = conn.RestoreDBInstanceFromS3(&opts)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
-					return resource.RetryableError(err)
+		if v, ok := d.GetOk("port"); ok {
+			input.Port = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.DBSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("storage_type"); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBInstanceFromS3(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "ENHANCED_MONITORING") {
+					return true, err
 				}
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3_SNAPSHOT_INGESTION") {
-					return resource.RetryableError(err)
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "S3_SNAPSHOT_INGESTION") {
+					return true, err
 				}
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "S3 bucket cannot be found") {
-					return resource.RetryableError(err)
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "S3 bucket cannot be found") {
+					return true, err
 				}
 				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded. Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Files from the specified Amazon S3 bucket cannot be downloaded") {
-					return resource.RetryableError(err)
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Files from the specified Amazon S3 bucket cannot be downloaded") {
+					return true, err
 				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.RestoreDBInstanceFromS3(&opts)
-		}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("creating RDS DB Instance (restore from S3) (%s): %w", identifier, err)
