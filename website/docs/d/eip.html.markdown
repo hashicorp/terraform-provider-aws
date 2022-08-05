@@ -81,3 +81,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value map of tags associated with Elastic IP.
 
 ~> **Note:** The data source computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

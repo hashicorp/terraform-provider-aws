@@ -307,6 +307,36 @@ func CheckResourceAttrRegionalHostnameService(resourceName, attributeName, servi
 	}
 }
 
+// CheckResourceAttrNameFromPrefix verifies that the state attribute value matches name generated from given prefix
+func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixFromPrefix(resourceName, attributeName, prefix, "")
+}
+
+// Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
+func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, resource.UniqueIDSuffixLength, suffix))
+}
+
+// CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
+func CheckResourceAttrNameWithSuffixFromPrefix(resourceName string, attributeName string, prefix string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeMatch := resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// CheckResourceAttrNameGenerated verifies that the state attribute value matches name automatically generated without prefix
+func CheckResourceAttrNameGenerated(resourceName string, attributeName string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
+}
+
+// CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
+func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(resource.UniqueIdPrefix, suffix))(s)
+	}
+}
+
 // MatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func MatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1209,11 +1239,12 @@ provider "aws" {
 }
 
 const testAccProviderConfigBase = `
-data "aws_partition" "provider_test" {}
+data "aws_region" "provider_test" {}
 
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
+# Required to initialize the provider.
+data "aws_service" "provider_test" {
+  region     = data.aws_region.provider_test.name
+  service_id = "s3"
 }
 `
 

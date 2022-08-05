@@ -887,15 +887,17 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
-			"aws_waf_ipset":           waf.DataSourceIPSet(),
-			"aws_waf_rule":            waf.DataSourceRule(),
-			"aws_waf_rate_based_rule": waf.DataSourceRateBasedRule(),
-			"aws_waf_web_acl":         waf.DataSourceWebACL(),
+			"aws_waf_ipset":                 waf.DataSourceIPSet(),
+			"aws_waf_rule":                  waf.DataSourceRule(),
+			"aws_waf_rate_based_rule":       waf.DataSourceRateBasedRule(),
+			"aws_waf_subscribed_rule_group": waf.DataSourceSubscribedRuleGroup(),
+			"aws_waf_web_acl":               waf.DataSourceWebACL(),
 
-			"aws_wafregional_ipset":           wafregional.DataSourceIPSet(),
-			"aws_wafregional_rule":            wafregional.DataSourceRule(),
-			"aws_wafregional_rate_based_rule": wafregional.DataSourceRateBasedRule(),
-			"aws_wafregional_web_acl":         wafregional.DataSourceWebACL(),
+			"aws_wafregional_ipset":                 wafregional.DataSourceIPSet(),
+			"aws_wafregional_rule":                  wafregional.DataSourceRule(),
+			"aws_wafregional_rate_based_rule":       wafregional.DataSourceRateBasedRule(),
+			"aws_wafregional_subscribed_rule_group": wafregional.DataSourceSubscribedRuleGroup(),
+			"aws_wafregional_web_acl":               wafregional.DataSourceWebACL(),
 
 			"aws_wafv2_ip_set":            wafv2.DataSourceIPSet(),
 			"aws_wafv2_regex_pattern_set": wafv2.DataSourceRegexPatternSet(),
@@ -1683,13 +1685,14 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
@@ -2052,6 +2055,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
 			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),

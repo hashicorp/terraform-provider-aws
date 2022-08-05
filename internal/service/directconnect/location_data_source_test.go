@@ -19,6 +19,7 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLocationDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dsResourceName, "available_macsec_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_providers.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "location_code"),

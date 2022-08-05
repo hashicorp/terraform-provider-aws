@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -103,13 +104,13 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetGroup(params)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserGroup, d.Get("name").(string))
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string))
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserGroup, d.Get("name").(string), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserGroup, d.Get("name").(string), err)
 	}
 
 	d.Set("description", resp.Group.Description)

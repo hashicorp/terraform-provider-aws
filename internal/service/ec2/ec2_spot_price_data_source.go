@@ -14,6 +14,10 @@ func DataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceSpotPriceRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"instance_type": {

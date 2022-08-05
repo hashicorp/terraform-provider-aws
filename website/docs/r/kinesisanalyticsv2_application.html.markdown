@@ -485,12 +485,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_kinesisanalyticsv2_application` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for Application creation
-- `update` - (Default `10 minutes`) Used for Application modifications and snapshotting
-- `delete` - (Default `10 minutes`) Used for Application deletion
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

@@ -123,9 +123,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_cloudformation_stack_set` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `update` - (Default `30m`) How long to wait for a StackSet to be updated.
+* `update` - (Default `30m`)
 
 ## Import
 

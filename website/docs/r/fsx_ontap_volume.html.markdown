@@ -79,12 +79,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_ontap_volume` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `30m`) How long to wait for the storage virtual machine to be created.
-* `delete` - (Default `30m`) How long to wait for the storage virtual machine to be deleted.
-* `update` - (Default `30m`) How long to wait for the storage virtual machine to be updated.
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

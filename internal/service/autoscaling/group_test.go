@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -174,7 +173,7 @@ func TestAccAutoScalingGroup_nameGenerated(t *testing.T) {
 				Config: testAccGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -198,7 +197,7 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 				Config: testAccGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},

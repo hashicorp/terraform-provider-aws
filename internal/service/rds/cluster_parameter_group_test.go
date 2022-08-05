@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
@@ -169,7 +168,7 @@ func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -196,7 +195,7 @@ func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_namePrefixParameter("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -223,7 +222,7 @@ func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
 			},
@@ -250,7 +249,7 @@ func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_generatedName_Parameter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
 			},

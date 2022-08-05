@@ -31,7 +31,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the accelerator.
-* `ip_address_type` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`.
+* `ip_address_type` - (Optional) The value for the address type. Defaults to `IPV4`. Valid values: `IPV4`, `DUAL_STACK`.
 * `enabled` - (Optional) Indicates whether the accelerator is enabled. Defaults to `true`. Valid values: `true`, `false`.
 * `attributes` - (Optional) The attributes of the accelerator. Fields documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -63,11 +63,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_globalaccelerator_accelerator` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be created.
-* `update` - (Default `30 minutes`) How long to wait for the Global Accelerator Accelerator to be updated.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

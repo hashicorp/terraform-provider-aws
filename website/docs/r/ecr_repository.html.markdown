@@ -52,10 +52,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ecr_repository` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
+- `delete` - (Default `20m`)
 
 ## Import
 

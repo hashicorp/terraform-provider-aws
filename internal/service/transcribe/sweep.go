@@ -17,6 +17,15 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_transcribe_language_model", &resource.Sweeper{
+		Name: "aws_transcribe_language_model",
+		F:    sweepLanguageModels,
+		Dependencies: []string{
+			"aws_s3_bucket",
+			"aws_iam_role",
+		},
+	})
+
 	resource.AddTestSweepers("aws_transcribe_medical_vocabulary", &resource.Sweeper{
 		Name: "aws_transcribe_medical_vocabulary",
 		F:    sweepMedicalVocabularies,
@@ -40,6 +49,56 @@ func init() {
 			"aws_s3_bucket",
 		},
 	})
+}
+
+func sweepLanguageModels(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	ctx := context.Background()
+	conn := client.(*conns.AWSClient).TranscribeConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	in := &transcribe.ListLanguageModelsInput{}
+	var errs *multierror.Error
+
+	pages := transcribe.NewListLanguageModelsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if sweep.SkipSweepError(err) {
+			log.Println("[WARN] Skipping Transcribe Language Models sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving Transcribe Language Models: %w", err)
+		}
+
+		for _, model := range page.Models {
+			name := aws.ToString(model.ModelName)
+			log.Printf("[INFO] Deleting Transcribe Language Model: %s", name)
+
+			r := ResourceLanguageModel()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Language Models for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Transcribe Language Models sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepMedicalVocabularies(region string) error {

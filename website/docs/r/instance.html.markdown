@@ -145,14 +145,6 @@ The following arguments are supported:
 
 * `vpc_security_group_ids` - (Optional, VPC only) A list of security group IDs to associate with.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
-* `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g., when changing instance type
-* `delete` - (Defaults to 20 mins) Used when terminating the instance
-
 ### Capacity Reservation Specification
 
 ~> **NOTE:** You can specify only one argument at a time. If you specify both `capacity_reservation_preference` and `capacity_reservation_target`, the request fails. Modifying `capacity_reservation_preference` or `capacity_reservation_target` in this block requires the instance to be in `stopped` state.
@@ -311,6 +303,14 @@ For `root_block_device`, in addition to the arguments above, the following attri
 
 * `volume_id` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `device_name` - Device name, e.g., `/dev/sdh` or `xvdh`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

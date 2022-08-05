@@ -54,11 +54,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ebs_volume` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `5 minutes`) Used for creating volumes. This includes the time required for the volume to become available
-- `update` - (Default `5 minutes`) Used for `size`, `type`, or `iops` volume changes
-- `delete` - (Default `5 minutes`) Used for destroying volumes
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

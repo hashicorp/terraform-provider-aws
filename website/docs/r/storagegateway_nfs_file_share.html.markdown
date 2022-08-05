@@ -74,11 +74,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_storagegateway_nfs_file_share` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for file share creation.
-* `update` - (Default `10m`) How long to wait for file share updates.
-* `delete` - (Default `10m`) How long to wait for file share deletion.
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

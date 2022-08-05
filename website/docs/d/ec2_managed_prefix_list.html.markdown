@@ -63,3 +63,9 @@ In addition to all arguments above, the following attributes are exported:
 * `address_family` - The address family of the prefix list. Valid values are `IPv4` and `IPv6`.
 * `max_entries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
 * `tags` - A map of tags assigned to the resource.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
