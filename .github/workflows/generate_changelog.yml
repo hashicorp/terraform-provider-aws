@@ -23,6 +23,6 @@ jobs:
             git config --local user.email changelogbot@hashicorp.com
             git config --local user.name changelogbot
             git add CHANGELOG.md
-            git commit -m "$MSG" 
+            git commit -m "$MSG"
             git push
           fi
