@@ -86,7 +86,7 @@ func testAccCheckRuleGroupNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfamp.FindRuleGroupNamespaceByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func testAccCheckRuleGroupNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfamp.FindRuleGroupNamespaceByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindRuleGroupNamespaceByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
