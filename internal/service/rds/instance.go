@@ -1522,220 +1522,199 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	req := &rds.ModifyDBInstanceInput{
-		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-		DBInstanceIdentifier: aws.String(d.Id()),
-	}
-
-	if !aws.BoolValue(req.ApplyImmediately) {
-		log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
-	}
-
-	requestUpdate := false
-	if d.HasChanges("allocated_storage", "iops") {
-		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
-		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
-		requestUpdate = true
-	}
-	if d.HasChange("allow_major_version_upgrade") {
-		req.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
-		// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
-		// as it results in InvalidParameterCombination: No modifications were requested
-	}
-	if d.HasChange("backup_retention_period") {
-		req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
-		requestUpdate = true
-	}
-	if d.HasChange("copy_tags_to_snapshot") {
-		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		requestUpdate = true
-	}
-	if d.HasChange("ca_cert_identifier") {
-		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("license_model") {
-		req.LicenseModel = aws.String(d.Get("license_model").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("deletion_protection") {
-		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
-		requestUpdate = true
-	}
-	if d.HasChange("instance_class") {
-		req.DBInstanceClass = aws.String(d.Get("instance_class").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("parameter_group_name") {
-		req.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("engine_version") {
-		req.EngineVersion = aws.String(d.Get("engine_version").(string))
-		req.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
-		requestUpdate = true
-	}
-	if d.HasChange("backup_window") {
-		req.PreferredBackupWindow = aws.String(d.Get("backup_window").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("maintenance_window") {
-		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("max_allocated_storage") {
-		mas := d.Get("max_allocated_storage").(int)
-
-		// The API expects the max allocated storage value to be set to the allocated storage
-		// value when disabling autoscaling. This check ensures that value is set correctly
-		// if the update to the Terraform configuration was removing the argument completely.
-		if mas == 0 {
-			mas = d.Get("allocated_storage").(int)
+	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+	// as it results in "InvalidParameterCombination: No modifications were requested".
+	if d.HasChangesExcept("allow_major_version_upgrade", "replicate_source_db", "tags", "tags_all") {
+		input := &rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		req.MaxAllocatedStorage = aws.Int64(int64(mas))
-		requestUpdate = true
-	}
-	if d.HasChange("password") {
-		req.MasterUserPassword = aws.String(d.Get("password").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("multi_az") {
-		req.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
-		requestUpdate = true
-	}
-	if d.HasChange("publicly_accessible") {
-		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-		requestUpdate = true
-	}
-	if d.HasChange("storage_type") {
-		req.StorageType = aws.String(d.Get("storage_type").(string))
-		requestUpdate = true
-
-		if aws.StringValue(req.StorageType) == storageTypeIO1 {
-			req.Iops = aws.Int64(int64(d.Get("iops").(int)))
-		}
-	}
-	if d.HasChange("auto_minor_version_upgrade") {
-		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("monitoring_role_arn") {
-		req.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("monitoring_interval") {
-		req.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("vpc_security_group_ids") {
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("security_group_names") {
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			req.DBSecurityGroups = flex.ExpandStringSet(attr)
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("option_group_name") {
-		req.OptionGroupName = aws.String(d.Get("option_group_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("port") {
-		req.DBPortNumber = aws.Int64(int64(d.Get("port").(int)))
-		requestUpdate = true
-	}
-	if d.HasChange("db_subnet_group_name") {
-		req.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-		o := oraw.(*schema.Set)
-		n := nraw.(*schema.Set)
-
-		enable := n.Difference(o)
-		disable := o.Difference(n)
-
-		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			EnableLogTypes:  flex.ExpandStringSet(enable),
-			DisableLogTypes: flex.ExpandStringSet(disable),
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("iam_database_authentication_enabled") {
-		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChanges("domain", "domain_iam_role_name") {
-		req.Domain = aws.String(d.Get("domain").(string))
-		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
-		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-
-		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		if !aws.BoolValue(input.ApplyImmediately) {
+			log.Println("[INFO] Only settings updating, instance changes will be applied in next maintenance window")
 		}
 
-		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
-			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		if d.HasChanges("allocated_storage", "iops") {
+			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
 
-		requestUpdate = true
-	}
+		if d.HasChange("allow_major_version_upgrade") {
+			input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+		}
 
-	if d.HasChange("customer_owned_ip_enabled") {
-		req.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
-		requestUpdate = true
-	}
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		}
 
-	if d.HasChange("replica_mode") {
-		req.ReplicaMode = aws.String(d.Get("replica_mode").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("backup_retention_period") {
+			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		}
 
-	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
-	if requestUpdate {
-		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
+		if d.HasChange("backup_window") {
+			input.PreferredBackupWindow = aws.String(d.Get("backup_window").(string))
+		}
 
-		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-			_, err := conn.ModifyDBInstance(req)
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
 
-			// Retry for IAM eventual consistency
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
+		if d.HasChange("ca_cert_identifier") {
+			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		}
+
+		if d.HasChange("customer_owned_ip_enabled") {
+			input.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+		}
+
+		if d.HasChange("db_subnet_group_name") {
+			input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
+		}
+
+		if d.HasChange("deletion_protection") {
+			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		}
+
+		if d.HasChanges("domain", "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get("domain").(string))
+			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+		}
+
+		if d.HasChange("enabled_cloudwatch_logs_exports") {
+			oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+			o := oraw.(*schema.Set)
+			n := nraw.(*schema.Set)
+
+			enable := n.Difference(o)
+			disable := o.Difference(n)
+
+			input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+				EnableLogTypes:  flex.ExpandStringSet(enable),
+				DisableLogTypes: flex.ExpandStringSet(disable),
+			}
+		}
+
+		if d.HasChange("engine_version") {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+			input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+		}
+
+		if d.HasChange("iam_database_authentication_enabled") {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		}
+
+		if d.HasChange("instance_class") {
+			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+		}
+
+		if d.HasChange("license_model") {
+			input.LicenseModel = aws.String(d.Get("license_model").(string))
+		}
+
+		if d.HasChange("maintenance_window") {
+			input.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+		}
+
+		if d.HasChange("max_allocated_storage") {
+			v := d.Get("max_allocated_storage").(int)
+
+			// The API expects the max allocated storage value to be set to the allocated storage
+			// value when disabling autoscaling. This check ensures that value is set correctly
+			// if the update to the Terraform configuration was removing the argument completely.
+			if v == 0 {
+				v = d.Get("allocated_storage").(int)
 			}
 
-			// InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later.
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBInstance(req)
+			input.MaxAllocatedStorage = aws.Int64(int64(v))
 		}
+
+		if d.HasChange("monitoring_interval") {
+			input.MonitoringInterval = aws.Int64(int64(d.Get("monitoring_interval").(int)))
+		}
+
+		if d.HasChange("monitoring_role_arn") {
+			input.MonitoringRoleArn = aws.String(d.Get("monitoring_role_arn").(string))
+		}
+
+		if d.HasChange("multi_az") {
+			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+		}
+
+		if d.HasChange("option_group_name") {
+			input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
+		}
+
+		if d.HasChange("parameter_group_name") {
+			input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		}
+
+		if d.HasChange("password") {
+			input.MasterUserPassword = aws.String(d.Get("password").(string))
+		}
+
+		if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
+			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+
+			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+				input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+				input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+			}
+		}
+
+		if d.HasChange("port") {
+			input.DBPortNumber = aws.Int64(int64(d.Get("port").(int)))
+		}
+
+		if d.HasChange("publicly_accessible") {
+			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		}
+
+		if d.HasChange("replica_mode") {
+			input.ReplicaMode = aws.String(d.Get("replica_mode").(string))
+		}
+
+		if d.HasChange("security_group_names") {
+			if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
+				input.DBSecurityGroups = flex.ExpandStringSet(v)
+			}
+		}
+
+		if d.HasChange("storage_type") {
+			input.StorageType = aws.String(d.Get("storage_type").(string))
+
+			if aws.StringValue(input.StorageType) == storageTypeIO1 {
+				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+			}
+		}
+
+		if d.HasChange("vpc_security_group_ids") {
+			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			}
+		}
+
+		log.Printf("[DEBUG] Updating DB Instance: %s", input)
+		_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+			func() (interface{}, error) {
+				return conn.ModifyDBInstance(input)
+			},
+			func(err error) (bool, error) {
+				// Retry for IAM eventual consistency.
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					return true, err
+				}
+
+				// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
@@ -1746,22 +1725,24 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// separate request to promote a database
+	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
 		if d.Get("replicate_source_db").(string) == "" {
-			// promote
-			opts := rds.PromoteReadReplicaInput{
-				DBInstanceIdentifier: aws.String(d.Id()),
+			input := &rds.PromoteReadReplicaInput{
+				BackupRetentionPeriod: aws.Int64(int64(d.Get("backup_retention_period").(int))),
+				DBInstanceIdentifier:  aws.String(d.Id()),
 			}
-			attr := d.Get("backup_retention_period")
-			opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+
 			if attr, ok := d.GetOk("backup_window"); ok {
-				opts.PreferredBackupWindow = aws.String(attr.(string))
+				input.PreferredBackupWindow = aws.String(attr.(string))
 			}
-			_, err := conn.PromoteReadReplica(&opts)
+
+			_, err := conn.PromoteReadReplica(input)
+
 			if err != nil {
-				return fmt.Errorf("Error promoting database: %w", err)
+				return fmt.Errorf("promoting RDS DB Instance (%s): %w", d.Id(), err)
 			}
+
 			d.Set("replicate_source_db", "")
 		} else {
 			return fmt.Errorf("cannot elect new source database for replication")
@@ -1772,9 +1753,8 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("updating RDS DB Instance (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceInstanceRead(d, meta)
@@ -1821,7 +1801,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required
+	// that final_snapshot_identifier is not required.
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
