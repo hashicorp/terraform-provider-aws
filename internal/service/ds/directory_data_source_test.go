@@ -134,7 +134,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 }
 
 func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
-	resourceName := "aws_directory_service_shared_directory.test"
+	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -152,8 +152,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 				Config: testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "shared_directory_id", dataSourceName, "directory_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttr(dataSourceName, "type", "SharedMicrosoftAD"),
 				),
 			},
 		},
@@ -245,10 +244,16 @@ resource "aws_directory_service_directory" "base" {
 
 func testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domain string) string {
 	return acctest.ConfigCompose(testAccSharedDirectoryConfig_basic(rName, domain), `
+resource "aws_directory_service_shared_directory_accepter" "test" {
+  provider = "awsalternate"
+
+  shared_directory_id = aws_directory_service_shared_directory.test.shared_directory_id
+}
+
 data "aws_directory_service_directory" "test" {
   provider = "awsalternate"
 
-  directory_id = aws_directory_service_shared_directory.test.shared_directory_id
+  directory_id = aws_directory_service_shared_directory_accepter.test.shared_directory_id
 }
 `)
 }
