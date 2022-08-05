@@ -10,14 +10,14 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_worklink_fleet" "example" {
   name = "terraform-example"
 }
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-  fleet_arn   = "${aws_worklink_fleet.test.arn}"
-  certificate = "${file("certificate.pem")}"
+  fleet_arn   = aws_worklink_fleet.test.arn
+  certificate = file("certificate.pem")
 }
 ```
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.
+WorkLink Website Certificate Authority can be imported using `FLEET-ARN,WEBSITE-CA-ID`, e.g.,
 
 ```
 $ terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk

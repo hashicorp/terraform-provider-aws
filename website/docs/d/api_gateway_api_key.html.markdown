@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_api_key"
 description: |-
@@ -13,7 +13,7 @@ example to supply credentials for a dependency microservice.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_api_gateway_api_key" "my_api_key" {
   id = "ru3mpjgse6"
 }

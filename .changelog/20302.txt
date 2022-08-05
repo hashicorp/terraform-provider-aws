@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_qldb_ledger: Add `permissions_mode` support
+```
+
+```release-note:enhancement
+data-source/aws_qldb_ledger: Add `permissions_mode` attribute
+```

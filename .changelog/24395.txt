@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_iot_topic_rule: Add `kafka` and `error_action.kafka` arguments
+```
+
+```release-note:new-resource
+aws_iot_topic_rule_destination
+```

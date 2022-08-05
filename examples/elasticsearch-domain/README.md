@@ -33,5 +33,5 @@ terraform apply
 To remove the stack
 
 ```bash
- terraform destroy
+terraform destroy
 ```

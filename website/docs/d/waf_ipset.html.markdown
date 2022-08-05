@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF"
+subcategory: "WAF Classic"
 layout: "aws"
 page_title: "AWS: aws_waf_ipset"
 description: |-
@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_waf_ipset" "example" {
   name = "tfWAFIPSet"
 }

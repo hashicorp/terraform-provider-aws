@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route_table"
 description: |-
@@ -17,10 +17,11 @@ an input variable and needs to, for example, find the associated Outpost or Loca
 
 The following example returns a specific local gateway route table ID
 
-```hcl
+```terraform
 variable "aws_ec2_local_gateway_route_table" {}
+
 data "aws_ec2_local_gateway_route_table" "selected" {
-  local_gateway_route_table_id = "${var.aws_ec2_local_gateway_route_table}"
+  local_gateway_route_table_id = var.aws_ec2_local_gateway_route_table
 }
 ```
 
@@ -49,3 +50,9 @@ which take the following arguments:
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A local gateway route table will be selected if any one of the given values matches.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
