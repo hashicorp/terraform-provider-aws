@@ -246,6 +246,8 @@ resource "aws_directory_service_directory" "base" {
 func testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domain string) string {
 	return acctest.ConfigCompose(testAccSharedDirectoryConfig_basic(rName, domain), `
 data "aws_directory_service_directory" "test" {
+  provider = "awsalternate"
+
   directory_id = aws_directory_service_shared_directory.test.shared_directory_id
 }
 `)
