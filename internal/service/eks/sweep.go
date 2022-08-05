@@ -54,7 +54,7 @@ func sweepAddon(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	ctx := context.Background()
+	ctx := context.TODO()
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
@@ -230,7 +230,7 @@ func sweepIdentityProvidersConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	ctx := context.Background()
+	ctx := context.TODO()
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error

@@ -51,7 +51,7 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForGlobalClusterDeletion(context.Background(), conn, id, GlobalClusterDeleteTimeout); err != nil {
+			if err := WaitForGlobalClusterDeletion(context.TODO(), conn, id, GlobalClusterDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}

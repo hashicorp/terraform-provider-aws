@@ -549,7 +549,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	globalCluster, err := findGlobalClusterByARN(context.Background(), conn, aws.StringValue(dbc.DBClusterArn))
+	globalCluster, err := findGlobalClusterByARN(context.TODO(), conn, aws.StringValue(dbc.DBClusterArn))
 
 	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases

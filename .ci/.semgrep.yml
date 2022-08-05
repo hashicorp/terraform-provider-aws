@@ -828,12 +828,12 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO
+  - id: avoid-context-TODO-in-tests
     languages: [go]
     message: Prefer using context.Background() instead of context.TODO()
     paths:
       include:
-        - internal/
+        - "internal/**/*_test.go"
     patterns:
       - pattern: context.TODO
     severity: ERROR
