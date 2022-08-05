@@ -1380,11 +1380,9 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if requiresRebootDbInstance {
-		input := &rds.RebootDBInstanceInput{
+		_, err := conn.RebootDBInstance(&rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
-		}
-
-		_, err := conn.RebootDBInstance(input)
+		})
 
 		if err != nil {
 			return fmt.Errorf("rebooting RDS DB Instance (%s): %w", d.Id(), err)
