@@ -1167,7 +1167,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfkafka.FindClusterByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafka.FindClusterByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1196,7 +1196,7 @@ func testAccCheckClusterExists(n string, v *kafka.ClusterInfo) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
-		output, err := tfkafka.FindClusterByARN(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfkafka.FindClusterByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
