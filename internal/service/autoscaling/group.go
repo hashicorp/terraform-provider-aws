@@ -991,7 +991,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if nASG < minSize {
-					return fmt.Errorf("want at least %d healthy instances in Auto Scaling Group, have %d", minSize, nASG)
+					return fmt.Errorf("want at least %d healthy instance(s) in Auto Scaling Group, have %d", minSize, nASG)
 				}
 
 				minELBCapacity := d.Get("min_elb_capacity").(int)
@@ -1000,7 +1000,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if nELB < minELBCapacity {
-					return fmt.Errorf("want at least %d healthy instances registered to Load Balancer, have %d", minELBCapacity, nELB)
+					return fmt.Errorf("want at least %d healthy instance(s) registered to Load Balancer, have %d", minELBCapacity, nELB)
 				}
 
 				return nil
@@ -1495,12 +1495,12 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 
 					if nASG != minSize {
-						return fmt.Errorf("want exactly %d healthy instances in Auto Scaling Group, have %d", minSize, nASG)
+						return fmt.Errorf("want exactly %d healthy instance(s) in Auto Scaling Group, have %d", minSize, nASG)
 					}
 
 					if waitForELBCapacity := d.Get("wait_for_elb_capacity").(int); waitForELBCapacity > 0 {
 						if nELB != waitForELBCapacity {
-							return fmt.Errorf("want exactly %d healthy instances registered to Load Balancer, have %d", waitForELBCapacity, nELB)
+							return fmt.Errorf("want exactly %d healthy instance(s) registered to Load Balancer, have %d", waitForELBCapacity, nELB)
 						}
 					}
 
