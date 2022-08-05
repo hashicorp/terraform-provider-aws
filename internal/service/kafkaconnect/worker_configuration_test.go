@@ -82,7 +82,7 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
