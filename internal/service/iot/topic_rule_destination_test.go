@@ -126,7 +126,7 @@ func testAccCheckTopicRuleDestinationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiot.FindTopicRuleDestinationByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindTopicRuleDestinationByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -155,7 +155,7 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		_, err := tfiot.FindTopicRuleDestinationByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindTopicRuleDestinationByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
