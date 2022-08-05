@@ -234,7 +234,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
-		_, err := tfdocdb.FindEventSubscriptionByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfdocdb.FindEventSubscriptionByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -263,7 +263,7 @@ func testAccCheckEventSubscriptionExists(n string, eventSubscription *docdb.Even
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
-		res, err := tfdocdb.FindEventSubscriptionByID(context.TODO(), conn, rs.Primary.ID)
+		res, err := tfdocdb.FindEventSubscriptionByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
