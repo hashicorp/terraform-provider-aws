@@ -257,8 +257,9 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	kmsKeyResourceName := "aws_kms_key.foo"
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -267,7 +268,7 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_kmsKey(sdkacctest.RandInt()),
+				Config: testAccClusterInstanceConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -1242,10 +1243,10 @@ resource "aws_db_subnet_group" "test" {
 `, rName))
 }
 
-func testAccClusterInstanceConfig_kmsKey(n int) string {
+func testAccClusterInstanceConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %[1]d"
+resource "aws_kms_key" "test" {
+  description = %[1]q
 
   policy = <<POLICY
 {
@@ -1266,8 +1267,8 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%[1]d"
+resource "aws_rds_cluster" "test" {
+  cluster_identifier = %[1]q
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
@@ -1277,25 +1278,25 @@ resource "aws_rds_cluster" "default" {
   master_username     = "foo"
   master_password     = "mustbeeightcharacters"
   storage_encrypted   = true
-  kms_key_id          = aws_kms_key.foo.arn
+  kms_key_id          = aws_kms_key.test.arn
   skip_final_snapshot = true
 }
 
 data "aws_rds_orderable_db_instance" "test" {
-  engine                     = aws_rds_cluster.default.engine
-  engine_version             = aws_rds_cluster.default.engine_version
+  engine                     = aws_rds_cluster.test.engine
+  engine_version             = aws_rds_cluster.test.engine_version
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
 }
 
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier              = "tf-cluster-instance-%[1]d"
-  cluster_identifier      = aws_rds_cluster.default.id
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  cluster_identifier      = aws_rds_cluster.test.id
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_parameter_group_name = aws_db_parameter_group.bar.name
+  db_parameter_group_name = aws_db_parameter_group.test.name
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%[1]d"
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
   family = "aurora5.6"
 
   parameter {
@@ -1303,12 +1304,8 @@ resource "aws_db_parameter_group" "bar" {
     value        = "32767"
     apply_method = "pending-reboot"
   }
-
-  tags = {
-    foo = "bar"
-  }
 }
-`, n))
+`, rName))
 }
 
 func testAccClusterInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
