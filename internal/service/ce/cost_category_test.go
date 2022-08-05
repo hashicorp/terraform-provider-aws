@@ -191,7 +191,7 @@ func testAccCheckCostCategoryExists(n string, v *costexplorer.CostCategory) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 
-		output, err := tfce.FindCostCategoryByARN(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfce.FindCostCategoryByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -211,7 +211,7 @@ func testAccCheckCostCategoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfce.FindCostCategoryByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfce.FindCostCategoryByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
