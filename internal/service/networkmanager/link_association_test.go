@@ -76,7 +76,7 @@ func testAccCheckLinkAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindLinkAssociationByThreePartKey(context.TODO(), conn, globalNetworkID, linkID, deviceID)
+		_, err = tfnetworkmanager.FindLinkAssociationByThreePartKey(context.Background(), conn, globalNetworkID, linkID, deviceID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -111,7 +111,7 @@ func testAccCheckLinkAssociationExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindLinkAssociationByThreePartKey(context.TODO(), conn, globalNetworkID, linkID, deviceID)
+		_, err = tfnetworkmanager.FindLinkAssociationByThreePartKey(context.Background(), conn, globalNetworkID, linkID, deviceID)
 
 		if err != nil {
 			return err
