@@ -59,7 +59,7 @@ func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefre
 
 func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		service, err := FindServiceNoTagsByID(context.Background(), conn, id, cluster)
+		service, err := FindServiceNoTagsByID(context.TODO(), conn, id, cluster)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

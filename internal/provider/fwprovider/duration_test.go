@@ -42,7 +42,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := context.TODO()
 			val, err := fwprovider.DurationType.ValueFromTerraform(ctx, test.val)
 
 			if err == nil && test.expectError {
@@ -89,7 +89,7 @@ func TestDurationTypeValidate(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := context.TODO()
 
 			diags := fwprovider.DurationType.Validate(ctx, test.val, path.Root("test"))
 

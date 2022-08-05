@@ -18,7 +18,7 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.Background()
+	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },

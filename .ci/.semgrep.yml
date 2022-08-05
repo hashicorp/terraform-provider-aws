@@ -827,13 +827,3 @@ rules:
     patterns:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
-
-  - id: avoid-context-TODO
-    languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern: context.TODO
-    severity: ERROR
