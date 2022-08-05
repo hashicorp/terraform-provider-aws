@@ -2098,11 +2098,6 @@ func findWarmPool(conn *autoscaling.AutoScaling, name string) (*autoscaling.Desc
 	return output, nil
 }
 
-const (
-	groupCapacityInProgress = "InProgress"
-	groupCapacitySatisfied  = "Satisfied"
-)
-
 func statusGroupCapacity(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Check for fatal error in activity logs.
@@ -2195,10 +2190,10 @@ func statusGroupCapacity(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2c
 		err = cb(nASG, nELB)
 
 		if err != nil {
-			return struct{ err error }{err: err}, groupCapacityInProgress, nil //nolint:nilerr // err indicates why capacity is not satisfied
+			return struct{}{}, err.Error(), nil //nolint:nilerr // err is passed via the result State
 		}
 
-		return struct{}{}, groupCapacitySatisfied, nil
+		return struct{}{}, "ok", nil
 	}
 }
 
@@ -2327,8 +2322,7 @@ func statusWarmPoolInstanceCount(conn *autoscaling.AutoScaling, name string) res
 
 func waitGroupCapacitySatisfied(conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{groupCapacityInProgress},
-		Target:  []string{groupCapacitySatisfied},
+		Target:  []string{"ok"},
 		Refresh: statusGroupCapacity(conn, elbconn, elbv2conn, name, cb),
 		Timeout: timeout,
 	}
