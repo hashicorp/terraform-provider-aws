@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_authorizer"
 description: |-
@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic WebSocket API
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_authorizer" "example" {
   api_id           = aws_apigatewayv2_api.example.id
   authorizer_type  = "REQUEST"
@@ -27,7 +27,7 @@ resource "aws_apigatewayv2_authorizer" "example" {
 
 ### Basic HTTP API
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_authorizer" "example" {
   api_id           = aws_apigatewayv2_api.example.id
   authorizer_type  = "JWT"
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.
+`aws_apigatewayv2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334

@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_account"
 description: |-
@@ -14,7 +14,7 @@ Provides a settings of an API Gateway Account. Settings is applied region-wide p
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_account" "demo" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
 }
@@ -86,7 +86,7 @@ The following attribute is exported:
 
 ## Import
 
-API Gateway Accounts can be imported using the word `api-gateway-account`, e.g.
+API Gateway Accounts can be imported using the word `api-gateway-account`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_account.demo api-gateway-account

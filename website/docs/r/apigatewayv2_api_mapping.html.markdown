@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_api_mapping"
 description: |-
@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api_mapping" "example" {
   api_id      = aws_apigatewayv2_api.example.id
   domain_name = aws_apigatewayv2_domain_name.example.id
@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.
+`aws_apigatewayv2_api_mapping` can be imported by using the API mapping identifier and domain name, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_api_mapping.example 1122334/ws-api.example.com

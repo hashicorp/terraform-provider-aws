@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpn_attachment"
 description: |-
@@ -16,7 +16,7 @@ Get information on an EC2 Transit Gateway VPN Attachment.
 
 ### By Transit Gateway and VPN Connection Identifiers
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpn_attachment" "example" {
   transit_gateway_id = aws_ec2_transit_gateway.example.id
   vpn_connection_id  = aws_vpn_connection.example.id
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway_vpn_attachment" "example" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   filter {
     name   = "resource-id"
@@ -56,3 +56,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway VPN Attachment identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway VPN Attachment
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

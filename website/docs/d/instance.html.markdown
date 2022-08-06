@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_instance"
 description: |-
@@ -13,7 +13,7 @@ resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_instance" "foo" {
   instance_id = "i-instanceid"
 
@@ -62,6 +62,8 @@ interpolation.
 * `arn` - The ARN of the instance.
 * `associate_public_ip_address` - Whether or not the Instance is associated with a public IP address or not (Boolean).
 * `availability_zone` - The availability zone of the Instance.
+* `disable_api_stop` - Whether or not EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection) is enabled (Boolean).
+* `disable_api_termination` - Whether or not [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination) is enabled (Boolean).
 * `ebs_block_device` - The EBS block device mappings of the Instance.
     * `delete_on_termination` - If the EBS volume will be deleted on termination.
     * `device_name` - The physical name of the device.
@@ -89,9 +91,14 @@ interpolation.
   This attribute is only exported if `get_password_data` is true.
   See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - The placement group of the Instance.
+* `placement_partition_number` - The number of the partition the instance is in.
 * `private_dns` - The private DNS name assigned to the Instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC.
+* `private_dns_name_options` - The options for the instance hostname.
+    * `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+    * `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+    * `hostname_type` - The type of hostname for EC2 instances.
 * `private_ip` - The private IP address assigned to the Instance.
 * `secondary_private_ips` - The secondary private IPv4 addresses assigned to the instance's primary network interface (eth0) in a VPC.
 * `public_dns` - The public DNS name assigned to the Instance. For EC2-VPC, this
@@ -121,7 +128,16 @@ interpolation.
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
-* `enclave_options` - The enclave options of the Instance.
+    * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
+* `enclave_options` - The enclave options of the instance.
     * `enabled` - Whether Nitro Enclaves are enabled.
+* `maintenance_options` - The maintenance and recovery options for the instance.
+    * `auto_recovery` - The automatic recovery behavior of the instance.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

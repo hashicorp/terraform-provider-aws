@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_coip_pools"
 description: |-
@@ -14,7 +14,7 @@ Provides information for multiple EC2 Customer-Owned IP Pools, such as their ide
 
 The following shows outputing all COIP Pool Ids.
 
-```hcl
+```terraform
 data "aws_ec2_coip_pools" "foo" {}
 
 output "foo" {
@@ -42,3 +42,9 @@ which take the following arguments:
 
 * `id` - AWS Region.
 * `pool_ids` - Set of COIP Pool Identifiers
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

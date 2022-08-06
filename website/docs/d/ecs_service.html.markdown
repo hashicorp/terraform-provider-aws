@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
 description: |-
@@ -13,7 +13,7 @@ Service within a AWS ECS Cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecs_service" "example" {
   service_name = "example"
   cluster_arn  = data.aws_ecs_cluster.example.arn
@@ -36,3 +36,4 @@ In addition to all arguments above, the following attributes are exported:
 * `launch_type` - The launch type for the ECS Service
 * `scheduling_strategy` - The scheduling strategy for the ECS Service
 * `task_definition` - The family for the latest ACTIVE revision
+* `tags` - Resource tags.

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_instance_type"
 description: |-
@@ -13,7 +13,7 @@ Get characteristics for a single EC2 Instance Type.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ec2_instance_type" "example" {
   instance_type = "t2.micro"
 }
@@ -51,6 +51,7 @@ In addition to the argument above, the following attributes are exported:
 * `ebs_performance_maximum_throughput` - The maximum throughput performance for an EBS-optimized instance type, in MBps.
 * `efa_supported` - Indicates whether Elastic Fabric Adapter (EFA) is supported.
 * `ena_support` - Indicates whether Elastic Network Adapter (ENA) is supported.
+* `encryption_in_transit_supported` - Indicates whether encryption in-transit between instances is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
     * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
     * `fpgas.#.manufacturer` - The manufacturer of the FPGA accelerator.
@@ -90,3 +91,9 @@ In addition to the argument above, the following attributes are exported:
 * `total_instance_storage` - The total size of the instance disks, in GB.
 * `valid_cores` - List of the valid number of cores that can be configured for the instance type.
 * `valid_threads_per_core` - List of the valid number of threads per core that can be configured for the instance type.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

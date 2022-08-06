@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_notification"
 description: |-
@@ -16,7 +16,7 @@ Manages a S3 Bucket Notification Configuration. For additional information, see 
 
 ### Add notification configuration to SNS Topic
 
-```hcl
+```terraform
 resource "aws_sns_topic" "topic" {
   name = "s3-event-notification-topic"
 
@@ -25,7 +25,7 @@ resource "aws_sns_topic" "topic" {
     "Version":"2012-10-17",
     "Statement":[{
         "Effect": "Allow",
-        "Principal": {"AWS":"*"},
+        "Principal": { "Service": "s3.amazonaws.com" },
         "Action": "SNS:Publish",
         "Resource": "arn:aws:sns:*:*:s3-event-notification-topic",
         "Condition":{
@@ -37,7 +37,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "your_bucket_name"
+  bucket = "your-bucket-name"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -53,7 +53,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add notification configuration to SQS Queue
 
-```hcl
+```terraform
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 
@@ -76,7 +76,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "your_bucket_name"
+  bucket = "your-bucket-name"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -92,7 +92,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add notification configuration to Lambda Function
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -129,7 +129,7 @@ resource "aws_lambda_function" "func" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "your_bucket_name"
+  bucket = "your-bucket-name"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -148,7 +148,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Trigger multiple Lambda functions
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -200,7 +200,7 @@ resource "aws_lambda_function" "func2" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "your_bucket_name"
+  bucket = "your-bucket-name"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -229,7 +229,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add multiple notification configurations to SQS Queue
 
-```hcl
+```terraform
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 
@@ -252,7 +252,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "your_bucket_name"
+  bucket = "your-bucket-name"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -298,40 +298,48 @@ For Terraform's [JSON syntax](https://www.terraform.io/docs/configuration/syntax
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `bucket` - (Required) The name of the bucket to put notification configuration.
-* `topic` - (Optional) The notification configuration to SNS Topic (documented below).
-* `queue` - (Optional) The notification configuration to SQS Queue (documented below).
-* `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function (documented below).
+* `bucket` - (Required) Name of the bucket for notification configuration.
 
-The `topic` notification configuration supports the following:
+The following arguments are optional:
 
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `topic_arn` - (Required) Specifies Amazon SNS topic ARN.
+* `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications.
+* `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
+* `queue` - (Optional) Notification configuration to SQS Queue. See below.
+* `topic` - (Optional) Notification configuration to SNS Topic. See below.
+
+### `lambda_function`
+
+* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `lambda_function_arn` - (Required) Lambda function ARN.
+
+### `queue`
+
 * `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `queue_arn` - (Required) SQS queue ARN.
 
-The `queue` notification configuration supports the following:
+### `topic`
 
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `queue_arn` - (Required) Specifies Amazon SQS queue ARN.
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
+* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `filter_prefix` - (Optional) Object key name prefix.
+* `filter_suffix` - (Optional) Object key name suffix.
+* `id` - (Optional) Unique identifier for each of the notification configurations.
+* `topic_arn` - (Required) SNS topic ARN.
 
-The `lambda_function` notification configuration supports the following:
+## Attributes Reference
 
-* `id` - (Optional) Specifies unique identifier for each of the notification configurations.
-* `lambda_function_arn` - (Required) Specifies Amazon Lambda function ARN.
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
-* `filter_prefix` - (Optional) Specifies object key name prefix.
-* `filter_suffix` - (Optional) Specifies object key name suffix.
+No additional attributes are exported.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.
+S3 bucket notification can be imported using the `bucket`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_notification.bucket_notification bucket-name

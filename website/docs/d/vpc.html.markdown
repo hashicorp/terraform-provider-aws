@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc"
 description: |-
@@ -20,7 +20,7 @@ The following example shows how one might accept a VPC id as a variable
 and use this data source to obtain the data necessary to create a subnet
 within it.
 
-```hcl
+```terraform
 variable "vpc_id" {}
 
 data "aws_vpc" "selected" {
@@ -90,3 +90,9 @@ The following attribute is additionally exported:
 * `association_id` - The association ID for the the IPv4 CIDR block.
 * `cidr_block` - The CIDR block for the association.
 * `state` - The State of the association.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

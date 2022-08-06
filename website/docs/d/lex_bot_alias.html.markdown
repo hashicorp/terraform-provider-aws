@@ -1,5 +1,5 @@
 ---
-subcategory: "Lex"
+subcategory: "Lex Model Building"
 layout: "aws"
 page_title: "AWS: aws_lex_bot_alias"
 description: |-
@@ -12,7 +12,7 @@ Provides details about a specific Amazon Lex Bot Alias.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_lex_bot_alias" "order_flowers_prod" {
   bot_name = "OrderFlowers"
   name     = "OrderFlowersProd"

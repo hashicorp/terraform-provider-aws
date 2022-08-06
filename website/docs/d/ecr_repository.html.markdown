@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository"
 description: |-
@@ -12,7 +12,7 @@ The ECR Repository data source allows the ARN, Repository URI and Registry ID to
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecr_repository" "service" {
   name = "ecr-repository"
 }

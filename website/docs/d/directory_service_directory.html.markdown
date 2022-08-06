@@ -1,5 +1,5 @@
 ---
-subcategory: "Directory Service"
+subcategory: "DS (Directory Service)"
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
 description: |-
@@ -12,7 +12,7 @@ Get attributes of AWS Directory Service directory (SimpleAD, Managed AD, AD Conn
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_directory_service_directory" "example" {
   directory_id = aws_directory_service_directory.main.id
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_engine_version"
 description: |-
@@ -12,7 +12,7 @@ Information about an RDS engine version.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
   preferred_versions = ["5.7.42", "5.7.19", "5.7.17"]

@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_version"
 description: |-
@@ -12,7 +12,7 @@ Provides a resource to manage an API Gateway Documentation Version.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_documentation_version" "example" {
   version     = "example_version"
   rest_api_id = aws_api_gateway_rest_api.example.id
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.
+API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version

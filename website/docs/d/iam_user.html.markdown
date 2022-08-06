@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_user"
 description: |-
@@ -14,7 +14,7 @@ properties without having to hard code ARNs or unique IDs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_user" "example" {
   user_name = "an_example_user_name"
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_lb_cookie_stickiness_policy"
 description: |-
@@ -12,7 +12,7 @@ Provides a load balancer cookie stickiness policy, which allows an ELB to contro
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]

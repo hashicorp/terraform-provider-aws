@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb_target_group"
 description: |-
@@ -18,7 +18,7 @@ an LB Target Group for use in other resources, given LB Target Group name.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_tg_arn" {
   type    = string
   default = ""
@@ -48,3 +48,9 @@ The following arguments are supported:
 
 See the [LB Target Group Resource](/docs/providers/aws/r/lb_target_group.html) for details
 on the returned attributes - they are identical.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_managed_prefix_list"
 description: |-
@@ -15,7 +15,7 @@ customer-managed prefix list in the current region.
 
 ### Find the regional DynamoDB prefix list
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "example" {
@@ -25,7 +25,7 @@ data "aws_ec2_managed_prefix_list" "example" {
 
 ### Find a managed prefix list using filters
 
-```hcl
+```terraform
 data "aws_ec2_managed_prefix_list" "example" {
   filter {
     name   = "prefix-list-name"
@@ -63,3 +63,9 @@ In addition to all arguments above, the following attributes are exported:
 * `address_family` - The address family of the prefix list. Valid values are `IPv4` and `IPv6`.
 * `max_entries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
 * `tags` - A map of tags assigned to the resource.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

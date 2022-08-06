@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_notification"
 description: |-
@@ -16,7 +16,7 @@ Services, and are applied to each AutoScaling Group you supply.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_autoscaling_notification" "example_notifications" {
   group_names = [
     aws_autoscaling_group.bar.name,

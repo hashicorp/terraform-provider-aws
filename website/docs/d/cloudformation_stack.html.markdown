@@ -3,7 +3,7 @@ subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
 description: |-
-    Provides metadata of a CloudFormation stack (e.g. outputs)
+    Provides metadata of a CloudFormation stack (e.g., outputs)
 ---
 
 # Data Source: aws_cloudformation_stack
@@ -13,7 +13,7 @@ outputs and other useful data including the template body.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudformation_stack" "network" {
   name = "my-network-stack"
 }

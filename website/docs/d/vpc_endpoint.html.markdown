@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint"
 description: |-
@@ -13,7 +13,7 @@ a specific VPC endpoint.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.foo.id
@@ -69,3 +69,9 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - The DNS name.
 * `hosted_zone_id` - The ID of the private hosted zone.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

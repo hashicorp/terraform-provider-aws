@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_availability_zone"
 description: |-
@@ -13,7 +13,7 @@ in the current region.
 
 This can be used both to validate an availability zone given in a variable
 and to split the AZ name into its component parts of an AWS region and an
-AZ identifier letter. The latter may be useful e.g. for implementing a
+AZ identifier letter. The latter may be useful e.g., for implementing a
 consistent subnet numbering scheme across several regions by mapping both
 the region and the subnet letter to network numbers.
 
@@ -25,7 +25,7 @@ which provides a list of the available zones.
 The following example shows how this data source might be used to derive
 VPC and subnet CIDR prefixes systematically for an availability zone.
 
-```hcl
+```terraform
 variable "region_number" {
   # Arbitrary mapping of region name to number to use in
   # a VPC's CIDR prefix.
@@ -101,3 +101,9 @@ For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz
 * `parent_zone_name` - The name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `region` - The region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
 * `zone_type` - The type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

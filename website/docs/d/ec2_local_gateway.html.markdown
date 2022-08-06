@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway"
 description: |-
@@ -14,7 +14,7 @@ Provides details about an EC2 Local Gateway.
 
 The following example shows how one might accept a local gateway id as a variable.
 
-```hcl
+```terraform
 variable "local_gateway_id" {}
 
 data "aws_ec2_local_gateway" "selected" {
@@ -59,3 +59,9 @@ The following attributes are additionally exported:
 * `outpost_arn` - Amazon Resource Name (ARN) of Outpost
 * `owner_id` - AWS account identifier that owns the Local Gateway.
 * `state` - State of the local gateway.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

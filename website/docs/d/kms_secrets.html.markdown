@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_secrets"
 description: |-
@@ -26,7 +26,7 @@ AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIB
 
 That encrypted output can now be inserted into Terraform configurations without exposing the plaintext secret directly.
 
-```hcl
+```terraform
 data "aws_kms_secrets" "example" {
   secret {
     # ... potentially other configuration ...

@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
@@ -19,7 +19,7 @@ VPC that the security group belongs to.
 The following example shows how one might accept a Security Group id as a variable
 and use this data source to obtain the data necessary to create a subnet.
 
-```hcl
+```terraform
 variable "security_group_id" {}
 
 data "aws_security_group" "selected" {
@@ -72,3 +72,9 @@ The following fields are also exported:
 * `arn` - The computed ARN of the security group.
 
 ~> **Note:** The [default security group for a VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#DefaultSecurityGroup) has the name `default`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
