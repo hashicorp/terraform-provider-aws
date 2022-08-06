@@ -18,11 +18,12 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                     testAccInstanceStorageConfig_basic,
-		"disappears":                testAccInstanceStorageConfig_disappears,
-		"S3Config_BucketName":       testAccInstanceStorageConfig_S3Config_BucketName,
-		"S3Config_BucketPrefix":     testAccInstanceStorageConfig_S3Config_BucketPrefix,
-		"S3Config_EncryptionConfig": testAccInstanceStorageConfig_S3Config_EncryptionConfig,
+		"basic":                             testAccInstanceStorageConfig_basic,
+		"disappears":                        testAccInstanceStorageConfig_disappears,
+		"KinesisFirehoseConfig_FirehoseARN": testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN,
+		"S3Config_BucketName":               testAccInstanceStorageConfig_S3Config_BucketName,
+		"S3Config_BucketPrefix":             testAccInstanceStorageConfig_S3Config_BucketPrefix,
+		"S3Config_EncryptionConfig":         testAccInstanceStorageConfig_S3Config_EncryptionConfig,
 	}
 
 	for name, tc := range testCases {
@@ -63,6 +64,51 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisFirehose),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisFirehose),
+				),
 			},
 		},
 	})
@@ -333,6 +379,141 @@ resource "aws_connect_instance_storage_config" "test" {
   }
 }
 `, rName2))
+}
+
+func testAccInstanceStorageDeliveryStreamConfig_Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "firehose" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "private"
+}
+
+resource "aws_iam_role_policy" "firehose" {
+  name = %[1]q
+  role = aws_iam_role.firehose.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
+      ]
+    },
+    {
+      "Sid": "GlueAccess",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
+func testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, selectFirehose string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigConfig_base(rName),
+		testAccInstanceStorageDeliveryStreamConfig_Base(rName2),
+		fmt.Sprintf(`
+locals {
+  select_firehose = %[3]q
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test2" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[2]q
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "CONTACT_TRACE_RECORDS"
+
+  storage_config {
+    kinesis_firehose_config {
+      firehose_arn = local.select_firehose == "first" ? aws_kinesis_firehose_delivery_stream.test.arn : aws_kinesis_firehose_delivery_stream.test2.arn
+    }
+    storage_type = "KINESIS_FIREHOSE"
+  }
+}
+`, rName3, rName4, selectFirehose))
 }
 
 func testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, selectBucket string) string {
