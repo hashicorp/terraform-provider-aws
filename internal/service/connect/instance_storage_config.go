@@ -76,6 +76,44 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
+						"kinesis_video_stream_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"encryption_config": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"encryption_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(connect.EncryptionType_Values(), false),
+												},
+												"key_id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"prefix": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"retention_period_hours": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(0, 87600),
+									},
+								},
+							},
+						},
 						"s3_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -278,6 +316,10 @@ func expandStorageConfig(tfList []interface{}) *connect.InstanceStorageConfig {
 		result.KinesisStreamConfig = expandKinesisStreamConfig(v)
 	}
 
+	if v, ok := tfMap["kinesis_video_stream_config"].([]interface{}); ok && len(v) > 0 {
+		result.KinesisVideoStreamConfig = expandKinesisVideoStreamConfig(v)
+	}
+
 	if v, ok := tfMap["s3_config"].([]interface{}); ok && len(v) > 0 {
 		result.S3Config = exapandS3Config(v)
 	}
@@ -314,6 +356,25 @@ func expandKinesisStreamConfig(tfList []interface{}) *connect.KinesisStreamConfi
 
 	result := &connect.KinesisStreamConfig{
 		StreamArn: aws.String(tfMap["stream_arn"].(string)),
+	}
+
+	return result
+}
+
+func expandKinesisVideoStreamConfig(tfList []interface{}) *connect.KinesisVideoStreamConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.KinesisVideoStreamConfig{
+		EncryptionConfig:     expandEncryptionConfig(tfMap["encryption_config"].([]interface{})),
+		Prefix:               aws.String(tfMap["prefix"].(string)),
+		RetentionPeriodHours: aws.Int64(int64(tfMap["retention_period_hours"].(int))),
 	}
 
 	return result
@@ -376,6 +437,10 @@ func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{
 		values["kinesis_stream_config"] = flattenKinesisStreamConfig(v)
 	}
 
+	if v := apiObject.KinesisVideoStreamConfig; v != nil {
+		values["kinesis_video_stream_config"] = flattenKinesisVideoStreamConfig(v)
+	}
+
 	if v := apiObject.S3Config; v != nil {
 		values["s3_config"] = flattenS3Config(v)
 	}
@@ -402,6 +467,20 @@ func flattenKinesisStreamConfig(apiObject *connect.KinesisStreamConfig) []interf
 
 	values := map[string]interface{}{
 		"stream_arn": aws.StringValue(apiObject.StreamArn),
+	}
+
+	return []interface{}{values}
+}
+
+func flattenKinesisVideoStreamConfig(apiObject *connect.KinesisVideoStreamConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"encryption_config":      flattenEncryptionConfig(apiObject.EncryptionConfig),
+		"prefix":                 aws.StringValue(apiObject.Prefix),
+		"retention_period_hours": aws.Int64Value(apiObject.RetentionPeriodHours),
 	}
 
 	return []interface{}{values}
