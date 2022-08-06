@@ -19,14 +19,15 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                             testAccInstanceStorageConfig_basic,
-		"disappears":                        testAccInstanceStorageConfig_disappears,
-		"KinesisFirehoseConfig_FirehoseARN": testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN,
-		"KinesisStreamConfig_StreamARN":     testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN,
-		"KinesisVideoStreamConfig_Prefix":   testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix,
-		"S3Config_BucketName":               testAccInstanceStorageConfig_S3Config_BucketName,
-		"S3Config_BucketPrefix":             testAccInstanceStorageConfig_S3Config_BucketPrefix,
-		"S3Config_EncryptionConfig":         testAccInstanceStorageConfig_S3Config_EncryptionConfig,
+		"basic":                              testAccInstanceStorageConfig_basic,
+		"disappears":                         testAccInstanceStorageConfig_disappears,
+		"KinesisFirehoseConfig_FirehoseARN":  testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN,
+		"KinesisStreamConfig_StreamARN":      testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN,
+		"KinesisVideoStreamConfig_Prefix":    testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix,
+		"KinesisVideoStreamConfig_Retention": testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention,
+		"S3Config_BucketName":                testAccInstanceStorageConfig_S3Config_BucketName,
+		"S3Config_BucketPrefix":              testAccInstanceStorageConfig_S3Config_BucketPrefix,
+		"S3Config_EncryptionConfig":          testAccInstanceStorageConfig_S3Config_EncryptionConfig,
 	}
 
 	for name, tc := range testCases {
@@ -209,6 +210,61 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", updatedPrefix),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(retention)),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	prefix := "examplePrefix"
+
+	originalRetention := 0
+	updatedRetention := 87600
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, originalRetention),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(originalRetention)),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, updatedRetention),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(updatedRetention)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
 				),
 			},
