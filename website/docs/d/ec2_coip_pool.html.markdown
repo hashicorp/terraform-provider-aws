@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_coip_pool"
 description: |-
@@ -55,6 +55,13 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected COIP Pool.
 
-The following attribute is additionally exported:
+In addition, the following attributes are exported:
 
+* `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -57,7 +57,7 @@ The source configuration block supports the following arguments:
 The configuration block supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket.
-* `key` - (Required) Key name of the bucket object that contains your unsigned code.
+* `key` - (Required) Key name of the object that contains your unsigned code.
 * `version` - (Required) Version of your source image in your version enabled S3 bucket.
 
 ### Destination
@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Signer signing jobs can be imported using the `job_id`, e.g.
+Signer signing jobs can be imported using the `job_id`, e.g.,
 
 ```
 $ terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee

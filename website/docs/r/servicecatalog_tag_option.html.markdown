@@ -39,9 +39,18 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier (e.g., `tag-pjtvagohlyo3m`).
 * `owner_id` - AWS account ID of the owner account that created the tag option.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
+
 ## Import
 
-`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.
+`aws_servicecatalog_tag_option` can be imported using the tag option ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_tag_option.example tag-pjtvagohlyo3m

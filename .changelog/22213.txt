@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_sns_topic: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_sns_topic_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

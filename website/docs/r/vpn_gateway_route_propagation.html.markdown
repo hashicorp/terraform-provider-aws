@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_route_propagation"
 description: |-
@@ -33,3 +33,10 @@ The following arguments are required:
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `2m`)
+- `delete` - (Default `2m`)

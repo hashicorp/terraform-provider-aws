@@ -61,14 +61,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_guardduty_invite_accepter` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `1m`) How long to wait for an invite to accept.
+- `create` - (Default `1m`)
 
 ## Import
 
-`aws_guardduty_invite_accepter` can be imported using the the member GuardDuty detector ID, e.g.
+`aws_guardduty_invite_accepter` can be imported using the the member GuardDuty detector ID, e.g.,
 
 ```
 $ terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617

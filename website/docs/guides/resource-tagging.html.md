@@ -25,7 +25,7 @@ Many AWS services implement [resource tags](https://docs.aws.amazon.com/general/
 
 ## Getting Started with Resource Tags
 
-Terraform AWS Provider resources that support resource tags implement a consistent argument named `tags` which accepts a key-value map, e.g.
+Terraform AWS Provider resources that support resource tags implement a consistent argument named `tags` which accepts a key-value map, e.g.,
 
 ```terraform
 resource "aws_vpc" "example" {
@@ -39,7 +39,7 @@ resource "aws_vpc" "example" {
 
 The tags for the resource are wholly managed by Terraform except tag keys beginning with `aws:` as these are managed by AWS services and cannot typically be edited or deleted. Any non-AWS tags added to the VPC outside of Terraform will be proposed for removal on the next Terraform execution. Missing tags or those with incorrect values from the Terraform configuration will be proposed for addition or update on the next Terraform execution. Advanced patterns that can adjust these behaviors for special use cases, such as Terraform AWS Provider configurations that affect all resources and the ability to manage resource tags for resources not managed by Terraform, can be found later in this guide.
 
-For most environments and use cases, this is the typical implementation pattern, whether it be in a standalone Terraform configuration or within a [Terraform Module](https://www.terraform.io/docs/modules/). The Terraform configuration language also enables less repetitive configurations via [variables](https://www.terraform.io/docs/configuration/variables.html), [locals](https://www.terraform.io/docs/configuration/locals.html), or potentially a combination of these, e.g.
+For most environments and use cases, this is the typical implementation pattern, whether it be in a standalone Terraform configuration or within a [Terraform Module](https://www.terraform.io/docs/modules/). The Terraform configuration language also enables less repetitive configurations via [variables](https://www.terraform.io/docs/configuration/variables.html), [locals](https://www.terraform.io/docs/configuration/locals.html), or potentially a combination of these, e.g.,
 
 ```terraform
 # Terraform 0.12 and later syntax
@@ -135,7 +135,7 @@ provider "aws" {
 
 Any of the `ignore_tags` configurations can be combined as needed.
 
-The provider ignore tags configuration applies to all Terraform AWS Provider resources under that particular instance (the `default` provider instance in the above cases). If multiple, different Terraform AWS Provider configurations are being used (e.g. [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-instances)), the ignore tags configuration must be added to all applicable provider configurations.
+The provider ignore tags configuration applies to all Terraform AWS Provider resources under that particular instance (the `default` provider instance in the above cases). If multiple, different Terraform AWS Provider configurations are being used (e.g., [multiple provider instances](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-instances)), the ignore tags configuration must be added to all applicable provider configurations.
 
 ## Managing Individual Resource Tags
 
@@ -202,4 +202,4 @@ resource "aws_vpc" "example" {
 ```
 
 In this example, the `Environment` and `Owner` tags defined within the provider configuration block will be added to the VPC on resource creation, in addition to the `Name` tag defined within the VPC resource configuration.
-To access all the tags applied to the VPC resource, use the read-only attribute `tags_all`, e.g. `aws_vpc.example.tags_all`.
+To access all the tags applied to the VPC resource, use the read-only attribute `tags_all`, e.g., `aws_vpc.example.tags_all`.

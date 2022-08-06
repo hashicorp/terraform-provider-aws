@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_db_instance: Prevent panic when setting instance connection endpoint values
+```

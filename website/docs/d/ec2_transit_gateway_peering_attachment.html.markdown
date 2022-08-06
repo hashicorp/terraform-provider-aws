@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_peering_attachment"
 description: |-
@@ -56,3 +56,9 @@ In addition to all arguments above, the following attributes are exported:
 * `peer_region` - Identifier of the peer AWS region
 * `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
 * `transit_gateway_id` - Identifier of the local EC2 Transit Gateway
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

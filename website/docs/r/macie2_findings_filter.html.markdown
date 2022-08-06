@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_findings_filter` can be imported using the id, e.g.
+`aws_macie2_findings_filter` can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_macie2_findings_filter.example abcd1

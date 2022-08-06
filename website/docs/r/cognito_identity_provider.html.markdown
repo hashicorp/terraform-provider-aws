@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_provider"
 side_bar_current: "docs-aws-resource-cognito-identity-provider"
@@ -54,8 +54,8 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.
+`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_provider.example xxx_yyyyy:example
+$ terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
 ```
