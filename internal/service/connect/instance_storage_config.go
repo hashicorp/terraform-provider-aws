@@ -48,6 +48,20 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"kinesis_firehose_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"firehose_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"s3_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -242,8 +256,29 @@ func expandStorageConfig(tfList []interface{}) *connect.InstanceStorageConfig {
 		StorageType: aws.String(tfMap["storage_type"].(string)),
 	}
 
+	if v, ok := tfMap["kinesis_firehose_config"].([]interface{}); ok && len(v) > 0 {
+		result.KinesisFirehoseConfig = expandKinesisFirehoseConfig(v)
+	}
+
 	if v, ok := tfMap["s3_config"].([]interface{}); ok && len(v) > 0 {
 		result.S3Config = exapandS3Config(v)
+	}
+
+	return result
+}
+
+func expandKinesisFirehoseConfig(tfList []interface{}) *connect.KinesisFirehoseConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.KinesisFirehoseConfig{
+		FirehoseArn: aws.String(tfMap["firehose_arn"].(string)),
 	}
 
 	return result
@@ -298,8 +333,24 @@ func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{
 		"storage_type": apiObject.StorageType,
 	}
 
+	if v := apiObject.KinesisFirehoseConfig; v != nil {
+		values["kinesis_firehose_config"] = flattenKinesisFirehoseConfig(v)
+	}
+
 	if v := apiObject.S3Config; v != nil {
 		values["s3_config"] = flattenS3Config(v)
+	}
+
+	return []interface{}{values}
+}
+
+func flattenKinesisFirehoseConfig(apiObject *connect.KinesisFirehoseConfig) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"firehose_arn": aws.StringValue(apiObject.FirehoseArn),
 	}
 
 	return []interface{}{values}
