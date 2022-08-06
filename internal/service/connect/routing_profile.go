@@ -109,39 +109,6 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			// used to update the queue configs by first disassociating the existing set and re-associating them
-			"queue_configs_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delay": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"routing_profile_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,7 +211,6 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("queue_configs", queueConfigs)
-	d.Set("queue_configs_associated", queueConfigs)
 
 	tags := KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -328,31 +294,39 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
 	// since the update only updates the existing queues that are associated, we will instead disassociate (if there are any queues)
 	// and then associate all the queues again to ensure new queues can be added and unused queues can be removed
-	inputQueueAssociate := &connect.AssociateRoutingProfileQueuesInput{
-		InstanceId:       aws.String(instanceID),
-		RoutingProfileId: aws.String(routingProfileID),
-	}
-
-	inputQueueDisassociate := &connect.DisassociateRoutingProfileQueuesInput{
-		InstanceId:       aws.String(instanceID),
-		RoutingProfileId: aws.String(routingProfileID),
-	}
-
 	if d.HasChange("queue_configs") {
-		// first disassociate all existing queues
-		currentAssociatedQueueReferences := expandRoutingProfileQueueReferences(d.Get("queue_configs_associated").(*schema.Set).List())
-		if currentAssociatedQueueReferences != nil {
-			inputQueueDisassociate.QueueReferences = currentAssociatedQueueReferences
-			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, inputQueueDisassociate)
+		o, n := d.GetChange("queue_configs")
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		queueConfigsUpdateAdd := ns.Difference(os).List()
+		queueConfigsUpdateRemove := os.Difference(ns).List()
+
+		// disassociate first since Queue and channel type combination cannot be duplicated
+		if len(queueConfigsUpdateRemove) > 0 {
+			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, &connect.DisassociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueReferences:  expandRoutingProfileQueueReferences(queueConfigsUpdateRemove),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
 			}
 		}
-		// re-associate the queues
-		updatedQueueConfigs := expandRoutingProfileQueueConfigs(d.Get("queue_configs").(*schema.Set).List())
-		if updatedQueueConfigs != nil {
-			inputQueueAssociate.QueueConfigs = updatedQueueConfigs
-			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, inputQueueAssociate)
+
+		if len(queueConfigsUpdateAdd) > 0 {
+			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, &connect.AssociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueConfigs:     expandRoutingProfileQueueConfigs(queueConfigsUpdateAdd),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
 			}
