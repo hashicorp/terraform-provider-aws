@@ -20,6 +20,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceInstanceStorageConfigCreate,
 		ReadContext:   resourceInstanceStorageConfigRead,
+		UpdateContext: resourceInstanceStorageConfigUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -164,6 +165,34 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return nil
+}
+
+func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	input := &connect.UpdateInstanceStorageConfigInput{
+		AssociationId: aws.String(associationId),
+		InstanceId:    aws.String(instanceId),
+		ResourceType:  aws.String(resourceType),
+	}
+
+	if d.HasChange("storage_config") {
+		input.StorageConfig = expandStorageConfig(d.Get("storage_config").([]interface{}))
+	}
+
+	_, err = conn.UpdateInstanceStorageConfigWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Instance Storage Config (%s): %w", d.Id(), err))
+	}
+
+	return resourceInstanceStorageConfigRead(ctx, d, meta)
 }
 
 func InstanceStorageConfigParseId(id string) (string, string, string, error) {
