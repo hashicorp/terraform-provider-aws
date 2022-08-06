@@ -292,8 +292,8 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	// AssociateRoutingProfileQueues - Associates a set of queues with a routing profile.
 	// DisassociateRoutingProfileQueues - Disassociates a set of queues from a routing profile.
 	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
-	// since the update only updates the existing queues that are associated, we will instead disassociate (if there are any queues)
-	// and then associate all the queues again to ensure new queues can be added and unused queues can be removed
+	// since the update only updates the existing queues that are associated, we will instead disassociate and associate
+	// the respective queues based on the diff detected
 	if d.HasChange("queue_configs") {
 		o, n := d.GetChange("queue_configs")
 
