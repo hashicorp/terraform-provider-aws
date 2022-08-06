@@ -18,7 +18,8 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccInstanceStorageConfig_basic,
+		"basic":      testAccInstanceStorageConfig_basic,
+		"disappears": testAccInstanceStorageConfig_disappears,
 	}
 
 	for name, tc := range testCases {
@@ -59,6 +60,30 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_disappears(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_basic(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstanceStorageConfig(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
