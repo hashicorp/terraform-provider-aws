@@ -431,6 +431,127 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 	})
 }
 
+func TestAccComprehendEntityRecognizer_VPCConfig_Create(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var er1, er2 types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_vpcConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &er1),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEntityRecognizerConfig_vpcConfig_Update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &er2),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.3", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_VPCConfig_Update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var er1, er2, er3 types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_vpcConfig_None(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &er1),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccEntityRecognizerConfig_vpcConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &er2),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEntityRecognizerConfig_vpcConfig_None(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &er3),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 3),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -726,7 +847,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -780,7 +901,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -830,7 +951,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -879,7 +1000,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -929,7 +1050,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -981,7 +1102,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1068,7 +1189,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1152,7 +1273,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1204,7 +1325,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1291,7 +1412,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1377,7 +1498,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1430,7 +1551,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1484,7 +1605,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy.test
+    aws_iam_role_policy.test,
   ]
 }
 
@@ -1575,4 +1696,350 @@ data "aws_iam_policy_document" "role" {
   }
 }
 `, rName)
+}
+
+func testAccEntityRecognizerConfig_vpcRole() string {
+	return `
+resource "aws_iam_role_policy" "vpc_access" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.vpc_access.json
+}
+
+data "aws_iam_policy_document" "vpc_access" {
+  statement {
+    actions = [
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateNetworkInterfacePermission",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DeleteNetworkInterfacePermission",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeDhcpOptions",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+`
+}
+
+func testAccEntityRecognizerConfig_vpcConfig(rName string) string {
+	const subnetCount = 2
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerConfig_vpcRole(),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		configVPCWithSubnetsAndDNS(rName, subnetCount),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test[0].id]
+    subnets            = aws_subnet.test[*].id
+  }
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.vpc_access,
+    aws_vpc_endpoint_route_table_association.test,
+  ]
+}
+
+resource "aws_security_group" "test" {
+  count = 1
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = [aws_vpc_endpoint.s3.prefix_list_id]
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route_table_association" "test" {
+  count = length(aws_subnet.test)
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+resource "aws_vpc_endpoint_policy" "s3" {
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+
+  policy = data.aws_iam_policy_document.s3_endpoint.json
+}
+
+data "aws_iam_policy_document" "s3_endpoint" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket",
+      "s3:GetBucketLocation",
+      "s3:DeleteObject",
+      "s3:ListMultipartUploadParts",
+      "s3:AbortMultipartUpload",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_vpcConfig_Update(rName string) string {
+	const subnetCount = 4
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerConfig_vpcRole(),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		configVPCWithSubnetsAndDNS(rName, subnetCount),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test[1].id]
+    subnets            = slice(aws_subnet.test[*].id, 2, 4)
+  }
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.vpc_access,
+    aws_vpc_endpoint_route_table_association.test,
+  ]
+}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = [aws_vpc_endpoint.s3.prefix_list_id]
+  }
+	}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route_table_association" "test" {
+  count = length(aws_subnet.test)
+
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_vpc_endpoint_route_table_association" "test" {
+  route_table_id  = aws_route_table.test.id
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+resource "aws_vpc_endpoint_policy" "s3" {
+  vpc_endpoint_id = aws_vpc_endpoint.s3.id
+
+  policy = data.aws_iam_policy_document.s3_endpoint.json
+}
+
+data "aws_iam_policy_document" "s3_endpoint" {
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket",
+      "s3:GetBucketLocation",
+      "s3:DeleteObject",
+      "s3:ListMultipartUploadParts",
+      "s3:AbortMultipartUpload",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_vpcConfig_None(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerConfig_vpcRole(),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    entity_list {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "entities" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/entitylist.csv"
+}
+`, rName))
 }

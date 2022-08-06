@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,7 +78,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 							},
 						},
 						"augmented_manifests": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -218,12 +221,12 @@ func ResourceEntityRecognizer() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_group_ids": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"subnets": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -273,6 +276,11 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
 	time.Sleep(iamPropagationTimeout)
 
+	if in.VpcConfig != nil {
+		modelVPCENILock.Lock()
+		defer modelVPCENILock.Unlock()
+	}
+
 	var out *comprehend.CreateEntityRecognizerOutput
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
@@ -302,11 +310,66 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(out.EntityRecognizerArn))
 
-	if _, err := waitEntityRecognizerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+	var g multierror.Group
+	waitCtx, cancel := context.WithCancel(ctx)
+
+	g.Go(func() error {
+		_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		cancel()
+		return err
+	})
+
+	var diags diag.Diagnostics
+
+	if in.VpcConfig != nil {
+		g.Go(func() error {
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn
+			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+				return nil
+			}
+			initialENIIds := make(map[string]bool, len(enis))
+			for _, v := range enis {
+				initialENIIds[aws.ToString(v.NetworkInterfaceId)] = true
+			}
+
+			newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
+			if errors.Is(err, context.Canceled) {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), "ENI not found")
+				return nil
+			}
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+				return nil
+			}
+
+			modelVPCENILock.Unlock()
+
+			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
+				Resources: []*string{newENI.NetworkInterfaceId},
+				Tags: []*ec2.Tag{
+					{
+						Key:   aws.String("tf-aws_comprehend_entity_recognizer"),
+						Value: aws.String(d.Id()),
+					},
+				},
+			})
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+				return nil
+			}
+
+			return nil
+		})
 	}
 
-	return resourceEntityRecognizerRead(ctx, d, meta)
+	err = g.Wait().ErrorOrNil()
+	if err != nil {
+		return awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
 }
 
 func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -370,6 +433,8 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ComprehendConn
 
+	var diags diag.Diagnostics
+
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &comprehend.CreateEntityRecognizerInput{
 			DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
@@ -405,6 +470,11 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
 		time.Sleep(iamPropagationTimeout)
 
+		if in.VpcConfig != nil {
+			modelVPCENILock.Lock()
+			defer modelVPCENILock.Unlock()
+		}
+
 		var out *comprehend.CreateEntityRecognizerOutput
 		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			var err error
@@ -434,8 +504,61 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 
 		d.SetId(aws.ToString(out.EntityRecognizerArn))
 
-		if _, err := waitEntityRecognizerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Amazon Comprehend Entity Recognizer (%s) to be updated: %s", d.Id(), err)
+		var g multierror.Group
+		waitCtx, cancel := context.WithCancel(ctx)
+
+		g.Go(func() error {
+			_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+			cancel()
+			return err
+		})
+
+		if in.VpcConfig != nil {
+			g.Go(func() error {
+				ec2Conn := meta.(*conns.AWSClient).EC2Conn
+				enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
+				if err != nil {
+					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+					return nil
+				}
+				initialENIIds := make(map[string]bool, len(enis))
+				for _, v := range enis {
+					initialENIIds[aws.ToString(v.NetworkInterfaceId)] = true
+				}
+
+				newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
+				if errors.Is(err, context.Canceled) {
+					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), "ENI not found")
+					return nil
+				}
+				if err != nil {
+					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+					return nil
+				}
+
+				modelVPCENILock.Unlock()
+
+				_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
+					Resources: []*string{newENI.NetworkInterfaceId},
+					Tags: []*ec2.Tag{
+						{
+							Key:   aws.String("tf-aws_comprehend_entity_recognizer"),
+							Value: aws.String(d.Id()),
+						},
+					},
+				})
+				if err != nil {
+					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+					return nil
+				}
+
+				return nil
+			})
+		}
+
+		err = g.Wait().ErrorOrNil()
+		if err != nil {
+			return awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be updated: %s", d.Id(), err)
 		}
 	} else if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -445,7 +568,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	return resourceEntityRecognizerRead(ctx, d, meta)
+	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -502,6 +625,38 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 
 			if _, err := waitEntityRecognizerDeleted(ctx, conn, aws.ToString(v.EntityRecognizerArn), d.Timeout(schema.TimeoutDelete)); err != nil {
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
+			}
+
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn
+			networkInterfaces, err := tfec2.FindNetworkInterfacesWithContext(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
+				Filters: []*ec2.Filter{
+					tfec2.NewFilter(fmt.Sprintf("tag:%s", "tf-aws_comprehend_entity_recognizer"), []string{aws.ToString(v.EntityRecognizerArn)}),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("finding ENIs for version (%s): %w", aws.ToString(v.VersionName), err)
+			}
+
+			for _, v := range networkInterfaces {
+				v := v
+				g.Go(func() error {
+					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+
+					if v.Attachment != nil {
+						err = tfec2.DetachNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), d.Timeout(schema.TimeoutDelete))
+
+						if err != nil {
+							return fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err)
+						}
+					}
+
+					err = tfec2.DeleteNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID)
+					if err != nil {
+						return fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err)
+					}
+
+					return nil
+				})
 			}
 
 			return nil
@@ -586,8 +741,8 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 
 func waitEntityRecognizerStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.EntityRecognizerProperties, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusStopRequested),
-		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError),
+		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
+		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
 		Refresh:      statusEntityRecognizer(ctx, conn, id),
 		PollInterval: entityRegcognizerPollInterval,
 		Timeout:      timeout,
@@ -766,8 +921,8 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": apiObject.SecurityGroupIds,
-		"subnets":            apiObject.Subnets,
+		"security_group_ids": FlattenStringSet(apiObject.SecurityGroupIds),
+		"subnets":            FlattenStringSet(apiObject.Subnets),
 	}
 
 	return []interface{}{m}
@@ -783,7 +938,7 @@ func expandInputDataConfig(tfList []interface{}) *types.EntityRecognizerInputDat
 	a := &types.EntityRecognizerInputDataConfig{
 		EntityTypes:        expandEntityTypes(tfMap["entity_types"].(*schema.Set)),
 		Annotations:        expandAnnotations(tfMap["annotations"].([]interface{})),
-		AugmentedManifests: expandAugmentedManifests(tfMap["augmented_manifests"].([]interface{})),
+		AugmentedManifests: expandAugmentedManifests(tfMap["augmented_manifests"].(*schema.Set)),
 		DataFormat:         types.EntityRecognizerDataFormat(tfMap["data_format"].(string)),
 		Documents:          expandDocuments(tfMap["documents"].([]interface{})),
 		EntityList:         expandEntityList(tfMap["entity_list"].([]interface{})),
@@ -848,14 +1003,14 @@ func expandAnnotations(tfList []interface{}) *types.EntityRecognizerAnnotations 
 	return a
 }
 
-func expandAugmentedManifests(tfList []interface{}) []types.AugmentedManifestsListItem {
-	if len(tfList) == 0 {
+func expandAugmentedManifests(tfSet *schema.Set) []types.AugmentedManifestsListItem {
+	if tfSet.Len() == 0 {
 		return nil
 	}
 
 	var s []types.AugmentedManifestsListItem
 
-	for _, r := range tfList {
+	for _, r := range tfSet.List() {
 		m, ok := r.(map[string]interface{})
 
 		if !ok {
@@ -938,8 +1093,8 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	tfMap := tfList[0].(map[string]interface{})
 
 	a := &types.VpcConfig{
-		SecurityGroupIds: ExpandStringList(tfMap["security_group_ids"].([]interface{})),
-		Subnets:          ExpandStringList(tfMap["subnets"].([]interface{})),
+		SecurityGroupIds: ExpandStringSet(tfMap["security_group_ids"].(*schema.Set)),
+		Subnets:          ExpandStringSet(tfMap["subnets"].(*schema.Set)),
 	}
 
 	return a
