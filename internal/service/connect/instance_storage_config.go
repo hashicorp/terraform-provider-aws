@@ -428,7 +428,7 @@ func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{
 	}
 
 	values := map[string]interface{}{
-		"storage_type": apiObject.StorageType,
+		"storage_type": aws.StringValue(apiObject.StorageType),
 	}
 
 	if v := apiObject.KinesisFirehoseConfig; v != nil {
@@ -499,8 +499,8 @@ func flattenS3Config(apiObject *connect.S3Config) []interface{} {
 	}
 
 	values := map[string]interface{}{
-		"bucket_name":   apiObject.BucketName,
-		"bucket_prefix": apiObject.BucketPrefix,
+		"bucket_name":   aws.StringValue(apiObject.BucketName),
+		"bucket_prefix": aws.StringValue(apiObject.BucketPrefix),
 	}
 
 	if v := apiObject.EncryptionConfig; v != nil {
@@ -516,8 +516,8 @@ func flattenEncryptionConfig(apiObject *connect.EncryptionConfig) []interface{} 
 	}
 
 	values := map[string]interface{}{
-		"encryption_type": apiObject.EncryptionType,
-		"key_id":          apiObject.KeyId,
+		"encryption_type": aws.StringValue(apiObject.EncryptionType),
+		"key_id":          aws.StringValue(apiObject.KeyId),
 	}
 
 	return []interface{}{values}
