@@ -93,13 +93,6 @@ func ResourceQueue() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"quick_connect_ids_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -216,7 +209,6 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
-	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
 
 	tags := KeyValueTags(ctx, resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -322,29 +314,39 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// updates to quick_connect_ids
 	if d.HasChange("quick_connect_ids") {
-		// first disassociate all existing quick connects
-		if v, ok := d.GetOk("quick_connect_ids_associated"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, input)
+		o, n := d.GetChange("quick_connect_ids")
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		quickConnectIdsUpdateAdd := ns.Difference(os)
+		quickConnectIdsUpdateRemove := os.Difference(ns)
+
+		if len(quickConnectIdsUpdateAdd.List()) > 0 {
+			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, &connect.AssociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateAdd),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
 			}
 		}
 
-		// re-associate the quick connects
-		if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, input)
+		if len(quickConnectIdsUpdateRemove.List()) > 0 {
+			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, &connect.DisassociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateRemove),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
 			}
 		}
 	}
