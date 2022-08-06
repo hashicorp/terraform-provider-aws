@@ -18,9 +18,10 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":               testAccInstanceStorageConfig_basic,
-		"disappears":          testAccInstanceStorageConfig_disappears,
-		"S3Config_BucketName": testAccInstanceStorageConfig_S3Config_BucketName,
+		"basic":                 testAccInstanceStorageConfig_basic,
+		"disappears":            testAccInstanceStorageConfig_disappears,
+		"S3Config_BucketName":   testAccInstanceStorageConfig_S3Config_BucketName,
+		"S3Config_BucketPrefix": testAccInstanceStorageConfig_S3Config_BucketPrefix,
 	}
 
 	for name, tc := range testCases {
@@ -103,6 +104,52 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test2", "id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	originalBucketPrefix := "originalBucketPrefix"
+	updatedBucketPrefix := "updatedBucketPrefix"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, originalBucketPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", originalBucketPrefix),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, updatedBucketPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", updatedBucketPrefix),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
 			},
@@ -269,4 +316,28 @@ resource "aws_connect_instance_storage_config" "test" {
   }
 }
 `, rName2, rName3, selectBucket))
+}
+
+func testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, bucketPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "CHAT_TRANSCRIPTS"
+
+  storage_config {
+    s3_config {
+      bucket_name   = aws_s3_bucket.test.id
+      bucket_prefix = %[2]q
+    }
+    storage_type = "S3"
+  }
+}
+`, rName2, bucketPrefix))
 }
