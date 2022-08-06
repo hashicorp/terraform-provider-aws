@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -101,6 +102,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 											},
 										},
 									},
+									// API returns <prefix>-connect-<connect_instance_alias>-contact-
 									"prefix": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -477,9 +479,14 @@ func flattenKinesisVideoStreamConfig(apiObject *connect.KinesisVideoStreamConfig
 		return []interface{}{}
 	}
 
+	// API returns <prefix>-connect-<connect_instance_alias>-contact-
+	prefixRaw := aws.StringValue(apiObject.Prefix)
+	regexPatten := regexp.MustCompile(`-connect-.*-contact-`)
+	prefix := regexPatten.Split(prefixRaw, 2)[0]
+
 	values := map[string]interface{}{
 		"encryption_config":      flattenEncryptionConfig(apiObject.EncryptionConfig),
-		"prefix":                 aws.StringValue(apiObject.Prefix),
+		"prefix":                 prefix,
 		"retention_period_hours": aws.Int64Value(apiObject.RetentionPeriodHours),
 	}
 
