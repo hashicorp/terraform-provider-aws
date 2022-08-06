@@ -21,6 +21,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 		CreateContext: resourceInstanceStorageConfigCreate,
 		ReadContext:   resourceInstanceStorageConfigRead,
 		UpdateContext: resourceInstanceStorageConfigUpdate,
+		DeleteContext: resourceInstanceStorageConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -193,6 +194,28 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	return resourceInstanceStorageConfigRead(ctx, d, meta)
+}
+
+func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DisassociateInstanceStorageConfigWithContext(ctx, &connect.DisassociateInstanceStorageConfigInput{
+		AssociationId: aws.String(associationId),
+		InstanceId:    aws.String(instanceId),
+		ResourceType:  aws.String(resourceType),
+	})
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting InstanceStorageConfig (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func InstanceStorageConfigParseId(id string) (string, string, string, error) {
