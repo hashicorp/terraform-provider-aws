@@ -18,8 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccInstanceStorageConfig_basic,
-		"disappears": testAccInstanceStorageConfig_disappears,
+		"basic":               testAccInstanceStorageConfig_basic,
+		"disappears":          testAccInstanceStorageConfig_disappears,
+		"S3Config_BucketName": testAccInstanceStorageConfig_S3Config_BucketName,
 	}
 
 	for name, tc := range testCases {
@@ -60,6 +61,50 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test2", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
 			},
 		},
 	})
@@ -191,4 +236,37 @@ resource "aws_connect_instance_storage_config" "test" {
   }
 }
 `, rName2))
+}
+
+func testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, selectBucket string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigConfig_base(rName),
+		fmt.Sprintf(`
+locals {
+  select_bucket = %[3]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = %[2]q
+  force_destroy = true
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "CHAT_TRANSCRIPTS"
+
+  storage_config {
+    s3_config {
+      bucket_name   = local.select_bucket == "first" ? aws_s3_bucket.test.id : aws_s3_bucket.test2.id
+      bucket_prefix = "tf-test-Chat-Transcripts"
+    }
+    storage_type = "S3"
+  }
+}
+`, rName2, rName3, selectBucket))
 }
