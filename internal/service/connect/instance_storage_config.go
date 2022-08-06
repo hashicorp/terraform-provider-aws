@@ -18,7 +18,8 @@ import (
 
 func ResourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourceInstanceStorageConfigRead,
+		CreateContext: resourceInstanceStorageConfigCreate,
+		ReadContext:   resourceInstanceStorageConfigRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -95,6 +96,34 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 	}
 }
 
+func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	instanceId := d.Get("instance_id").(string)
+	resourceType := d.Get("resource_type").(string)
+
+	input := &connect.AssociateInstanceStorageConfigInput{
+		InstanceId:    aws.String(instanceId),
+		ResourceType:  aws.String(resourceType),
+		StorageConfig: expandStorageConfig(d.Get("storage_config").([]interface{})),
+	}
+
+	log.Printf("[DEBUG] Creating Connect Instance Storage Config %s", input)
+	output, err := conn.AssociateInstanceStorageConfigWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): %w", instanceId, resourceType, err))
+	}
+
+	if output == nil || output.AssociationId == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): empty output", instanceId, resourceType))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s:%s", instanceId, aws.StringValue(output.AssociationId), resourceType))
+
+	return resourceInstanceStorageConfigRead(ctx, d, meta)
+}
+
 func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
@@ -145,6 +174,67 @@ func InstanceStorageConfigParseId(id string) (string, string, string, error) {
 	}
 
 	return parts[0], parts[1], parts[2], nil
+}
+
+func expandStorageConfig(tfList []interface{}) *connect.InstanceStorageConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.InstanceStorageConfig{
+		StorageType: aws.String(tfMap["storage_type"].(string)),
+	}
+
+	if v, ok := tfMap["s3_config"].([]interface{}); ok && len(v) > 0 {
+		result.S3Config = exapandS3Config(v)
+	}
+
+	return result
+}
+
+func exapandS3Config(tfList []interface{}) *connect.S3Config {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.S3Config{
+		BucketName:   aws.String(tfMap["bucket_name"].(string)),
+		BucketPrefix: aws.String(tfMap["bucket_prefix"].(string)),
+	}
+
+	if v, ok := tfMap["encryption_config"].([]interface{}); ok && len(v) > 0 {
+		result.EncryptionConfig = expandEncryptionConfig(v)
+	}
+
+	return result
+}
+
+func expandEncryptionConfig(tfList []interface{}) *connect.EncryptionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &connect.EncryptionConfig{
+		EncryptionType: aws.String(tfMap["encryption_type"].(string)),
+		KeyId:          aws.String(tfMap["key_id"].(string)),
+	}
+
+	return result
 }
 
 func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{} {
