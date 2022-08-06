@@ -18,10 +18,11 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":                 testAccInstanceStorageConfig_basic,
-		"disappears":            testAccInstanceStorageConfig_disappears,
-		"S3Config_BucketName":   testAccInstanceStorageConfig_S3Config_BucketName,
-		"S3Config_BucketPrefix": testAccInstanceStorageConfig_S3Config_BucketPrefix,
+		"basic":                     testAccInstanceStorageConfig_basic,
+		"disappears":                testAccInstanceStorageConfig_disappears,
+		"S3Config_BucketName":       testAccInstanceStorageConfig_S3Config_BucketName,
+		"S3Config_BucketPrefix":     testAccInstanceStorageConfig_S3Config_BucketPrefix,
+		"S3Config_EncryptionConfig": testAccInstanceStorageConfig_S3Config_EncryptionConfig,
 	}
 
 	for name, tc := range testCases {
@@ -150,6 +151,55 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", updatedBucketPrefix),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
+	var v connect.DescribeInstanceStorageConfigOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test2", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
 			},
@@ -340,4 +390,60 @@ resource "aws_connect_instance_storage_config" "test" {
   }
 }
 `, rName2, bucketPrefix))
+}
+
+func testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, selectKey string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigConfig_base(rName),
+		fmt.Sprintf(`
+locals {
+  select_key = %[2]q
+}
+
+resource "aws_kms_key" "test" {
+  description             = "KMS Key for Bucket 1"
+  deletion_window_in_days = 10
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "KMS Key for Bucket 2"
+  deletion_window_in_days = 10
+}
+
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = local.select_key == "first" ? aws_kms_key.test.arn : aws_kms_key.test2.arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "CHAT_TRANSCRIPTS"
+
+  storage_config {
+    s3_config {
+      bucket_name   = aws_s3_bucket.test.id
+      bucket_prefix = "tf-test-Chat-Transcripts"
+
+      encryption_config {
+        encryption_type = "KMS"
+        key_id          = local.select_key == "first" ? aws_kms_key.test.arn : aws_kms_key.test2.arn
+      }
+    }
+    storage_type = "S3"
+  }
+}
+`, rName2, selectKey))
 }
