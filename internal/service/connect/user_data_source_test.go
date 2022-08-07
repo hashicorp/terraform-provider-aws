@@ -119,7 +119,7 @@ resource "aws_connect_user" "test" {
   ]
 
   identity_info {
-	email      = %[2]q
+    email      = %[2]q
     first_name = "example"
     last_name  = "example2"
   }
