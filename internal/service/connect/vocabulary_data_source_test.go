@@ -41,6 +41,37 @@ func TestAccConnectVocabularyDataSource_vocabularyID(t *testing.T) {
 	})
 }
 
+func TestAccConnectVocabularyDataSource_name(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_vocabulary.test"
+	datasourceName := "data.aws_connect_vocabulary.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVocabularyDataSourceConfig_name(rName, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "language_code", resourceName, "language_code"),
+					resource.TestCheckResourceAttrPair(datasourceName, "last_modified_time", resourceName, "last_modified_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "vocabulary_id", resourceName, "vocabulary_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccVocabularyBaseDataSourceConfig(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
@@ -70,6 +101,17 @@ func testAccVocabularyDataSourceConfig_id(rName, rName2 string) string {
 data "aws_connect_vocabulary" "test" {
   instance_id   = aws_connect_instance.test.id
   vocabulary_id = aws_connect_vocabulary.test.vocabulary_id
+}
+`)
+}
+
+func testAccVocabularyDataSourceConfig_name(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccVocabularyBaseDataSourceConfig(rName, rName2),
+		`
+data "aws_connect_vocabulary" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = aws_connect_vocabulary.test.name
 }
 `)
 }
