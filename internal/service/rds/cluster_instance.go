@@ -96,8 +96,8 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      EngineAurora,
-				ValidateFunc: validEngine(),
+				Default:      ClusterEngineAurora,
+				ValidateFunc: validClusterEngine(),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,

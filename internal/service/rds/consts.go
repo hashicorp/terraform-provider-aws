@@ -60,20 +60,20 @@ const (
 )
 
 const (
-	EngineAurora           = "aurora"
-	EngineAuroraMySQL      = "aurora-mysql"
-	EngineAuroraPostgreSQL = "aurora-postgresql"
-	EngineMySQL            = "mysql"
-	EnginePostgres         = "postgres"
+	ClusterEngineAurora           = "aurora"
+	ClusterEngineAuroraMySQL      = "aurora-mysql"
+	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+	ClusterEngineMySQL            = "mysql"
+	ClusterEnginePostgres         = "postgres"
 )
 
-func Engine_Values() []string {
+func ClusterEngine_Values() []string {
 	return []string{
-		EngineAurora,
-		EngineAuroraMySQL,
-		EngineAuroraPostgreSQL,
-		EngineMySQL,
-		EnginePostgres,
+		ClusterEngineAurora,
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
 	}
 }
 
