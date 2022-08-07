@@ -499,6 +499,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user":                        connect.DataSourceUser(),
 			"aws_connect_user_hierarchy_group":        connect.DataSourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
