@@ -870,11 +870,12 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			Tags:                    Tags(tags.IgnoreAWS()),
 		}
 
+		engine := strings.ToLower(d.Get("engine").(string))
 		if v, ok := d.GetOk("db_name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
-			switch strings.ToLower(d.Get("engine").(string)) {
-			case "mysql", "postgres", "mariadb":
+			switch engine {
+			case InstanceEngineMySQL, InstanceEnginePostgres, InstanceEngineMariaDB:
 				// skip
 			default:
 				input.DBName = aws.String(v.(string))
@@ -882,8 +883,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		} else if v, ok := d.GetOk("name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
-			switch strings.ToLower(d.Get("engine").(string)) {
-			case "mysql", "postgres", "mariadb":
+			switch engine {
+			case InstanceEngineMySQL, InstanceEnginePostgres, InstanceEngineMariaDB:
 				// skip
 			default:
 				input.DBName = aws.String(v.(string))
@@ -919,6 +920,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("domain"); ok {
 			input.Domain = aws.String(v.(string))
 		}
@@ -931,8 +936,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine"); ok {
-			input.Engine = aws.String(v.(string))
+		if engine != "" {
+			input.Engine = aws.String(engine)
 		}
 
 		if v, ok := d.GetOk("engine_version"); ok {
@@ -973,71 +978,67 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("multi_az"); ok {
+		if v, ok := d.GetOk("multi_az"); ok {
 			// When using SQL Server engine with MultiAZ enabled, its not
 			// possible to immediately enable mirroring since
 			// BackupRetentionPeriod is not available as a parameter to
 			// RestoreDBInstanceFromDBSnapshot and you receive an error. e.g.
 			// InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
 			// If we know the engine, prevent the error upfront.
-			if v, ok := d.GetOk("engine"); ok && strings.HasPrefix(strings.ToLower(v.(string)), "sqlserver") {
-				modifyDbInstanceInput.MultiAZ = aws.Bool(attr.(bool))
+			if strings.HasPrefix(engine, "sqlserver") {
+				modifyDbInstanceInput.MultiAZ = aws.Bool(v.(bool))
 				requiresModifyDbInstance = true
 			} else {
-				input.MultiAZ = aws.Bool(attr.(bool))
+				input.MultiAZ = aws.Bool(v.(bool))
 			}
 		}
 
-		if attr, ok := d.GetOk("option_group_name"); ok {
-			input.OptionGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("option_group_name"); ok {
+			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			input.DBParameterGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("password"); ok {
-			modifyDbInstanceInput.MasterUserPassword = aws.String(attr.(string))
+		if v, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("port"); ok {
-			input.Port = aws.Int64(int64(attr.(int)))
-		}
-
-		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(attr)
-			requiresModifyDbInstance = true
-		}
-
-		if attr, ok := d.GetOk("storage_type"); ok {
-			modifyDbInstanceInput.StorageType = aws.String(attr.(string))
-			requiresModifyDbInstance = true
-		}
-
-		if attr, ok := d.GetOk("tde_credential_arn"); ok {
-			input.TdeCredentialArn = aws.String(attr.(string))
-		}
-
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
-		}
-
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("performance_insights_enabled"); ok {
+			modifyDbInstanceInput.EnablePerformanceInsights = aws.Bool(v.(bool))
 			requiresModifyDbInstance = true
 
-			if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-				modifyDbInstanceInput.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+			if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+				modifyDbInstanceInput.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 			}
 
-			if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
-				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+			if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+				modifyDbInstanceInput.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 			}
 		}
 
-		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
-			input.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("port"); ok {
+			input.Port = aws.Int64(int64(v.(int)))
+		}
+
+		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
+			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(v)
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("storage_type"); ok {
+			modifyDbInstanceInput.StorageType = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("tde_credential_arn"); ok {
+			input.TdeCredentialArn = aws.String(v.(string))
+		}
+
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
