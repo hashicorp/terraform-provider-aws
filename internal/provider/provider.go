@@ -501,6 +501,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
 			"aws_connect_user_hierarchy_group":        connect.DataSourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
+			"aws_connect_vocabulary":                  connect.DataSourceVocabulary(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
 
