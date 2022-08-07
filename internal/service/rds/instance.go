@@ -859,7 +859,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("creating RDS DB Instance (restore from S3) (%s): %w", identifier, err)
 		}
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
-		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
+		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -870,106 +870,106 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			Tags:                    Tags(tags.IgnoreAWS()),
 		}
 
-		if attr, ok := d.GetOk("db_name"); ok {
+		if v, ok := d.GetOk("db_name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
 			switch strings.ToLower(d.Get("engine").(string)) {
 			case "mysql", "postgres", "mariadb":
 				// skip
 			default:
-				opts.DBName = aws.String(attr.(string))
+				input.DBName = aws.String(v.(string))
 			}
-		} else if attr, ok := d.GetOk("name"); ok {
+		} else if v, ok := d.GetOk("name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
 			switch strings.ToLower(d.Get("engine").(string)) {
 			case "mysql", "postgres", "mariadb":
 				// skip
 			default:
-				opts.DBName = aws.String(attr.(string))
+				input.DBName = aws.String(v.(string))
 			}
 		}
 
-		if attr, ok := d.GetOk("allocated_storage"); ok {
-			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("allocated_storage"); ok {
+			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("availability_zone"); ok {
-			opts.AvailabilityZone = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
-			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// InvalidParameterCombination: No modifications were requested
 		}
 
-		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
-			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("availability_zone"); ok {
+			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOkExists("backup_retention_period"); ok {
+			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("backup_window"); ok {
-			modifyDbInstanceInput.PreferredBackupWindow = aws.String(attr.(string))
+		if v, ok := d.GetOk("backup_window"); ok {
+			modifyDbInstanceInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
-			opts.DBSubnetGroupName = aws.String(attr.(string))
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("domain"); ok {
-			opts.Domain = aws.String(attr.(string))
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("domain_iam_role_name"); ok {
-			opts.DomainIAMRoleName = aws.String(attr.(string))
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
-			opts.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr.(*schema.Set))
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if attr, ok := d.GetOk("engine"); ok {
-			opts.Engine = aws.String(attr.(string))
+		if v, ok := d.GetOk("engine"); ok {
+			input.Engine = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("engine_version"); ok {
-			modifyDbInstanceInput.EngineVersion = aws.String(attr.(string))
+		if v, ok := d.GetOk("engine_version"); ok {
+			modifyDbInstanceInput.EngineVersion = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
-			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if attr, ok := d.GetOk("iops"); ok {
-			modifyDbInstanceInput.Iops = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("iops"); ok {
+			modifyDbInstanceInput.Iops = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("license_model"); ok {
-			opts.LicenseModel = aws.String(attr.(string))
+		if v, ok := d.GetOk("license_model"); ok {
+			input.LicenseModel = aws.String(v.(string))
 		}
 
-		if attr, ok := d.GetOk("maintenance_window"); ok {
-			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("max_allocated_storage"); ok {
-			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("max_allocated_storage"); ok {
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("monitoring_interval"); ok {
-			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(attr.(int)))
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
 
-		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
-			modifyDbInstanceInput.MonitoringRoleArn = aws.String(attr.(string))
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			modifyDbInstanceInput.MonitoringRoleArn = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
 
@@ -984,16 +984,16 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 				modifyDbInstanceInput.MultiAZ = aws.Bool(attr.(bool))
 				requiresModifyDbInstance = true
 			} else {
-				opts.MultiAZ = aws.Bool(attr.(bool))
+				input.MultiAZ = aws.Bool(attr.(bool))
 			}
 		}
 
 		if attr, ok := d.GetOk("option_group_name"); ok {
-			opts.OptionGroupName = aws.String(attr.(string))
+			input.OptionGroupName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("parameter_group_name"); ok {
-			opts.DBParameterGroupName = aws.String(attr.(string))
+			input.DBParameterGroupName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("password"); ok {
@@ -1002,7 +1002,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
-			opts.Port = aws.Int64(int64(attr.(int)))
+			input.Port = aws.Int64(int64(attr.(int)))
 		}
 
 		if attr := d.Get("security_group_names").(*schema.Set); attr.Len() > 0 {
@@ -1016,11 +1016,11 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("tde_credential_arn"); ok {
-			opts.TdeCredentialArn = aws.String(attr.(string))
+			input.TdeCredentialArn = aws.String(attr.(string))
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1037,11 +1037,11 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
-			opts.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+			input.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
 		}
 
-		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
-		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
+		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
+		_, err := conn.RestoreDBInstanceFromDBSnapshot(input)
 
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
@@ -1051,11 +1051,11 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		// Since engine is not a required argument when using snapshot_identifier
 		// and the RDS API determines this condition, we catch the error
 		// and remove the invalid configuration for it to be fixed afterwards.
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Mirroring cannot be applied to instances with backup retention set to zero") {
-			opts.MultiAZ = aws.Bool(false)
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Mirroring cannot be applied to instances with backup retention set to zero") {
+			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshot(&opts)
+			_, err = conn.RestoreDBInstanceFromDBSnapshot(input)
 		}
 
 		if err != nil {
