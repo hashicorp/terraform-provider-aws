@@ -22,6 +22,20 @@ func StorageType_Values() []string {
 	}
 }
 
+const (
+	InstanceEngineMariaDB             = "mariadb"
+	InstanceEngineMySQL               = "mysql"
+	InstanceEngineOracleEnterprise    = "oracle-ee"
+	InstanceEngineOracleEnterpriseCDB = "oracle-ee-cdb"
+	InstanceEngineOracleStandard2     = "oracle-se2"
+	InstanceEngineOracleStandard2CDB  = "oracle-se2-cdb"
+	InstanceEnginePostgres            = "postgres"
+	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
+	InstanceEngineSQLServerExpress    = "sqlserver-ex"
+	InstanceEngineSQLServerStandard   = "sqlserver-se"
+	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+)
+
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
 	InstanceStatusAvailable                     = "available"
