@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -399,7 +400,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		costexplorer.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionCreating, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
@@ -420,7 +421,7 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.Set("arn", costCategory.CostCategoryArn)
@@ -429,27 +430,27 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
 	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
 	}
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, "setting tags_all", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting tags_all", ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil
@@ -476,14 +477,14 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
 		if err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResCostCategory, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.CE, names.ErrActionUpdating, ResTags, d.Id(), err)
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}
 
@@ -502,7 +503,7 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil

@@ -135,7 +135,7 @@ data "aws_iam_policy_document" "test" {
     }
 
     resources = [
-      "${aws_sns_topic.test.arn}",
+      aws_sns_topic.test.arn,
     ]
 
     sid = "__default_statement_ID"

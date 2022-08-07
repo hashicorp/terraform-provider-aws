@@ -169,21 +169,21 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id(), err)
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	if d.IsNewResource() && len(resp.Projects) == 0 {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id(), errors.New("no project found after create"))
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
 	}
 
 	if !d.IsNewResource() && len(resp.Projects) == 0 {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -191,11 +191,11 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	project := resp.Projects[0]
 
 	if d.IsNewResource() && project.Webhook == nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id(), errors.New("no webhook after creation"))
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
 	}
 
 	if !d.IsNewResource() && project.Webhook == nil {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResWebhook, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}

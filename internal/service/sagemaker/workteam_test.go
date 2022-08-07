@@ -469,7 +469,7 @@ resource "aws_sns_topic_policy" "test" {
         "Action" : [
           "sns:Publish"
         ],
-        "Resource" : "${aws_sns_topic.test.arn}"
+        "Resource" : aws_sns_topic.test.arn
       }
     ]
   })

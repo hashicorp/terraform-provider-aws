@@ -298,7 +298,7 @@ func testAccCheckContainerServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflightsail.FindContainerServiceByName(context.TODO(), conn, r.Primary.ID)
+		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, r.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -325,7 +325,7 @@ func testAccCheckContainerServiceExists(resourceName string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
-		_, err := tflightsail.FindContainerServiceByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

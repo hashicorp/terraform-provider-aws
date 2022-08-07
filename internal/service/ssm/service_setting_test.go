@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,7 +65,7 @@ func testAccServiceSettingDestroy(s *terraform.State) error {
 			return err
 		}
 		if output.ServiceSetting.Status != aws.String("default") {
-			return names.Error(names.SSM, names.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
+			return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 	}
 
@@ -83,7 +84,7 @@ func testAccServiceSettingExists(n string, res *ssm.ServiceSetting) resource.Tes
 		output, err := tfssm.FindServiceSettingByARN(conn, rs.Primary.Attributes["setting_id"])
 
 		if err != nil {
-			return names.Error(names.SSM, names.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
+			return create.Error(names.SSM, create.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 
 		*res = *output

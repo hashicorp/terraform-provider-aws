@@ -235,7 +235,7 @@ func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		_, err := tfkafkaconnect.FindConnectorByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -253,7 +253,7 @@ func testAccCheckConnectorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfkafkaconnect.FindConnectorByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

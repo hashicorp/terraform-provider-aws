@@ -42,6 +42,17 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
+// Takes list of pointers to strings. Expand to an array
+// of raw strings and returns a []interface{}
+// to keep compatibility w/ schema.NewSetschema.NewSet
+func FlattenStringValueList(list []string) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, v)
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	stringMap := make(map[string]*string, len(m))
@@ -80,6 +91,10 @@ func ExpandStringValueSet(configured *schema.Set) []string {
 
 func FlattenStringSet(list []*string) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringList(list)) // nosemgrep:ci.helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+}
+
+func FlattenStringValueSet(list []string) *schema.Set {
+	return schema.NewSet(schema.HashString, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
 // Takes the result of schema.Set of strings and returns a []*int64

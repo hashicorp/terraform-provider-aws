@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -125,10 +126,6 @@ func ResourceOrganizationCustomRule() *schema.Resource {
 	}
 }
 
-const (
-	ResNameOrganizationCustomRule = "Organization Custom Rule"
-)
-
 func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigServiceConn
 	name := d.Get("name").(string)
@@ -176,13 +173,13 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 	_, err := conn.PutOrganizationConfigRule(input)
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionCreating, ResNameOrganizationCustomRule, name, err)
+		return create.Error(names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomRule, name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionWaitingForCreation, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return resourceOrganizationCustomRuleRead(d, meta)
@@ -200,7 +197,7 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && rule == nil {
@@ -210,22 +207,22 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.IsNewResource() && rule == nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Managed Rule"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Managed Rule"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata == nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty metadata"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty metadata"))
 	}
 
 	d.Set("arn", rule.OrganizationConfigRuleArn)
 	d.Set("description", rule.OrganizationCustomRuleMetadata.Description)
 
 	if err := d.Set("excluded_accounts", aws.StringValueSlice(rule.ExcludedAccounts)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("input_parameters", rule.OrganizationCustomRuleMetadata.InputParameters)
@@ -235,14 +232,14 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("resource_id_scope", rule.OrganizationCustomRuleMetadata.ResourceIdScope)
 
 	if err := d.Set("resource_types_scope", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.ResourceTypesScope)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("tag_key_scope", rule.OrganizationCustomRuleMetadata.TagKeyScope)
 	d.Set("tag_value_scope", rule.OrganizationCustomRuleMetadata.TagValueScope)
 
 	if err := d.Set("trigger_types", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.OrganizationConfigRuleTriggerTypes)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return nil
@@ -294,11 +291,11 @@ func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface
 	_, err := conn.PutOrganizationConfigRule(input)
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionUpdating, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if err := waitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionWaitingForUpdate, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return resourceOrganizationCustomRuleRead(d, meta)
@@ -314,11 +311,11 @@ func resourceOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteOrganizationConfigRule(input)
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionDeleting, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if err := waitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return names.Error(names.ConfigService, names.ErrActionWaitingForDeletion, ResNameOrganizationCustomRule, d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return nil

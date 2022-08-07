@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1870,7 +1871,7 @@ func testAccCheckReplicaHasTags(n string, region string, should bool) resource.T
 		if aws.StringValue(conn.Config.Region) != region {
 			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
 			if err != nil {
-				return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.ID, err)
+				return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
 			}
 
 			conn = dynamodb.New(session)
@@ -1879,21 +1880,21 @@ func testAccCheckReplicaHasTags(n string, region string, should bool) resource.T
 		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes["arn"], region)
 
 		if err != nil {
-			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.ID, err)
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
 		}
 
 		tags, err := tfdynamodb.ListTags(conn, newARN)
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], err)
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], err)
 		}
 
 		if len(tags.Keys()) > 0 && !should {
-			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], errors.New("replica should not have tags but does"))
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], errors.New("replica should not have tags but does"))
 		}
 
 		if len(tags.Keys()) == 0 && should {
-			return names.Error(names.DynamoDB, names.ErrActionChecking, "Table", rs.Primary.Attributes["arn"], errors.New("replica should have tags but does not"))
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], errors.New("replica should have tags but does not"))
 		}
 
 		return nil

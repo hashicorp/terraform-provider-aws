@@ -50,3 +50,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `cidr` - The previewed CIDR from the pool.
 * `id` - The ID of the preview.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

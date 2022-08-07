@@ -192,11 +192,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Provider returns a *schema.Provider.
-func Provider() *schema.Provider {
-	// TODO: Move the validation to this, requires conditional schemas
-	// TODO: Move the configuration to this, requires validation
-
+// New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
+// The provider instance is fully configured once the `ConfigureContextFunc` has been called.
+func New(_ context.Context) (*schema.Provider, error) {
 	// The actual provider
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
@@ -741,7 +739,7 @@ func Provider() *schema.Provider {
 			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
 			"aws_location_tracker":             location.DataSourceTracker(),
 
-			"aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),
@@ -763,6 +761,7 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
 			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
 
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
@@ -892,15 +891,17 @@ func Provider() *schema.Provider {
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
-			"aws_waf_ipset":           waf.DataSourceIPSet(),
-			"aws_waf_rule":            waf.DataSourceRule(),
-			"aws_waf_rate_based_rule": waf.DataSourceRateBasedRule(),
-			"aws_waf_web_acl":         waf.DataSourceWebACL(),
+			"aws_waf_ipset":                 waf.DataSourceIPSet(),
+			"aws_waf_rule":                  waf.DataSourceRule(),
+			"aws_waf_rate_based_rule":       waf.DataSourceRateBasedRule(),
+			"aws_waf_subscribed_rule_group": waf.DataSourceSubscribedRuleGroup(),
+			"aws_waf_web_acl":               waf.DataSourceWebACL(),
 
-			"aws_wafregional_ipset":           wafregional.DataSourceIPSet(),
-			"aws_wafregional_rule":            wafregional.DataSourceRule(),
-			"aws_wafregional_rate_based_rule": wafregional.DataSourceRateBasedRule(),
-			"aws_wafregional_web_acl":         wafregional.DataSourceWebACL(),
+			"aws_wafregional_ipset":                 wafregional.DataSourceIPSet(),
+			"aws_wafregional_rule":                  wafregional.DataSourceRule(),
+			"aws_wafregional_rate_based_rule":       wafregional.DataSourceRateBasedRule(),
+			"aws_wafregional_subscribed_rule_group": wafregional.DataSourceSubscribedRuleGroup(),
+			"aws_wafregional_web_acl":               wafregional.DataSourceWebACL(),
 
 			"aws_wafv2_ip_set":            wafv2.DataSourceIPSet(),
 			"aws_wafv2_regex_pattern_set": wafv2.DataSourceRegexPatternSet(),
@@ -1274,6 +1275,7 @@ func Provider() *schema.Provider {
 			"aws_directory_service_conditional_forwarder":     ds.ResourceConditionalForwarder(),
 			"aws_directory_service_directory":                 ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
+			"aws_directory_service_region":                    ds.ResourceRegion(),
 			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
 			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
@@ -1616,6 +1618,7 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
 
+			"aws_kendra_data_source":                  kendra.ResourceDataSource(),
 			"aws_kendra_experience":                   kendra.ResourceExperience(),
 			"aws_kendra_faq":                          kendra.ResourceFaq(),
 			"aws_kendra_index":                        kendra.ResourceIndex(),
@@ -1687,13 +1690,14 @@ func Provider() *schema.Provider {
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
@@ -2057,6 +2061,7 @@ func Provider() *schema.Provider {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
 			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),
@@ -2124,7 +2129,7 @@ func Provider() *schema.Provider {
 		return providerConfigure(ctx, d, terraformVersion)
 	}
 
-	return provider
+	return provider, nil
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {

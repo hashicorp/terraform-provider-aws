@@ -116,9 +116,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_security_group_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `5 minutes`) Used for security group rule creation
+- `create` - (Default `5m`)
 
 ## Import
 
