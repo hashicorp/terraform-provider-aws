@@ -36,9 +36,9 @@ data "aws_connect_user" "example" {
 
 The following arguments are supported:
 
-* `user_id` - (Optional) Returns information on a specific User by User id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
+* `user_id` - (Optional) Returns information on a specific User by User id
 
 ## Attributes Reference
 
