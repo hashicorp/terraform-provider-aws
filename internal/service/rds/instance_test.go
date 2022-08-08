@@ -5480,7 +5480,7 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_baseForPITR(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  identifier               = %[1]q
+  identifier              = %[1]q
   allocated_storage       = 10
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
