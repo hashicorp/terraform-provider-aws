@@ -192,9 +192,17 @@ func testAccClassificationJob_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
 				),
 			},
 			{
@@ -210,9 +218,17 @@ func testAccClassificationJob_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
 				),
 			},
 			{
@@ -407,6 +423,17 @@ resource "aws_macie2_classification_job" "test" {
             values     = ["test"]
           }
         }
+        and {
+          tag_scope_term {
+            comparator = "EQ"
+            key        = "TAG"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            target = "S3_OBJECT"
+          }
+        }
       }
       includes {
         and {
@@ -414,6 +441,17 @@ resource "aws_macie2_classification_job" "test" {
             comparator = "EQ"
             key        = "OBJECT_EXTENSION"
             values     = ["test"]
+          }
+        }
+        and {
+          tag_scope_term {
+            comparator = "EQ"
+            key        = "TAG"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            target = "S3_OBJECT"
           }
         }
       }
