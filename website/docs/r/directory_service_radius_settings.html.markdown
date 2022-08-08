@@ -1,18 +1,18 @@
 ---
 subcategory: "DS (Directory Service)"
 layout: "aws"
-page_title: "AWS: aws_directory_radius_settings"
+page_title: "AWS: aws_directory_service_radius_settings"
 description: |-
   Manages a directory's multi-factor authentication (MFA) using a Remote Authentication Dial In User Service (RADIUS) server.
 ---
 
-# Resource: aws_directory_radius_settings
+# Resource: aws_directory_service_radius_settings
 
 Manages a directory's multi-factor authentication (MFA) using a Remote Authentication Dial In User Service (RADIUS) server.
 ## Example Usage
 
 ```terraform
-resource "aws_directory_radius_settings" "example" {
+resource "aws_directory_service_radius_settings" "example" {
   directory_id = aws_directory_service_directory.example.id
 
   authentication_protocol = "PAP"
@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_directory_radius_settings` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_directory_service_radius_settings` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for RADIUS settings creation
 - `update` - (Default `30 minutes`) Used for RADIUS settings update
@@ -57,5 +57,5 @@ In addition to all arguments above, the following attributes are exported:
 RADIUS settings can be imported using the directory ID, e.g.,
 
 ```
-$ terraform import aws_directory_radius_settings.example d-926724cf57
+$ terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```
