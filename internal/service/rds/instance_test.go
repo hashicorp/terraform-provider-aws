@@ -3863,9 +3863,9 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
-
-	resourceName := "aws_db_instance.bar"
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 	dataSourceName := "data.aws_rds_certificate.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3875,9 +3875,9 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_caCertificateID(),
+				Config: testAccInstanceConfig_caCertificateID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
 				),
 			},
@@ -4960,13 +4960,14 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_caCertificateID() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+func testAccInstanceConfig_caCertificateID(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
 }
 
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
   allocated_storage   = 10
   apply_immediately   = true
   ca_cert_identifier  = data.aws_rds_certificate.latest.id
@@ -4977,7 +4978,7 @@ resource "aws_db_instance" "bar" {
   skip_final_snapshot = true
   username            = "foo"
 }
-`)
+`, rName))
 }
 
 func testAccInstanceConfig_iamAuth(rName string) string {
