@@ -23,13 +23,6 @@ const (
 	clusterTypeSingleNode = "single-node"
 )
 
-func clusterType_Values() []string {
-	return []string{
-		clusterTypeMultiNode,
-		clusterTypeSingleNode,
-	}
-}
-
 const (
 	clusterAvailabilityZoneRelocationStatusEnabled          = "enabled"
 	clusterAvailabilityZoneRelocationStatusDisabled         = "disabled"
