@@ -14,23 +14,19 @@ func DataSourceWorkspace() *schema.Resource {
 		Read: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"workspace_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"prometheus_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"prometheus_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,6 +35,10 @@ func DataSourceWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"workspace_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -51,19 +51,19 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	workspace, err := FindWorkspaceByID(conn, workspaceID)
 
 	if err != nil {
-		return fmt.Errorf("error reading AMP Workspace (%s): %w", workspaceID, err)
+		return fmt.Errorf("reading AMP Workspace (%s): %w", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
 
-	d.Set("arn", workspace.Arn)
-	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set("alias", workspace.Alias)
+	d.Set("arn", workspace.Arn)
 	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
+	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set("status", workspace.Status.StatusCode)
 
 	if err := d.Set("tags", KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil
