@@ -70,11 +70,6 @@ func ResourceInstanceGroup() *schema.Resource {
 					return json
 				},
 			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -107,6 +102,11 @@ func ResourceInstanceGroup() *schema.Resource {
 					},
 				},
 				Set: resourceClusterEBSHashConfig,
+			},
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 			"instance_count": {
 				Type:     schema.TypeInt,
