@@ -211,9 +211,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			},
 																		},
 																		"key": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(tagScopeTermKeyValues(), false),
 																		},
 																		"target": {
 																			Type:         schema.TypeString,
@@ -300,9 +301,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			},
 																		},
 																		"key": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(tagScopeTermKeyValues(), false),
 																		},
 																		"target": {
 																			Type:         schema.TypeString,
