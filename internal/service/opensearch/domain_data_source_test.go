@@ -166,7 +166,7 @@ POLICY
   ebs_options {
     ebs_enabled = true
     iops        = 3000
-	throughput  = 125
+    throughput  = 125
     volume_type = "gp3"
     volume_size = 20
   }
