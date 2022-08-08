@@ -146,7 +146,7 @@ func ResourceDirectory() *schema.Resource {
 						},
 						"display_label": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 						"radius_port": {
@@ -376,7 +376,9 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("radius_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		// TODO
+		if err := enableRADIUS(conn, d.Id(), expandRadiusSettings(v.([]interface{})[0].(map[string]interface{}))); err != nil {
+			return err
+		}
 	}
 
 	return resourceDirectoryRead(d, meta)
@@ -542,6 +544,21 @@ func disableSSO(conn *directoryservice.DirectoryService, directoryID string) err
 
 	if err != nil {
 		return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", directoryID, err)
+	}
+
+	return nil
+}
+
+func enableRADIUS(conn *directoryservice.DirectoryService, directoryID string, radiusSettings *directoryservice.RadiusSettings) error {
+	input := &directoryservice.EnableRadiusInput{
+		DirectoryId:    aws.String(directoryID),
+		RadiusSettings: radiusSettings,
+	}
+
+	_, err := conn.EnableRadius(input)
+
+	if err != nil {
+		return fmt.Errorf("enabling Directory Service Directory (%s) RADIUS: %w", directoryID, err)
 	}
 
 	return nil
@@ -743,12 +760,86 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	return tfMap
 }
 
+func expandRadiusSettings(tfMap map[string]interface{}) *directoryservice.RadiusSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &directoryservice.RadiusSettings{}
+
+	if v, ok := tfMap["authentication_protocol"].(string); ok && v != "" {
+		apiObject.AuthenticationProtocol = aws.String(v)
+	}
+
+	if v, ok := tfMap["display_label"].(string); ok && v != "" {
+		apiObject.DisplayLabel = aws.String(v)
+	}
+
+	if v, ok := tfMap["radius_port"].(int); ok && v != 0 {
+		apiObject.RadiusPort = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["radius_retries"].(int); ok && v != 0 {
+		apiObject.RadiusRetries = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["radius_servers"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.RadiusServers = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["radius_timeout"].(int); ok && v != 0 {
+		apiObject.RadiusTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["shared_secret"].(string); ok && v != "" {
+		apiObject.SharedSecret = aws.String(v)
+	}
+
+	if v, ok := tfMap["use_same_username"].(bool); ok {
+		apiObject.UseSameUsername = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenRadiusSettings(apiObject *directoryservice.RadiusSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthenticationProtocol; v != nil {
+		tfMap["authentication_protocol"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DisplayLabel; v != nil {
+		tfMap["display_label"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RadiusPort; v != nil {
+		tfMap["radius_port"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RadiusRetries; v != nil {
+		tfMap["radius_retries"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RadiusServers; v != nil {
+		tfMap["radius_servers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.RadiusTimeout; v != nil {
+		tfMap["radius_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SharedSecret; v != nil {
+		tfMap["shared_secret"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.UseSameUsername; v != nil {
+		tfMap["use_same_username"] = aws.BoolValue(v)
+	}
 
 	return tfMap
 }
