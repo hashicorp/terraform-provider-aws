@@ -4,7 +4,7 @@ const (
 	tagScopeTermKeyTag = "TAG"
 )
 
-func tagScopeTermKeyValues() []string {
+func tagScopeTermKey_Values() []string {
 	return []string{
 		tagScopeTermKeyTag,
 	}
