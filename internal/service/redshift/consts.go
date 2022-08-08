@@ -13,8 +13,9 @@ const (
 
 // https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-mgmt-cluster-status.
 //
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
+//nolint:deadcode,varcheck
 const (
+	// These constants are missing from the AWS SDK
 	clusterStatusAvailable              = "available"
 	clusterStatusAvailablePrepForResize = "available, prep-for-resize"
 	clusterStatusAvailableResizeCleanup = "available, resize-cleanup"
