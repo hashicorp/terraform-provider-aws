@@ -703,7 +703,6 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 // remote rule, which may be structured differently because of how AWS
 // aggregates the rules under the to, from, and type.
 //
-//
 // Matching rules are written to state, with their elements removed from the
 // remote set
 //
@@ -1103,31 +1102,31 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 //
 // For example, in terraform syntax, the following block:
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [
-//     "192.168.0.1/32",
-//     "192.168.0.2/32",
-//   ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [
+//	    "192.168.0.1/32",
+//	    "192.168.0.2/32",
+//	  ]
+//	}
 //
 // will be converted to the two blocks below:
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [ "192.168.0.1/32" ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [ "192.168.0.1/32" ]
+//	}
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [ "192.168.0.2/32" ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [ "192.168.0.2/32" ]
+//	}
 //
 // Then the Difference operation is executed on the new set
 // to find which rules got modified, and the resulting set
@@ -1135,7 +1134,6 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 // to convert the "diff" back to a more compact form for
 // execution. Such compact form helps reduce the number of
 // API calls.
-//
 func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 

@@ -36,7 +36,7 @@ jobs:
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
   validate-terraform:
-    runs-on: ubuntu-latest
+    runs-on: [custom, linux, medium]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
