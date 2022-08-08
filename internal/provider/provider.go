@@ -1273,6 +1273,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_directory_service_directory":                 ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
 			"aws_directory_service_region":                    ds.ResourceRegion(),
+			"aws_directory_service_radius_settings":           ds.ResourceRadiusSettings(),
 			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
 			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
