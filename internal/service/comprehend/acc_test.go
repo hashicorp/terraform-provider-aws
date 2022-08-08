@@ -46,7 +46,7 @@ resource "aws_subnet" "test" {
   count = %[2]d
 
   vpc_id            = aws_vpc.test.id
-  availability_zone = element(data.aws_availability_zones.available.names,count.index)
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
   tags = {

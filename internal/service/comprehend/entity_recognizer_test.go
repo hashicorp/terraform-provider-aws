@@ -825,6 +825,7 @@ func testAccEntityRecognizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -855,18 +856,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -874,6 +863,7 @@ func testAccEntityRecognizerConfig_versionName(rName, vName, key, value string) 
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -909,18 +899,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName, vName, key, value))
 }
 
@@ -928,6 +906,7 @@ func testAccEntityRecognizerConfig_versionNameEmpty(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -959,18 +938,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -978,6 +945,7 @@ func testAccEntityRecognizerConfig_versionNameGenerated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1008,18 +976,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1027,6 +983,7 @@ func testAccEntityRecognizerConfig_versioNamePrefix(rName, versionNamePrefix str
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1058,18 +1015,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName, versionNamePrefix))
 }
 
@@ -1077,6 +1022,7 @@ func testAccEntityRecognizerConfig_kmsKeyIds(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1145,18 +1091,6 @@ resource "aws_kms_key" "model" {
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1164,6 +1098,7 @@ func testAccEntityRecognizerConfig_kmsKeyARNs(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1232,18 +1167,6 @@ resource "aws_kms_key" "model" {
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1251,6 +1174,7 @@ func testAccEntityRecognizerConfig_kmsKeys_None(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1281,18 +1205,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1300,6 +1212,7 @@ func testAccEntityRecognizerConfig_kmsKeys_Set(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1368,18 +1281,6 @@ resource "aws_kms_key" "model" {
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1387,6 +1288,7 @@ func testAccEntityRecognizerConfig_kmsKeys_Update(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1455,18 +1357,6 @@ resource "aws_kms_key" "model2" {
 resource "aws_kms_key" "volume2" {
   deletion_window_in_days = 7
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1474,6 +1364,7 @@ func testAccEntityRecognizerConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1506,18 +1397,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1525,6 +1404,7 @@ func testAccEntityRecognizerConfig_tags1(rName, tagKey1, tagValue1 string) strin
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1559,18 +1439,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName, tagKey1, tagValue1))
 }
 
@@ -1578,6 +1446,7 @@ func testAccEntityRecognizerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tag
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1612,18 +1481,6 @@ resource "aws_comprehend_entity_recognizer" "test" {
   depends_on = [
     aws_iam_role_policy.test,
   ]
-}
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -1740,6 +1597,7 @@ func testAccEntityRecognizerConfig_vpcConfig(rName string) string {
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
 		configVPCWithSubnetsAndDNS(rName, subnetCount),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1850,18 +1708,6 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -1872,6 +1718,7 @@ func testAccEntityRecognizerConfig_vpcConfig_Update(rName string) string {
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
 		configVPCWithSubnetsAndDNS(rName, subnetCount),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1931,7 +1778,7 @@ resource "aws_security_group" "test" {
     protocol        = "-1"
     prefix_list_ids = [aws_vpc_endpoint.s3.prefix_list_id]
   }
-	}
+}
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
@@ -1982,18 +1829,6 @@ data "aws_iam_policy_document" "s3_endpoint" {
     ]
   }
 }
-
-resource "aws_s3_object" "documents" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "documents.txt"
-  source = "test-fixtures/entity_recognizer/documents.txt"
-}
-
-resource "aws_s3_object" "entities" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "entitylist.csv"
-  source = "test-fixtures/entity_recognizer/entitylist.csv"
-}
 `, rName))
 }
 
@@ -2002,6 +1837,7 @@ func testAccEntityRecognizerConfig_vpcConfig_None(rName string) string {
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_basic,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2034,7 +1870,10 @@ resource "aws_comprehend_entity_recognizer" "test" {
     aws_iam_role_policy.test,
   ]
 }
+`, rName))
+}
 
+const testAccEntityRecognizerConfig_S3_basic = `
 resource "aws_s3_object" "documents" {
   bucket = aws_s3_bucket.test.bucket
   key    = "documents.txt"
@@ -2046,5 +1885,4 @@ resource "aws_s3_object" "entities" {
   key    = "entitylist.csv"
   source = "test-fixtures/entity_recognizer/entitylist.csv"
 }
-`, rName))
-}
+  `
