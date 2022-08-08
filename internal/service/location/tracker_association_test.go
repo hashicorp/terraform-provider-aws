@@ -168,7 +168,7 @@ func testAccCheckTrackerAssociationExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
 
-		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(context.TODO(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
+		err = tflocation.FindTrackerAssociationByTrackerNameAndConsumerARN(context.Background(), conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
 
 		if err != nil {
 			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameTrackerAssociation, rs.Primary.ID, err)
