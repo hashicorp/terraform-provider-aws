@@ -56,7 +56,6 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "model_policy"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
@@ -135,8 +134,6 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "model_policy"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value1"),
 				),
@@ -155,8 +152,6 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "model_policy"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
 				),
@@ -198,8 +193,6 @@ func TestAccComprehendEntityRecognizer_versionNameEmpty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s$`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "model_policy"),
 				),
 			},
 			{
@@ -231,7 +224,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEntityRecognizerConfig_versionNameGenerated(rName),
+				Config: testAccEntityRecognizerConfig_versionNameNotSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
@@ -312,7 +305,6 @@ func TestAccComprehendEntityRecognizer_testDocuments(t *testing.T) {
 					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
@@ -324,7 +316,6 @@ func TestAccComprehendEntityRecognizer_testDocuments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "model_policy"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
@@ -998,7 +989,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
 `, rName))
 }
 
-func testAccEntityRecognizerConfig_versionNameGenerated(rName string) string {
+func testAccEntityRecognizerConfig_versionNameNotSet(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
