@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccWorkspaceDataSource_basic(t *testing.T) {
+func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	randName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amp_workspace.test"
 	dataSourceName := "data.aws_amp_workspace.test"
