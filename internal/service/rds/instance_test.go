@@ -3604,335 +3604,6 @@ func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
-		describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(
-			&rds.DescribeDBInstanceAutomatedBackupsInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
-		if err != nil {
-			return err
-		}
-
-		if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
-			return fmt.Errorf("Automated backup for %s not found", rs.Primary.ID)
-		}
-
-		log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.ID)
-		_, err = conn.DeleteDBInstanceAutomatedBackup(
-			&rds.DeleteDBInstanceAutomatedBackupInput{
-				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
-			})
-		if err != nil {
-			return err
-		}
-	}
-
-	return testAccCheckInstanceDestroy(s)
-}
-
-func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *v.Engine != "mysql" {
-			return fmt.Errorf("bad engine: %#v", *v.Engine)
-		}
-
-		if *v.EngineVersion == "" {
-			return fmt.Errorf("bad engine_version: %#v", *v.EngineVersion)
-		}
-
-		if *v.BackupRetentionPeriod != 0 {
-			return fmt.Errorf("bad backup_retention_period: %#v", *v.BackupRetentionPeriod)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceAttributes_MSSQL(v *rds.DBInstance, tz string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *v.Engine != "sqlserver-ex" {
-			return fmt.Errorf("bad engine: %#v", *v.Engine)
-		}
-
-		rtz := ""
-		if v.Timezone != nil {
-			rtz = *v.Timezone
-		}
-
-		if tz != rtz {
-			return fmt.Errorf("Expected (%s) Timezone for MSSQL test, got (%s)", tz, rtz)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceDomainAttributes(domain string, v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, dm := range v.DomainMemberships {
-			if *dm.FQDN != domain {
-				continue
-			}
-
-			return nil
-		}
-
-		return fmt.Errorf("Domain %s not found in domain memberships", domain)
-	}
-}
-
-func testAccCheckInstanceParameterApplyStatusInSync(dbInstance *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, dbParameterGroup := range dbInstance.DBParameterGroups {
-			parameterApplyStatus := aws.StringValue(dbParameterGroup.ParameterApplyStatus)
-			if parameterApplyStatus != "in-sync" {
-				id := aws.StringValue(dbInstance.DBInstanceIdentifier)
-				parameterGroupName := aws.StringValue(dbParameterGroup.DBParameterGroupName)
-				return fmt.Errorf("expected DB Instance (%s) Parameter Group (%s) apply status to be: \"in-sync\", got: %q", id, parameterGroupName, parameterApplyStatus)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if replica.ReadReplicaSourceDBInstanceIdentifier != nil && *replica.ReadReplicaSourceDBInstanceIdentifier != *source.DBInstanceIdentifier {
-			return fmt.Errorf("bad source identifier for replica, expected: '%s', got: '%s'", *source.DBInstanceIdentifier, *replica.ReadReplicaSourceDBInstanceIdentifier)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceSnapshot(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := awsClient.RDSConn
-
-		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
-		snapOutput, err := conn.DescribeDBSnapshots(
-			&rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-
-		if err != nil {
-			return err
-		}
-
-		if snapOutput == nil || len(snapOutput.DBSnapshots) == 0 {
-			return fmt.Errorf("Snapshot %s not found", rs.Primary.Attributes["final_snapshot_identifier"])
-		}
-
-		// verify we have the tags copied to the snapshot
-		tagsARN := aws.StringValue(snapOutput.DBSnapshots[0].DBSnapshotArn)
-		listTagsOutput, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(tagsARN),
-		})
-		if err != nil {
-			return fmt.Errorf("Error retrieving tags for ARN (%s): %s", tagsARN, err)
-		}
-
-		if listTagsOutput.TagList == nil || len(listTagsOutput.TagList) == 0 {
-			return fmt.Errorf("Tag list is nil or zero: %s", listTagsOutput.TagList)
-		}
-
-		var found bool
-		for _, t := range listTagsOutput.TagList {
-			if aws.StringValue(t.Key) == "Name" && strings.HasPrefix(aws.StringValue(t.Value), acctest.ResourcePrefix) {
-				found = true
-			}
-		}
-		if !found {
-			return fmt.Errorf("Expected to find tag Name with prefix \"%s\", but wasn't found. Tags: %s", acctest.ResourcePrefix, listTagsOutput.TagList)
-		}
-		// end tag search
-
-		log.Printf("[INFO] Deleting the Snapshot %s", rs.Primary.Attributes["final_snapshot_identifier"])
-		_, err = conn.DeleteDBSnapshot(
-			&rds.DeleteDBSnapshotInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-		if err != nil {
-			return err
-		}
-
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-				continue
-			}
-			return err
-
-		}
-
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-			return err
-		}
-
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
-
-		_, err = conn.DescribeDBSnapshots(
-			&rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceNotRecreated(instance1, instance2 *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(instance1.InstanceCreateTime).Equal(aws.TimeValue(instance2.InstanceCreateTime)) {
-			return fmt.Errorf("database instance was recreated. expected: %s, got: %s", instance1.InstanceCreateTime, instance2.InstanceCreateTime)
-		}
-		return nil
-	}
-}
-
-func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceEC2ClassicDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceEC2ClassicExists(resourceName string, v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
-		if !ok {
-			return fmt.Errorf("resource (%s) state not found", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource ID not set")
-		}
-
-		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
-
-		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8792
 func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.T) {
 	if testing.Short() {
@@ -4585,6 +4256,335 @@ func TestAccRDSInstance_license(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckInstanceAutomatedBackups(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
+		describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(
+			&rds.DescribeDBInstanceAutomatedBackupsInput{
+				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			})
+		if err != nil {
+			return err
+		}
+
+		if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
+			return fmt.Errorf("Automated backup for %s not found", rs.Primary.ID)
+		}
+
+		log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.ID)
+		_, err = conn.DeleteDBInstanceAutomatedBackup(
+			&rds.DeleteDBInstanceAutomatedBackupInput{
+				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
+			})
+		if err != nil {
+			return err
+		}
+	}
+
+	return testAccCheckInstanceDestroy(s)
+}
+
+func testAccCheckInstanceDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckInstanceAttributes(v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *v.Engine != "mysql" {
+			return fmt.Errorf("bad engine: %#v", *v.Engine)
+		}
+
+		if *v.EngineVersion == "" {
+			return fmt.Errorf("bad engine_version: %#v", *v.EngineVersion)
+		}
+
+		if *v.BackupRetentionPeriod != 0 {
+			return fmt.Errorf("bad backup_retention_period: %#v", *v.BackupRetentionPeriod)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceAttributes_MSSQL(v *rds.DBInstance, tz string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *v.Engine != "sqlserver-ex" {
+			return fmt.Errorf("bad engine: %#v", *v.Engine)
+		}
+
+		rtz := ""
+		if v.Timezone != nil {
+			rtz = *v.Timezone
+		}
+
+		if tz != rtz {
+			return fmt.Errorf("Expected (%s) Timezone for MSSQL test, got (%s)", tz, rtz)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceDomainAttributes(domain string, v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, dm := range v.DomainMemberships {
+			if *dm.FQDN != domain {
+				continue
+			}
+
+			return nil
+		}
+
+		return fmt.Errorf("Domain %s not found in domain memberships", domain)
+	}
+}
+
+func testAccCheckInstanceParameterApplyStatusInSync(dbInstance *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, dbParameterGroup := range dbInstance.DBParameterGroups {
+			parameterApplyStatus := aws.StringValue(dbParameterGroup.ParameterApplyStatus)
+			if parameterApplyStatus != "in-sync" {
+				id := aws.StringValue(dbInstance.DBInstanceIdentifier)
+				parameterGroupName := aws.StringValue(dbParameterGroup.DBParameterGroupName)
+				return fmt.Errorf("expected DB Instance (%s) Parameter Group (%s) apply status to be: \"in-sync\", got: %q", id, parameterGroupName, parameterApplyStatus)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if replica.ReadReplicaSourceDBInstanceIdentifier != nil && *replica.ReadReplicaSourceDBInstanceIdentifier != *source.DBInstanceIdentifier {
+			return fmt.Errorf("bad source identifier for replica, expected: '%s', got: '%s'", *source.DBInstanceIdentifier, *replica.ReadReplicaSourceDBInstanceIdentifier)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceSnapshot(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.RDSConn
+
+		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
+		snapOutput, err := conn.DescribeDBSnapshots(
+			&rds.DescribeDBSnapshotsInput{
+				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
+			})
+
+		if err != nil {
+			return err
+		}
+
+		if snapOutput == nil || len(snapOutput.DBSnapshots) == 0 {
+			return fmt.Errorf("Snapshot %s not found", rs.Primary.Attributes["final_snapshot_identifier"])
+		}
+
+		// verify we have the tags copied to the snapshot
+		tagsARN := aws.StringValue(snapOutput.DBSnapshots[0].DBSnapshotArn)
+		listTagsOutput, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
+			ResourceName: aws.String(tagsARN),
+		})
+		if err != nil {
+			return fmt.Errorf("Error retrieving tags for ARN (%s): %s", tagsARN, err)
+		}
+
+		if listTagsOutput.TagList == nil || len(listTagsOutput.TagList) == 0 {
+			return fmt.Errorf("Tag list is nil or zero: %s", listTagsOutput.TagList)
+		}
+
+		var found bool
+		for _, t := range listTagsOutput.TagList {
+			if aws.StringValue(t.Key) == "Name" && strings.HasPrefix(aws.StringValue(t.Value), acctest.ResourcePrefix) {
+				found = true
+			}
+		}
+		if !found {
+			return fmt.Errorf("Expected to find tag Name with prefix \"%s\", but wasn't found. Tags: %s", acctest.ResourcePrefix, listTagsOutput.TagList)
+		}
+		// end tag search
+
+		log.Printf("[INFO] Deleting the Snapshot %s", rs.Primary.Attributes["final_snapshot_identifier"])
+		_, err = conn.DeleteDBSnapshot(
+			&rds.DeleteDBSnapshotInput{
+				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
+			})
+		if err != nil {
+			return err
+		}
+
+		resp, err := conn.DescribeDBInstances(
+			&rds.DescribeDBInstancesInput{
+				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			})
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+				continue
+			}
+			return err
+
+		}
+
+		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
+			return fmt.Errorf("DB Instance still exists")
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		resp, err := conn.DescribeDBInstances(
+			&rds.DescribeDBInstancesInput{
+				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			})
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+			return err
+		}
+
+		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
+			return fmt.Errorf("DB Instance still exists")
+		}
+
+		_, err = conn.DescribeDBSnapshots(
+			&rds.DescribeDBSnapshotsInput{
+				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
+			})
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckInstanceNotRecreated(instance1, instance2 *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(instance1.InstanceCreateTime).Equal(aws.TimeValue(instance2.InstanceCreateTime)) {
+			return fmt.Errorf("database instance was recreated. expected: %s, got: %s", instance1.InstanceCreateTime, instance2.InstanceCreateTime)
+		}
+		return nil
+	}
+}
+
+func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No DB Instance ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckInstanceEC2ClassicDestroy(s *terraform.State) error {
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckInstanceEC2ClassicExists(resourceName string, v *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("resource (%s) state not found", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource ID not set")
+		}
+
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
+
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
 }
 
 func testAccInstanceConfig_orderableClass(engine, license, storage, classes string) string {
