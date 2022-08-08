@@ -484,6 +484,18 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if d.HasChange("radius_settings") {
+		if v, ok := d.GetOk("radius_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if err := updateRADIUS(conn, d.Id(), expandRadiusSettings(v.([]interface{})[0].(map[string]interface{}))); err != nil {
+				return err
+			}
+		} else {
+			if err := disableRADIUS(conn, d.Id()); err != nil {
+				return err
+			}
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -530,6 +542,20 @@ func createAlias(conn *directoryservice.DirectoryService, directoryID, alias str
 
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
+	}
+
+	return nil
+}
+
+func disableRADIUS(conn *directoryservice.DirectoryService, directoryID string) error {
+	input := &directoryservice.DisableRadiusInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	_, err := conn.DisableRadius(input)
+
+	if err != nil {
+		return fmt.Errorf("disabling Directory Service Directory (%s) RADIUS: %w", directoryID, err)
 	}
 
 	return nil
@@ -637,6 +663,21 @@ func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, di
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) delete: %w", directoryID, v, err)
 			}
 		}
+	}
+
+	return nil
+}
+
+func updateRADIUS(conn *directoryservice.DirectoryService, directoryID string, radiusSettings *directoryservice.RadiusSettings) error {
+	input := &directoryservice.UpdateRadiusInput{
+		DirectoryId:    aws.String(directoryID),
+		RadiusSettings: radiusSettings,
+	}
+
+	_, err := conn.UpdateRadius(input)
+
+	if err != nil {
+		return fmt.Errorf("updating Directory Service Directory (%s) RADIUS: %w", directoryID, err)
 	}
 
 	return nil
