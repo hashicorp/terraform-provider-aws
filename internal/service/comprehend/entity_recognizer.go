@@ -561,6 +561,8 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 			return awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be updated: %s", d.Id(), err)
 		}
 	} else if d.HasChange("tags_all") {
+		// For a tags-only change. If tag changes are combined with version publishing, the tags are set
+		// by the CreateEntityRecognizer call
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {

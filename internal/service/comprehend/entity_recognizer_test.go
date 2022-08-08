@@ -159,6 +159,11 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
