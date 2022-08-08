@@ -2196,9 +2196,9 @@ resource "aws_opensearch_domain" "test" {
   ebs_options {
     ebs_enabled = true
     volume_size = %d
-	throughput  = %d
-	volume_type = "gp3"
-	iops        = %d
+    throughput  = %d
+    volume_type = "gp3"
+    iops        = %d
   }
 
   cluster_config {
