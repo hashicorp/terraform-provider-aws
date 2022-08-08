@@ -742,6 +742,9 @@ func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *macie2.S3JobDefini
 
 	s3JobMap := s3JobDefinitionObj[0].(map[string]interface{})
 
+	if v1, ok1 := s3JobMap["bucket_criteria"]; ok1 && len(v1.([]interface{})) > 0 {
+		s3JobDefinition.BucketCriteria = expandS3BucketCriteriaForJob(v1.([]interface{}))
+	}
 	if v1, ok1 := s3JobMap["bucket_definitions"]; ok1 && len(v1.([]interface{})) > 0 {
 		s3JobDefinition.BucketDefinitions = expandBucketDefinitions(v1.([]interface{}))
 	}
@@ -750,6 +753,125 @@ func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *macie2.S3JobDefini
 	}
 
 	return &s3JobDefinition
+}
+
+func expandS3BucketCriteriaForJob(criteria []interface{}) *macie2.S3BucketCriteriaForJob {
+	if len(criteria) == 0 {
+		return nil
+	}
+
+	var criteriaObj macie2.S3BucketCriteriaForJob
+
+	criteriaMap := criteria[0].(map[string]interface{})
+
+	if v, ok := criteriaMap["excludes"]; ok && len(v.([]interface{})) > 0 {
+		v1 := v.([]interface{})
+		andMap := v1[0].(map[string]interface{})
+		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
+			criteriaObj.Excludes = &macie2.CriteriaBlockForJob{
+				And: expandCriteriaBlockForJob(v2.([]interface{})),
+			}
+		}
+	}
+	if v, ok := criteriaMap["includes"]; ok && len(v.([]interface{})) > 0 {
+		v1 := v.([]interface{})
+		andMap := v1[0].(map[string]interface{})
+		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
+			criteriaObj.Includes = &macie2.CriteriaBlockForJob{
+				And: expandCriteriaBlockForJob(v2.([]interface{})),
+			}
+		}
+	}
+
+	return &criteriaObj
+}
+
+func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*macie2.CriteriaForJob {
+	if len(criteriaBlocks) == 0 {
+		return nil
+	}
+
+	var criteriaBlocksList []*macie2.CriteriaForJob
+
+	for _, v := range criteriaBlocks {
+		v1 := v.(map[string]interface{})
+		var criteriaBlock macie2.CriteriaForJob
+
+		if v2, ok1 := v1["simple_criterion"]; ok1 && len(v2.([]interface{})) > 0 {
+			criteriaBlock.SimpleCriterion = expandSimpleCriterionForJob(v2.([]interface{}))
+		}
+		if v2, ok1 := v1["tag_criterion"]; ok1 && len(v2.([]interface{})) > 0 {
+			criteriaBlock.TagCriterion = expandTagCriterionForJob(v2.([]interface{}))
+		}
+
+		criteriaBlocksList = append(criteriaBlocksList, &criteriaBlock)
+	}
+
+	return criteriaBlocksList
+}
+
+func expandSimpleCriterionForJob(criterion []interface{}) *macie2.SimpleCriterionForJob {
+	if len(criterion) == 0 {
+		return nil
+	}
+
+	var simpleCriterion macie2.SimpleCriterionForJob
+
+	simpleCriterionMap := criterion[0].(map[string]interface{})
+
+	if v, ok := simpleCriterionMap["comparator"]; ok && v.(string) != "" {
+		simpleCriterion.Comparator = aws.String(v.(string))
+	}
+	if v, ok := simpleCriterionMap["key"]; ok && v.(string) != "" {
+		simpleCriterion.Key = aws.String(v.(string))
+	}
+	if v, ok := simpleCriterionMap["values"]; ok && len(v.([]interface{})) > 0 {
+		simpleCriterion.Values = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	return &simpleCriterion
+}
+
+func expandTagCriterionForJob(criterion []interface{}) *macie2.TagCriterionForJob {
+	if len(criterion) == 0 {
+		return nil
+	}
+
+	var tagCriterion macie2.TagCriterionForJob
+
+	tagCriterionMap := criterion[0].(map[string]interface{})
+
+	if v, ok := tagCriterionMap["comparator"]; ok && v.(string) != "" {
+		tagCriterion.Comparator = aws.String(v.(string))
+	}
+	if v, ok := tagCriterionMap["tag_values"]; ok && len(v.([]interface{})) > 0 {
+		tagCriterion.TagValues = expandTagCriterionPairForJob(v.([]interface{}))
+	}
+
+	return &tagCriterion
+}
+
+func expandTagCriterionPairForJob(tagValues []interface{}) []*macie2.TagCriterionPairForJob {
+	if len(tagValues) == 0 {
+		return nil
+	}
+
+	var tagValuesList []*macie2.TagCriterionPairForJob
+
+	for _, v := range tagValues {
+		v1 := v.(map[string]interface{})
+		var tagValue macie2.TagCriterionPairForJob
+
+		if v2, ok := v1["value"]; ok && v2.(string) != "" {
+			tagValue.Value = aws.String(v2.(string))
+		}
+		if v2, ok := v1["key"]; ok && v2.(string) != "" {
+			tagValue.Key = aws.String(v2.(string))
+		}
+		tagValuesList = append(tagValuesList, &tagValue)
+	}
+
+	return tagValuesList
 }
 
 func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefinitionForJob {
