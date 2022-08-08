@@ -218,7 +218,7 @@ func waitDBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rd
 	return nil, err
 }
 
-func waitDBInstanceUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+func waitDBInstanceUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
