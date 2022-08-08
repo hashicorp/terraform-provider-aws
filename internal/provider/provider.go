@@ -794,6 +794,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
 
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
+
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
 			"aws_ram_resource_share": ram.DataSourceResourceShare(),
