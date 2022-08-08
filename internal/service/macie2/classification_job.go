@@ -1074,11 +1074,106 @@ func flattenS3JobDefinition(s3JobDefinition *macie2.S3JobDefinition) []map[strin
 	var jobDefinitions []map[string]interface{}
 
 	jobDefinitions = append(jobDefinitions, map[string]interface{}{
+		"bucket_criteria":    flattenS3BucketCriteriaForJob(s3JobDefinition.BucketCriteria),
 		"bucket_definitions": flattenBucketDefinition(s3JobDefinition.BucketDefinitions),
 		"scoping":            flattenScoping(s3JobDefinition.Scoping),
 	})
 
 	return jobDefinitions
+}
+
+func flattenS3BucketCriteriaForJob(criteria *macie2.S3BucketCriteriaForJob) []map[string]interface{} {
+	if criteria == nil {
+		return nil
+	}
+
+	var criteriaList []map[string]interface{}
+
+	criteriaList = append(criteriaList, map[string]interface{}{
+		"excludes": flattenCriteriaBlockForJob(criteria.Excludes),
+		"includes": flattenCriteriaBlockForJob(criteria.Includes),
+	})
+
+	return criteriaList
+}
+
+func flattenCriteriaBlockForJob(criteriaBlock *macie2.CriteriaBlockForJob) []map[string]interface{} {
+	if criteriaBlock == nil {
+		return nil
+	}
+
+	var criteriaBlockList []map[string]interface{}
+
+	criteriaBlockList = append(criteriaBlockList, map[string]interface{}{
+		"and": flattenCriteriaForJob(criteriaBlock.And),
+	})
+
+	return criteriaBlockList
+}
+
+func flattenCriteriaForJob(criteria []*macie2.CriteriaForJob) []map[string]interface{} {
+	if criteria == nil {
+		return nil
+	}
+
+	var criteriaList []map[string]interface{}
+
+	for _, criterion := range criteria {
+		criteriaList = append(criteriaList, map[string]interface{}{
+			"simple_criterion": flattenSimpleCriterionForJob(criterion.SimpleCriterion),
+			"tag_criterion":    flattenTagCriterionForJob(criterion.TagCriterion),
+		})
+	}
+
+	return criteriaList
+}
+
+func flattenSimpleCriterionForJob(criterion *macie2.SimpleCriterionForJob) []map[string]interface{} {
+	if criterion == nil {
+		return nil
+	}
+
+	var simpleCriterionList []map[string]interface{}
+
+	simpleCriterionList = append(simpleCriterionList, map[string]interface{}{
+		"comparator": aws.StringValue(criterion.Comparator),
+		"key":        aws.StringValue(criterion.Key),
+		"values":     flex.FlattenStringList(criterion.Values),
+	})
+
+	return simpleCriterionList
+}
+
+func flattenTagCriterionForJob(criterion *macie2.TagCriterionForJob) []map[string]interface{} {
+	if criterion == nil {
+		return nil
+	}
+
+	var tagCriterionList []map[string]interface{}
+
+	tagCriterionList = append(tagCriterionList, map[string]interface{}{
+		"comparator": aws.StringValue(criterion.Comparator),
+		"tag_values": flattenTagCriterionPairForJob(criterion.TagValues),
+	})
+
+	return tagCriterionList
+}
+
+func flattenTagCriterionPairForJob(tagValues []*macie2.TagCriterionPairForJob) []map[string]interface{} {
+	if len(tagValues) == 0 {
+		return nil
+	}
+
+	var tagValuesList []map[string]interface{}
+
+	for _, tagValue := range tagValues {
+		tagValuesList = append(tagValuesList, map[string]interface{}{
+			"value": aws.StringValue(tagValue.Value),
+			"key":   aws.StringValue(tagValue.Key),
+		})
+	}
+
+	return tagValuesList
 }
 
 func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJob) []map[string]interface{} {
