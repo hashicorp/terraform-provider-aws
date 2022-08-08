@@ -133,6 +133,58 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"radius_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_protocol": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(directoryservice.RadiusAuthenticationProtocol_Values(), false),
+						},
+						"display_label": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
+						},
+						"radius_port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IsPortNumber,
+						},
+						"radius_retries": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(0, 10),
+						},
+						"radius_servers": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+						"radius_timeout": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 20),
+						},
+						"shared_secret": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Sensitive:    true,
+							ValidateFunc: validation.StringLenBetween(8, 512),
+						},
+						"use_same_username": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -323,6 +375,10 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("radius_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		// TODO
+	}
+
 	return resourceDirectoryRead(d, meta)
 }
 
@@ -362,6 +418,13 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
 	d.Set("name", dir.Name)
+	if dir.RadiusSettings != nil {
+		if err := d.Set("radius_settings", []interface{}{flattenRadiusSettings(dir.RadiusSettings)}); err != nil {
+			return fmt.Errorf("setting radius_settings: %w", err)
+		}
+	} else {
+		d.Set("radius_settings", nil)
+	}
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else {
@@ -676,6 +739,16 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	if v := apiObject.VpcId; v != nil {
 		tfMap["vpc_id"] = aws.StringValue(v)
 	}
+
+	return tfMap
+}
+
+func flattenRadiusSettings(apiObject *directoryservice.RadiusSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
 
 	return tfMap
 }
