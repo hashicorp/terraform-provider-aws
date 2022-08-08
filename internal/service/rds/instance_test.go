@@ -426,6 +426,7 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -436,10 +437,9 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_iamAuth(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "iam_database_authentication_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "true"),
 				),
 			},
 		},
@@ -4997,7 +4997,7 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iam_database_authentication = true
 }
 
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier                          = %[2]q
   allocated_storage                   = 10
   engine                              = data.aws_rds_engine_version.default.engine
