@@ -108,7 +108,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** One of `eni_id`, `subnet_id`, or `vpc_id` must be specified.
+~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id` or `vpc_id` must be specified.
 
 The following arguments are supported:
 
@@ -127,6 +127,7 @@ The following arguments are supported:
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
   minutes). Default: `600`.
+  ~> **NOTE:** When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` _must_ be 60 seconds (1 minute).
 * `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
