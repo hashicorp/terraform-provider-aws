@@ -3967,6 +3967,34 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	sourceName := "aws_db_instance.test"
+	resourceName := "aws_db_instance.restore"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_RestoreToPointInTime_monitoring(rName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(sourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -5449,18 +5477,10 @@ resource "aws_db_instance" "test" {
 `, rName)
 }
 
-const testAccInstanceBaseConfig = `
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
-}
-
+func testAccInstanceConfig_baseForPITR(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
+  identifier               = %[1]q
   allocated_storage       = 10
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
@@ -5472,14 +5492,15 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot     = true
   username                = "foo"
 }
-`
+`, rName))
+}
 
 func testAccInstanceConfig_RestoreToPointInTime_sourceID(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceBaseConfig,
+		testAccInstanceConfig_baseForPITR(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "restore" {
-  identifier     = %[1]q
+  identifier     = "%[1]s-restore"
   instance_class = aws_db_instance.test.instance_class
   restore_to_point_in_time {
     source_db_instance_identifier = aws_db_instance.test.identifier
@@ -5492,10 +5513,10 @@ resource "aws_db_instance" "restore" {
 
 func testAccInstanceConfig_RestoreToPointInTime_sourceResourceID(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceBaseConfig,
+		testAccInstanceConfig_baseForPITR(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "restore" {
-  identifier     = %[1]q
+  identifier     = "%[1]s-restore"
   instance_class = aws_db_instance.test.instance_class
   restore_to_point_in_time {
     source_dbi_resource_id     = aws_db_instance.test.resource_id
@@ -5504,6 +5525,27 @@ resource "aws_db_instance" "restore" {
   skip_final_snapshot = true
 }
 `, rName))
+}
+
+func testAccInstanceConfig_RestoreToPointInTime_monitoring(rName string, monitoringInterval int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseForPITR(rName),
+		testAccInstanceConfig_baseMonitoringRole(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "restore" {
+  identifier          = "%[1]s-restore"
+  instance_class      = aws_db_instance.test.instance_class
+  monitoring_interval = %[2]d
+  monitoring_role_arn = aws_iam_role.test.arn
+
+  restore_to_point_in_time {
+    source_dbi_resource_id     = aws_db_instance.test.resource_id
+    use_latest_restorable_time = true
+  }
+
+  skip_final_snapshot = true
+}
+`, rName, monitoringInterval))
 }
 
 func testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
@@ -7502,7 +7544,7 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_ReplicateSourceDB_monitoring(rName string, monitoringInterval int) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		testAccInstanceConfig_MonitoringRole(rName),
+		testAccInstanceConfig_baseMonitoringRole(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -7911,7 +7953,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_MonitoringRole(rName string) string {
+func testAccInstanceConfig_baseMonitoringRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

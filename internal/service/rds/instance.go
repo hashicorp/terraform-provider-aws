@@ -1146,6 +1146,16 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 		}
 
+		if v, ok := d.GetOk("monitoring_interval"); ok {
+			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(v.(int)))
+			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("monitoring_role_arn"); ok {
+			modifyDbInstanceInput.MonitoringRoleArn = aws.String(v.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if v, ok := d.GetOk("multi_az"); ok {
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
