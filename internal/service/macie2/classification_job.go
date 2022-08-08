@@ -114,8 +114,9 @@ func ResourceClassificationJob() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_definitions": {
-							Type:     schema.TypeList,
-							Optional: true,
+							ConflictsWith: []string{"s3_job_definition.0.bucket_criteria"},
+							Type:          schema.TypeList,
+							Optional:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"account_id": {
@@ -126,6 +127,177 @@ func ResourceClassificationJob() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"bucket_criteria": {
+							ConflictsWith: []string{"s3_job_definition.0.bucket_definitions"},
+							Type:          schema.TypeList,
+							Optional:      true,
+							Computed:      true,
+							MaxItems:      1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"excludes": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"and": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"simple_criterion": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"comparator": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																		},
+																		"values": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																		"key": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"tag_criterion": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"comparator": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																		},
+																		"tag_values": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"value": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"key": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"includes": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"and": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"simple_criterion": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"comparator": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																		},
+																		"values": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																		"key": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"tag_criterion": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"comparator": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																		},
+																		"tag_values": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"value": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"key": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
