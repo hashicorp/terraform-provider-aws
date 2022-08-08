@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -304,9 +305,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																		},
 																		"target": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice(macie2.TagTarget_Values(), false),
 																		},
 																	},
 																},
@@ -364,7 +366,27 @@ func ResourceClassificationJob() *schema.Resource {
 				},
 			},
 		},
+		CustomizeDiff: resourceClassificationJobCustomizeDiff,
 	}
+}
+func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	//TagScopeTerm() enforces the `target` key even though documentation marks it as optional.
+	//ClassificationJobs criteria and scoping cannot be updated.
+	//The API as of Aug 7, 2022 returns an empty string (even if a target was sent), causing a diff on new plans.
+	//The following will clear the diff for these keys if the object exists already in the state.
+	if diff.Id() != "" {
+		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.excludes") {
+			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
+				diff.Clear(key)
+			}
+		}
+		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.includes") {
+			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
+				diff.Clear(key)
+			}
+		}
+	}
+	return nil
 }
 
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
