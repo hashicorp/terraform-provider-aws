@@ -57,7 +57,7 @@ func statusDomainController(conn *directoryservice.DirectoryService, directoryID
 	}
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
+func statusRadius(_ context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(conn, directoryID)
 

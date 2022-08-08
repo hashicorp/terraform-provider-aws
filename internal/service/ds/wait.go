@@ -87,7 +87,7 @@ func waitDomainControllerDeleted(conn *directoryservice.DirectoryService, direct
 	return nil, err
 }
 
-func waitRadiusCompleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
+func waitRadiusCompleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{directoryservice.RadiusStatusCreating},
 		Target:  []string{directoryservice.RadiusStatusCompleted},
