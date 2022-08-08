@@ -16,6 +16,7 @@ resource "aws_directory_radius_settings" "example" {
   directory_id = aws_directory_service_directory.example.id
 
   authentication_protocol = "PAP"
+  display_label           = "example"
   radius_port             = 1812
   radius_retries          = 4
   radius_servers          = ["10.0.1.5"]
@@ -30,7 +31,7 @@ The following arguments are supported:
 
 * `authentication_protocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directory_id` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
-* `display_label` - (Optional) Not currently used.
+* `display_label` - (Required) Display label.
 * `radius_port` - (Required) The port that your RADIUS server is using for communications. Your self-managed network must allow inbound traffic over this port from the AWS Directory Service servers.
 * `radius_retries` - (Required) The maximum number of times that communication with the RADIUS server is attempted. Minimum value of `0`. Maximum value of `10`.
 * `radius_servers` - (Required) An array of strings that contains the fully qualified domain name (FQDN) or IP addresses of the RADIUS server endpoints, or the FQDN or IP addresses of your RADIUS server load balancer.
@@ -48,8 +49,8 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_directory_radius_settings` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
-- `create` - (Default `60 minutes`) Used for RADIUS settings creation
-- `update` - (Default `60 minutes`) Used for RADIUS settings update
+- `create` - (Default `30 minutes`) Used for RADIUS settings creation
+- `update` - (Default `30 minutes`) Used for RADIUS settings update
 
 ## Import
 

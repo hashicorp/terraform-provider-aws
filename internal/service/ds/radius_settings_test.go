@@ -34,12 +34,23 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRadiusSettingsExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
+					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
+					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
+					resource.TestCheckResourceAttr(resourceName, "radius_retries", "4"),
+					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", "10.0.1.5"),
+					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "shared_secret"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"shared_secret",
+				},
 			},
 		},
 	})
@@ -136,6 +147,14 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_directory_service_radius_settings" "test" {
   directory_id = aws_directory_service_directory.test.id
+
+  authentication_protocol = "PAP"
+  display_label           = "test"
+  radius_port             = 1812
+  radius_retries          = 4
+  radius_servers          = ["10.0.1.5"]
+  radius_timeout          = 1
+  shared_secret           = "12345678"
 }
 `, rName, domain))
 }

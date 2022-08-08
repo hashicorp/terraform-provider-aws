@@ -28,8 +28,8 @@ func ResourceRadiusSettings() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(60 * time.Minute),
-			Update: schema.DefaultTimeout(60 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -45,7 +45,7 @@ func ResourceRadiusSettings() *schema.Resource {
 			},
 			"display_label": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"radius_port": {
@@ -93,6 +93,7 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 		DirectoryId: aws.String(directoryID),
 		RadiusSettings: &directoryservice.RadiusSettings{
 			AuthenticationProtocol: aws.String(d.Get("authentication_protocol").(string)),
+			DisplayLabel:           aws.String(d.Get("display_label").(string)),
 			RadiusPort:             aws.Int64(int64(d.Get("radius_port").(int))),
 			RadiusRetries:          aws.Int64(int64(d.Get("radius_retries").(int))),
 			RadiusServers:          flex.ExpandStringSet(d.Get("radius_servers").(*schema.Set)),
@@ -100,10 +101,6 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 			SharedSecret:           aws.String(d.Get("shared_secret").(string)),
 			UseSameUsername:        aws.Bool(d.Get("use_same_username").(bool)),
 		},
-	}
-
-	if v, ok := d.GetOk("display_label"); ok {
-		input.RadiusSettings.DisplayLabel = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Enabling Directory Service Directory RADIUS: %s", input)
@@ -115,7 +112,9 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(directoryID)
 
-	// TODO Wait?
+	if _, err := waitRadiusCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Directory Service Directory (%s) RADIUS create: %s", d.Id(), err)
+	}
 
 	return resourceRadiusSettingsRead(ctx, d, meta)
 }
@@ -155,6 +154,7 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		DirectoryId: aws.String(d.Id()),
 		RadiusSettings: &directoryservice.RadiusSettings{
 			AuthenticationProtocol: aws.String(d.Get("authentication_protocol").(string)),
+			DisplayLabel:           aws.String(d.Get("display_label").(string)),
 			RadiusPort:             aws.Int64(int64(d.Get("radius_port").(int))),
 			RadiusRetries:          aws.Int64(int64(d.Get("radius_retries").(int))),
 			RadiusServers:          flex.ExpandStringSet(d.Get("radius_servers").(*schema.Set)),
@@ -164,10 +164,6 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		},
 	}
 
-	if v, ok := d.GetOk("display_label"); ok {
-		input.RadiusSettings.DisplayLabel = aws.String(v.(string))
-	}
-
 	log.Printf("[DEBUG] Updating Directory Service Directory RADIUS: %s", input)
 	_, err := conn.UpdateRadiusWithContext(ctx, input)
 
@@ -175,7 +171,9 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("updating Directory Service Directory (%s) RADIUS: %s", d.Id(), err)
 	}
 
-	// TODO Wait?
+	if _, err := waitRadiusCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return diag.Errorf("waiting for Directory Service Directory (%s) RADIUS update: %s", d.Id(), err)
+	}
 
 	return resourceRadiusSettingsRead(ctx, d, meta)
 }
