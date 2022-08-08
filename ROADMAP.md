@@ -36,11 +36,50 @@ New Resource(s):
 - `aws_medialive_multiplex`
 - `aws_medialive_multiplex_program`
 
+### AWS Audit Manager
+
+Issue: [#4936](https://github.com/hashicorp/terraform-provider-aws/issues/17981)
+
+_[AWS Audit Manager](https://aws.amazon.com/audit-manager/) helps you continuously audit your AWS usage to simplify how you assess risk and compliance with regulations and industry standards. Audit Manager automates evidence collection to reduce the “all hands on deck” manual effort that often happens for audits and enable you to scale your audit capability in the cloud as your business grows. With Audit Manager, it is easy to assess if your policies, procedures, and activities – also known as controls – are operating effectively. When it is time for an audit, AWS Audit Manager helps you manage stakeholder reviews of your controls and enables you to build audit-ready reports with much less manual effort._
+
+Support for AWS Audit Manager may include:
+
+New Resource(s):
+
+- `aws_auditmanager_assessment`
+- `aws_auditmanager_assessment_framework`
+- `aws_auditmanager_assessment_report`
+- `aws_auditmanager_control`
+
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Lake Formation Tag-Based Access Control](https://github.com/hashicorp/terraform-provider-aws/issues/19640)
+- [Add support for AWS MSK Serverless cluster type](https://github.com/hashicorp/terraform-provider-aws/issues/22058)
+- [VPC Reachability Analyzer / EC2 Network Insights](https://github.com/hashicorp/terraform-provider-aws/issues/16715)
+- [Amazon S3 Storage Lens configuration](https://github.com/hashicorp/terraform-provider-aws/issues/16310)
+- [CodePipeline: ECR as Source Action](https://github.com/hashicorp/terraform-provider-aws/issues/7012)
+- [Resource Identifiers and Tags for VPC Security Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/20104)
+- [Add support for regex_match_statement to AWS WAF v2 ACL rules](https://github.com/hashicorp/terraform-provider-aws/issues/22452)
+- [Redact Sensitive Variables from Logging](https://github.com/hashicorp/terraform-provider-aws/issues/26029)
+- [Add support for AWS MSK Serverless cluster type](https://github.com/hashicorp/terraform-provider-aws/issues/22058)
+- [Support for RDS Reserved Instances](https://github.com/hashicorp/terraform-provider-aws/issues/8521)
+- [New Feature: Launch AWS Marketplace produccts (AMIs, containers) in linked AWS accounts](https://github.com/hashicorp/terraform-provider-aws/issues/17146)
+- [AWS Inspector2 Enable Service Feature](https://github.com/hashicorp/terraform-provider-aws/issues/22330)
+- [Add support for AWS MSK Serverless cluster type](https://github.com/hashicorp/terraform-provider-aws/issues/22058)
+- [aws_sns_platform_application: support APNS with token-based authentication](https://github.com/hashicorp/terraform-provider-aws/issues/23147)
+- [Cannot use SQS redrive_allow_policy correctly without creating a cycle](https://github.com/hashicorp/terraform-provider-aws/issues/22577)
+- [aws_sns_platform_application: support APNS with token-based authentication](https://github.com/hashicorp/terraform-provider-aws/issues/23147)
+- [dms-vpc-role is not configured properly when creating aws_dms_replication_instance](https://github.com/hashicorp/terraform-provider-aws/issues/11025)
+- [Modify aws_db_instance and delete aws_db_parameter_group breaks](https://github.com/hashicorp/terraform-provider-aws/issues/6448)
+- [Add support for setting default SSM patch baseline](https://github.com/hashicorp/terraform-provider-aws/issues/3342)
+- [Add force_delete to aws_backup_vault resource](https://github.com/hashicorp/terraform-provider-aws/issues/13247)
+- [Support of dedicated IP pool in AWS SES](https://github.com/hashicorp/terraform-provider-aws/issues/10703)
+- [Do not try to delete lambda@edge functions with replicas](https://github.com/hashicorp/terraform-provider-aws/issues/1721)
+- [Terraform seems to ignore "skip_final_snapshot" for rds cluster](https://github.com/hashicorp/terraform-provider-aws/issues/2588)
+- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
+- [Support for SES domain and email identity default configuration set](https://github.com/hashicorp/terraform-provider-aws/issues/21129)
+
 
 ## Research Topics
 
