@@ -1412,11 +1412,13 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 24),
+				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 24, 250, 3500),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
 					testAccCheckEBSVolumeSize(24, &input),
+					testAccCheckEBSVolumeThroughput(250, &input),
+					testAccCheckEBSVolumeIops(3500, &input),
 				),
 			},
 			{
@@ -1433,11 +1435,13 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 12),
+				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 12, 125, 3000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
 					testAccCheckEBSVolumeSize(12, &input),
+					testAccCheckEBSVolumeThroughput(125, &input),
+					testAccCheckEBSVolumeIops(3000, &input),
 				),
 			},
 		}})
@@ -1591,6 +1595,26 @@ func testAccCheckNumberOfSecurityGroups(numberOfSecurityGroups int, status *open
 		count := len(status.VPCOptions.SecurityGroupIds)
 		if count != numberOfSecurityGroups {
 			return fmt.Errorf("Number of security groups differ. Given: %d, Expected: %d", count, numberOfSecurityGroups)
+		}
+		return nil
+	}
+}
+
+func testAccCheckEBSVolumeThroughput(ebsVolumeThroughput int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EBSOptions
+		if *conf.Throughput != int64(ebsVolumeThroughput) {
+			return fmt.Errorf("EBS throughput differ. Given: %d, Expected: %d", *conf.Throughput, ebsVolumeThroughput)
+		}
+		return nil
+	}
+}
+
+func testAccCheckEBSVolumeIops(ebsVolumeIops int, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.EBSOptions
+		if *conf.Iops != int64(ebsVolumeIops) {
+			return fmt.Errorf("EBS IOPS differ. Given: %d, Expected: %d", *conf.Iops, ebsVolumeIops)
 		}
 		return nil
 	}
@@ -2158,7 +2182,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName, instanceInt, snapshotInt)
 }
 
-func testAccDomainConfig_clusterUpdateEBSVolume(rName string, volumeSize int) string {
+func testAccDomainConfig_clusterUpdateEBSVolume(rName string, volumeSize int, volumeThroughput int, volumeIops int) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = substr(%[1]q, 0, 28)
@@ -2172,15 +2196,18 @@ resource "aws_opensearch_domain" "test" {
   ebs_options {
     ebs_enabled = true
     volume_size = %d
+	throughput  = %d
+	volume_type = "gp3"
+	iops        = %d
   }
 
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "t2.small.search"
+    instance_type          = "t3.small.search"
   }
 }
-`, rName, volumeSize)
+`, rName, volumeSize, volumeThroughput, volumeIops)
 }
 
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {
