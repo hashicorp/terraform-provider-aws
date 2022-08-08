@@ -551,12 +551,18 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 	if diff.Id() != "" {
 		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.excludes") {
 			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
-				diff.Clear(key)
+				err := diff.Clear(key)
+				if err != nil {
+					return err
+				}
 			}
 		}
 		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.includes") {
 			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
-				diff.Clear(key)
+				err := diff.Clear(key)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
