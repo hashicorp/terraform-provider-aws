@@ -111,7 +111,7 @@ func ResourceInstanceGroup() *schema.Resource {
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Computed: true,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -142,7 +142,6 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
@@ -165,6 +164,12 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
+	}
+
+	if v, ok := d.GetOk("instance_count"); ok {
+		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
+	} else {
+		groupConfig.InstanceCount = aws.Int64(1)
 	}
 
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
