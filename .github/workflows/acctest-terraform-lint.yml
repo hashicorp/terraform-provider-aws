@@ -63,7 +63,7 @@ jobs:
       - run: tflint -c .ci/.tflint.hcl --init
 
       - run: |
-          find -E ./internal -type f -regex '.*/service/[a-f].*_test\.go' \
+          find ./internal -type f -regextype egrep -regex '\./internal/service/[a-f].*_test\.go' \
             | .ci/scripts/validate-terraform.sh
   validate-testsb:
     name: Validate Tests 2 of 2
@@ -93,5 +93,5 @@ jobs:
       - run: tflint -c .ci/.tflint.hcl --init
 
       - run: |
-          find -E ./internal -type f -regex '.*/service/[g-z].*_test\.go' \
+          find ./internal -type f -regextype egrep -regex '\./internal/service/[g-z].*_test\.go' \
             | .ci/scripts/validate-terraform.sh
