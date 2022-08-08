@@ -325,8 +325,8 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	kmsKeyResourceName := "aws_kms_key.foo"
-	resourceName := "aws_db_instance.bar"
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -398,7 +398,6 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -4788,8 +4787,10 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_kmsKeyID(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
   description = %[1]q
 
   policy = <<POLICY
@@ -4811,27 +4812,14 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  license_model              = "general-public-license"
-  storage_type               = "standard"
-  preferred_instance_classes = [%[2]s]
-
-  supports_storage_encryption = true
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
   allocated_storage       = 10
   backup_retention_period = 0
-  engine                  = data.aws_rds_engine_version.default.engine
-  engine_version          = data.aws_rds_engine_version.default.version
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  kms_key_id              = aws_kms_key.foo.arn
+  kms_key_id              = aws_kms_key.test.arn
   db_name                 = "baz"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   password                = "barbarbarbar"
@@ -4844,27 +4832,106 @@ resource "aws_db_instance" "bar" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`, rName, mySQLPreferredInstanceClasses)
+`, rName, mySQLPreferredInstanceClasses))
 }
 
-func testAccInstanceConfig_caCertificateID() string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
-data "aws_rds_certificate" "latest" {
-  latest_valid_till = true
+func testAccInstanceConfig_subnetGroup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_db_instance" "bar" {
-  allocated_storage   = 10
-  apply_immediately   = true
-  ca_cert_identifier  = data.aws_rds_certificate.latest.id
-  engine              = data.aws_rds_orderable_db_instance.test.engine
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name             = "baz"
-  password            = "barbarbarbar"
-  skip_final_snapshot = true
-  username            = "foo"
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "mydb"
+  username             = "foo"
+  password             = "barbarbar"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  port                 = 3305
+  allocated_storage    = 10
+  skip_final_snapshot  = true
+
+  backup_retention_period = 0
+  apply_immediately       = true
 }
-`)
+`, rName))
+}
+
+func testAccInstanceConfig_subnetGroupUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  count = 2
+
+  vpc_id            = aws_vpc.test2.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test2.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test2" {
+  name       = "%[1]s-2"
+  subnet_ids = aws_subnet.test2[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name              = "mydb"
+  username             = "foo"
+  password             = "barbarbar"
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  db_subnet_group_name = aws_db_subnet_group.test2.name
+  port                 = 3305
+  allocated_storage    = 10
+  skip_final_snapshot  = true
+
+  backup_retention_period = 0
+  apply_immediately       = true
+
+  depends_on = [aws_db_subnet_group.test]
+}
+`, rName))
 }
 
 func testAccInstanceConfig_optionGroup(rName string) string {
@@ -4891,6 +4958,26 @@ resource "aws_db_instance" "test" {
   username            = "foo"
 }
 `, rName))
+}
+
+func testAccInstanceConfig_caCertificateID() string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), `
+data "aws_rds_certificate" "latest" {
+  latest_valid_till = true
+}
+
+resource "aws_db_instance" "bar" {
+  allocated_storage   = 10
+  apply_immediately   = true
+  ca_cert_identifier  = data.aws_rds_certificate.latest.id
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name             = "baz"
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
+}
+`)
 }
 
 func testAccInstanceConfig_iamAuth(rName string) string {
@@ -5494,169 +5581,6 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
-}
-`, rName))
-}
-
-func testAccInstanceConfig_subnetGroup(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  port                 = 3305
-  allocated_storage    = 10
-  skip_final_snapshot  = true
-
-  backup_retention_period = 0
-  apply_immediately       = true
-}
-`, rName))
-}
-
-func testAccInstanceConfig_subnetGroupUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test2" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_subnet" "test3" {
-  cidr_block        = "10.10.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test2.id
-
-  tags = {
-    Name = "%[1]s-3"
-  }
-}
-
-resource "aws_subnet" "test4" {
-  cidr_block        = "10.10.4.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test2.id
-
-  tags = {
-    Name = "%[1]s-4"
-  }
-}
-
-resource "aws_db_subnet_group" "test2" {
-  name       = "%[1]s-2"
-  subnet_ids = [aws_subnet.test3.id, aws_subnet.test4.id]
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  db_subnet_group_name = aws_db_subnet_group.test2.name
-  port                 = 3305
-  allocated_storage    = 10
-  skip_final_snapshot  = true
-
-  backup_retention_period = 0
-  apply_immediately       = true
-
-  depends_on = [aws_db_subnet_group.test]
 }
 `, rName))
 }
