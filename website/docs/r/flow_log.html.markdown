@@ -108,7 +108,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id` or `vpc_id` must be specified.
+~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
 The following arguments are supported:
 
