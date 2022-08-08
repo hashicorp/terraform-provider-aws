@@ -51,6 +51,7 @@ The `schedule_frequency` object supports the following:
 * `monthly_schedule` -  (Optional) Specifies a monthly recurrence pattern for running the job.
 
 The `s3_job_definition` object supports the following:
+
 * `bucket_criteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. (documented below)
 * `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. (documented below)
 * `scoping` -  (Optional) The property- and tag-based conditions that determine which objects to include or exclude from the analysis. (documented below)
@@ -81,7 +82,7 @@ The `tag_criterion` object supports the following:
 
 * `comparator` -  (Required) The operator to use in the condition. Valid combination and values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
 * `tag_values` -  (Required) The  tag key and value pairs to use in the condition. One or more blocks are allowed. (documented below)
- 
+
 The `tag_values` object supports the following:
 
 * `key` - (Required) The tag key.
