@@ -137,6 +137,7 @@ func ResourceDirectory() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"authentication_protocol": {
@@ -484,10 +485,18 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("radius_settings") {
-		if v, ok := d.GetOk("radius_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			if err := updateRADIUS(conn, d.Id(), expandRadiusSettings(v.([]interface{})[0].(map[string]interface{}))); err != nil {
-				return err
+	// For backwards compatability, only modify RADIUS settings if they have been configured.
+	if d.HasChange("radius_settings") && d.GetRawConfig().GetAttr("radius_settings").IsKnown() {
+		o, n := d.GetChange("radius_settings")
+		if n, ok := n.(([]interface{})); ok && len(n) > 0 && n[0] != nil {
+			if o, ok := o.(([]interface{})); ok && len(o) > 0 && o[0] != nil {
+				if err := updateRADIUS(conn, d.Id(), expandRadiusSettings(n[0].(map[string]interface{}))); err != nil {
+					return err
+				}
+			} else {
+				if err := enableRADIUS(conn, d.Id(), expandRadiusSettings(n[0].(map[string]interface{}))); err != nil {
+					return err
+				}
 			}
 		} else {
 			if err := disableRADIUS(conn, d.Id()); err != nil {
