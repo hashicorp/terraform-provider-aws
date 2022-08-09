@@ -374,6 +374,14 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.CreateTargetGroup(params)
 	}
 
+	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
+	// Retry creation without tags
+	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+		params.Tags = nil
+		resp, err = conn.CreateTargetGroup(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("creating LB Target Group: %w", err)
 	}

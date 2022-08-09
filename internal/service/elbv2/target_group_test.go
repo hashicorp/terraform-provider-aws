@@ -924,6 +924,7 @@ func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
 					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -2163,6 +2164,10 @@ resource "aws_lb_target_group" "test" {
   health_check {
     port     = 80
     protocol = "HTTP"
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName)
