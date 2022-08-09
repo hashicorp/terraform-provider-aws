@@ -54,7 +54,7 @@ const (
 )
 
 func CheckISOErrorTagsUnsupported(partition string, err error) bool {
-	if partition == endpoints.AwsPartitionID {
+	if partition == endpoints.AwsIsoPartitionID {
 		return false
 	}
 
@@ -111,6 +111,10 @@ func CheckISOErrorTagsUnsupported(partition string, err error) bool {
 	}
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not support tagging") {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "cannot specify tags on creation") {
 		return true
 	}
 
