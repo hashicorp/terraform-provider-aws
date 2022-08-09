@@ -6,7 +6,7 @@
 
 1. Figure out what you're trying to do:
     * Create a resource or a data source?
-    * [AWS Go SDK v1 or v2](aws-go-sdk-versions) code?
+    * [AWS Go SDK v1 or v2](aws-go-sdk-versions.md) code?
     * [Name](naming.md) of the new resource or data source?
 2. Use `skaff` to generate provider code
 3. Go through the generated code completing code and customizing for the AWS Go SDK API
@@ -16,7 +16,7 @@
 
 ## Running `skaff`
 
-1. Use Git to clone the GitHub [https://github.com/hashicorp/terraform-provider-aws](hashicorp/terraform-provider-aws) repository.
+1. Use Git to clone the GitHub [https://github.com/hashicorp/terraform-provider-aws](https://github.com/hashicorp/terraform-provider-aws) repository.
 2. `cd skaff`
 3. `go install .`
 4. Change directories to the service where your new resource will reside. _E.g._, `cd ../internal/service/mq`.
