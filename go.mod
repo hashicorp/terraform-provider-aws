@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.10
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.2
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.1
 	github.com/beevik/etree v1.1.0
@@ -45,8 +45,8 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.15 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
