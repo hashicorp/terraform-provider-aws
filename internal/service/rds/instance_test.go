@@ -49,7 +49,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
@@ -64,7 +64,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
 					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexp.MustCompile(`^default:mysql-\d`)),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
@@ -74,7 +74,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "username", "test"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tfacctest"),
 				),
 			},
 			{
@@ -263,8 +263,8 @@ func TestAccRDSInstance_nameDeprecated(t *testing.T) {
 				Config: testAccInstanceConfig_nameDeprecated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "db_name", "baz"),
-					resource.TestCheckResourceAttr(resourceName, "name", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "db_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
 				),
 			},
 			{
@@ -4658,11 +4658,11 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
+  db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "test"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4681,10 +4681,10 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "password"
   publicly_accessible = true
   skip_final_snapshot = true
-  username            = "root"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 `, identifierPrefix))
 }
@@ -4696,10 +4696,10 @@ resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "password"
   publicly_accessible = true
   skip_final_snapshot = true
-  username            = "root"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 `)
 }
@@ -4715,11 +4715,11 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
+  db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "test"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4744,11 +4744,11 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
+  db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "test"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4774,11 +4774,11 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz" # deprecated
+  name                    = "test" # deprecated
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "test"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4799,11 +4799,11 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_engine_version.default.engine
   engine_version          = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
+  db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4847,12 +4847,12 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   kms_key_id              = aws_kms_key.test.arn
-  db_name                 = "baz"
+  db_name                 = "test"
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                = "barbarbarbar"
   skip_final_snapshot     = true
   storage_encrypted       = true
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   # Maintenance Window is stored in lower case in the API, though not strictly
   # documented. Terraform will downcase this to match (as opposed to throw a
@@ -4881,9 +4881,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test.name
   port                 = 3305
@@ -4944,9 +4944,9 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "mydb"
-  username             = "foo"
-  password             = "barbarbar"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   db_subnet_group_name = aws_db_subnet_group.test2.name
   port                 = 3305
@@ -4978,11 +4978,11 @@ resource "aws_db_instance" "test" {
   engine_version      = aws_db_option_group.test.major_engine_version
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name             = "baz"
+  db_name             = "test"
   option_group_name   = aws_db_option_group.test.name
-  password            = "barbarbarbar"
   skip_final_snapshot = true
-  username            = "foo"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 `, rName))
 }
@@ -5000,10 +5000,10 @@ resource "aws_db_instance" "test" {
   ca_cert_identifier  = data.aws_rds_certificate.latest.id
   engine              = data.aws_rds_orderable_db_instance.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name             = "baz"
-  password            = "barbarbarbar"
+  db_name             = "test"
   skip_final_snapshot = true
-  username            = "foo"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 `, rName))
 }
@@ -5030,9 +5030,9 @@ resource "aws_db_instance" "test" {
   engine                              = data.aws_rds_engine_version.default.engine
   engine_version                      = data.aws_rds_engine_version.default.version
   instance_class                      = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                             = "baz"
-  password                            = "barbarbarbar"
-  username                            = "foo"
+  db_name                             = "test"
+  password                            = "avoid-plaintext-passwords"
+  username                            = "tfacctest"
   backup_retention_period             = 0
   skip_final_snapshot                 = true
   parameter_group_name                = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
@@ -5050,9 +5050,9 @@ resource "aws_db_instance" "snapshot" {
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
-  password                = "barbarbarbar"
-  username                = "foo"
+  db_name                 = "test"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   backup_retention_period = 1
 
   publicly_accessible = true
@@ -5065,7 +5065,7 @@ resource "aws_db_instance" "snapshot" {
 `, rName))
 }
 
-func testAccInstanceConfig_S3Import_Base(rName, bucketPrefix string) string {
+func testAccInstanceConfig_baseS3Import(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -5161,7 +5161,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 func testAccInstanceConfig_S3Import_basic(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier = %[1]q
@@ -5196,7 +5196,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_S3Import_NameDeprecated_basic(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier = %[1]q
@@ -5231,7 +5231,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier_prefix = %[1]q
@@ -5266,7 +5266,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_S3Import_Base(rName, bucketPrefix),
+		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage          = 5
