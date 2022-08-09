@@ -171,6 +171,28 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 	})
 }
 
+func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_backup_vault.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVaultDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
@@ -288,6 +310,28 @@ resource "aws_backup_vault" "test" {
   name = %[1]q
 
   force_destroy = true
+}
+`, rName)
+}
+
+func testAccVaultConfig_forceDestroyWithDynamoDBTable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
 }
 `, rName)
 }
