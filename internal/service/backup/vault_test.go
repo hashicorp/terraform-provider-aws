@@ -15,10 +15,10 @@ import (
 )
 
 func TestAccBackupVault_basic(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
+	var v backup.DescribeBackupVaultOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
@@ -28,7 +28,7 @@ func TestAccBackupVault_basic(t *testing.T) {
 			{
 				Config: testAccVaultConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &v),
 				),
 			},
 			{
@@ -40,11 +40,11 @@ func TestAccBackupVault_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupVault_withKMSKey(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
+func TestAccBackupVault_disappears(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
@@ -52,26 +52,22 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_kmsKey(rInt),
+				Config: testAccVaultConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+					testAccCheckVaultExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
 func TestAccBackupVault_withTags(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
+	var v backup.DescribeBackupVaultOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
@@ -81,7 +77,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccVaultConfig_tags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.up", "down"),
 					resource.TestCheckResourceAttr(resourceName, "tags.left", "right"),
@@ -95,7 +91,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccVaultConfig_updateTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.up", "downdown"),
 					resource.TestCheckResourceAttr(resourceName, "tags.left", "rightright"),
@@ -106,7 +102,7 @@ func TestAccBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccVaultConfig_removeTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
+					testAccCheckVaultExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
@@ -116,11 +112,11 @@ func TestAccBackupVault_withTags(t *testing.T) {
 	})
 }
 
-func TestAccBackupVault_disappears(t *testing.T) {
-	var vault backup.DescribeBackupVaultOutput
-
+func TestAccBackupVault_withKMSKey(t *testing.T) {
+	var v backup.DescribeBackupVaultOutput
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_backup_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
@@ -128,12 +124,16 @@ func TestAccBackupVault_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_basic(rInt),
+				Config: testAccVaultConfig_kmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVaultExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVault(), resourceName),
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -162,7 +162,7 @@ func testAccCheckVaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultExists(name string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -181,7 +181,7 @@ func testAccCheckVaultExists(name string, vault *backup.DescribeBackupVaultOutpu
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}
