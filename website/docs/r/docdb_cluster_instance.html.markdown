@@ -68,7 +68,7 @@ The following arguments are supported:
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 * `port` - The database port
 * `preferred_backup_window` - The daily time range during which automated backups are created if automated backups are enabled.
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 
@@ -94,13 +94,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_docdb_cluster_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `90 minutes`) Used for Creating Instances, Replicas, and
+- `create` - (Default `90m`)
 restoring from Snapshots
-- `update` - (Default `90 minutes`) Used for Database modifications
-- `delete` - (Default `90 minutes`) Used for destroying databases. This includes
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 the time required to take snapshots
 
 ## Import

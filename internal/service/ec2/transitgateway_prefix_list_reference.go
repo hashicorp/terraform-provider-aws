@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -74,20 +75,17 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
 
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %s", input)
 	output, err := conn.CreateTransitGatewayPrefixListReference(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway Prefix List Reference: %w", err)
+		return fmt.Errorf("creating EC2 Transit Gateway Prefix List Reference: %w", err)
 	}
 
-	if output == nil || output.TransitGatewayPrefixListReference == nil {
-		return fmt.Errorf("error creating EC2 Transit Gateway Prefix List Reference: empty response")
-	}
-
-	d.SetId(TransitGatewayPrefixListReferenceCreateID(aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)))
+	d.SetId(TransitGatewayPrefixListReferenceCreateResourceID(aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)))
 
 	if _, err := WaitTransitGatewayPrefixListReferenceStateCreated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Prefix List Reference (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayPrefixListReferenceRead(d, meta)
@@ -96,7 +94,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(d.Id())
+	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -111,7 +109,7 @@ func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	d.Set("blackhole", transitGatewayPrefixListReference.Blackhole)
@@ -151,15 +149,11 @@ func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, met
 	output, err := conn.ModifyTransitGatewayPrefixListReference(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
-	}
-
-	if output == nil || output.TransitGatewayPrefixListReference == nil {
-		return fmt.Errorf("error updating EC2 Transit Gateway Prefix List Reference (%s): empty response", d.Id())
+		return fmt.Errorf("updating EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayPrefixListReferenceStateUpdated(conn, aws.StringValue(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.StringValue(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) update: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Prefix List Reference (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceTransitGatewayPrefixListReferenceRead(d, meta)
@@ -168,30 +162,48 @@ func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, met
 func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseID(d.Id())
+	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	input := &ec2.DeleteTransitGatewayPrefixListReferenceInput{
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %s", d.Id())
+	_, err = conn.DeleteTransitGatewayPrefixListReference(&ec2.DeleteTransitGatewayPrefixListReferenceInput{
 		PrefixListId:               aws.String(prefixListID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	}
-
-	_, err = conn.DeleteTransitGatewayPrefixListReference(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitTransitGatewayPrefixListReferenceStateDeleted(conn, transitGatewayRouteTableID, prefixListID); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Prefix List Reference (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 Transit Gateway Prefix List Reference (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+const transitGatewayPrefixListReferenceIDSeparator = "_"
+
+func TransitGatewayPrefixListReferenceCreateResourceID(transitGatewayRouteTableID string, prefixListID string) string {
+	parts := []string{transitGatewayRouteTableID, prefixListID}
+	id := strings.Join(parts, transitGatewayPrefixListReferenceIDSeparator)
+
+	return id
+}
+
+func TransitGatewayPrefixListReferenceParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, transitGatewayPrefixListReferenceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TRANSIT-GATEWAY-ROUTE-TABLE-ID%[2]sPREFIX-LIST-ID", id, transitGatewayPrefixListReferenceIDSeparator)
 }

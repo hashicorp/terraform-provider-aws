@@ -44,7 +44,7 @@ func sweepContainerServices(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	output, err := conn.GetContainerServicesWithContext(context.TODO(), input)
+	output, err := conn.GetContainerServicesWithContext(context.Background(), input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Lightsail Container Service sweep for %s: %s", region, err)

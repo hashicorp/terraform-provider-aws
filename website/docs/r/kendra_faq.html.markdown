@@ -82,7 +82,7 @@ The following arguments are optional:
 * `description` - (Optional, Forces new resource) The description for a FAQ.
 * `file_format` - (Optional, Forces new resource) The file format used by the input files for the FAQ. Valid Values are `CSV`, `CSV_WITH_HEADER`, `JSON`.
 * `language_code` - (Optional, Forces new resource) The code for a language. This shows a supported language for the FAQ document. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -95,14 +95,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique identifiers of the FAQ and index separated by a slash (`/`)
 * `status` - The status of the FAQ. It is ready to use when the status is ACTIVE.
 * `updated_at` - The date and time that the FAQ was last updated.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_kendra_faq` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `30m`)
-* `delete` - (Optional, Default: `30m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

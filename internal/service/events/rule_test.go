@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -297,7 +296,7 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 				Config: testAccRuleConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
 			},
@@ -324,7 +323,7 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 				Config: testAccRuleConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(resourceName, &v),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},

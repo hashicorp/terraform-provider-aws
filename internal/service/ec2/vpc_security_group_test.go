@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -606,7 +605,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
 			},
@@ -665,7 +664,7 @@ func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -695,7 +694,7 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_namePrefix(rName, "terraform-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(resourceName, &group),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "terraform-test"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "terraform-test"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-test"),
 				),
 			},

@@ -151,7 +151,7 @@ func testAccCheckTypeExists(resourceName string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
 
-		_, err := tfcloudformation.FindTypeByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -169,7 +169,7 @@ func testAccCheckTypeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudformation.FindTypeByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

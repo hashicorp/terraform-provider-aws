@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -110,7 +109,7 @@ func TestAccSQSQueue_Name_generated(t *testing.T) {
 				Config: testAccQueueConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
 				),
@@ -138,7 +137,7 @@ func TestAccSQSQueue_NameGenerated_fifoQueue(t *testing.T) {
 				Config: testAccQueueConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
-					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FIFOQueueNameSuffix),
+					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FIFOQueueNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
 				),
@@ -166,7 +165,7 @@ func TestAccSQSQueue_namePrefix(t *testing.T) {
 				Config: testAccQueueConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
 				),
@@ -194,7 +193,7 @@ func TestAccSQSQueue_NamePrefix_fifoQueue(t *testing.T) {
 				Config: testAccQueueConfig_namePrefixFIFO("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
-					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
+					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", "tf-acc-test-prefix-", tfsqs.FIFOQueueNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
 				),

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
@@ -31,7 +30,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeOneTime),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_definitions.0.buckets.0", bucketName),
@@ -61,7 +60,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -90,7 +89,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 				Config: testAccClassificationJobConfig_namePrefix(bucketName, namePrefix, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(resourceName, &macie2Output),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},

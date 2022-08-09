@@ -86,3 +86,21 @@ func FindPatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGro
 
 	return result, err
 }
+
+func FindServiceSettingByARN(conn *ssm.SSM, arn string) (*ssm.ServiceSetting, error) {
+	input := &ssm.GetServiceSettingInput{
+		SettingId: aws.String(arn),
+	}
+
+	output, err := conn.GetServiceSetting(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ServiceSetting == nil {
+		return nil, fmt.Errorf("finding %s: empty result", arn)
+	}
+
+	return output.ServiceSetting, nil
+}

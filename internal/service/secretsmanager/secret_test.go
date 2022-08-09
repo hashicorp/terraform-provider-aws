@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -68,7 +67,7 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				Config: testAccSecretConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},

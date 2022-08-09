@@ -29,14 +29,14 @@ The following arguments are optional:
 * `description` - (Optional) The optional description for the tracker resource.
 * `kms_key_id` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `position_filtering` - (Optional) The position filtering method of the tracker resource. Valid values: `TimeBased`, `DistanceBased`, `AccuracyBased`. Default: `TimeBased`.
-* `tags` - (Optional) Key-value tags for the tracker. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the tracker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `tracker_arn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
 * `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
 

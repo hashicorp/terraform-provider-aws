@@ -1,9 +1,11 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -76,6 +78,7 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -84,7 +87,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDataSourceConfig_filter(),
+				Config: testAccTransitGatewayDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -109,6 +112,7 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 func testAccTransitGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -117,7 +121,7 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayDataSourceConfig_id(),
+				Config: testAccTransitGatewayDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -138,9 +142,13 @@ func testAccTransitGatewayDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayDataSourceConfig_filter() string {
-	return `
-resource "aws_ec2_transit_gateway" "test" {}
+func testAccTransitGatewayDataSourceConfig_filter(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 data "aws_ec2_transit_gateway" "test" {
   filter {
@@ -148,15 +156,19 @@ data "aws_ec2_transit_gateway" "test" {
     values = [aws_ec2_transit_gateway.test.id]
   }
 }
-`
+`, rName)
 }
 
-func testAccTransitGatewayDataSourceConfig_id() string {
-	return `
-resource "aws_ec2_transit_gateway" "test" {}
+func testAccTransitGatewayDataSourceConfig_id(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 data "aws_ec2_transit_gateway" "test" {
   id = aws_ec2_transit_gateway.test.id
 }
-`
+`, rName)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -150,13 +151,13 @@ func resourcePoolRolesAttachmentRead(d *schema.ResourceData, meta interface{}) e
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPoolRolesAttachment, d.Id(), err)
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)

@@ -27,7 +27,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = "~> 4.0"
     }
   }
 }
@@ -48,7 +48,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 3.0"
+  version = "~> 4.0"
   region  = "us-east-1"
 }
 

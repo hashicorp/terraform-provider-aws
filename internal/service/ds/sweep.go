@@ -46,7 +46,7 @@ func sweepDirectories(region string) error {
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	err = describeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPagesWithContext(context.Background(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

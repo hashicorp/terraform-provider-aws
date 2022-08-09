@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -96,7 +95,7 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 				Config: testAccSnapshotConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -118,7 +117,7 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 				Config: testAccSnapshotConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},

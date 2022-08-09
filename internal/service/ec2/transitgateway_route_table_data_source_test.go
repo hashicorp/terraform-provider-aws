@@ -1,9 +1,11 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -11,6 +13,7 @@ import (
 func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table.test"
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -19,13 +22,13 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableDataSourceConfig_filter(),
+				Config: testAccTransitGatewayRouteTableDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_association_route_table", dataSourceName, "default_association_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
@@ -35,6 +38,7 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table.test"
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
@@ -43,25 +47,33 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T) {
 		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableDataSourceConfig_iD(),
+				Config: testAccTransitGatewayRouteTableDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_association_route_table", dataSourceName, "default_association_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccTransitGatewayRouteTableDataSourceConfig_filter() string {
-	return `
-resource "aws_ec2_transit_gateway" "test" {}
+func testAccTransitGatewayRouteTableDataSourceConfig_filter(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_route_table" "test" {
@@ -70,19 +82,27 @@ data "aws_ec2_transit_gateway_route_table" "test" {
     values = [aws_ec2_transit_gateway_route_table.test.id]
   }
 }
-`
+`, rName)
 }
 
-func testAccTransitGatewayRouteTableDataSourceConfig_iD() string {
-	return `
-resource "aws_ec2_transit_gateway" "test" {}
+func testAccTransitGatewayRouteTableDataSourceConfig_id(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ec2_transit_gateway_route_table" "test" {
   id = aws_ec2_transit_gateway_route_table.test.id
 }
-`
+`, rName)
 }

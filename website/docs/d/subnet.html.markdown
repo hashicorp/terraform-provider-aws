@@ -92,3 +92,9 @@ In addition to the attributes above, the following attributes are exported:
 * `outpost_arn` - ARN of the Outpost.
 * `owner_id` - ID of the AWS account that owns the subnet.
 * `private_dns_hostname_type_on_launch` - The type of hostnames assigned to instances in the subnet at launch.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
