@@ -28,6 +28,7 @@ func TestAccRDSSubnetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids", dataSourceName, "subnet_ids"),
+					resource.TestCheckResourceAttrPair(resourceName, "supported_network_types", dataSourceName, "supported_network_types"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_id"),
 				),

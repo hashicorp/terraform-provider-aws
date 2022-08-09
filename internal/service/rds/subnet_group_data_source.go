@@ -36,6 +36,11 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"supported_network_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -81,6 +86,14 @@ func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("subnet_ids", subnets); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %w", err)
+	}
+
+	supportedNetworkTypes := make([]string, 0, len(dbSubnetGroup.SupportedNetworkTypes))
+	for _, networkType := range dbSubnetGroup.SupportedNetworkTypes {
+		supportedNetworkTypes = append(supportedNetworkTypes, *networkType)
+	}
+	if err := d.Set("supported_network_types", supportedNetworkTypes); err != nil {
+		return fmt.Errorf("error setting supported_network_types: %w", err)
 	}
 
 	d.Set("vpc_id", dbSubnetGroup.VpcId)

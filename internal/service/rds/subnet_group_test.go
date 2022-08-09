@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+const ipv4SupportedNetworkType = "IPV4"
+const dualSupportedNetworkType = "DUAL"
+
 func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 
@@ -34,6 +37,8 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.0", ipv4SupportedNetworkType),
 				),
 			},
 			{
@@ -41,6 +46,31 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
+func TestAccRDSSubnetGroup_basicDualNetwork(t *testing.T) {
+	var v rds.DBSubnetGroup
+
+	resourceName := "aws_db_subnet_group.test"
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_basicDualNetwork(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBSubnetGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.0", dualSupportedNetworkType),
+					resource.TestCheckResourceAttr(resourceName, "supported_network_types.1", ipv4SupportedNetworkType),
+				),
 			},
 		},
 	})
@@ -250,6 +280,61 @@ resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-2"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "%s"
+  subnet_ids = [aws_subnet.test.id, aws_subnet.bar.id]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
+}
+`, rName)
+}
+
+func testAccSubnetGroupConfig_basicDualNetwork(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true	
+
+  tags = {
+    Name = "terraform-testacc-db-subnet-group"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block                      = "10.1.1.0/24"
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
+  assign_ipv6_address_on_creation = true
+  availability_zone               = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-1"
+  }
+}
+
+resource "aws_subnet" "bar" {
+  cidr_block                      = "10.1.2.0/24"
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-db-subnet-group-2"

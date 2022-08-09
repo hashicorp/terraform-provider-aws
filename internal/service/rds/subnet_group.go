@@ -62,6 +62,12 @@ func ResourceSubnetGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"supported_network_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -156,6 +162,12 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
 	d.Set("arn", arn)
+
+	supportedNetworkTypes := make([]string, 0, len(subnetGroup.SupportedNetworkTypes))
+	for _, networkType := range subnetGroup.SupportedNetworkTypes {
+		supportedNetworkTypes = append(supportedNetworkTypes, *networkType)
+	}
+	d.Set("supported_network_types", supportedNetworkTypes)
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
