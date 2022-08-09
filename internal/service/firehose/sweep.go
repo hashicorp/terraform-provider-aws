@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,30 +29,30 @@ func sweepDeliveryStreams(region string) error {
 	input := &firehose.ListDeliveryStreamsInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	for {
-		page, err := conn.ListDeliveryStreams(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
-			return nil
+	err = listDeliveryStreamsPages(conn, input, func(page *firehose.ListDeliveryStreamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %w", err)
-		}
-
-		for _, sn := range page.DeliveryStreamNames {
+		for _, v := range page.DeliveryStreamNames {
 			r := ResourceDeliveryStream()
 			d := r.Data(nil)
 			d.SetId("???")
-			d.Set("name", sn)
+			d.Set("name", v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if !aws.BoolValue(page.HasMoreDeliveryStreams) {
-			break
-		}
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Firehose Delivery Stream sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Kinesis Firehose Delivery Streams (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(sweepResources)
