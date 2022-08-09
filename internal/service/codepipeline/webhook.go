@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -155,13 +156,13 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	webhook, err := GetWebhook(conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, ResWebhook, d.Id())
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodePipeline, names.ErrActionReading, ResWebhook, d.Id(), err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition

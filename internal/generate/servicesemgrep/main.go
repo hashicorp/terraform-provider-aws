@@ -480,7 +480,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "({{ $s }})"
+            - pattern-regex: "({{ $s }})"
     severity: WARNING
 {{- end }}
   - id: ec2-in-func-name

@@ -254,17 +254,6 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
 
-### Timeouts
-
-`aws_db_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
-restoring from Snapshots.
-- `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `60 minutes`) Used for destroying databases. This includes
-the time required to take snapshots.
-
 [1]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]:
@@ -306,6 +295,14 @@ in a Route 53 Alias record).
 On Oracle and Microsoft SQL instances the following is exported additionally:
 
 * `character_set_name` - The character set (collation) used on Oracle and Microsoft SQL instances.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `40m`)
+- `update` - (Default `80m`)
+- `delete` - (Default `60m`)
 
 ## Import
 

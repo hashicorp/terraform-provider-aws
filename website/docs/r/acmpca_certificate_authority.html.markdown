@@ -158,10 +158,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_acmpca_certificate_authority` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `1m`) How long to wait for a certificate authority to be created.
+* `create` - (Default `1m`)
 
 ## Import
 

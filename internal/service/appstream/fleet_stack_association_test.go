@@ -84,7 +84,7 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfappstream.FindFleetStackAssociation(context.TODO(), conn, fleetName, stackName)
+		err = tfappstream.FindFleetStackAssociation(context.Background(), conn, fleetName, stackName)
 
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
@@ -111,7 +111,7 @@ func testAccCheckFleetStackAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfappstream.FindFleetStackAssociation(context.TODO(), conn, fleetName, stackName)
+		err = tfappstream.FindFleetStackAssociation(context.Background(), conn, fleetName, stackName)
 
 		if tfresource.NotFound(err) {
 			continue

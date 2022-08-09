@@ -67,3 +67,9 @@ In addition to the attributes above, the following attributes are exported:
 * `owner_id` - The ID of the AWS account that owns the Dedicated Host.
 * `sockets` - The number of sockets on the Dedicated Host.
 * `total_vcpus` - The total number of vCPUs on the Dedicated Host.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -229,11 +229,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_fleet` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for a fleet to be active.
-* `update` - (Default `10m`) How long to wait for a fleet to be modified.
-* `delete` - (Default `10m`) How long to wait for a fleet to be deleted. If `terminate_instances` is `true`, how long to wait for instances to terminate.
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

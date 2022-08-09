@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +14,11 @@ import (
 func DataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceSubnetsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
 			"ids": {

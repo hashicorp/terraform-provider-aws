@@ -146,7 +146,7 @@ func testAccCheckGlobalNetworkDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -175,7 +175,7 @@ func testAccCheckGlobalNetworkExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
-		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

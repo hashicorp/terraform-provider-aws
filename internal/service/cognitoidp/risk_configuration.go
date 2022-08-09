@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -312,7 +313,7 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 	riskConfig, err := FindRiskConfigurationById(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResRiskConfiguration, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameRiskConfiguration, d.Id())
 		d.SetId("")
 		return nil
 	}

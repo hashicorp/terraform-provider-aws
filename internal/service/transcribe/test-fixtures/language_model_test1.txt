@@ -1,0 +1,11 @@
+The PS5 will feature a custom eight-core AMD Zen 2 CPU clocked at 3.5GHz (variable frequency) and a custom GPU based on AMD’s RDNA 2 architecture hardware that promises 10.28 teraflops and 36 compute units clocked at 2.23GHz (also variable frequency).
+
+It’ll also have 16GB of GDDR6 RAM and a custom 825GB SSD that Sony has previously promised will offer super-fast loading times in gameplay, via Eurogamer.
+
+One of the biggest technical updates in the PS5 was already announced last year: a switch to SSD storage for the console’s main hard drive, which Sony says will result in dramatically faster load times.
+
+A previous demo showed Spider-Man loading levels in less than a second on the PS5, compared to the roughly eight seconds it took on a PS4.PlayStation hardware lead Mark Cerny dove into some of the details about those SSD goals at the announcement.
+
+Where it took a PS4 around 20 seconds to load a single gigabyte of data, the goal with the PS5’s SSD was to enable loading
+
+five gigabytes of data in a single second.

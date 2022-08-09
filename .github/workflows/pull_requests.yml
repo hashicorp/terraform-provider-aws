@@ -10,22 +10,22 @@ jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Apply Labels
-      uses: actions/labeler@v4
-      with:
-        configuration-path: .github/labeler-pr-triage.yml
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: Apply Labels
+        uses: actions/labeler@v4
+        with:
+          configuration-path: .github/labeler-pr-triage.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
   NeedsTriageLabeler:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Apply needs-triage Label
-      uses: actions/labeler@v4
-      if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
-      with:
-        configuration-path: .github/labeler-pr-needs-triage.yml
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - name: Apply needs-triage Label
+        uses: actions/labeler@v4
+        if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
+        with:
+          configuration-path: .github/labeler-pr-needs-triage.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
   SizeLabeler:
     runs-on: ubuntu-latest
     steps:
@@ -53,9 +53,9 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-
             Welcome @${{github.actor}} :wave:
-            
+
             It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing) guide and [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/faq.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
 
             Also take a look at our [FAQ](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/faq.md) which details how we prioritize Pull Requests for inclusion.
-            
-            Thanks again, and welcome to the community! :smiley:         
+
+            Thanks again, and welcome to the community! :smiley:

@@ -363,11 +363,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_opensearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `60m`) How long to wait for creation.
-* `update` - (Optional, Default: `180m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

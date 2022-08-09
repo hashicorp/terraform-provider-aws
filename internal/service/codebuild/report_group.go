@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -135,23 +136,23 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	reportGroup, err := FindReportGroupByARN(conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), err)
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && reportGroup == nil {
-		names.LogNotFoundRemoveState(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id())
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if reportGroup == nil {
-		return names.Error(names.CodeBuild, names.ErrActionReading, ResReportGroup, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)

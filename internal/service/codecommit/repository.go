@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,13 +140,13 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.GetRepository(input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codecommit.ErrCodeRepositoryDoesNotExistException) {
-		names.LogNotFoundRemoveState(names.CodeCommit, names.ErrActionReading, ResRepository, d.Id())
+		create.LogNotFoundRemoveState(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeCommit, names.ErrActionReading, ResRepository, d.Id(), err)
+		return create.Error(names.CodeCommit, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	d.Set("repository_id", out.RepositoryMetadata.RepositoryId)

@@ -47,3 +47,9 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayVpcAttachments.html
 [2]: https://www.terraform.io/docs/providers/aws/d/ec2_transit_gateway_vpc_attachment.html
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

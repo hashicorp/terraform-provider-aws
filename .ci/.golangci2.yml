@@ -12,6 +12,7 @@ linters:
     - deadcode
     - errcheck
     - exportloopref
+    - gofmt
     - gomnd
     - gosimple
     - ineffassign

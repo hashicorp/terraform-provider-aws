@@ -54,3 +54,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect Peer
 * `transit_gateway_address` - The IP address assigned to Transit Gateway, which is used as tunnel endpoint.
 * `transit_gateway_attachment_id` - The Transit Gateway Connect
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

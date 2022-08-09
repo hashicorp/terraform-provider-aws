@@ -23,6 +23,10 @@ func DataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAMIRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:     schema.TypeString,

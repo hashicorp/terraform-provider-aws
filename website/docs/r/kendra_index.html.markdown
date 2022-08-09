@@ -120,13 +120,13 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `url` - (Optional) The signing key URL. Valid pattern is `^(https?|ftp|file):\/\/([^\s]*)`
 * `user_name_attribute_field` - (Optional) The user name attribute field. Minimum length of 1. Maximum length of 100.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 40 mins) Used when creating the index.
-* `delete` - (Defaults to 40 mins) Used when deleting the index.
-* `update` - (Defaults to 40 mins) Used when updating the index.
+* `create` - (Default `40m`)
+* `delete` - (Default `40m`)
+* `update` - (Default `40m`)
 
 ## Attributes Reference
 
