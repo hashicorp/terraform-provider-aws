@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,307 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(dynamodb.EndpointsID, testAccErrorCheckSkip)
-}
-
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"Unsupported input parameter TableClass",
-	)
-}
-
-func TestUpdateDiffGSI(t *testing.T) {
-	testCases := []struct {
-		Old             []interface{}
-		New             []interface{}
-		ExpectedUpdates []*dynamodb.GlobalSecondaryIndexUpdate
-	}{
-		{ // No-op => no changes
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{},
-		},
-		{ // No-op => ignore ordering of non_key_attributes
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":               "att1-index",
-					"hash_key":           "att1",
-					"write_capacity":     10,
-					"read_capacity":      10,
-					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"attr3", "attr1", "attr2"}),
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":               "att1-index",
-					"hash_key":           "att1",
-					"write_capacity":     10,
-					"read_capacity":      10,
-					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"attr1", "attr2", "attr3"}),
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{},
-		},
-
-		{ // Creation
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-				map[string]interface{}{
-					"name":            "att2-index",
-					"hash_key":        "att2",
-					"write_capacity":  12,
-					"read_capacity":   11,
-					"projection_type": "ALL",
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
-				{
-					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-						IndexName: aws.String("att2-index"),
-						KeySchema: []*dynamodb.KeySchemaElement{
-							{
-								AttributeName: aws.String("att2"),
-								KeyType:       aws.String("HASH"),
-							},
-						},
-						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-							WriteCapacityUnits: aws.Int64(12),
-							ReadCapacityUnits:  aws.Int64(11),
-						},
-						Projection: &dynamodb.Projection{
-							ProjectionType: aws.String("ALL"),
-						},
-					},
-				},
-			},
-		},
-
-		{ // Deletion
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-				map[string]interface{}{
-					"name":            "att2-index",
-					"hash_key":        "att2",
-					"write_capacity":  12,
-					"read_capacity":   11,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
-				{
-					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-						IndexName: aws.String("att2-index"),
-					},
-				},
-			},
-		},
-
-		{ // Update
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  20,
-					"read_capacity":   30,
-					"projection_type": "ALL",
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
-				{
-					Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
-						IndexName: aws.String("att1-index"),
-						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-							WriteCapacityUnits: aws.Int64(20),
-							ReadCapacityUnits:  aws.Int64(30),
-						},
-					},
-				},
-			},
-		},
-
-		{ // Update of non-capacity attributes
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":               "att1-index",
-					"hash_key":           "att-new",
-					"range_key":          "new-range-key",
-					"write_capacity":     10,
-					"read_capacity":      10,
-					"projection_type":    "KEYS_ONLY",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"RandomAttribute"}),
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
-				{
-					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-						IndexName: aws.String("att1-index"),
-					},
-				},
-				{
-					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-						IndexName: aws.String("att1-index"),
-						KeySchema: []*dynamodb.KeySchemaElement{
-							{
-								AttributeName: aws.String("att-new"),
-								KeyType:       aws.String("HASH"),
-							},
-							{
-								AttributeName: aws.String("new-range-key"),
-								KeyType:       aws.String("RANGE"),
-							},
-						},
-						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-							WriteCapacityUnits: aws.Int64(10),
-							ReadCapacityUnits:  aws.Int64(10),
-						},
-						Projection: &dynamodb.Projection{
-							ProjectionType:   aws.String("KEYS_ONLY"),
-							NonKeyAttributes: aws.StringSlice([]string{"RandomAttribute"}),
-						},
-					},
-				},
-			},
-		},
-
-		{ // Update of all attributes
-			Old: []interface{}{
-				map[string]interface{}{
-					"name":            "att1-index",
-					"hash_key":        "att1",
-					"write_capacity":  10,
-					"read_capacity":   10,
-					"projection_type": "ALL",
-				},
-			},
-			New: []interface{}{
-				map[string]interface{}{
-					"name":               "att1-index",
-					"hash_key":           "att-new",
-					"range_key":          "new-range-key",
-					"write_capacity":     12,
-					"read_capacity":      12,
-					"projection_type":    "INCLUDE",
-					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"RandomAttribute"}),
-				},
-			},
-			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{
-				{
-					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-						IndexName: aws.String("att1-index"),
-					},
-				},
-				{
-					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-						IndexName: aws.String("att1-index"),
-						KeySchema: []*dynamodb.KeySchemaElement{
-							{
-								AttributeName: aws.String("att-new"),
-								KeyType:       aws.String("HASH"),
-							},
-							{
-								AttributeName: aws.String("new-range-key"),
-								KeyType:       aws.String("RANGE"),
-							},
-						},
-						ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-							WriteCapacityUnits: aws.Int64(12),
-							ReadCapacityUnits:  aws.Int64(12),
-						},
-						Projection: &dynamodb.Projection{
-							ProjectionType:   aws.String("INCLUDE"),
-							NonKeyAttributes: aws.StringSlice([]string{"RandomAttribute"}),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for i, tc := range testCases {
-		ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		// Convert to strings to avoid dealing with pointers
-		opsS := fmt.Sprintf("%v", ops)
-		opsExpectedS := fmt.Sprintf("%v", tc.ExpectedUpdates)
-
-		if opsS != opsExpectedS {
-			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s",
-				i, opsS, opsExpectedS)
-		}
-	}
-}
-
-func TestAccDynamoDBTable_basic(t *testing.T) {
+func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -329,12 +28,12 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName),
+				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
@@ -357,7 +56,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_disappears(t *testing.T) {
+func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 	var table1 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -366,12 +65,12 @@ func TestAccDynamoDBTable_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName),
+				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table1),
+					testAccCheckInitialTableReplicaExists(resourceName, &table1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -380,7 +79,7 @@ func TestAccDynamoDBTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
+func TestAccDynamoDBTableReplica_Disappears_payPerRequestWithGSI(t *testing.T) {
 	var table1, table2 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -389,20 +88,20 @@ func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingPayPerRequestGSI(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequestGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table1),
+					testAccCheckInitialTableReplicaExists(resourceName, &table1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestGSI(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequestGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table2),
+					testAccCheckInitialTableReplicaExists(resourceName, &table2),
 				),
 			},
 			{
@@ -414,7 +113,7 @@ func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_extended(t *testing.T) {
+func TestAccDynamoDBTableReplica_extended(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -427,13 +126,13 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_initialState(rName),
+				Config: testAccTableReplicaConfig_initialState(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaConf(resourceName),
 				),
 			},
 			{
@@ -442,9 +141,9 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_addSecondaryGSI(rName),
+				Config: testAccTableReplicaConfig_addSecondaryGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
@@ -492,7 +191,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_enablePITR(t *testing.T) {
+func TestAccDynamoDBTableReplica_enablePITR(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -501,13 +200,13 @@ func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_initialState(rName),
+				Config: testAccTableReplicaConfig_initialState(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaConf(resourceName),
 				),
 			},
 			{
@@ -516,9 +215,9 @@ func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_backup(rName),
+				Config: testAccTableReplicaConfig_backup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
 				),
@@ -527,7 +226,7 @@ func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -536,12 +235,12 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingPayPerRequest(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequest(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -553,9 +252,9 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingProvisioned(rName),
+				Config: testAccTableReplicaConfig_billingProvisioned(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
@@ -565,7 +264,7 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingMode_payPerRequestToProvisionedIgnoreChanges(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -574,12 +273,12 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingPayPerRequest(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequest(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -591,9 +290,9 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingProvisionedIgnoreChanges(rName),
+				Config: testAccTableReplicaConfig_billingProvisionedIgnoreChanges(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
@@ -603,7 +302,7 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t 
 	})
 }
 
-func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -616,12 +315,12 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingProvisioned(rName),
+				Config: testAccTableReplicaConfig_billingProvisioned(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
@@ -633,9 +332,9 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequest(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequest(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -645,7 +344,7 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingMode_provisionedToPayPerRequestIgnoreChanges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -658,12 +357,12 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingProvisioned(rName),
+				Config: testAccTableReplicaConfig_billingProvisioned(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
@@ -675,9 +374,9 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestIgnoreChanges(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequestIgnoreChanges(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -687,7 +386,7 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 	})
 }
 
-func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -696,12 +395,12 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingPayPerRequestGSI(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequestGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
@@ -713,9 +412,9 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingProvisionedGSI(rName),
+				Config: testAccTableReplicaConfig_billingProvisionedGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -723,7 +422,7 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 	})
 }
 
-func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
+func TestAccDynamoDBTableReplica_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -732,12 +431,12 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_billingProvisionedGSI(rName),
+				Config: testAccTableReplicaConfig_billingProvisionedGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -747,9 +446,9 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestGSI(rName),
+				Config: testAccTableReplicaConfig_billingPayPerRequestGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 				),
 			},
@@ -757,7 +456,7 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 	})
 }
 
-func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
+func TestAccDynamoDBTableReplica_streamSpecification(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -766,12 +465,12 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
+				Config: testAccTableReplicaConfig_streamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
@@ -784,9 +483,9 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_streamSpecification(rName, false, ""),
+				Config: testAccTableReplicaConfig_streamSpecification(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
@@ -797,22 +496,22 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
+func TestAccDynamoDBTableReplica_streamSpecificationValidation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_streamSpecification("anything", true, ""),
+				Config:      testAccTableReplicaConfig_streamSpecification("anything", true, ""),
 				ExpectError: regexp.MustCompile(`stream_view_type is required when stream_enabled = true`),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_tags(t *testing.T) {
+func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -821,13 +520,13 @@ func TestAccDynamoDBTable_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_tags(rName),
+				Config: testAccTableReplicaConfig_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckInitialTableConf(resourceName),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaConf(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 				),
 			},
@@ -841,7 +540,7 @@ func TestAccDynamoDBTable_tags(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/13243
-func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
+func TestAccDynamoDBTableReplica_gsiUpdateCapacity(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -850,12 +549,12 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_gsiUpdate(rName),
+				Config: testAccTableReplicaConfig_gsiUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
@@ -880,9 +579,9 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_gsiUpdatedCapacity(rName),
+				Config: testAccTableReplicaConfig_gsiUpdatedCapacity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
@@ -905,7 +604,7 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
+func TestAccDynamoDBTableReplica_gsiUpdateOtherAttributes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -918,12 +617,12 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_gsiUpdate(rName),
+				Config: testAccTableReplicaConfig_gsiUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
@@ -960,9 +659,9 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_gsiUpdatedOtherAttributes(rName),
+				Config: testAccTableReplicaConfig_gsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
@@ -999,7 +698,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15115
-func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
+func TestAccDynamoDBTableReplica_lsiNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1008,12 +707,12 @@ func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_lsiNonKeyAttributes(rName),
+				Config: testAccTableReplicaConfig_lsiNonKeyAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
 						"name":                 "TestTableLSI",
@@ -1034,7 +733,7 @@ func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/566
-func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
+func TestAccDynamoDBTableReplica_gsiUpdateNonKeyAttributes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1047,12 +746,12 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_gsiUpdatedOtherAttributes(rName),
+				Config: testAccTableReplicaConfig_gsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
@@ -1090,9 +789,9 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_gsiUpdatedNonKeyAttributes(rName),
+				Config: testAccTableReplicaConfig_gsiUpdatedNonKeyAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						"name":                 "att2-index",
@@ -1129,7 +828,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/671
-func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
+func TestAccDynamoDBTableReplica_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1140,12 +839,12 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_gsiMultipleNonKeyAttributes(rName, attributes),
+				Config: testAccTableReplicaConfig_gsiMultipleNonKeyAttributes(rName, attributes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
@@ -1165,7 +864,7 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccTableConfig_gsiMultipleNonKeyAttributes(rName, reorderedAttributes),
+				Config:             testAccTableReplicaConfig_gsiMultipleNonKeyAttributes(rName, reorderedAttributes),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -1175,7 +874,7 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
+func TestAccDynamoDBTableReplica_TTL_enabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1184,12 +883,12 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_timeToLive(rName, true),
+				Config: testAccTableReplicaConfig_timeToLive(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
@@ -1205,7 +904,7 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
+func TestAccDynamoDBTableReplica_TTL_disabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1214,12 +913,12 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_timeToLive(rName, false),
+				Config: testAccTableReplicaConfig_timeToLive(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
 				),
@@ -1230,9 +929,9 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_timeToLive(rName, true),
+				Config: testAccTableReplicaConfig_timeToLive(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
@@ -1241,7 +940,7 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
+func TestAccDynamoDBTableReplica_attributeUpdate(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1254,12 +953,12 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_oneAttribute(rName, "firstKey", "firstKey", "S"),
+				Config: testAccTableReplicaConfig_oneAttribute(rName, "firstKey", "firstKey", "S"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 			{
@@ -1268,28 +967,28 @@ func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{ // Attribute type change
-				Config: testAccTableConfig_oneAttribute(rName, "firstKey", "firstKey", "N"),
+				Config: testAccTableReplicaConfig_oneAttribute(rName, "firstKey", "firstKey", "N"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 			{ // New attribute addition (index update)
-				Config: testAccTableConfig_twoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
+				Config: testAccTableReplicaConfig_twoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 			{ // Attribute removal (index update)
-				Config: testAccTableConfig_oneAttribute(rName, "firstKey", "firstKey", "S"),
+				Config: testAccTableReplicaConfig_oneAttribute(rName, "firstKey", "firstKey", "S"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
+func TestAccDynamoDBTableReplica_lsiUpdate(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1298,12 +997,12 @@ func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_lsi(rName, "lsi-original"),
+				Config: testAccTableReplicaConfig_lsi(rName, "lsi-original"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 			{
@@ -1312,41 +1011,41 @@ func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{ // Change name of local secondary index
-				Config: testAccTableConfig_lsi(rName, "lsi-changed"),
+				Config: testAccTableReplicaConfig_lsi(rName, "lsi-changed"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_attributeUpdateValidation(t *testing.T) {
+func TestAccDynamoDBTableReplica_attributeUpdateValidation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_oneAttribute(rName, "firstKey", "unusedKey", "S"),
+				Config:      testAccTableReplicaConfig_oneAttribute(rName, "firstKey", "unusedKey", "S"),
 				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["unusedKey"\]`),
 			},
 			{
-				Config:      testAccTableConfig_twoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
+				Config:      testAccTableReplicaConfig_twoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
 				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
 			},
 			{
-				Config:      testAccTableConfig_unmatchedIndexes(rName, "firstUnused", "secondUnused"),
+				Config:      testAccTableReplicaConfig_unmatchedIndexes(rName, "firstUnused", "secondUnused"),
 				ExpectError: regexp.MustCompile(`indexes must match a defined attribute. Unmatched indexes:`),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_encryption(t *testing.T) {
+func TestAccDynamoDBTableReplica_encryption(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1361,12 +1060,12 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_initialStateEncryptionBYOK(rName),
+				Config: testAccTableReplicaConfig_initialStateEncryptionBYOK(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &confBYOK),
+					testAccCheckInitialTableReplicaExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
@@ -1378,9 +1077,9 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_initialStateEncryptionAmazonCMK(rName, false),
+				Config: testAccTableReplicaConfig_initialStateEncryptionAmazonCMK(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &confEncDisabled),
+					testAccCheckInitialTableReplicaExists(resourceName, &confEncDisabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
 					func(s *terraform.State) error {
 						if !confEncDisabled.Table.CreationDateTime.Equal(*confBYOK.Table.CreationDateTime) {
@@ -1391,9 +1090,9 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_initialStateEncryptionAmazonCMK(rName, true),
+				Config: testAccTableReplicaConfig_initialStateEncryptionAmazonCMK(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &confEncEnabled),
+					testAccCheckInitialTableReplicaExists(resourceName, &confEncEnabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
@@ -1409,7 +1108,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_multiple(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1425,32 +1124,32 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replica2(rName),
+				Config: testAccTableReplicaConfig_replica2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
 			{
-				Config:            testAccTableConfig_replica2(rName),
+				Config:            testAccTableReplicaConfig_replica2(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_replica0(rName),
+				Config: testAccTableReplicaConfig_replica0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
-				Config: testAccTableConfig_replica2(rName),
+				Config: testAccTableReplicaConfig_replica2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
@@ -1458,7 +1157,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_single(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_single(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1474,32 +1173,32 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replica1(rName),
+				Config: testAccTableReplicaConfig_replica1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 			{
-				Config:            testAccTableConfig_replica1(rName),
+				Config:            testAccTableReplicaConfig_replica1(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_replica0(rName),
+				Config: testAccTableReplicaConfig_replica0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
-				Config: testAccTableConfig_replica1(rName),
+				Config: testAccTableReplicaConfig_replica1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
@@ -1507,7 +1206,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_tagMagic(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_tagMagic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1519,17 +1218,17 @@ func TestAccDynamoDBTable_Replica_tagMagic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaMoreTags(rName),
+				Config: testAccTableReplicaConfig_replicaMoreTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 			{
-				Config:            testAccTableConfig_replicaMoreTags(rName),
+				Config:            testAccTableReplicaConfig_replicaMoreTags(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1538,7 +1237,7 @@ func TestAccDynamoDBTable_Replica_tagMagic(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_singleWithCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1558,12 +1257,12 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaCMK(rName),
+				Config: testAccTableReplicaConfig_replicaCMK(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1574,7 +1273,7 @@ func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_pitr(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1590,12 +1289,12 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaPITR(rName, false, true, false),
+				Config: testAccTableReplicaConfig_replicaPITR(rName, false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
@@ -1610,9 +1309,9 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_replicaPITR(rName, true, false, true),
+				Config: testAccTableReplicaConfig_replicaPITR(rName, true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
@@ -1630,7 +1329,7 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_tagsOneOfTwo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1646,14 +1345,14 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaTags(rName, "benny", "smiles", true, false),
+				Config: testAccTableReplicaConfig_replicaTags(rName, "benny", "smiles", true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
-					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), false),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
+					testAccCheckTableReplicaHasTags(resourceName, acctest.ThirdRegion(), false),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
@@ -1669,7 +1368,7 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
+func TestAccDynamoDBTableReplica_Replica_tagsTwoOfTwo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1685,14 +1384,14 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_replicaTags(rName, "Structure", "Adobe", true, true),
+				Config: testAccTableReplicaConfig_replicaTags(rName, "Structure", "Adobe", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
-					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), true),
+					testAccCheckInitialTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
+					testAccCheckTableReplicaHasTags(resourceName, acctest.ThirdRegion(), true),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
@@ -1708,7 +1407,7 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
+func TestAccDynamoDBTableReplica_tableClassInfrequentAccess(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1717,12 +1416,12 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_class(rName, "STANDARD_INFREQUENT_ACCESS"),
+				Config: testAccTableReplicaConfig_class(rName, "STANDARD_INFREQUENT_ACCESS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD_INFREQUENT_ACCESS"),
 				),
 			},
@@ -1732,9 +1431,9 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_class(rName, "STANDARD"),
+				Config: testAccTableReplicaConfig_class(rName, "STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &table),
+					testAccCheckInitialTableReplicaExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 				),
 			},
@@ -1747,7 +1446,7 @@ func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
+func TestAccDynamoDBTableReplica_backupEncryption(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1761,12 +1460,12 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_backupInitialStateEncryption(rName),
+				Config: testAccTableReplicaConfig_backupInitialStateEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &confBYOK),
+					testAccCheckInitialTableReplicaExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
@@ -1786,7 +1485,7 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
+func TestAccDynamoDBTableReplica_backup_overrideEncryption(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1800,12 +1499,12 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_backupInitialStateOverrideEncryption(rName),
+				Config: testAccTableReplicaConfig_backupInitialStateOverrideEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &confBYOK),
+					testAccCheckInitialTableReplicaExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
@@ -1825,7 +1524,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 	})
 }
 
-func testAccCheckTableDestroy(s *terraform.State) error {
+func testAccCheckTableReplicaDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -1854,7 +1553,7 @@ func testAccCheckTableDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+func testAccCheckInitialTableReplicaExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table state!")
 		rs, ok := s.RootModule().Resources[n]
@@ -1884,7 +1583,7 @@ func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutpu
 	}
 }
 
-func testAccCheckReplicaHasTags(n string, region string, should bool) resource.TestCheckFunc {
+func testAccCheckTableReplicaHasTags(n string, region string, should bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1931,7 +1630,7 @@ func testAccCheckReplicaHasTags(n string, region string, should bool) resource.T
 	}
 }
 
-func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
+func testAccCheckInitialTableReplicaConf(resourceName string) resource.TestCheckFunc {
 	return resource.ComposeAggregateTestCheckFunc(
 		resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 		resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
@@ -1974,7 +1673,7 @@ func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 	)
 }
 
-func testAccTableConfig_basic(rName string) string {
+func testAccTableReplicaConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -1990,7 +1689,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_backup(rName string) string {
+func testAccTableReplicaConfig_backup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2010,7 +1709,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingPayPerRequest(rName string) string {
+func testAccTableReplicaConfig_billingPayPerRequest(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -2025,7 +1724,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingPayPerRequestIgnoreChanges(rName string) string {
+func testAccTableReplicaConfig_billingPayPerRequestIgnoreChanges(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -2044,7 +1743,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingProvisioned(rName string) string {
+func testAccTableReplicaConfig_billingProvisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -2062,7 +1761,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingProvisionedIgnoreChanges(rName string) string {
+func testAccTableReplicaConfig_billingProvisionedIgnoreChanges(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -2084,7 +1783,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingPayPerRequestGSI(rName string) string {
+func testAccTableReplicaConfig_billingPayPerRequestGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = %[1]q
@@ -2110,7 +1809,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_billingProvisionedGSI(rName string) string {
+func testAccTableReplicaConfig_billingProvisionedGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   billing_mode   = "PROVISIONED"
@@ -2140,7 +1839,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_initialState(rName string) string {
+func testAccTableReplicaConfig_initialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2187,7 +1886,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_initialStateEncryptionAmazonCMK(rName string, enabled bool) string {
+func testAccTableReplicaConfig_initialStateEncryptionAmazonCMK(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dynamodb" {
   name = "alias/aws/dynamodb"
@@ -2215,7 +1914,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, enabled)
 }
 
-func testAccTableConfig_initialStateEncryptionBYOK(rName string) string {
+func testAccTableReplicaConfig_initialStateEncryptionBYOK(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -2240,7 +1939,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_addSecondaryGSI(rName string) string {
+func testAccTableReplicaConfig_addSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2288,7 +1987,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_streamSpecification(rName string, enabled bool, viewType string) string {
+func testAccTableReplicaConfig_streamSpecification(rName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2307,7 +2006,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, enabled, viewType)
 }
 
-func testAccTableConfig_tags(rName string) string {
+func testAccTableReplicaConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2360,7 +2059,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_gsiUpdate(rName string) string {
+func testAccTableReplicaConfig_gsiUpdate(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
@@ -2419,7 +2118,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_gsiUpdatedCapacity(rName string) string {
+func testAccTableReplicaConfig_gsiUpdatedCapacity(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 2
@@ -2478,7 +2177,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_gsiUpdatedOtherAttributes(rName string) string {
+func testAccTableReplicaConfig_gsiUpdatedOtherAttributes(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
@@ -2545,7 +2244,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_gsiUpdatedNonKeyAttributes(rName string) string {
+func testAccTableReplicaConfig_gsiUpdatedNonKeyAttributes(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
@@ -2612,7 +2311,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_gsiMultipleNonKeyAttributes(rName, attributes string) string {
+func testAccTableReplicaConfig_gsiMultipleNonKeyAttributes(rName, attributes string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
@@ -2652,7 +2351,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, attributes)
 }
 
-func testAccTableConfig_lsiNonKeyAttributes(rName string) string {
+func testAccTableReplicaConfig_lsiNonKeyAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2686,7 +2385,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_timeToLive(rName string, ttlEnabled bool) string {
+func testAccTableReplicaConfig_timeToLive(rName string, ttlEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   hash_key       = "TestTableHashKey"
@@ -2707,7 +2406,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, ttlEnabled)
 }
 
-func testAccTableConfig_oneAttribute(rName, hashKey, attrName, attrType string) string {
+func testAccTableReplicaConfig_oneAttribute(rName, hashKey, attrName, attrType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2736,7 +2435,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, hashKey, attrName, attrType)
 }
 
-func testAccTableConfig_twoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
+func testAccTableReplicaConfig_twoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2771,7 +2470,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2)
 }
 
-func testAccTableConfig_unmatchedIndexes(rName, attr1, attr2 string) string {
+func testAccTableReplicaConfig_unmatchedIndexes(rName, attr1, attr2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -2794,7 +2493,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, attr1, attr2)
 }
 
-func testAccTableConfig_replica0(rName string) string {
+func testAccTableReplicaConfig_replica0(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2813,7 +2512,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replica1(rName string) string {
+func testAccTableReplicaConfig_replica1(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2840,7 +2539,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaMoreTags(rName string) string {
+func testAccTableReplicaConfig_replicaMoreTags(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2877,7 +2576,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaCMK(rName string) string {
+func testAccTableReplicaConfig_replicaCMK(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2925,7 +2624,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaPITR(rName string, mainPITR, replica1, replica2 bool) string {
+func testAccTableReplicaConfig_replicaPITR(rName string, mainPITR, replica1, replica2 bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
@@ -2966,7 +2665,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, mainPITR, replica1, replica2))
 }
 
-func testAccTableConfig_replica2(rName string) string {
+func testAccTableReplicaConfig_replica2(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
@@ -3001,7 +2700,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccTableConfig_replicaTags(rName, key, value string, propagate1, propagate2 bool) string {
+func testAccTableReplicaConfig_replicaTags(rName, key, value string, propagate1, propagate2 bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
@@ -3044,7 +2743,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, key, value, propagate1, propagate2))
 }
 
-func testAccTableConfig_lsi(rName, lsiName string) string {
+func testAccTableReplicaConfig_lsi(rName, lsiName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -3077,7 +2776,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, lsiName)
 }
 
-func testAccTableConfig_class(rName, tableClass string) string {
+func testAccTableReplicaConfig_class(rName, tableClass string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   hash_key       = "TestTableHashKey"
@@ -3094,7 +2793,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName, tableClass)
 }
 
-func testAccTableConfig_backupInitialStateOverrideEncryption(rName string) string {
+func testAccTableReplicaConfig_backupInitialStateOverrideEncryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "source" {
   name           = "%[1]s-source"
@@ -3133,7 +2832,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_backupInitialStateEncryption(rName string) string {
+func testAccTableReplicaConfig_backupInitialStateEncryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "source" {
   name           = "%[1]s-source"

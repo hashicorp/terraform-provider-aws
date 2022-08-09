@@ -90,6 +90,7 @@ func ResourceTable() *schema.Resource {
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			setReplicaTagsDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -270,6 +271,8 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"tags":     tftags.TagsSchema(),
+						"tags_all": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -387,24 +390,23 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
 	if _, ok := d.GetOk("restore_source_name"); ok {
-
-		req := &dynamodb.RestoreTableToPointInTimeInput{
+		input := &dynamodb.RestoreTableToPointInTimeInput{
 			TargetTableName: aws.String(d.Get("name").(string)),
 			SourceTableName: aws.String(d.Get("restore_source_name").(string)),
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
-			req.RestoreDateTime = aws.Time(t)
+			input.RestoreDateTime = aws.Time(t)
 		}
 
 		if attr, ok := d.GetOk("restore_to_latest_time"); ok {
-			req.UseLatestRestorableTime = aws.Bool(attr.(bool))
+			input.UseLatestRestorableTime = aws.Bool(attr.(bool))
 		}
 
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
-			req.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
 		billingModeOverride := d.Get("billing_mode").(string)
@@ -415,13 +417,13 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 					"write_capacity": d.Get("write_capacity"),
 					"read_capacity":  d.Get("read_capacity"),
 				}
-				req.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
+				input.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
 			}
 		}
 
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
-			req.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
 		if v, ok := d.GetOk("global_secondary_index"); ok {
@@ -437,17 +439,17 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
 				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 			}
-			req.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+			input.GlobalSecondaryIndexOverride = globalSecondaryIndexes
 		}
 
 		if v, ok := d.GetOk("server_side_encryption"); ok {
-			req.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
+			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
 		var output *dynamodb.RestoreTableToPointInTimeOutput
 		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
 			var err error
-			output, err = conn.RestoreTableToPointInTime(req)
+			output, err = conn.RestoreTableToPointInTime(input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
 					return resource.RetryableError(err)
@@ -465,7 +467,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			output, err = conn.RestoreTableToPointInTime(req)
+			output, err = conn.RestoreTableToPointInTime(input)
 		}
 
 		if err != nil {
@@ -477,11 +479,14 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 	} else {
-		req := &dynamodb.CreateTableInput{
+		input := &dynamodb.CreateTableInput{
 			TableName:   aws.String(d.Get("name").(string)),
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
-			Tags:        Tags(tags.IgnoreAWS()),
+		}
+
+		if len(tags) > 0 {
+			input.Tags = Tags(tags.IgnoreAWS())
 		}
 
 		billingMode := d.Get("billing_mode").(string)
@@ -491,16 +496,16 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			"read_capacity":  d.Get("read_capacity"),
 		}
 
-		req.ProvisionedThroughput = expandProvisionedThroughput(capacityMap, billingMode)
+		input.ProvisionedThroughput = expandProvisionedThroughput(capacityMap, billingMode)
 
 		if v, ok := d.GetOk("attribute"); ok {
 			aSet := v.(*schema.Set)
-			req.AttributeDefinitions = expandAttributes(aSet.List())
+			input.AttributeDefinitions = expandAttributes(aSet.List())
 		}
 
 		if v, ok := d.GetOk("local_secondary_index"); ok {
 			lsiSet := v.(*schema.Set)
-			req.LocalSecondaryIndexes = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+			input.LocalSecondaryIndexes = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
 		}
 
 		if v, ok := d.GetOk("global_secondary_index"); ok {
@@ -516,28 +521,28 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
 				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
 			}
-			req.GlobalSecondaryIndexes = globalSecondaryIndexes
+			input.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
 		if v, ok := d.GetOk("stream_enabled"); ok {
-			req.StreamSpecification = &dynamodb.StreamSpecification{
+			input.StreamSpecification = &dynamodb.StreamSpecification{
 				StreamEnabled:  aws.Bool(v.(bool)),
 				StreamViewType: aws.String(d.Get("stream_view_type").(string)),
 			}
 		}
 
 		if v, ok := d.GetOk("server_side_encryption"); ok {
-			req.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
+			input.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("table_class"); ok {
-			req.TableClass = aws.String(v.(string))
+			input.TableClass = aws.String(v.(string))
 		}
 
 		var output *dynamodb.CreateTableOutput
 		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
 			var err error
-			output, err = conn.CreateTable(req)
+			output, err = conn.CreateTable(input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException", "") {
 					return resource.RetryableError(err)
@@ -555,7 +560,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			output, err = conn.CreateTable(req)
+			output, err = conn.CreateTable(input)
 		}
 
 		if err != nil {
@@ -602,8 +607,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(d.Id()),
@@ -722,6 +725,9 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return names.ErrorSetting(names.DynamoDB, "Table", d.Id(), "ttl", err)
 	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
@@ -965,6 +971,53 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 
 // custom diff
 
+func setReplicaTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
+
+	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
+
+	replicas := diff.Get("replica").(*schema.Set).List()
+
+	setNew := false
+	tagsAllExist := false
+
+	for i, replicaRaw := range replicas {
+		replica := replicaRaw.(map[string]interface{})
+
+		replicaAllTags := tftags.New(replica["tags"].(map[string]interface{}))
+
+		if replica["propagate_tags"].(bool) {
+			replicaAllTags.Merge(allTags)
+		}
+
+		if len(replica["tags_all"].(map[string]interface{})) > 0 {
+			tagsAllExist = true
+		}
+
+		if len(replicaAllTags) > 0 {
+			replica["tags_all"] = replicaAllTags.Map()
+			setNew = true
+		}
+
+		replicas[i] = replica
+	}
+
+	if setNew {
+		if err := diff.SetNew("replica", replicas); err != nil {
+			return fmt.Errorf("setting new replica tags_all diff: %w", err)
+		}
+	} else if tagsAllExist {
+		if err := diff.SetNewComputed("replica"); err != nil {
+			return fmt.Errorf("setting replica tags_all to computed: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func isTableOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
 	if len(options) == 0 {
@@ -1081,7 +1134,14 @@ func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{
 			continue
 		}
 
+		replicaTags := tftags.New(tfMap["tags"].(map[string]interface{}))
+		allTags := replicaTags
+
 		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
+			allTags = replicaTags.Merge(tftags.New(newTags))
+		}
+
+		if len(allTags) > 0 {
 			if aws.StringValue(conn.Config.Region) != region {
 				session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
 				if err != nil {
@@ -1096,7 +1156,7 @@ func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			if err := UpdateTags(conn, newARN, oldTags, newTags); err != nil {
+			if err := UpdateTags(conn, newARN, oldTags, allTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
