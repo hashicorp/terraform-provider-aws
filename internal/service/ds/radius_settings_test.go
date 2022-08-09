@@ -3,6 +3,7 @@ package ds_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -16,6 +17,12 @@ import (
 )
 
 func TestAccDSRadiusSettings_basic(t *testing.T) {
+	key := "DIRECTORY_SERVICE_RADIUS_SERVER"
+	radiusServer := os.Getenv(key)
+	if radiusServer == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	var v directoryservice.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -31,16 +38,16 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRadiusSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRadiusSettingsConfig_basic(rName, domainName),
+				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRadiusSettingsExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
 					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
-					resource.TestCheckResourceAttr(resourceName, "radius_retries", "4"),
+					resource.TestCheckResourceAttr(resourceName, "radius_retries", "3"),
 					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", "10.0.1.5"),
-					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", radiusServer),
+					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_secret"),
 				),
 			},
@@ -57,6 +64,12 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 }
 
 func TestAccDSRadiusSettings_disappears(t *testing.T) {
+	key := "DIRECTORY_SERVICE_RADIUS_SERVER"
+	radiusServer := os.Getenv(key)
+	if radiusServer == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	var v directoryservice.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +85,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRadiusSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRadiusSettingsConfig_basic(rName, domainName),
+				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusSettingsExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
@@ -132,10 +145,10 @@ func testAccCheckRadiusSettingsExists(n string, v *directoryservice.RadiusSettin
 	}
 }
 
-func testAccRadiusSettingsConfig_basic(rName, domain string) string {
+func testAccRadiusSettingsConfig_basic(rName, domain, radiusServer string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
-  name     = %[2]q
+  name     = %[1]q
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 
@@ -151,10 +164,10 @@ resource "aws_directory_service_radius_settings" "test" {
   authentication_protocol = "PAP"
   display_label           = "test"
   radius_port             = 1812
-  radius_retries          = 4
-  radius_servers          = ["10.0.1.5"]
-  radius_timeout          = 1
-  shared_secret           = "12345678"
+  radius_retries          = 3
+  radius_servers          = [%[2]q]
+  radius_timeout          = 30
+  shared_secret           = "avoid-plaintext-passwords"
 }
-`, rName, domain))
+`, domain, radiusServer))
 }
