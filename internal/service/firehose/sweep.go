@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,8 +39,16 @@ func sweepDeliveryStreams(region string) error {
 		for _, v := range page.DeliveryStreamNames {
 			r := ResourceDeliveryStream()
 			d := r.Data(nil)
-			d.SetId("???")
-			d.Set("name", v)
+			name := aws.StringValue(v)
+			arn := arn.ARN{
+				Partition: client.(*conns.AWSClient).Partition,
+				Service:   firehose.ServiceName,
+				Region:    client.(*conns.AWSClient).Region,
+				AccountID: client.(*conns.AWSClient).AccountID,
+				Resource:  fmt.Sprintf("deliverystream/%s", name),
+			}.String()
+			d.SetId(arn)
+			d.Set("name", name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
