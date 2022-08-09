@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -102,11 +101,18 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 											},
 										},
 									},
-									// API returns <prefix>-connect-<connect_instance_alias>-contact-
 									"prefix": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
+										// API returns <prefix>-connect-<connect_instance_alias>-contact-
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// API returns <prefix>-connect-<connect_instance_alias>-contact-
+											// case 1: API appends to prefix. User-defined string (old) is prefix of API-returned string (new). Check non-empty old in resoure creation scenario
+											// case 2: after setting API-returned string.  User-defined string (new) is prefix of API-returned string (old)
+											// case 3: update for other arguments that still require the prefix to be sent in the request
+											return (strings.HasPrefix(new, old) && old != "") || (strings.HasPrefix(old, new) && !d.HasChange("storage_config.0.kinesis_video_stream_config.0.encryption_config") && !d.HasChange("storage_config.0.kinesis_video_stream_config.0.retention_period_hours"))
+										},
 									},
 									"retention_period_hours": {
 										Type:         schema.TypeInt,
@@ -479,15 +485,11 @@ func flattenKinesisVideoStreamConfig(apiObject *connect.KinesisVideoStreamConfig
 		return []interface{}{}
 	}
 
-	// API returns <prefix>-connect-<connect_instance_alias>-contact-
-	prefixRaw := aws.StringValue(apiObject.Prefix)
-	regexPattern := regexp.MustCompile(`-connect-.*-contact-`)
-	subStringUpperBound := 2
-	prefix := regexPattern.Split(prefixRaw, subStringUpperBound)[0]
-
 	values := map[string]interface{}{
-		"encryption_config":      flattenEncryptionConfig(apiObject.EncryptionConfig),
-		"prefix":                 prefix,
+		"encryption_config": flattenEncryptionConfig(apiObject.EncryptionConfig),
+		// API returns <prefix>-connect-<connect_instance_alias>-contact-
+		// DiffSuppressFunc used
+		"prefix":                 aws.StringValue(apiObject.Prefix),
 		"retention_period_hours": aws.Int64Value(apiObject.RetentionPeriodHours),
 	}
 
