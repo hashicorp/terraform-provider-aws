@@ -15,22 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectVocabulary_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":       testAccVocabulary_basic,
-		"disappears":  testAccVocabulary_disappears,
-		"update_tags": testAccVocabulary_updateTags,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccVocabulary_basic(t *testing.T) {
 	var v connect.DescribeVocabularyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

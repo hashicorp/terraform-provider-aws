@@ -16,29 +16,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectInstanceStorageConfig_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":                                     testAccInstanceStorageConfig_basic,
-		"disappears":                                testAccInstanceStorageConfig_disappears,
-		"KinesisFirehoseConfig_FirehoseARN":         testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN,
-		"KinesisStreamConfig_StreamARN":             testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN,
-		"KinesisVideoStreamConfig_EncryptionConfig": testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig,
-		"KinesisVideoStreamConfig_Prefix":           testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix,
-		"KinesisVideoStreamConfig_Retention":        testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention,
-		"S3Config_BucketName":                       testAccInstanceStorageConfig_S3Config_BucketName,
-		"S3Config_BucketPrefix":                     testAccInstanceStorageConfig_S3Config_BucketPrefix,
-		"S3Config_EncryptionConfig":                 testAccInstanceStorageConfig_S3Config_EncryptionConfig,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccInstanceStorageConfig_basic(t *testing.T) {
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
