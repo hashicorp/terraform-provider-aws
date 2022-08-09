@@ -114,10 +114,6 @@ func CheckISOErrorTagsUnsupported(partition string, err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "cannot specify tags on creation") {
-		return true
-	}
-
 	if tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
 		return true
 	}
