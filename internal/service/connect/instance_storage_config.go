@@ -481,9 +481,9 @@ func flattenKinesisVideoStreamConfig(apiObject *connect.KinesisVideoStreamConfig
 
 	// API returns <prefix>-connect-<connect_instance_alias>-contact-
 	prefixRaw := aws.StringValue(apiObject.Prefix)
-	regexPatten := regexp.MustCompile(`-connect-.*-contact-`)
+	regexPattern := regexp.MustCompile(`-connect-.*-contact-`)
 	subStringUpperBound := 2
-	prefix := regexPatten.Split(prefixRaw, subStringUpperBound)[0]
+	prefix := regexPattern.Split(prefixRaw, subStringUpperBound)[0]
 
 	values := map[string]interface{}{
 		"encryption_config":      flattenEncryptionConfig(apiObject.EncryptionConfig),
