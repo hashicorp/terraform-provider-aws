@@ -124,6 +124,20 @@ func FindDomainControllers(conn *directoryservice.DirectoryService, input *direc
 	return output, nil
 }
 
+func FindRadiusSettings(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) (*directoryservice.RadiusSettings, error) {
+	output, err := FindDirectoryByID(conn, directoryID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.RadiusSettings == nil {
+		return nil, tfresource.NewEmptyResultError(directoryID)
+	}
+
+	return output.RadiusSettings, nil
+}
+
 func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) (*directoryservice.RegionDescription, error) {
 	input := &directoryservice.DescribeRegionsInput{
 		DirectoryId: aws.String(directoryID),
