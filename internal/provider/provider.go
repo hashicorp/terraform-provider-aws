@@ -644,6 +644,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
+			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
+
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),

@@ -234,3 +234,34 @@ func FindSnapshotByID(conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 
 	return output.Snapshots[0], nil
 }
+
+func FindSnapshots(conn *fsx.FSx, input *fsx.DescribeSnapshotsInput) ([]*fsx.Snapshot, error) {
+	var output []*fsx.Snapshot
+
+	err := conn.DescribeSnapshotsPages(input, func(page *fsx.DescribeSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Snapshots {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
