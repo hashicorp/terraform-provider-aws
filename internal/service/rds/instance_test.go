@@ -773,8 +773,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
-
+	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -787,12 +786,12 @@ func TestAccRDSInstance_password(t *testing.T) {
 			// Password should not be shown in error message
 			{
 				Config:      testAccInstanceConfig_password(rName, "invalid"),
-				ExpectError: regexp.MustCompile(`MasterUserPassword: "\*{8}",`),
+				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
 				),
 			},
@@ -3376,7 +3375,7 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-
+	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3388,11 +3387,14 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
 			{
-				ResourceName:      "aws_db_instance.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -3413,7 +3415,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 	}
 
 	var v rds.DBInstance
-	resourceName := "aws_db_instance.bar"
+	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -3467,8 +3469,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance rds.DBInstance
-
+	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -3481,7 +3482,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_mssql(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
 			},
@@ -3506,7 +3507,6 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_oracle(t *testing.T) {
 	}
 
 	var dbInstance rds.DBInstance
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -3545,7 +3545,6 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 	}
 
 	var dbInstance rds.DBInstance
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -4246,7 +4245,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbInstance1 rds.DBInstance
+	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
@@ -4259,7 +4258,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_license(rName, "license-included"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance1),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "license-included"),
 				),
 			},
@@ -4278,7 +4277,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_license(rName, "bring-your-own-license"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance1),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "bring-your-own-license"),
 				),
 			},
@@ -6108,54 +6107,24 @@ resource "aws_db_instance" "bar" {
 func testAccInstanceConfig_cloudWatchLogsExportConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   skip_final_snapshot  = true
 
   enabled_cloudwatch_logs_exports = [
@@ -6169,54 +6138,24 @@ resource "aws_db_instance" "bar" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationAdd(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   skip_final_snapshot  = true
 
   apply_immediately = true
@@ -6233,54 +6172,24 @@ resource "aws_db_instance" "bar" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationModify(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   skip_final_snapshot  = true
 
   apply_immediately = true
@@ -6297,54 +6206,24 @@ resource "aws_db_instance" "bar" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationDelete(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-  subnet_ids  = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
   engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
+  db_name              = "test"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
   skip_final_snapshot  = true
 
   apply_immediately = true
