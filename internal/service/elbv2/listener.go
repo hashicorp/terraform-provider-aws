@@ -443,7 +443,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
 	// Retry creation without tags
-	if params.Tags != nil && tfawserr.ErrMessageContains(err, "ValidationError", "cannot specify tags on creation") {
+	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
 		params.Tags = nil
 		output, err = retryListenerCreate(conn, params)
