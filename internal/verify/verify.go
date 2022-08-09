@@ -54,7 +54,7 @@ const (
 )
 
 func CheckISOErrorTagsUnsupported(partition string, err error) bool {
-	if partition == endpoints.AwsIsoPartitionID {
+	if partition == endpoints.AwsPartitionID {
 		return false
 	}
 
