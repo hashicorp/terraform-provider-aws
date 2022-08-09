@@ -23,9 +23,10 @@ resource "aws_backup_vault" "example" {
 
 The following arguments are supported:
 
+* `force_destroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
+* `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
 * `name` - (Required) Name of the backup vault to create.
 * `tags` - (Optional) Metadata that you can assign to help organize the resources that you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
 
 ## Attributes Reference
 

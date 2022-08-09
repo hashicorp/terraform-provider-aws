@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,6 +32,11 @@ func ResourceVault() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
@@ -140,6 +146,43 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
+
+	if d.Get("force_destroy").(bool) {
+		input := &backup.ListRecoveryPointsByBackupVaultInput{
+			BackupVaultName: aws.String(d.Id()),
+		}
+		var recoveryPointErrs *multierror.Error
+
+		err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.RecoveryPoints {
+				recoveryPointARN := aws.StringValue(v.RecoveryPointArn)
+
+				log.Printf("[DEBUG] Deleting Backup Vault recovery point: %s", recoveryPointARN)
+				_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
+					BackupVaultName:  aws.String(d.Id()),
+					RecoveryPointArn: aws.String(recoveryPointARN),
+				})
+
+				if err != nil {
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting Backup Vault (%s) recovery point (%s): %w", d.Id(), recoveryPointARN, err))
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			return fmt.Errorf("listing Backup Vault (%s) recovery points: %w", d.Id(), err)
+		}
+
+		if err := recoveryPointErrs.ErrorOrNil(); err != nil {
+			return err
+		}
+	}
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
 	_, err := conn.DeleteBackupVault(&backup.DeleteBackupVaultInput{
