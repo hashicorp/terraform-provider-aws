@@ -22,6 +22,7 @@ func ResourceVault() *schema.Resource {
 		Read:   resourceVaultRead,
 		Update: resourceVaultUpdate,
 		Delete: resourceVaultDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +75,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateBackupVault(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault (%s): %w", name, err)
+		return fmt.Errorf("creating Backup Vault (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -96,7 +97,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.BackupVaultArn)
@@ -107,18 +108,18 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -130,7 +131,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Vault (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating tags for Backup Vault (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -150,7 +151,7 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	return nil
