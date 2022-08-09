@@ -411,8 +411,8 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 // in which they are created, so we allow users to specify an original endpoint
 // for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
 // See:
-//  - https://github.com/hashicorp/terraform/pull/12688
-//  - https://github.com/hashicorp/terraform/issues/12842
+//   - https://github.com/hashicorp/terraform/pull/12688
+//   - https://github.com/hashicorp/terraform/issues/12842
 func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
 	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 

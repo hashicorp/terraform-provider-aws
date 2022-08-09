@@ -767,7 +767,7 @@ resource "aws_security_group" "bar" {
 `, rName))
 }
 
-//lintignore:AWSAT003,AWSAT005
+// lintignore:AWSAT003,AWSAT005
 func testAccModelConfig_primaryContainerPrivateDockerRegistry(rName string) string {
 	return acctest.ConfigCompose(testAccModelConfigBase(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {

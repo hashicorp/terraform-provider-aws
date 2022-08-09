@@ -794,6 +794,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
 
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
+
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
 			"aws_ram_resource_share": ram.DataSourceResourceShare(),
@@ -1684,6 +1686,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_place_index":         location.ResourcePlaceIndex(),
 			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
 			"aws_location_tracker":             location.ResourceTracker(),
+			"aws_location_tracker_association": location.ResourceTrackerAssociation(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
