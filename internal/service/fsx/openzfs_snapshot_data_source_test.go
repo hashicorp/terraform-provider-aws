@@ -179,7 +179,7 @@ resource "aws_fsx_openzfs_snapshot" "test" {
 data "aws_fsx_openzfs_snapshot" "test" {
   filter {
     name   = "file-system-id"
-	values = [aws_fsx_openzfs_file_system.test.id]
+    values = [aws_fsx_openzfs_file_system.test.id]
   }
 }
 `, rName))
@@ -195,7 +195,7 @@ resource "aws_fsx_openzfs_snapshot" "test" {
 data "aws_fsx_openzfs_snapshot" "test" {
   filter {
     name   = "volume-id"
-	values = [aws_fsx_openzfs_file_system.test.root_volume_id]
+    values = [aws_fsx_openzfs_file_system.test.root_volume_id]
   }
 }
 `, rName))
@@ -218,7 +218,7 @@ data "aws_fsx_openzfs_snapshot" "test" {
   most_recent = true
   filter {
     name   = "volume-id"
-	values = [aws_fsx_openzfs_file_system.test.root_volume_id]
+    values = [aws_fsx_openzfs_file_system.test.root_volume_id]
   }
   depends_on = [aws_fsx_openzfs_snapshot.test, aws_fsx_openzfs_snapshot.latest]
 }
