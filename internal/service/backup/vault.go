@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -26,6 +27,10 @@ func ResourceVault() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -169,6 +174,11 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 
 				if err != nil {
 					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting Backup Vault (%s) recovery point (%s): %w", d.Id(), recoveryPointARN, err))
+					continue
+				}
+
+				if _, err := waitRecoveryPointDeleted(conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("waiting for Backup Vault (%s) recovery point (%s) delete: %w", d.Id(), recoveryPointARN, err))
 				}
 			}
 
