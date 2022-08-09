@@ -2,6 +2,6 @@
  resource/aws_lb_listener: Fix `ValidationError` when tags are added on `create`
 ```
 
- ```release-note:bug
+```release-note:bug
   resource/aws_lb_target_group: Fix `ValidationError` when tags are added on `create`
- ```
+```
