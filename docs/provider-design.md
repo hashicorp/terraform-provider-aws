@@ -1,23 +1,6 @@
 # Provider Design
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
-
-The Terraform AWS Provider follows the guidelines established in the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html). That general documentation provides many high-level design points gleaned from years of experience with Terraform's design and implementation concepts. Sections below will expand on specific design details between that documentation and this provider, while others will capture other pertinent information that may not be covered there. Other pages of the contributing guide cover implementation details such as code, testing, and documentation specifics.
-
-- [API and SDK Boundary](#api-and-sdk-boundary)
-- [Infrastructure as Code Suitability](#infrastructure-as-code-suitability)
-- [Resource Type Considerations](#resource-type-considerations)
-    - [Authorization and Acceptance Resources](#authorization-and-acceptance-resources)
-    - [Cross-Service Functionality](#cross-service-functionality)
-    - [Data Sources](#data-sources)
-        - [Plural Data Sources](#plural-data-sources)
-        - [Singular Data Sources](#singular-data-sources)
-    - [IAM Resource-Based Policy Resources](#iam-resource-based-policy-resources)
-    - [Managing Resource Running State](#managing-resource-running-state)
-    - [Task Execution and Waiter Resources](#task-execution-and-waiter-resources)
-    - [Versioned Resources](#versioned-resources)
-- [Other Considerations](#other-considerations)
-    - [AWS Credential Exfiltration](#aws-credential-exfiltration)
+The Terraform AWS Provider follows the guidelines established in the [HashiCorp Provider Design Principles](https://www.terraform.io/plugin/hashicorp-provider-design-principles). That general documentation provides many high-level design points gleaned from years of experience with Terraform's design and implementation concepts. Sections below will expand on specific design details between that documentation and this provider, while others will capture other pertinent information that may not be covered there. Other pages of the contributing guide cover implementation details such as code, testing, and documentation specifics.
 
 ## API and SDK Boundary
 
@@ -32,11 +15,13 @@ Some examples of functionality that is not expected in this provider:
 
 ## Infrastructure as Code Suitability
 
-The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
+The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. Specifically: IaC is best suited for [immutable rather than mutable infrastrcture](https://www.hashicorp.com/resources/what-is-mutable-vs-immutable-infrastructure) -- i.e. for resources with a single desired state described in its entirety, as opposed to resources defined via a dynamic process.
+
+If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
 
 ## Resource Type Considerations
 
-Terraform resources work best as the smallest infrastructure blocks on which practitioners can build more complex configurations and abstractions, such as [Terraform Modules](https://www.terraform.io/docs/modules/). The general heuristic guiding when to implement a new Terraform resource for an aspect of AWS is whether the AWS service API provides create, read, update, and delete (CRUD) operations. However, not all AWS service API functionality falls cleanly into CRUD lifecycle management. In these situations, there is extra consideration necessary for properly mapping API operations to Terraform resources.
+Terraform resources work best as the smallest infrastructure blocks on which practitioners can build more complex configurations and abstractions, such as [Terraform Modules](https://www.terraform.io/language/modules). The general heuristic guiding when to implement a new Terraform resource for an aspect of AWS is whether the AWS service API provides create, read, update, and delete (CRUD) operations. However, not all AWS service API functionality falls cleanly into CRUD lifecycle management. In these situations, there is extra consideration necessary for properly mapping API operations to Terraform resources.
 
 This section highlights design patterns when to consider an implementation within a singular Terraform resource or as separate Terraform resources.
 
@@ -73,7 +58,7 @@ Many AWS service APIs build on top of other AWS services. Some examples of these
 * Lambda Functions managing EC2 ENIs
 * Transfer Servers managing EC2 VPC Endpoints
 
-Some cross-service API implementations lack the management or description capabilities of the other service. The lack can make the Terraform resource implementation seem incomplete or unsuccessful in end-to-end configurations. Given the overall “resources should represent a single API object” goal from the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html), a resource must only communicate with a single AWS service API. As such, maintainers will not approve cross-service resources.
+Some cross-service API implementations lack the management or description capabilities of the other service. The lack can make the Terraform resource implementation seem incomplete or unsuccessful in end-to-end configurations. Given the overall “resources should represent a single API object” goal from the [HashiCorp Provider Design Principles](https://www.terraform.io/plugin/hashicorp-provider-design-principles), a resource must only communicate with a single AWS service API. As such, maintainers will not approve cross-service resources.
 
 The rationale behind this design decision includes the following:
 

@@ -1,55 +1,14 @@
 # Data Handling and Conversion
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
-
-The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/docs/extend/how-terraform-works.html) and an AWS API client to support AWS operations and data types as Terraform Resources. Data handling and conversion is a large portion of resource implementation given the domain specific implementations of each side of the provider. The first where Terraform is a generic infrastructure as code tool with a generic data model and the other where the details are driven by AWS API data modeling concepts. This guide is intended to explain and show preferred Terraform AWS Provider code implementations required to successfully translate data between these two systems.
+The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/plugin/how-terraform-works) and an AWS API client to support AWS operations and data types as Terraform Resources. Data handling and conversion is a large portion of resource implementation given the domain specific implementations of each side of the provider. The first where Terraform is a generic infrastructure as code tool with a generic data model and the other where the details are driven by AWS API data modeling concepts. This guide is intended to explain and show preferred Terraform AWS Provider code implementations required to successfully translate data between these two systems.
 
 At the bottom of this documentation is a [Glossary section](#glossary), which may be a helpful reference while reading the other sections.
-
-- [Data Conversions in Terraform Providers](#data-conversions-in-terraform-providers)
-    - [Implicit State Passthrough](#implicit-state-passthrough)
-- [Data Conversions in the Terraform AWS Provider](#data-conversions-in-the-terraform-aws-provider)
-    - [Type Mapping](#type-mapping)
-    - [Zero Value Mapping](#zero-value-mapping)
-    - [Root Attributes Versus Block Attributes](#root-attributes-versus-block-attributes)
-- [Recommended Implementations](#recommended-implementations)
-    - [Expand Functions for Blocks](#expand-functions-for-blocks)
-    - [Flatten Functions for Blocks](#flatten-functions-for-blocks)
-    - [Root TypeBool and AWS Boolean](#root-typebool-and-aws-boolean)
-    - [Root TypeFloat and AWS Float](#root-typefloat-and-aws-float)
-    - [Root TypeInt and AWS Integer](#root-typeint-and-aws-integer)
-    - [Root TypeList of Resource and AWS List of Structure](#root-typelist-of-resource-and-aws-list-of-structure)
-    - [Root TypeList of Resource and AWS Structure](#root-typelist-of-resource-and-aws-structure)
-    - [Root TypeList of TypeString and AWS List of String](#root-typelist-of-typestring-and-aws-list-of-string)
-    - [Root TypeMap of TypeString and AWS Map of String](#root-typemap-of-typestring-and-aws-map-of-string)
-    - [Root TypeSet of Resource and AWS List of Structure](#root-typeset-of-resource-and-aws-list-of-structure)
-    - [Root TypeSet of TypeString and AWS List of String](#root-typeset-of-typestring-and-aws-list-of-string)
-    - [Root TypeString and AWS String](#root-typestring-and-aws-string)
-    - [Root TypeString and AWS Timestamp](#root-typestring-and-aws-timestamp)
-    - [Nested TypeBool and AWS Boolean](#nested-typebool-and-aws-boolean)
-    - [Nested TypeFloat and AWS Float](#nested-typefloat-and-aws-float)
-    - [Nested TypeInt and AWS Integer](#nested-typeint-and-aws-integer)
-    - [Nested TypeList of Resource and AWS List of Structure](#nested-typelist-of-resource-and-aws-list-of-structure)
-    - [Nested TypeList of Resource and AWS Structure](#nested-typelist-of-resource-and-aws-structure)
-    - [Nested TypeList of TypeString and AWS List of String](#nested-typelist-of-typestring-and-aws-list-of-string)
-    - [Nested TypeMap of TypeString and AWS Map of String](#nested-typemap-of-typestring-and-aws-map-of-string)
-    - [Nested TypeSet of Resource and AWS List of Structure](#nested-typeset-of-resource-and-aws-list-of-structure)
-    - [Nested TypeSet of TypeString and AWS List of String](#nested-typeset-of-typestring-and-aws-list-of-string)
-    - [Nested TypeString and AWS String](#nested-typestring-and-aws-string)
-    - [Nested TypeString and AWS Timestamp](#nested-typestring-and-aws-timestamp)
-- [Further Guidelines](#further-guidelines)
-    - [Binary Values](#binary-values)
-    - [Destroy State Values](#destroy-state-values)
-    - [Hashed Values](#hashed-values)
-    - [Sensitive Values](#sensitive-values)
-    - [Virtual Attributes](#virtual-attributes)
-- [Glossary](#glossary)
 
 ## Data Conversions in Terraform Providers
 
 Before getting into highly specific documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
 
-There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into a applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/master/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
+There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into a applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/main/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
 
 As a generic walkthrough, the following data handling occurs when creating a Terraform Resource:
 
@@ -124,7 +83,7 @@ _There are efforts to replace the Terraform Plugin type system with one similar 
 
 ### Zero Value Mapping
 
-As mentioned in the [Type Mapping section](#type-mapping), there is a discrepency with how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute. These values will default to the matching underlying Go type "zero value" if not set:
+As mentioned in the [Type Mapping section](#type-mapping), there is a discrepancy with how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute. These values will default to the matching underlying Go type "zero value" if not set:
 
 | Terraform Plugin SDK | Go Type | Zero Value |
 |----------------------|---------|------------|
@@ -445,7 +404,7 @@ d.Set("attribute_name", output.Thing.AttributeName)
 
 ### Root TypeString and AWS Timestamp
 
-To ensure that parsing the read string value does not fail, define `attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/docs/extend/schemas/schema-behaviors.html#validatefunc):
+To ensure that parsing the read string value does not fail, define `attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors#validatefunc):
 
 ```go
 "attribute_name": {
@@ -789,7 +748,7 @@ func flattenStructure(apiObject *service.Structure) map[string]interface{} {
 
 ### Nested TypeString and AWS Timestamp
 
-To ensure that parsing the read string value does not fail, define `nested_attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/docs/extend/schemas/schema-behaviors.html#validatefunc):
+To ensure that parsing the read string value does not fail, define `nested_attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors#validatefunc):
 
 ```go
 "nested_attribute_name": {
@@ -899,12 +858,12 @@ Below is a listing of relevant terms and descriptions for data handling and conv
 - **AWS Go SDK Service**: AWS Service API Go code generated from the AWS Go SDK Model. Generated by the AWS Go SDK code.
 - **AWS Service API**: Logical boundary of an AWS service by API endpoint. Some large AWS services may be marketed with many different product names under the same service API (e.g., VPC functionality is part of the EC2 API) and vice-versa where some services may be marketed with one product name but are split into multiple service APIs (e.g., Single Sign-On functionality is split into the Identity Store and SSO Admin APIs).
 - **AWS Service API Model**: Declarative description of the AWS Service API operations and data types. Generated by the AWS service teams. Used to operate the API and generate API clients such as the various AWS Software Development Kits (SDKs).
-- **Terraform Language** ("Configuration"): Configuration syntax interpreted by the Terraform CLI. An implementation of [HCL](https://github.com/hashicorp/hcl). [Full Documentation](https://www.terraform.io/docs/configuration/index.html).
+- **Terraform Language** ("Configuration"): Configuration syntax interpreted by the Terraform CLI. An implementation of [HCL](https://github.com/hashicorp/hcl). [Full Documentation](https://www.terraform.io/language).
 - **Terraform Plugin Protocol**: Description of Terraform Plugin operations and data types. Currently based on the Remote Procedure Call (RPC) library [`gRPC`](https://grpc.io/).
 - **Terraform Plugin Go**: Low-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. Not currently implemented in the Terraform AWS Provider. [Project](https://github.com/hashicorp/terraform-plugin-go).
 - **Terraform Plugin SDK**: High-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. [Project](https://github.com/hashicorp/terraform-plugin-sdk).
-- **Terraform Plugin SDK Schema**: Declarative description of types and domain specific behaviors for a Terraform provider, including resources and attributes. [Full Documentation](https://www.terraform.io/docs/extend/schemas/index.html).
-- **Terraform State**: Bindings between objects in a remote system (e.g., an EC2 VPC) and a Terraform configuration (e.g., an `aws_vpc` resource configuration). [Full Documentation](https://www.terraform.io/docs/state/index.html).
+- **Terraform Plugin SDK Schema**: Declarative description of types and domain specific behaviors for a Terraform provider, including resources and attributes. [Full Documentation](https://www.terraform.io/plugin/sdkv2/schemas).
+- **Terraform State**: Bindings between objects in a remote system (e.g., an EC2 VPC) and a Terraform configuration (e.g., an `aws_vpc` resource configuration). [Full Documentation](https://www.terraform.io/language/state).
 
 AWS Service API Models use specific terminology to describe data and types:
 
@@ -925,7 +884,7 @@ The Terraform Language uses the following terminology to describe data and types
 - **Attribute** ("Argument"): Assigns a name to a data value.
 - **Block** ("Configuration Block"): Container type for Attributes or Blocks.
 - **null**: Virtual value equivalent to the Attribute not being set.
-- **Types**: [Full Documentation](https://www.terraform.io/docs/configuration/expressions/types.html).
+- **Types**: [Full Documentation](https://www.terraform.io/language/expressions/types).
     - **any**: Virtual type representing any concrete type in type declarations.
     - **bool**: Boolean value.
     - **list** ("tuple"): Ordered collection of values.
@@ -936,14 +895,14 @@ The Terraform Language uses the following terminology to describe data and types
 
 Terraform Plugin SDK Schemas use the following terminology to describe data and types:
 
-- **Behaviors**: [Full Documentation](https://www.terraform.io/docs/extend/schemas/schema-behaviors.html).
+- **Behaviors**: [Full Documentation](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors).
     - **Sensitive**: Whether the value should be hidden from user interface output.
     - **StateFunc**: Conversion function between the value set by the Terraform Plugin and the value seen by Terraform Plugin SDK (and ultimately the Terraform State).
 - **Element**: Underylying value type for a collection or grouping Schema.
 - **Resource Data**: Data representation of a Resource Schema. Translation layer between the Schema and Go code of a Terraform Plugin. In the Terraform Plugin SDK, the `ResourceData` Go type.
 - **Resource Schema**: Grouping of Schema that represents a Terraform Resource.
 - **Schema**: Represents an Attribute or Block. Has a Type and Behavior(s).
-- **Types**: [Full Documentation](https://www.terraform.io/docs/extend/schemas/schema-types.html).
+- **Types**: [Full Documentation](https://www.terraform.io/plugin/sdkv2/schemas/schema-types).
     - **TypeBool**: Boolean value.
     - **TypeFloat**: Fractional numeric value.
     - **TypeInt**: Whole numeric value.

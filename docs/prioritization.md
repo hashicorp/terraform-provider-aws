@@ -31,7 +31,7 @@ Another source of work that must be weighted are escalations around particular f
 These reports flow into an internal board and are triaged on a weekly basis to determine whether the escalation request should be prioritized for an upcoming release or added to the backlog to monitor for additional community support. During triage, we verify whether a GitHub issue or PR exists for the request and will create one if it does not exist. In this way, these requests are visible to the community to some degree. An escalation coming from a customer does not necessarily guarantee that it will be prioritized over requests made by the community. Instead, we assess them based on the following rubric:
 
 - Does the issue have considerable community support?
-- Does the issue pertain to one of our [Core Services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/core-services.md)?
+- Does the issue pertain to one of our [Core Services](core-services.md)?
 
 By weighing these factors, we can make a call to determine whether, and how it is to be prioritized.
 
@@ -39,7 +39,7 @@ By weighing these factors, we can make a call to determine whether, and how it i
 
 AWS Service Teams and Partner representatives regularly contact us to discuss upcoming features or new services. This work is often done under an NDA, so usually needs to be done in private. Often the ask is to enable Terraform support or an upcoming feature or service.
 
-As with customer escalations, a request from a partner does not necessarily mean that it will be prioritized over other efforts; capacity restraints require us to prioritize major releases or prefer offerings in line with our [core services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/core-services.md).
+As with customer escalations, a request from a partner does not necessarily mean that it will be prioritized over other efforts; capacity restraints require us to prioritize major releases or prefer offerings in line with our [core services](core-services.md).
 
 ### Internal
 

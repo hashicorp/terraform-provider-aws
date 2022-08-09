@@ -1,7 +1,5 @@
 # Retries and Waiters
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
-
 Terraform plugins may run into situations where calling the remote system after an operation may be necessary. These typically fall under three classes where:
 
 - The request never reaches the remote system.
@@ -10,28 +8,11 @@ Terraform plugins may run into situations where calling the remote system after 
 
 This guide describes the behavior of the Terraform AWS Provider and provides code implementations that help ensure success in each of these situations.
 
-- [Terraform Plugin SDK Functionality](#terraform-plugin-sdk-functionality)
-    - [State Change Configuration and Functions](#state-change-configuration-and-functions)
-    - [Retry Functions](#retry-functions)
-- [AWS Request Handling](#aws-request-handling)
-    - [Default AWS Go SDK Retries](#default-aws-go-sdk-retries)
-    - [Lower Network Error Retries](#lower-network-error-retries)
-    - [Terraform AWS Provider Service Retries](#terraform-aws-provider-service-retries)
-- [Eventual Consistency](#eventual-consistency)
-    - [Operation Specific Error Retries](#operation-specific-error-retries)
-        - [IAM Error Retries](#iam-error-retries)
-        - [Asynchronous Operation Error Retries](#asynchronous-operation-error-retries)
-    - [Resource Lifecycle Retries](#resource-lifecycle-retries)
-    - [Resource Attribute Value Waiters](#resource-attribute-value-waiters)
-- [Asynchronous Operations](#asynchronous-operations)
-    - [AWS Go SDK Waiters](#aws-go-sdk-waiters)
-    - [Resource Lifecycle Waiters](#resource-lifecycle-waiters)
-
 ## Terraform Plugin SDK Functionality
 
 The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry()` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
 
-This guide goes beyond the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/retries-and-customizable-timeouts.html) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
+This guide goes beyond the [Terraform Plugin SDK v2 documentation](https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
 
 ### State Change Configuration and Functions
 
@@ -332,12 +313,12 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Example Thing (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Example Thing (%s): %w", d.Id(), err)
 	}
 
 	// Prevent panics.
 	if output == nil {
-		return fmt.Errorf("error reading Example Thing (%s): empty response", d.Id())
+		return fmt.Errorf("reading Example Thing (%s): empty response", d.Id())
 	}
 
 	// ... refresh Terraform state as normal ...
@@ -416,7 +397,7 @@ function ExampleThingUpdate(d *schema.ResourceData, meta interface{}) error {
 		// ... AWS Go SDK logic to update attribute ...
 
 		if _, err := ThingAttributeUpdated(conn, d.Id(), d.Get("attribute").(string)); err != nil {
-			return fmt.Errorf("error waiting for Example Thing (%s) attribute update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Example Thing (%s) attribute update: %w", d.Id(), err)
 		}
 	}
 
@@ -436,7 +417,7 @@ In limited cases, the AWS service API model includes the information to automati
 
 ```go
 if err := conn.WaitUntilEndpointInService(input); err != nil {
-	return fmt.Errorf("error waiting for Example Thing (%s) ...: %w", d.Id(), err)
+	return fmt.Errorf("waiting for Example Thing (%s) ...: %w", d.Id(), err)
 }
 ```
 
@@ -523,7 +504,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to create resource ...
 
 	if _, err := ThingCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Example Thing (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Example Thing (%s) creation: %w", d.Id(), err)
 	}
 
 	return ExampleThingRead(d, meta)
@@ -533,7 +514,7 @@ function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to delete resource ...
 
 	if _, err := ThingDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Example Thing (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Example Thing (%s) deletion: %w", d.Id(), err)
 	}
 
 	return ExampleThingRead(d, meta)

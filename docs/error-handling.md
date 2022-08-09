@@ -1,31 +1,8 @@
 # Error Handling
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
-
-The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/docs/extend/how-terraform-works.html) and an AWS API client to support AWS operations and data types as Terraform Resources. An important aspect of performing resource and remote actions is properly handling those operations, but those operations are not guaranteed to succeed every time. Some common examples include where network connections are unreliable, necessary permissions are not properly setup, incorrect Terraform configurations, or the remote system responds unexpectedly. All these situations lead to an unexpected workflow action that must be surfaced to the Terraform user interface for operators to troubleshoot. This guide is intended to explain and show various Terraform AWS Provider code implementations that are considered best practice for surfacing these issues properly to operators and code maintainers.
+The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/plugin/how-terraform-works) and an AWS API client to support AWS operations and data types as Terraform Resources. An important aspect of performing resource and remote actions is properly handling those operations, but those operations are not guaranteed to succeed every time. Some common examples include where network connections are unreliable, necessary permissions are not properly setup, incorrect Terraform configurations, or the remote system responds unexpectedly. All these situations lead to an unexpected workflow action that must be surfaced to the Terraform user interface for operators to troubleshoot. This guide is intended to explain and show various Terraform AWS Provider code implementations that are considered best practice for surfacing these issues properly to operators and code maintainers.
 
 For further details about how the AWS SDK for Go v1 and the Terraform AWS Provider resource logic handle retryable errors, see the [Retries and Waiters documentation](retries-and-waiters.md).
-
-- [General Guidelines and Helpers](#general-guidelines-and-helpers)
-    - [Naming and Check Style](#naming-and-check-style)
-    - [Wrap Errors](#wrap-errors)
-    - [AWS SDK for Go v1 Errors](#aws-sdk-for-go-v1-errors)
-        - [AWS SDK for Go v1 Error Helpers](#aws-sdk-for-go-error-helpers)
-        - [Use AWS SDK for Go v1 Error Code Constants](#use-aws-sdk-for-go-v1-error-code-constants)
-    - [Terraform Plugin SDK Types and Helpers](#terraform-plugin-sdk-types-and-helpers)
-- [Resource Lifecycle Guidelines](#resource-lifecycle-guidelines)
-    - [Resource Creation](#resource-creation)
-        - [d.IsNewResource() Checks](#disnewresource-checks)
-        - [Creation Error Message Context](#creation-error-message-context)
-    - [Resource Deletion](#resource-deletion)
-        - [Resource Already Deleted](#resource-already-deleted)
-        - [Deletion Error Message Context](#deletion-error-message-context)
-    - [Resource Read](#resource-read)
-        - [Singular Data Source Errors](#singular-data-source-errors)
-        - [Plural Data Source Errors](#plural-data-source-errors)
-        - [Read Error Message Context](#read-error-message-context)
-    - [Resource Update](#resource-update)
-        - [Update Error Message Context](#update-error-message-context)
 
 ## General Guidelines and Helpers
 
@@ -63,7 +40,7 @@ For most use cases in this codebase, this means if code is receiving an error an
 return fmt.Errorf("adding some additional message: %w", err)
 ```
 
-This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
+This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g., a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g., `updating Service Thing (%s): %w`), so these messages can be more terse such as `waiting for completion: %w`.
 
 ### AWS SDK for Go v1 Errors
 
@@ -89,7 +66,7 @@ The recommendation for error message checking is to be just specific enough to c
 
 For example, given this error code and message:
 
-```
+```sh
 InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
 ```
 
@@ -157,7 +134,7 @@ Invoked in the resource via the `schema.Resource` type `Create`/`CreateContext` 
 
 During resource creation, Terraform CLI expects either a properly applied state for the new resource or an error. To signal proper resource existence, the Terraform Plugin SDK uses an underlying resource identifier (set via `d.SetId(/* some value */)`). If for some reason the resource creation is returned without an error, but also without the resource identifier being set, Terraform CLI will return an error such as:
 
-```
+```sh
 Error: Provider produced inconsistent result after apply
 
 When applying changes to aws_sns_topic_subscription.sqs,
@@ -193,7 +170,7 @@ func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
     }
 
     if err != nil {
-        return fmt.Errorf("error reading {Service} {Thing} (%s): %w", d.Id(), err)
+        return fmt.Errorf("reading {Service} {Thing} (%s): %w", d.Id(), err)
     }
 
     /* ... */
@@ -208,7 +185,7 @@ Returning errors during creation should include additional messaging about the l
 
 ```go
 if err != nil {
-    return fmt.Errorf("error creating {SERVICE} {THING}: %w", err)
+    return fmt.Errorf("creating {SERVICE} {THING}: %w", err)
 }
 ```
 
@@ -216,7 +193,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error creating EC2 VPC: %w", err)
+    return fmt.Errorf("creating EC2 VPC: %w", err)
 }
 ```
 
@@ -224,7 +201,7 @@ Code that also uses waiters or other operations that return errors should follow
 
 ```go
 if _, err := VpcAvailable(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) availability: %w", d.Id(), err)
 }
 ```
 
@@ -251,7 +228,7 @@ func resourceServiceThingDelete(d *schema.ResourceData, meta interface{}) error 
     }
 
     if err != nil {
-        return fmt.Errorf("error deleting {Service} {Thing} (%s): %w", d.Id(), err)
+        return fmt.Errorf("deleting {Service} {Thing} (%s): %w", d.Id(), err)
     }
 
     /* ... */
@@ -264,7 +241,7 @@ Returning errors during deletion should include the resource identifier and addi
 
 ```go
 if err != nil {
-    return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("deleting {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -272,7 +249,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("deleting EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -280,7 +257,7 @@ Code that also uses [waiters](retries-and-waiters.md) or other operations that r
 
 ```go
 if _, err := VpcDeleted(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) deletion: %w", d.Id(), err)
 }
 ```
 
@@ -303,7 +280,7 @@ For example in pseudo-code:
 output, err := conn.ListServiceThings(input)
 
 if err != nil {
-    return fmt.Errorf("error listing {Service} {Thing}s: %w", err)
+    return fmt.Errorf("listing {Service} {Thing}s: %w", err)
 }
 
 if output == nil || len(output.Results) == 0 {
@@ -325,7 +302,7 @@ Returning errors during read should include the resource identifier (for managed
 
 ```go
 if err != nil {
-    return fmt.Errorf("error reading {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("reading {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -333,7 +310,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("reading EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -347,7 +324,7 @@ Returning errors during update should include the resource identifier and additi
 
 ```go
 if err != nil {
-    return fmt.Errorf("error updating {SERVICE} {THING} (%s): %w", d.Id(), err)
+    return fmt.Errorf("updating {SERVICE} {THING} (%s): %w", d.Id(), err)
 }
 ```
 
@@ -355,7 +332,7 @@ e.g.
 
 ```go
 if err != nil {
-    return fmt.Errorf("error updating EC2 VPC (%s): %w", d.Id(), err)
+    return fmt.Errorf("updating EC2 VPC (%s): %w", d.Id(), err)
 }
 ```
 
@@ -363,6 +340,6 @@ Code that also uses waiters or other operations that return errors should follow
 
 ```go
 if _, err := VpcAvailable(conn, d.Id()); err != nil {
-    return fmt.Errorf("error waiting for EC2 VPC (%s) update: %w", d.Id(), err)
+    return fmt.Errorf("waiting for EC2 VPC (%s) update: %w", d.Id(), err)
 }
 ```
