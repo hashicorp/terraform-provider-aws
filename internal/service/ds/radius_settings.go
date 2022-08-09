@@ -69,7 +69,7 @@ func ResourceRadiusSettings() *schema.Resource {
 			"radius_timeout": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 20),
+				ValidateFunc: validation.IntBetween(1, 50),
 			},
 			"shared_secret": {
 				Type:         schema.TypeString,

@@ -35,7 +35,7 @@ The following arguments are supported:
 * `radius_port` - (Required) The port that your RADIUS server is using for communications. Your self-managed network must allow inbound traffic over this port from the AWS Directory Service servers.
 * `radius_retries` - (Required) The maximum number of times that communication with the RADIUS server is attempted. Minimum value of `0`. Maximum value of `10`.
 * `radius_servers` - (Required) An array of strings that contains the fully qualified domain name (FQDN) or IP addresses of the RADIUS server endpoints, or the FQDN or IP addresses of your RADIUS server load balancer.
-* `radius_timeout` - (Required) The amount of time, in seconds, to wait for the RADIUS server to respond. Minimum value of `1`. Maximum value of `20`.
+* `radius_timeout` - (Required) The amount of time, in seconds, to wait for the RADIUS server to respond. Minimum value of `1`. Maximum value of `50`.
 * `shared_secret` - (Required) Required for enabling RADIUS on the directory.
 * `use_same_username` - (Optional) Not currently used.
 
