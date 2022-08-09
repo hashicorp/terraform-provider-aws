@@ -5805,33 +5805,21 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
 `, rName)
 }
 
-func testAccInstanceConfig_VPCConfigBase(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-}
-
+func testAccInstanceConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name = %[1]q
 
   subnet_ids = aws_subnet.test[*].id
 }
-`, rName)
+`, rName))
 }
 
 func testAccInstanceConfig_MSSQLDomain_SharedConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassSQLServerEx(),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		testAccInstanceConfig_VPCConfigBase(rName),
+		testAccInstanceConfig_baseVPC(rName),
 		testAccInstanceConfig_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
