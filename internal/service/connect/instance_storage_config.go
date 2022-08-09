@@ -182,11 +182,11 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.AssociateInstanceStorageConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): %w", instanceId, resourceType, err))
+		return diag.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): %s", instanceId, resourceType, err)
 	}
 
 	if output == nil || output.AssociationId == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): empty output", instanceId, resourceType))
+		return diag.Errorf("error creating Connect Instance Storage Config for Connect Instance (%s,%s): empty output", instanceId, resourceType)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", instanceId, aws.StringValue(output.AssociationId), resourceType))
@@ -216,11 +216,11 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Instance Storage Config (%s): %w", d.Id(), err))
+		return diag.Errorf("error getting Connect Instance Storage Config (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.StorageConfig == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Instance Storage Config (%s): empty response", d.Id()))
+		return diag.Errorf("error getting Connect Instance Storage Config (%s): empty response", d.Id())
 	}
 
 	storageConfig := resp.StorageConfig
@@ -258,7 +258,7 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 	_, err = conn.UpdateInstanceStorageConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Instance Storage Config (%s): %w", d.Id(), err))
+		return diag.Errorf("[ERROR] Error updating Instance Storage Config (%s): %s", d.Id(), err)
 	}
 
 	return resourceInstanceStorageConfigRead(ctx, d, meta)
@@ -280,7 +280,7 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting InstanceStorageConfig (%s): %w", d.Id(), err))
+		return diag.Errorf("error deleting InstanceStorageConfig (%s): %s", d.Id(), err)
 	}
 
 	return nil
