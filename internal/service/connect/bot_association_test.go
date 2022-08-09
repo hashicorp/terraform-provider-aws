@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectBotAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccBotAssociation_basic,
