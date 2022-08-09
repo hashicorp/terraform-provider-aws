@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -78,8 +79,9 @@ func ResourceEntityRecognizer() *schema.Resource {
 							},
 						},
 						"augmented_manifests": {
-							Type:     schema.TypeSet,
-							Optional: true,
+							Type:         schema.TypeSet,
+							Optional:     true,
+							ExactlyOneOf: []string{"input_data_config.0.augmented_manifests", "input_data_config.0.documents"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"annotation_data_s3_uri": {
@@ -121,9 +123,10 @@ func ResourceEntityRecognizer() *schema.Resource {
 							Default:          types.EntityRecognizerDataFormatComprehendCsv,
 						},
 						"documents": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"input_data_config.0.documents", "input_data_config.0.augmented_manifests"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"input_format": {
@@ -235,7 +238,31 @@ func ResourceEntityRecognizer() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				tfMap := getInputDataConfig(diff)
+				if tfMap == nil {
+					return nil
+				}
+
+				if format := types.EntityRecognizerDataFormat(tfMap["data_format"].(string)); format == types.EntityRecognizerDataFormatComprehendCsv {
+					if tfMap["documents"] == nil {
+						return fmt.Errorf("documents must be set when data_format is %s", format)
+					}
+				} else {
+					if tfMap["augmented_manifests"] == nil {
+						return fmt.Errorf("augmented_manifests must be set when data_format is %s", format)
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -244,7 +271,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 
 	in := &comprehend.CreateEntityRecognizerInput{
 		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
-		InputDataConfig:    expandInputDataConfig(d.Get("input_data_config").([]interface{})),
+		InputDataConfig:    expandInputDataConfig(getInputDataConfig(d)),
 		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
 		RecognizerName:     aws.String(d.Get("name").(string)),
 		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
@@ -438,7 +465,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &comprehend.CreateEntityRecognizerInput{
 			DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
-			InputDataConfig:    expandInputDataConfig(d.Get("input_data_config").([]interface{})),
+			InputDataConfig:    expandInputDataConfig(getInputDataConfig(d)),
 			LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
 			RecognizerName:     aws.String(d.Get("name").(string)),
 			VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
@@ -930,12 +957,23 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	return []interface{}{m}
 }
 
-func expandInputDataConfig(tfList []interface{}) *types.EntityRecognizerInputDataConfig {
-	if len(tfList) == 0 {
+type resourceGetter interface {
+	Get(key string) any
+}
+
+func getInputDataConfig(diff resourceGetter) map[string]any {
+	v := diff.Get("input_data_config").([]any)
+	if len(v) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	return v[0].(map[string]any)
+}
+
+func expandInputDataConfig(tfMap map[string]any) *types.EntityRecognizerInputDataConfig {
+	if len(tfMap) == 0 {
+		return nil
+	}
 
 	a := &types.EntityRecognizerInputDataConfig{
 		EntityTypes:        expandEntityTypes(tfMap["entity_types"].(*schema.Set)),
