@@ -53,7 +53,7 @@ data "aws_directory_service_directory" "example" {
 
 `radius_settings` is also exported with the following attributes:
 
-* `authentication_protocol` - The protocol specified for your RADIUS endpoints. 
+* `authentication_protocol` - The protocol specified for your RADIUS endpoints.
 * `display_label` - Display label.
 * `radius_port` - The port that your RADIUS server is using for communications.
 * `radius_retries` - The maximum number of times that communication with the RADIUS server is attempted.
