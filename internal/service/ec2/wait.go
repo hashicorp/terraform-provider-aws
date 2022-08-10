@@ -2335,7 +2335,7 @@ func WaitNetworkInterfaceCreated(conn *ec2.EC2, id string, timeout time.Duration
 
 func WaitNetworkInterfaceDetached(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetaching},
+		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
 		Target:  []string{ec2.AttachmentStatusDetached},
 		Timeout: timeout,
 		Refresh: StatusNetworkInterfaceAttachmentStatus(ctx, conn, id),
