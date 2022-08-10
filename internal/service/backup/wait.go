@@ -15,6 +15,25 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+func WaitJobCompleted(conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{backup.JobStateCreated, backup.JobStatePending, backup.JobStateRunning, backup.JobStateAborting},
+		Target:  []string{backup.JobStateCompleted},
+		Refresh: statusJobState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*backup.DescribeBackupJobOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitFrameworkCreated(conn *backup.Backup, id string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},

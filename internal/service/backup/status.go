@@ -8,6 +8,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func statusJobState(conn *backup.Backup, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindJobByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 func statusFramework(conn *backup.Backup, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &backup.DescribeFrameworkInput{

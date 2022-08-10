@@ -3,7 +3,10 @@ package backup_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -189,6 +192,20 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					testAccCheckRunDynamoDBTableBackupJob(rName),
+				),
+			},
+			{
+				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
+				),
+			},
 		},
 	})
 }
@@ -236,6 +253,46 @@ func testAccCheckVaultExists(name string, v *backup.DescribeBackupVaultOutput) r
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckRunDynamoDBTableBackupJob(rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := client.BackupConn
+
+		iamRoleARN := arn.ARN{
+			Partition: client.Partition,
+			Service:   "iam",
+			AccountID: client.AccountID,
+			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
+		}.String()
+		resourceARN := arn.ARN{
+			Partition: client.Partition,
+			Service:   "dynamodb",
+			Region:    client.Region,
+			AccountID: client.AccountID,
+			Resource:  fmt.Sprintf("table/%s", rName),
+		}.String()
+		output, err := conn.StartBackupJob(&backup.StartBackupJobInput{
+			BackupVaultName: aws.String(rName),
+			IamRoleArn:      aws.String(iamRoleARN),
+			ResourceArn:     aws.String(resourceARN),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error starting Backup Job: %w", err)
+		}
+
+		jobID := aws.StringValue(output.BackupJobId)
+
+		_, err = tfbackup.WaitJobCompleted(conn, jobID, 10*time.Minute)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Backup Job (%s) complete: %w", jobID, err)
+		}
 
 		return nil
 	}
