@@ -3227,8 +3227,8 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	domain := acctest.RandomDomain()
-	directory1 := domain.RandomSubdomain().String()
-	directory2 := domain.RandomSubdomain().String()
+	domain1 := domain.RandomSubdomain().String()
+	domain2 := domain.RandomSubdomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -3237,19 +3237,19 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_mssqlDomain(rName, directory1, directory2),
+				Config: testAccInstanceConfig_mssqlDomain(rName, domain1, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &vBefore),
-					testAccCheckInstanceDomainAttributes(directory1, &vBefore),
+					testAccCheckInstanceDomainAttributes(domain1, &vBefore),
 					resource.TestCheckResourceAttrSet(resourceName, "domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_mssqlUpdateDomain(rName, directory1, directory2),
+				Config: testAccInstanceConfig_mssqlUpdateDomain(rName, domain1, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &vAfter),
-					testAccCheckInstanceDomainAttributes(directory2, &vAfter),
+					testAccCheckInstanceDomainAttributes(domain2, &vAfter),
 					resource.TestCheckResourceAttrSet(resourceName, "domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
@@ -3263,15 +3263,10 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var v, vRestoredInstance rds.DBInstance
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -5815,16 +5810,19 @@ resource "aws_db_subnet_group" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_MSSQLDomain_SharedConfig(rName, domain string) string {
+func testAccInstanceConfig_baseMSSQLDomain(rName, domain string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassSQLServerEx(),
-		acctest.ConfigAvailableAZsNoOptIn(),
 		testAccInstanceConfig_baseVPC(rName),
 		testAccInstanceConfig_ServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -5853,9 +5851,9 @@ data "aws_partition" "current" {}
 `, rName, domain))
 }
 
-func testAccInstanceConfig_mssqlDomain(rName, directory1, directory2 string) string {
+func testAccInstanceConfig_mssqlDomain(rName, domain1, domain2 string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
+		testAccInstanceConfig_baseMSSQLDomain(rName, domain1),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
@@ -5865,9 +5863,9 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "somecrazypassword"
   skip_final_snapshot     = true
-  username                = "somecrazyusername"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory.id
@@ -5885,12 +5883,12 @@ resource "aws_directory_service_directory" "directory-2" {
     subnet_ids = aws_subnet.test[*].id
   }
 }
-`, rName, directory2))
+`, rName, domain2))
 }
 
-func testAccInstanceConfig_mssqlUpdateDomain(rName, directory1, directory2 string) string {
+func testAccInstanceConfig_mssqlUpdateDomain(rName, domain1, domain2 string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_MSSQLDomain_SharedConfig(rName, directory1),
+		testAccInstanceConfig_baseMSSQLDomain(rName, domain1),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
@@ -5901,9 +5899,9 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "somecrazypassword"
   skip_final_snapshot     = true
-  username                = "somecrazyusername"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory-2.id
@@ -5921,12 +5919,12 @@ resource "aws_directory_service_directory" "directory-2" {
     subnet_ids = aws_subnet.test[*].id
   }
 }
-`, rName, directory2))
+`, rName, domain2))
 }
 
-func testAccInstanceConfig_mssqlDomainSnapshotRestore(rName, directory string) string {
+func testAccInstanceConfig_mssqlDomainSnapshotRestore(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_MSSQLDomain_SharedConfig(rName, directory),
+		testAccInstanceConfig_baseMSSQLDomain(rName, domain),
 		fmt.Sprintf(`
 resource "aws_db_instance" "origin" {
   allocated_storage   = 20
@@ -5934,9 +5932,9 @@ resource "aws_db_instance" "origin" {
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "somecrazypassword"
   skip_final_snapshot = true
-  username            = "somecrazyusername"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 
 resource "aws_db_snapshot" "origin" {
@@ -5953,9 +5951,9 @@ resource "aws_db_instance" "test" {
   engine_version          = aws_db_instance.origin.engine_version
   identifier              = "%[1]s-restore"
   instance_class          = aws_db_instance.origin.instance_class
-  password                = "somecrazypassword"
   skip_final_snapshot     = true
-  username                = "somecrazyusername"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
   domain               = aws_directory_service_directory.directory.id
