@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGlueJob_basic(t *testing.T) {
@@ -747,11 +746,11 @@ func TestAccGlueJob_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckJobExists(resourceName string, job *glue.Job) resource.TestCheckFunc {
+func testAccCheckJobExists(n string, v *glue.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -760,23 +759,15 @@ func testAccCheckJobExists(resourceName string, job *glue.Job) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
-		output, err := conn.GetJob(&glue.GetJobInput{
-			JobName: aws.String(rs.Primary.ID),
-		})
+		output, err := tfglue.FindJobByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output.Job == nil {
-			return fmt.Errorf("Glue Job (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		if aws.StringValue(output.Job.Name) == rs.Primary.ID {
-			*job = *output.Job
-			return nil
-		}
-
-		return fmt.Errorf("Glue Job (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -788,23 +779,17 @@ func testAccCheckJobDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
-		output, err := conn.GetJob(&glue.GetJobInput{
-			JobName: aws.String(rs.Primary.ID),
-		})
+		_, err := tfglue.FindJobByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
-			}
-
+			return err
 		}
 
-		job := output.Job
-		if job != nil && aws.StringValue(job.Name) == rs.Primary.ID {
-			return fmt.Errorf("Glue Job %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return fmt.Errorf("Glue Job %s still exists", rs.Primary.ID)
 	}
 
 	return nil

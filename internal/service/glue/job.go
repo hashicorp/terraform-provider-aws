@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -255,25 +256,16 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &glue.GetJobInput{
-		JobName: aws.String(d.Id()),
-	}
+	job, err := FindJobByName(conn, d.Id())
 
-	output, err := conn.GetJob(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Job (%s): %s", d.Id(), err)
-	}
-
-	job := output.Job
-	if job == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("reading Glue Job (%s): %w", d.Id(), err)
 	}
 
 	jobARN := arn.ARN{
@@ -284,56 +276,48 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()
 	d.Set("arn", jobARN)
-
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
-		return fmt.Errorf("error setting command: %s", err)
+		return fmt.Errorf("setting command: %w", err)
 	}
 	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
-		return fmt.Errorf("error setting connections: %s", err)
+		return fmt.Errorf("setting connections: %w", err)
 	}
-	if err := d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments)); err != nil {
-		return fmt.Errorf("error setting default_arguments: %s", err)
-	}
-	if err := d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments)); err != nil {
-		return fmt.Errorf("error setting non_overridable_arguments: %w", err)
-	}
+	d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments))
 	d.Set("description", job.Description)
-	d.Set("glue_version", job.GlueVersion)
+	d.Set("execution_class", job.ExecutionClass)
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
-		return fmt.Errorf("error setting execution_property: %s", err)
+		return fmt.Errorf("setting execution_property: %w", err)
 	}
+	d.Set("glue_version", job.GlueVersion)
 	d.Set("max_capacity", job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
-	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
-		return fmt.Errorf("error setting notification_property: #{err}")
-	}
 	d.Set("name", job.Name)
+	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
+	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
+		return fmt.Errorf("setting notification_property: %w", err)
+	}
+	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set("role_arn", job.Role)
+	d.Set("security_configuration", job.SecurityConfiguration)
+	d.Set("timeout", job.Timeout)
+	d.Set("worker_type", job.WorkerType)
 
 	tags, err := ListTags(conn, jobARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
+		return fmt.Errorf("listing tags for Glue Job (%s): %w", jobARN, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
-
-	d.Set("timeout", job.Timeout)
-	if err := d.Set("security_configuration", job.SecurityConfiguration); err != nil {
-		return fmt.Errorf("error setting security_configuration: %s", err)
-	}
-
-	d.Set("worker_type", job.WorkerType)
-	d.Set("number_of_workers", job.NumberOfWorkers)
 
 	return nil
 }
