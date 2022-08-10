@@ -40,10 +40,10 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basic("0", true),
+				Config: testAccCoreNetworkConfig_basic("0", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
 				),
 			},
 			{
@@ -53,7 +53,7 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
 				),
 			},
-			// Cannot currently update ipv6 without also updating subnet arns
+			// Cannot currently update ipv6
 			// {
 			// 	Config: testAccCoreNetworkConfig_basic("*", true),
 			// 	Check: resource.ComposeTestCheckFunc(
@@ -225,7 +225,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id = aws_networkmanager_vpc_attachment.test.id
+    attachment_id   = aws_networkmanager_vpc_attachment.test.id
+    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, azs, ipv6Support)
 }
@@ -248,7 +249,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id = aws_networkmanager_vpc_attachment.test.id
+    attachment_id   = aws_networkmanager_vpc_attachment.test.id
+    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1)
 }
@@ -272,7 +274,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id = aws_networkmanager_vpc_attachment.test.id
+    attachment_id   = aws_networkmanager_vpc_attachment.test.id
+    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
