@@ -76,6 +76,11 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"execution_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(glue.ExecutionClass_Values(), true),
+			},
 			"execution_property": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -109,6 +114,11 @@ func ResourceJob() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"non_overridable_arguments": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"notification_property": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -123,6 +133,12 @@ func ResourceJob() *schema.Resource {
 						},
 					},
 				},
+			},
+			"number_of_workers": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"max_capacity"},
+				ValidateFunc:  validation.IntAtLeast(2),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -147,22 +163,6 @@ func ResourceJob() *schema.Resource {
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
-				ValidateFunc:  validation.IntAtLeast(2),
-			},
-			"execution_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"FLEX", "STANDARD"}, true),
-			},
-			"non_overridable_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 		},
 	}
 }
@@ -171,8 +171,8 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
