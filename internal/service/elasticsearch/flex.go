@@ -80,6 +80,9 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 			if v, ok := m["iops"]; ok && v.(int) > 0 {
 				options.Iops = aws.Int64(int64(v.(int)))
 			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 {
+				options.Throughput = aws.Int64(int64(v.(int)))
+			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
@@ -164,6 +167,9 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	if aws.BoolValue(o.EBSEnabled) {
 		if o.Iops != nil {
 			m["iops"] = aws.Int64Value(o.Iops)
+		}
+		if o.Throughput != nil {
+			m["throughput"] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
 			m["volume_size"] = aws.Int64Value(o.VolumeSize)
