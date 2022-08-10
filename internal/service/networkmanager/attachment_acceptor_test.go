@@ -170,44 +170,44 @@ resource "awscc_networkmanager_core_network" "test" {
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
-	core_network_configuration {
-	  vpn_ecmp_support = false
-	  asn_ranges       = ["64512-64555"]
-	  edge_locations {
-		  location = "us-east-1"
-		  asn      = 64512
-	  }
-	}
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+    edge_locations {
+      location = "us-east-1"
+      asn      = 64512
+    }
+  }
 
-	segments {
-	  name                          = "shared"
-	  description                   = "SegmentForSharedServices"
-	  require_attachment_acceptance = true
-	}
+  segments {
+    name                          = "shared"
+    description                   = "SegmentForSharedServices"
+    require_attachment_acceptance = true
+  }
 
-	segment_actions {
-	  action     = "share"
-	  mode       = "attachment-route"
-	  segment    = "shared"
-	  share_with = ["*"]
-	}
+  segment_actions {
+    action     = "share"
+    mode       = "attachment-route"
+    segment    = "shared"
+    share_with = ["*"]
+  }
 
-	attachment_policies {
-	  rule_number     = 1
-	  condition_logic = "or"
+  attachment_policies {
+    rule_number     = 1
+    condition_logic = "or"
 
-	  conditions {
-		  type     = "tag-value"
-		  operator = "equals"
-		  key      = "segment"
-		  value    = "shared"
-	  }
+    conditions {
+      type     = "tag-value"
+      operator = "equals"
+      key      = "segment"
+      value    = "shared"
+    }
 
-	  action {
-		  association_method = "constant"
-		  segment            = "shared"
-	  }
-	}
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
+  }
 }
 `
 
@@ -220,13 +220,13 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   vpc_arn         = aws_vpc.test.arn
 
   options {
-    ipv6_support =  %[2]t
+    ipv6_support = %[2]t
   }
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id   = aws_networkmanager_vpc_attachment.test.id
-    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, azs, ipv6Support)
 }
@@ -240,7 +240,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   vpc_arn         = aws_vpc.test.arn
 
   options {
-    ipv6_support =  false
+    ipv6_support = false
   }
 
   tags = {
@@ -249,8 +249,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id   = aws_networkmanager_vpc_attachment.test.id
-    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1)
 }
@@ -274,8 +274,8 @@ resource "aws_networkmanager_vpc_attachment" "test" {
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id   = aws_networkmanager_vpc_attachment.test.id
-    attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
