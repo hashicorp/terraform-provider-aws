@@ -1145,7 +1145,6 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance rds.DBInstance
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
@@ -5967,52 +5966,17 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name        = %[1]q
-  description = "db subnets"
-  subnet_ids  = [aws_subnet.test.id, aws_subnet.test2.id]
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage   = 20
   engine              = data.aws_rds_engine_version.default.engine
   engine_version      = "8.0.25" # test is from older to newer version, update when restore from this to current default version is incompatible
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "password"
   skip_final_snapshot = true
-  username            = "root"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
 }
 
 resource "aws_db_snapshot" "test" {
@@ -6029,18 +5993,20 @@ resource "aws_db_instance" "restore" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = "%[1]s-restore"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "password"
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_snapshot.test.id
-  username                = "root"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-  description = "TF Testing"
-  vpc_id      = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {

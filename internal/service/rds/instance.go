@@ -915,12 +915,12 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("db_subnet_group_name"); ok {
-			input.DBSubnetGroupName = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
 			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
