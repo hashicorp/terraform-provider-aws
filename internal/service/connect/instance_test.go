@@ -15,22 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectInstance_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":     testAccInstance_basic,
-		"directory": testAccInstance_directory,
-		"saml":      testAccInstance_saml,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccInstance_basic(t *testing.T) {
 	var v connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
