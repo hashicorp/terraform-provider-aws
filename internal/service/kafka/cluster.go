@@ -38,14 +38,14 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("provisioned.0.kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return verify.SemVerLessThan(new.(string), old.(string))
 			}),
-			customdiff.ComputedIf("provisioned.0.broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("provisioned.0.broker_node_group_info.0.ebs_volume_size")
+			customdiff.ComputedIf("broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.ebs_volume_size")
 			}),
-			customdiff.ComputedIf("provisioned.0.broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("provisioned.0.broker_node_group_info.0.storage_info")
+			customdiff.ComputedIf("broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("broker_node_group_info.0.storage_info")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -83,142 +83,47 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"cluster_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"current_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provisioned": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				MaxItems:         1,
+			"broker_node_group_info": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"broker_node_group_info": {
-							Type:     schema.TypeList,
+						"az_distribution": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      kafka.BrokerAZDistributionDefault,
+							ValidateFunc: validation.StringInSlice(kafka.BrokerAZDistribution_Values(), false),
+						},
+						"client_subnets": {
+							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"connectivity_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"az_distribution": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										Default:      kafka.BrokerAZDistributionDefault,
-										ValidateFunc: validation.StringInSlice(kafka.BrokerAZDistribution_Values(), false),
-									},
-									"client_subnets": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"connectivity_info": {
+									"public_access": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"public_access": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Computed:     true,
-																ValidateFunc: validation.StringInSlice(PublicAccessType_Values(), false),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"ebs_volume_size": {
-										Type:          schema.TypeInt,
-										Optional:      true,
-										Computed:      true,
-										Deprecated:    "use 'storage_info' argument instead",
-										ValidateFunc:  validation.IntBetween(1, 16384),
-										ConflictsWith: []string{"provisioned.0.broker_node_group_info.0.storage_info"},
-									},
-									"instance_type": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"security_groups": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"storage_info": {
-										Type:          schema.TypeList,
-										Optional:      true,
-										Computed:      true,
-										MaxItems:      1,
-										ConflictsWith: []string{"provisioned.0.broker_node_group_info.0.ebs_volume_size"},
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ebs_storage_info": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"provisioned_throughput": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		// This feature is available for
-																		// storage volume larger than 10 GiB and
-																		// broker types kafka.m5.4xlarge and larger.
-																		"enabled": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																		},
-																		// Minimum and maximum for this varies between broker type
-																		// https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html
-																		"volume_throughput": {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			ValidateFunc: validation.IntBetween(250, 2375),
-																		},
-																	},
-																},
-															},
-															"volume_size": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
-																ValidateFunc: validation.IntBetween(1, 16384),
-															},
-														},
-													},
+												"type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(PublicAccessType_Values(), false),
 												},
 											},
 										},
@@ -226,285 +131,272 @@ func ResourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"client_authentication": {
+						"ebs_volume_size": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							Deprecated:    "use 'storage_info' argument instead",
+							ValidateFunc:  validation.IntBetween(1, 16384),
+							ConflictsWith: []string{"broker_node_group_info.0.storage_info"},
+						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"storage_info": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							Computed:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"broker_node_group_info.0.ebs_volume_size"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_info": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"provisioned_throughput": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															// This feature is available for
+															// storage volume larger than 10 GiB and
+															// broker types kafka.m5.4xlarge and larger.
+															"enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															// Minimum and maximum for this varies between broker type
+															// https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html
+															"volume_throughput": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(250, 2375),
+															},
+														},
+													},
+												},
+												"volume_size": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
+													ValidateFunc: validation.IntBetween(1, 16384),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"client_authentication": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sasl": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sasl": {
-										Type:     schema.TypeList,
+									"iam": {
+										Type:     schema.TypeBool,
 										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"iam": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-												"scram": {
-													Type:     schema.TypeBool,
-													Optional: true,
-												},
-											},
-										},
 									},
-									"tls": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"certificate_authority_arns": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: verify.ValidARN,
-													},
-												},
-											},
-										},
-									},
-									"unauthenticated": {
+									"scram": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"configuration_info": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"revision": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-									},
-								},
-							},
-						},
-						"encryption_info": {
+						"tls": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"encryption_at_rest_kms_key_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"encryption_in_transit": {
-										Type:     schema.TypeList,
+									"certificate_authority_arns": {
+										Type:     schema.TypeSet,
 										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"client_broker": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Default:      kafka.ClientBrokerTls,
-													ValidateFunc: validation.StringInSlice(kafka.ClientBroker_Values(), false),
-												},
-												"in_cluster": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													ForceNew: true,
-													Default:  true,
-												},
-											},
-										},
-										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-									},
-								},
-							},
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-						},
-						"enhanced_monitoring": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      kafka.EnhancedMonitoringDefault,
-							ValidateFunc: validation.StringInSlice(kafka.EnhancedMonitoring_Values(), true),
-						},
-						"kafka_version": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 64),
-						},
-						"logging_info": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"broker_logs": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cloudwatch_logs": {
-													Type:             schema.TypeList,
-													Optional:         true,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													MaxItems:         1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"enabled": {
-																Type:     schema.TypeBool,
-																Required: true,
-															},
-															"log_group": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"firehose": {
-													Type:             schema.TypeList,
-													Optional:         true,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													MaxItems:         1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"delivery_stream": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"enabled": {
-																Type:     schema.TypeBool,
-																Required: true,
-															},
-														},
-													},
-												},
-												"s3": {
-													Type:             schema.TypeList,
-													Optional:         true,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													MaxItems:         1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"bucket": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"enabled": {
-																Type:     schema.TypeBool,
-																Required: true,
-															},
-															"prefix": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
 								},
 							},
 						},
-						"number_of_broker_nodes": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"open_monitoring": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"prometheus": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"jmx_exporter": {
-													Type:             schema.TypeList,
-													Optional:         true,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													MaxItems:         1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"enabled_in_broker": {
-																Type:     schema.TypeBool,
-																Required: true,
-															},
-														},
-													},
-												},
-												"node_exporter": {
-													Type:             schema.TypeList,
-													Optional:         true,
-													DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-													MaxItems:         1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"enabled_in_broker": {
-																Type:     schema.TypeBool,
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"zookeeper_connect_string": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"zookeeper_connect_string_tls": {
-							Type:     schema.TypeString,
-							Computed: true,
+						"unauthenticated": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
 			},
-			"serverless": {
+			"cluster_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"configuration_info": {
 				Type:             schema.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_authentication": {
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"revision": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+					},
+				},
+			},
+			"current_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encryption_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"encryption_at_rest_kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"encryption_in_transit": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sasl": {
-										Type:     schema.TypeList,
+									"client_broker": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      kafka.ClientBrokerTls,
+										ValidateFunc: validation.StringInSlice(kafka.ClientBroker_Values(), false),
+									},
+									"in_cluster": {
+										Type:     schema.TypeBool,
 										Optional: true,
-										MaxItems: 1,
+										ForceNew: true,
+										Default:  true,
+									},
+								},
+							},
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+						},
+					},
+				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			},
+			"enhanced_monitoring": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kafka.EnhancedMonitoringDefault,
+				ValidateFunc: validation.StringInSlice(kafka.EnhancedMonitoring_Values(), true),
+			},
+			"kafka_version": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"logging_info": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker_logs": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloudwatch_logs": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"iam": {
+												"enabled": {
 													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"log_group": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"firehose": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delivery_stream": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+									"s3": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"prefix": {
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 											},
@@ -513,27 +405,52 @@ func ResourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"vpc_configs": {
+					},
+				},
+			},
+			"number_of_broker_nodes": {
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"open_monitoring": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prometheus": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"security_group_ids": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+									"jmx_exporter": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled_in_broker": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
 										},
 									},
-									"subnet_ids": {
-										Type:     schema.TypeSet,
-										Required: true,
-										ForceNew: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+									"node_exporter": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled_in_broker": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
 										},
 									},
 								},
@@ -544,6 +461,14 @@ func ResourceCluster() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"zookeeper_connect_string": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"zookeeper_connect_string_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -554,23 +479,42 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("cluster_name").(string)
-	inputV2 := &kafka.CreateClusterV2Input{
-		ClusterName: aws.String(name),
-		Tags:        Tags(tags.IgnoreAWS()),
+	input := &kafka.CreateClusterInput{
+		ClusterName:         aws.String(name),
+		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
+		NumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
-	clusterType := d.Get("cluster_type").(string)
-	if clusterType == "serverless" {
-		if v, ok := d.GetOk("serverless"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			inputV2.Serverless = expandServerlessRequest(v.([]interface{})[0].(map[string]interface{}))
-		}
-	} else if clusterType == "provisioned" {
-		if v, ok := d.GetOk("provisioned"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			inputV2.Provisioned = expandProvisionedRequest(v.([]interface{})[0].(map[string]interface{}))
-		}
+	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateClusterV2WithContext(ctx, inputV2)
+	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("enhanced_monitoring"); ok {
+		input.EnhancedMonitoring = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating MSK Cluster (%s): %s", name, err)
@@ -579,6 +523,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(output.ClusterArn))
 
 	_, err = waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
 		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
 	}
@@ -620,21 +565,65 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
-	d.Set("cluster_name", cluster.ClusterName)
-	d.Set("current_version", cluster.CurrentVersion)
+	if cluster.BrokerNodeGroupInfo != nil {
+		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+			return diag.Errorf("setting broker_node_group_info: %s", err)
+		}
+	} else {
+		d.Set("broker_node_group_info", nil)
+	}
 
-	if cluster.Provisioned != nil {
-		d.Set("cluster_type", aws.String("provisioned"))
-		if err := d.Set("provisioned", []interface{}{flattenProvisioned(cluster.Provisioned)}); err != nil {
-			return diag.Errorf("setting provisioned: %s", err)
+	if cluster.ClientAuthentication != nil {
+		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
+			return diag.Errorf("setting client_authentication: %s", err)
 		}
+	} else {
+		d.Set("client_authentication", nil)
 	}
-	if cluster.Serverless != nil {
-		d.Set("cluster_type", aws.String("serverless"))
-		if err := d.Set("serverless", []interface{}{flattenServerless(cluster.Serverless)}); err != nil {
-			return diag.Errorf("setting serverless: %s", err)
+
+	d.Set("cluster_name", cluster.ClusterName)
+
+	if cluster.CurrentBrokerSoftwareInfo != nil {
+		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
+			return diag.Errorf("setting configuration_info: %s", err)
 		}
+	} else {
+		d.Set("configuration_info", nil)
 	}
+
+	d.Set("current_version", cluster.CurrentVersion)
+	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
+
+	if cluster.EncryptionInfo != nil {
+		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
+			return diag.Errorf("setting encryption_info: %s", err)
+		}
+	} else {
+		d.Set("encryption_info", nil)
+	}
+
+	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
+
+	if cluster.LoggingInfo != nil {
+		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
+			return diag.Errorf("setting logging_info: %s", err)
+		}
+	} else {
+		d.Set("logging_info", nil)
+	}
+
+	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
+
+	if cluster.OpenMonitoring != nil {
+		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
+			return diag.Errorf("setting open_monitoring: %s", err)
+		}
+	} else {
+		d.Set("open_monitoring", nil)
+	}
+
+	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -653,11 +642,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn
 
-	if d.HasChange("provisioned.0.broker_node_group_info.0.instance_type") {
+	if d.HasChange("broker_node_group_info.0.instance_type") {
 		input := &kafka.UpdateBrokerTypeInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
-			TargetInstanceType: aws.String(d.Get("provisioned.0.broker_node_group_info.0.instance_type").(string)),
+			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
 		}
 
 		output, err := conn.UpdateBrokerTypeWithContext(ctx, input)
@@ -680,19 +669,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("provisioned.0.broker_node_group_info.0.ebs_volume_size", "provisioned.0.broker_node_group_info.0.storage_info") {
+	if d.HasChanges("broker_node_group_info.0.ebs_volume_size", "broker_node_group_info.0.storage_info") {
 		input := &kafka.UpdateBrokerStorageInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
-		if d.HasChange("provisioned.0.broker_node_group_info.0.storage_info") {
+		if d.HasChange("broker_node_group_info.0.storage_info") {
 			// case 1: deprecated ebs_volume_size replaced with storage_info
 			// case 2: regular update of storage_info
 			ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
 				KafkaBrokerNodeId: aws.String("All"),
-				VolumeSizeGB:      aws.Int64(int64(d.Get("provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
+				VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
 			}
-			if v, ok := d.GetOk("provisioned.0.broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
 			}
 			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
@@ -701,7 +690,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
 				{
 					KafkaBrokerNodeId: aws.String("All"),
-					VolumeSizeGB:      aws.Int64(int64(d.Get("provisioned.0.broker_node_group_info.0.ebs_volume_size").(int))),
+					VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.ebs_volume_size").(int))),
 				},
 			}
 		}
@@ -734,13 +723,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("provisioned.0.broker_node_group_info.0.connectivity_info") {
+	if d.HasChange("broker_node_group_info.0.connectivity_info") {
 		input := &kafka.UpdateConnectivityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("provisioned.0.broker_node_group_info.0.connectivity_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ConnectivityInfo = expandConnectivityInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -764,11 +753,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("provisioned.0.number_of_broker_nodes") {
+	if d.HasChange("number_of_broker_nodes") {
 		input := &kafka.UpdateBrokerCountInput{
 			ClusterArn:                aws.String(d.Id()),
 			CurrentVersion:            aws.String(d.Get("current_version").(string)),
-			TargetNumberOfBrokerNodes: aws.Int64(int64(d.Get("provisioned.0.number_of_broker_nodes").(int))),
+			TargetNumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
 		}
 
 		output, err := conn.UpdateBrokerCountWithContext(ctx, input)
@@ -791,18 +780,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("provisioned.0.enhanced_monitoring", "provisioned.0.logging_info", "provisioned.0.open_monitoring") {
+	if d.HasChanges("enhanced_monitoring", "logging_info", "open_monitoring") {
 		input := &kafka.UpdateMonitoringInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
-			EnhancedMonitoring: aws.String(d.Get("provisioned.0.enhanced_monitoring").(string)),
+			EnhancedMonitoring: aws.String(d.Get("enhanced_monitoring").(string)),
 		}
 
-		if v, ok := d.GetOk("provisioned.0.logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.LoggingInfo = expandLoggingInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("provisioned.0.open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("open_monitoring"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -826,13 +815,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("provisioned.0.configuration_info") && !d.HasChange("provisioned.0.kafka_version") {
+	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
 		input := &kafka.UpdateClusterConfigurationInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if v, ok := d.GetOk("provisioned.0.configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -856,15 +845,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("provisioned.0.kafka_version") {
+	if d.HasChange("kafka_version") {
 		input := &kafka.UpdateClusterKafkaVersionInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
-			TargetKafkaVersion: aws.String(d.Get("provisioned.0.kafka_version").(string)),
+			TargetKafkaVersion: aws.String(d.Get("kafka_version").(string)),
 		}
 
-		if d.HasChange("provisioned.0.configuration_info") {
-			if v, ok := d.GetOk("provisioned.0.configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange("configuration_info") {
+			if v, ok := d.GetOk("configuration_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -889,20 +878,20 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("provisioned.0.encryption_info", "provisioned.0.client_authentication") {
+	if d.HasChanges("encryption_info", "client_authentication") {
 		input := &kafka.UpdateSecurityInput{
 			ClusterArn:     aws.String(d.Id()),
 			CurrentVersion: aws.String(d.Get("current_version").(string)),
 		}
 
-		if d.HasChange("provisioned.0.client_authentication") {
-			if v, ok := d.GetOk("provisioned.0.client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange("client_authentication") {
+			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ClientAuthentication = expandClientAuthentication(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
-		if d.HasChange("provisioned.0.encryption_info") {
-			if v, ok := d.GetOk("provisioned.0.encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange("encryption_info") {
+			if v, ok := d.GetOk("encryption_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EncryptionInfo = expandEncryptionInfo(v.([]interface{})[0].(map[string]interface{}))
 				if input.EncryptionInfo != nil {
 					input.EncryptionInfo.EncryptionAtRest = nil // "Updating encryption-at-rest settings on your cluster is not currently supported."
@@ -967,117 +956,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return nil
-}
-
-func expandServerlessRequest(tfMap map[string]interface{}) *kafka.ServerlessRequest {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &kafka.ServerlessRequest{}
-
-	if v, ok := tfMap["client_authentication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ClientAuthentication = expandServerlessClientAuthentication(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["vpc_configs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VpcConfigs = expandVpcConfigs(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandProvisionedRequest(tfMap map[string]interface{}) *kafka.ProvisionedRequest {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &kafka.ProvisionedRequest{}
-
-	if v, ok := tfMap["broker_node_group_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["client_authentication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ClientAuthentication = expandClientAuthentication(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["configuration_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ConfigurationInfo = expandConfigurationInfo(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["encryption_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EncryptionInfo = expandEncryptionInfo(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["enhanced_monitoring"].(string); ok && v != "" {
-		apiObject.EnhancedMonitoring = aws.String(v)
-	}
-
-	if v, ok := tfMap["kafka_version"].(string); ok && v != "" {
-		apiObject.KafkaVersion = aws.String(v)
-	}
-
-	if v, ok := tfMap["logging_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.LoggingInfo = expandLoggingInfo(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["number_of_broker_nodes"].(int); ok && v != 0 {
-		apiObject.NumberOfBrokerNodes = aws.Int64(int64(v))
-	}
-
-	if v, ok := tfMap["open_monitoring"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.OpenMonitoring = expandOpenMonitoringInfo(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandVpcConfigs(tfMap map[string]interface{}) []*kafka.VpcConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	config := &kafka.VpcConfig{}
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.SecurityGroupIds = flex.ExpandStringSet(v)
-	}
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.SubnetIds = flex.ExpandStringSet(v)
-	}
-
-	vpcConfigs := []*kafka.VpcConfig{config}
-	return vpcConfigs
-}
-
-func expandServerlessClientAuthentication(tfMap map[string]interface{}) *kafka.ServerlessClientAuthentication {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &kafka.ServerlessClientAuthentication{}
-
-	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Sasl = expandServerlessSASL(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandServerlessSASL(tfMap map[string]interface{}) *kafka.ServerlessSasl {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &kafka.ServerlessSasl{}
-
-	if v, ok := tfMap["iam"].(bool); ok {
-		apiObject.Iam = &kafka.Iam{
-			Enabled: aws.Bool(v),
-		}
-	}
-
-	return apiObject
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {
@@ -1473,76 +1351,6 @@ func expandNodeExporterInfo(tfMap map[string]interface{}) *kafka.NodeExporterInf
 	return apiObject
 }
 
-func flattenServerless(apiObject *kafka.Serverless) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if v := apiObject.ClientAuthentication; v != nil {
-		tfMap["client_authentication"] = []interface{}{flattenServerlessClientAuthentication(apiObject.ClientAuthentication)}
-	}
-
-	if v := apiObject.VpcConfigs; v != nil {
-		tfMap["vpc_configs"] = flattenVpcConfigs(apiObject.VpcConfigs[0])
-	}
-
-	return tfMap
-}
-
-func flattenProvisioned(apiObject *kafka.Provisioned) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if v := apiObject.BrokerNodeGroupInfo; v != nil {
-		tfMap["broker_node_group_info"] = []interface{}{flattenBrokerNodeGroupInfo(apiObject.BrokerNodeGroupInfo)}
-	}
-
-	if v := apiObject.ClientAuthentication; v != nil {
-		tfMap["client_authentication"] = []interface{}{flattenClientAuthentication(apiObject.ClientAuthentication)}
-	}
-
-	if v := apiObject.CurrentBrokerSoftwareInfo; v != nil {
-		tfMap["configuration_info"] = []interface{}{flattenBrokerSoftwareInfo(apiObject.CurrentBrokerSoftwareInfo)}
-	}
-
-	if v := apiObject.EncryptionInfo; v != nil {
-		tfMap["encryption_info"] = []interface{}{flattenEncryptionInfo(apiObject.EncryptionInfo)}
-	}
-
-	if v := apiObject.EnhancedMonitoring; v != nil {
-		tfMap["enhanced_monitoring"] = apiObject.EnhancedMonitoring
-	}
-
-	if v := apiObject.CurrentBrokerSoftwareInfo.KafkaVersion; v != nil {
-		tfMap["kafka_version"] = apiObject.CurrentBrokerSoftwareInfo.KafkaVersion
-	}
-
-	if v := apiObject.LoggingInfo; v != nil {
-		tfMap["logging_info"] = []interface{}{flattenLoggingInfo(apiObject.LoggingInfo)}
-	}
-
-	if v := apiObject.NumberOfBrokerNodes; v != nil {
-		tfMap["number_of_broker_nodes"] = apiObject.NumberOfBrokerNodes
-	}
-
-	if v := apiObject.OpenMonitoring; v != nil {
-		tfMap["open_monitoring"] = []interface{}{flattenOpenMonitoring(apiObject.OpenMonitoring)}
-	}
-
-	if v := apiObject.ZookeeperConnectString; v != nil {
-		tfMap["zookeeper_connect_string"] = SortEndpointsString(aws.StringValue(apiObject.ZookeeperConnectString))
-	}
-
-	if v := apiObject.ZookeeperConnectStringTls; v != nil {
-		tfMap["zookeeper_connect_string_tls"] = SortEndpointsString(aws.StringValue(apiObject.ZookeeperConnectStringTls))
-	}
-
-	return tfMap
-}
-
 func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -1663,36 +1471,6 @@ func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
 	return tfMap
 }
 
-func flattenVpcConfigs(apiObject *kafka.VpcConfig) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
-	}
-	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenServerlessClientAuthentication(apiObject *kafka.ServerlessClientAuthentication) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []interface{}{flattenServerlessSASL(v)}
-	}
-	return tfMap
-}
-
 func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -1711,22 +1489,6 @@ func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[stri
 	if v := apiObject.Unauthenticated; v != nil {
 		if v := v.Enabled; v != nil {
 			tfMap["unauthenticated"] = aws.BoolValue(v)
-		}
-	}
-
-	return tfMap
-}
-
-func flattenServerlessSASL(apiObject *kafka.ServerlessSasl) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Iam; v != nil {
-		if v := v.Enabled; v != nil {
-			tfMap["iam"] = aws.BoolValue(v)
 		}
 	}
 
@@ -1919,7 +1681,7 @@ func flattenS3(apiObject *kafka.S3) map[string]interface{} {
 	return tfMap
 }
 
-func flattenOpenMonitoring(apiObject *kafka.OpenMonitoringInfo) map[string]interface{} {
+func flattenOpenMonitoring(apiObject *kafka.OpenMonitoring) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1933,7 +1695,7 @@ func flattenOpenMonitoring(apiObject *kafka.OpenMonitoringInfo) map[string]inter
 	return tfMap
 }
 
-func flattenPrometheus(apiObject *kafka.PrometheusInfo) map[string]interface{} {
+func flattenPrometheus(apiObject *kafka.Prometheus) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1951,7 +1713,7 @@ func flattenPrometheus(apiObject *kafka.PrometheusInfo) map[string]interface{} {
 	return tfMap
 }
 
-func flattenJmxExporter(apiObject *kafka.JmxExporterInfo) map[string]interface{} {
+func flattenJmxExporter(apiObject *kafka.JmxExporter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1965,7 +1727,7 @@ func flattenJmxExporter(apiObject *kafka.JmxExporterInfo) map[string]interface{}
 	return tfMap
 }
 
-func flattenNodeExporter(apiObject *kafka.NodeExporterInfo) map[string]interface{} {
+func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
