@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -131,7 +130,7 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(attachmentId)
 
 	if attachmentType == networkmanager.AttachmentTypeVpc {
-		if _, err := waitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := WaitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			d.SetId("")
 			return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 		}
@@ -153,21 +152,4 @@ func ResourceAttachmentAcceptorDelete(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[WARN] Attachment (%s) not deleted, removing from state.", d.Id())
 
 	return nil
-}
-
-func waitVpcAttachmentAcceptorCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
-		Target:  []string{networkmanager.AttachmentStateAvailable},
-		Timeout: timeout,
-		Refresh: StatusVpcAttachmentState(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*networkmanager.VpcAttachment); ok {
-		return output, err
-	}
-
-	return nil, err
 }

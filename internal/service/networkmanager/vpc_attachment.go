@@ -152,7 +152,7 @@ func resourceVpcAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.VpcAttachment.Attachment.AttachmentId))
 
-	if _, err := waitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
@@ -355,7 +355,7 @@ func StatusVpcAttachmentState(ctx context.Context, conn *networkmanager.NetworkM
 	}
 }
 
-func waitVpcAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+func WaitVpcAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
