@@ -41,9 +41,9 @@ func ResourceEntityRecognizer() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -267,133 +267,20 @@ func ResourceEntityRecognizer() *schema.Resource {
 }
 
 func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.ComprehendConn
 
-	in := &comprehend.CreateEntityRecognizerInput{
-		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
-		InputDataConfig:    expandInputDataConfig(getInputDataConfig(d)),
-		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
-		RecognizerName:     aws.String(d.Get("name").(string)),
-		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
-		ClientRequestToken: aws.String(resource.UniqueId()),
+	var versionName *string
+	raw := d.GetRawConfig().GetAttr("version_name")
+	if raw.IsNull() {
+		versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+	} else if v := raw.AsString(); v != "" {
+		versionName = aws.String(v)
 	}
 
-	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
-		in.ModelKmsKeyId = aws.String(v)
-	}
-
-	versionName := d.GetRawConfig().GetAttr("version_name")
-	if versionName.IsNull() {
-		in.VersionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
-	} else if v := versionName.AsString(); v != "" {
-		in.VersionName = aws.String(v)
-	}
-
-	if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
-		in.VolumeKmsKeyId = aws.String(v)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
-	time.Sleep(iamPropagationTimeout)
-
-	if in.VpcConfig != nil {
-		modelVPCENILock.Lock()
-		defer modelVPCENILock.Unlock()
-	}
-
-	var out *comprehend.CreateEntityRecognizerOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateEntityRecognizer(ctx, in)
-
-		if err != nil {
-			var tmre *types.TooManyRequestsException
-			if errors.As(err, &tmre) {
-				return resource.RetryableError(err)
-			} else {
-				return resource.NonRetryableError(err)
-			}
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEntityRecognizer(ctx, in)
-	}
-	if err != nil {
-		return diag.Errorf("creating Amazon Comprehend Entity Recognizer (%s): %s", d.Get("name").(string), err)
-	}
-
-	if out == nil || out.EntityRecognizerArn == nil {
-		return diag.Errorf("creating Amazon Comprehend Entity Recognizer (%s): empty output", d.Get("name").(string))
-	}
-
-	d.SetId(aws.ToString(out.EntityRecognizerArn))
-
-	var g multierror.Group
-	waitCtx, cancel := context.WithCancel(ctx)
-
-	g.Go(func() error {
-		_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-		cancel()
-		return err
-	})
-
-	var diags diag.Diagnostics
-
-	if in.VpcConfig != nil {
-		g.Go(func() error {
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn
-			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
-			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-				return nil
-			}
-			initialENIIds := make(map[string]bool, len(enis))
-			for _, v := range enis {
-				initialENIIds[aws.ToString(v.NetworkInterfaceId)] = true
-			}
-
-			newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
-			if errors.Is(err, context.Canceled) {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), "ENI not found")
-				return nil
-			}
-			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-				return nil
-			}
-
-			modelVPCENILock.Unlock()
-
-			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-				Resources: []*string{newENI.NetworkInterfaceId},
-				Tags: []*ec2.Tag{
-					{
-						Key:   aws.String("tf-aws_comprehend_entity_recognizer"),
-						Value: aws.String(d.Id()),
-					},
-				},
-			})
-			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-				return nil
-			}
-
-			return nil
-		})
-	}
-
-	err = g.Wait().ErrorOrNil()
-	if err != nil {
-		return awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
+	diags := entityRecognizerPublishVersion(ctx, conn, d, versionName, create.ErrActionCreating, d.Timeout(schema.TimeoutCreate), awsClient)
+	if diags.HasError() {
+		return diags
 	}
 
 	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
@@ -458,134 +345,22 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.ComprehendConn
 
 	var diags diag.Diagnostics
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		in := &comprehend.CreateEntityRecognizerInput{
-			DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
-			InputDataConfig:    expandInputDataConfig(getInputDataConfig(d)),
-			LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
-			RecognizerName:     aws.String(d.Get("name").(string)),
-			VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
-			ClientRequestToken: aws.String(resource.UniqueId()),
-		}
-
-		if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
-			in.ModelKmsKeyId = aws.String(v)
-		}
-
+		var versionName *string
 		if d.HasChange("version_name") {
-			in.VersionName = aws.String(d.Get("version_name").(string))
+			versionName = aws.String(d.Get("version_name").(string))
 		} else if v := d.Get("version_name_prefix").(string); v != "" {
-			versionName := create.Name("", d.Get("version_name_prefix").(string))
-			in.VersionName = aws.String(versionName)
+			versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
 		}
 
-		if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
-			in.VolumeKmsKeyId = aws.String(v)
-		}
-
-		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-		if len(tags) > 0 {
-			in.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
-		time.Sleep(iamPropagationTimeout)
-
-		if in.VpcConfig != nil {
-			modelVPCENILock.Lock()
-			defer modelVPCENILock.Unlock()
-		}
-
-		var out *comprehend.CreateEntityRecognizerOutput
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			var err error
-			out, err = conn.CreateEntityRecognizer(ctx, in)
-
-			if err != nil {
-				var tmre *types.TooManyRequestsException
-				if errors.As(err, &tmre) {
-					return resource.RetryableError(err)
-				} else {
-					return resource.NonRetryableError(err)
-				}
-			}
-
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			out, err = conn.CreateEntityRecognizer(ctx, in)
-		}
-		if err != nil {
-			return diag.Errorf("updating Amazon Comprehend Entity Recognizer (%s): %s", d.Id(), err)
-		}
-
-		if out == nil || out.EntityRecognizerArn == nil {
-			return diag.Errorf("updating Amazon Comprehend Entity Recognizer (%s): empty output", d.Id())
-		}
-
-		d.SetId(aws.ToString(out.EntityRecognizerArn))
-
-		var g multierror.Group
-		waitCtx, cancel := context.WithCancel(ctx)
-
-		g.Go(func() error {
-			_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-			cancel()
-			return err
-		})
-
-		if in.VpcConfig != nil {
-			g.Go(func() error {
-				ec2Conn := meta.(*conns.AWSClient).EC2Conn
-				enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
-				if err != nil {
-					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-					return nil
-				}
-				initialENIIds := make(map[string]bool, len(enis))
-				for _, v := range enis {
-					initialENIIds[aws.ToString(v.NetworkInterfaceId)] = true
-				}
-
-				newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
-				if errors.Is(err, context.Canceled) {
-					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), "ENI not found")
-					return nil
-				}
-				if err != nil {
-					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-					return nil
-				}
-
-				modelVPCENILock.Unlock()
-
-				_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
-					Resources: []*string{newENI.NetworkInterfaceId},
-					Tags: []*ec2.Tag{
-						{
-							Key:   aws.String("tf-aws_comprehend_entity_recognizer"),
-							Value: aws.String(d.Id()),
-						},
-					},
-				})
-				if err != nil {
-					diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be created: %s", d.Id(), err)
-					return nil
-				}
-
-				return nil
-			})
-		}
-
-		err = g.Wait().ErrorOrNil()
-		if err != nil {
-			return awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) to be updated: %s", d.Id(), err)
+		diags := entityRecognizerPublishVersion(ctx, conn, d, versionName, create.ErrActionUpdating, d.Timeout(schema.TimeoutUpdate), awsClient)
+		if diags.HasError() {
+			return diags
 		}
 	} else if d.HasChange("tags_all") {
 		// For a tags-only change. If tag changes are combined with version publishing, the tags are set
@@ -593,7 +368,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+			return awsdiag.AppendErrorf(diags, "updating tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -697,6 +472,139 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
+}
+
+func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client, d *schema.ResourceData, versionName *string, action string, timeout time.Duration, awsClient *conns.AWSClient) diag.Diagnostics {
+	in := &comprehend.CreateEntityRecognizerInput{
+		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
+		InputDataConfig:    expandInputDataConfig(getInputDataConfig(d)),
+		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
+		RecognizerName:     aws.String(d.Get("name").(string)),
+		VersionName:        versionName,
+		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
+		ClientRequestToken: aws.String(resource.UniqueId()),
+	}
+
+	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
+		in.ModelKmsKeyId = aws.String(v)
+	}
+
+	if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
+		in.VolumeKmsKeyId = aws.String(v)
+	}
+
+	defaultTagsConfig := awsClient.DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if len(tags) > 0 {
+		in.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
+	time.Sleep(iamPropagationTimeout)
+
+	if in.VpcConfig != nil {
+		modelVPCENILock.Lock()
+		defer modelVPCENILock.Unlock()
+	}
+
+	var out *comprehend.CreateEntityRecognizerOutput
+	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateEntityRecognizer(ctx, in)
+
+		if err != nil {
+			var tmre *types.TooManyRequestsException
+			if errors.As(err, &tmre) {
+				return resource.RetryableError(err)
+			} else {
+				return resource.NonRetryableError(err)
+			}
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		out, err = conn.CreateEntityRecognizer(ctx, in)
+	}
+	if err != nil {
+		return diag.Errorf("%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get("name").(string), err)
+	}
+
+	if out == nil || out.EntityRecognizerArn == nil {
+		return diag.Errorf("%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get("name").(string))
+	}
+
+	d.SetId(aws.ToString(out.EntityRecognizerArn))
+
+	var g multierror.Group
+	waitCtx, cancel := context.WithCancel(ctx)
+
+	g.Go(func() error {
+		_, err := waitEntityRecognizerCreated(waitCtx, conn, d.Id(), timeout)
+		cancel()
+		return err
+	})
+
+	var diags diag.Diagnostics
+	var tobe string
+	if action == create.ErrActionCreating {
+		tobe = "to be created"
+	} else if action == create.ErrActionUpdating {
+		tobe = "to be updated"
+	} else {
+		tobe = "to complete action"
+	}
+
+	if in.VpcConfig != nil {
+		g.Go(func() error {
+			ec2Conn := awsClient.EC2Conn
+			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
+				return nil
+			}
+			initialENIIds := make(map[string]bool, len(enis))
+			for _, v := range enis {
+				initialENIIds[aws.ToString(v.NetworkInterfaceId)] = true
+			}
+
+			newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
+			if errors.Is(err, context.Canceled) {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, "ENI not found")
+				return nil
+			}
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
+				return nil
+			}
+
+			modelVPCENILock.Unlock()
+
+			_, err = ec2Conn.CreateTagsWithContext(waitCtx, &ec2.CreateTagsInput{
+				Resources: []*string{newENI.NetworkInterfaceId},
+				Tags: []*ec2.Tag{
+					{
+						Key:   aws.String("tf-aws_comprehend_entity_recognizer"),
+						Value: aws.String(d.Id()),
+					},
+				},
+			})
+			if err != nil {
+				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
+				return nil
+			}
+
+			return nil
+		})
+	}
+
+	err = g.Wait().ErrorOrNil()
+	if err != nil {
+		diags = awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
+	}
+
+	return diags
 }
 
 func FindEntityRecognizerByID(ctx context.Context, conn *comprehend.Client, id string) (*types.EntityRecognizerProperties, error) {
