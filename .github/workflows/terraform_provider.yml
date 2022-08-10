@@ -11,6 +11,7 @@ on:
       - .ci/scripts/providerlint.sh
       - .go-version
       - .ci/.golangci.yml
+      - .markdownlint.yml
       - internal/**
       - docs/index.md
       - docs/data-sources/**
@@ -275,4 +276,4 @@ jobs:
       - uses: avto-dev/markdown-lint@v1
         with:
           args: '.'
-          ignore: './docs ./website/docs ./CHANGELOG.md'
+          ignore: './docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs'
