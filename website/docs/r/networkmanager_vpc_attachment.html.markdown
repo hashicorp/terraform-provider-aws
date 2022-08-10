@@ -1,5 +1,5 @@
 ---
-subcategory: "NetworkManager"
+subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_vpc_attachment"
 description: |-
@@ -16,18 +16,9 @@ Terraform resource for managing an AWS NetworkManager VpcAttachment.
 
 ```terraform
 resource "aws_networkmanager_vpc_attachment" "example" {
-  subnet_arns             = [aws_subnet.example.arn]
-  core_network_id         = awscc_networkmanager_core_network.example.id
-  vpc_arn                 = aws_vpc.example.arn
-
-  options {
-    ipv6_support =  false
-  }
-
-  tags = {
-    "Name" : "my-vpc",
-    "segment": "example"
-  }
+  subnet_arns     = [aws_subnet.example.arn]
+  core_network_id = awscc_networkmanager_core_network.example.id
+  vpc_arn         = aws_vpc.example.arn
 }
 ```
 

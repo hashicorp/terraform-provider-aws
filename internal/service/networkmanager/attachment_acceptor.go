@@ -14,7 +14,7 @@ import (
 )
 
 // AttachmentAcceptor is not specific to AttachmentType. However, querying attachments for status updates is
-// To faciliate querying and waiters on specific attachment types, attachment_type required
+// To facilitate querying and waiters on specific attachment types, attachment_type required
 
 func ResourceAttachmentAcceptor() *schema.Resource {
 	return &schema.Resource{
@@ -45,7 +45,7 @@ func ResourceAttachmentAcceptor() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{networkmanager.AttachmentTypeVpc}, false),
-				// Implement Values() function for validation as mroe types are onboarded to provider
+				// Implement Values() function for validation as more types are onboarded to provider
 				// networkmanager.AttachmentType_Values(), false),
 			},
 
@@ -97,7 +97,7 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 	var state string
 
 	if attachmentType == networkmanager.AttachmentTypeVpc {
-		output, err := FindVpcAttachmentByID(ctx, conn, attachmentId)
+		output, err := FindVPCAttachmentByID(ctx, conn, attachmentId)
 
 		if err != nil {
 			return diag.Errorf("error finding Network Manager VPC Attachment: %s", err)
@@ -130,7 +130,7 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(attachmentId)
 
 	if attachmentType == networkmanager.AttachmentTypeVpc {
-		if _, err := WaitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := WaitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			d.SetId("")
 			return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 		}

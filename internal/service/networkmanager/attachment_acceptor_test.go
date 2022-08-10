@@ -30,7 +30,7 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentBasic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVpcAttachmentDestroy,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basic("*", false),
@@ -84,7 +84,7 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentTags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVpcAttachmentDestroy,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_oneTag("segment", "shared"),
@@ -117,7 +117,7 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentTags(t *testing.T) {
 	})
 }
 
-func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
+func testAccCheckVPCAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +125,7 @@ func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfnetworkmanager.FindVpcAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindVPCAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 			continue
@@ -141,7 +141,7 @@ func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-const TestAccVpcConfig_multipleSubnets = `
+const TestAccVPCConfig_multipleSubnets = `
 data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
@@ -157,11 +157,11 @@ resource "aws_subnet" "test" {
 
   vpc_id            = aws_vpc.test.id
   cidr_block        = element(var.subnets, count.index)
-  availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
+  availability_zone = data.aws_availability_zones.test.names[count.index]
 }
 `
 
-const TestAccNetworkManagerCoreNetworkConfig = `
+const TestAccCoreNetworkConfig = `
 resource "awscc_networkmanager_global_network" "test" {}
 
 resource "awscc_networkmanager_core_network" "test" {
@@ -212,8 +212,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `
 
 func testAccCoreNetworkConfig_basic(azs string, ipv6Support bool) string {
-	return TestAccVpcConfig_multipleSubnets +
-		TestAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
+	return TestAccVPCConfig_multipleSubnets +
+		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = flatten([aws_subnet.test.%[1]s.arn])
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -232,10 +232,10 @@ resource "aws_networkmanager_attachment_acceptor" "test" {
 }
 
 func testAccCoreNetworkConfig_oneTag(tagKey1, tagValue1 string) string {
-	return TestAccVpcConfig_multipleSubnets +
-		TestAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
+	return TestAccVPCConfig_multipleSubnets +
+		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test.0.arn]
+  subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
@@ -256,10 +256,10 @@ resource "aws_networkmanager_attachment_acceptor" "test" {
 }
 
 func testAccCoreNetworkConfig_twoTag(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return TestAccVpcConfig_multipleSubnets +
-		TestAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
+	return TestAccVPCConfig_multipleSubnets +
+		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test.0.arn]
+  subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
