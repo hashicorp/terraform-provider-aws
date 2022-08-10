@@ -1832,11 +1832,11 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 }
 
 func TestAccRDSInstance_S3Import_basic(t *testing.T) {
-	var snap rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketPrefix := sdkacctest.RandString(5)
+	acctest.Skip(t, "RestoreDBInstanceFromS3 cannot restore from MySQL version 5.6")
 
-	const resourceName = "aws_db_instance.test"
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1845,111 +1845,11 @@ func TestAccRDSInstance_S3Import_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_S3Import_basic(rName, bucketPrefix),
+				Config: testAccInstanceConfig_S3Import_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &snap),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"password",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_S3Import_nameDeprecated(t *testing.T) {
-	var snap rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketPrefix := sdkacctest.RandString(5)
-
-	const resourceName = "aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_S3Import_NameDeprecated_basic(rName, bucketPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &snap),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"password",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_S3Import_namePrefix(t *testing.T) {
-	var snap rds.DBInstance
-	const identifierPrefix = "tf-acc-test-prefix-"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketPrefix := sdkacctest.RandString(5)
-
-	const resourceName = "aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &snap),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"password",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_S3Import_nameGenerated(t *testing.T) {
-	var snap rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketPrefix := sdkacctest.RandString(5)
-
-	const resourceName = "aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &snap),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
 				),
 			},
 			{
@@ -5059,25 +4959,25 @@ resource "aws_db_instance" "snapshot" {
 `, rName))
 }
 
-func testAccInstanceConfig_baseS3Import(rName, bucketPrefix string) string {
+func testAccInstanceConfig_baseS3Import(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "xtrabackup" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_object" "xtrabackup_db" {
-  bucket = aws_s3_bucket.xtrabackup.id
-  key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "%[1]s/mysql-5-6-xtrabackup.tar.gz"
   source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
   etag   = filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")
 }
 
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "rds_s3_access_role" {
-  name = "%[1]s-role"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -5097,7 +4997,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name = "%[1]s-policy"
+  name = %[1]q
 
   policy = <<POLICY
 {
@@ -5109,8 +5009,8 @@ resource "aws_iam_policy" "test" {
         "s3:*"
       ],
       "Resource": [
-        "${aws_s3_bucket.xtrabackup.arn}",
-        "${aws_s3_bucket.xtrabackup.arn}/*"
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
       ]
     }
   ]
@@ -5118,23 +5018,14 @@ resource "aws_iam_policy" "test" {
 POLICY
 }
 
-resource "aws_iam_policy_attachment" "test-attach" {
-  name = "%[1]s-policy-attachment"
+resource "aws_iam_policy_attachment" "test" {
+  name = %[1]q
 
   roles = [
-    aws_iam_role.rds_s3_access_role.name,
+    aws_iam_role.test.name,
   ]
 
   policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_db_subnet_group" "foo" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 data "aws_rds_engine_version" "default" {
@@ -5150,12 +5041,12 @@ data "aws_rds_orderable_db_instance" "test" {
   # instance class db.t2.micro is not supported for restoring from S3
   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t2.medium", "db.t3.medium"]
 }
-`, rName, bucketPrefix))
+`, rName))
 }
 
-func testAccInstanceConfig_S3Import_basic(rName, bucketPrefix string) string {
+func testAccInstanceConfig_S3Import_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
+		testAccInstanceConfig_baseS3Import(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier = %[1]q
@@ -5165,130 +5056,27 @@ resource "aws_db_instance" "test" {
   engine_version             = data.aws_rds_engine_version.default.version
   auto_minor_version_upgrade = true
   instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                    = "baz"
-  password                   = "barbarbarbar"
+  db_name                    = "test"
   publicly_accessible        = false
-  username                   = "foo"
+  password                   = "avoid-plaintext-passwords"
+  username                   = "tfacctest"
   backup_retention_period    = 0
 
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
   multi_az             = false
-  db_subnet_group_name = aws_db_subnet_group.foo.id
+  db_subnet_group_name = aws_db_subnet_group.test.id
 
   s3_import {
     source_engine         = data.aws_rds_orderable_db_instance.test.engine
     source_engine_version = "5.6" # leave at 5.6 until someone makes a new testdata restore file
 
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
-    bucket_prefix  = %[2]q
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
-  }
-}
-`, rName, bucketPrefix))
-}
-
-func testAccInstanceConfig_S3Import_NameDeprecated_basic(rName, bucketPrefix string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  identifier = %[1]q
-
-  allocated_storage          = 5
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  auto_minor_version_upgrade = true
-  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  name                       = "baz" # deprecated
-  password                   = "barbarbarbar"
-  publicly_accessible        = false
-  username                   = "foo"
-  backup_retention_period    = 0
-
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
-  multi_az             = false
-  db_subnet_group_name = aws_db_subnet_group.foo.id
-
-  s3_import {
-    source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6" # leave at 5.6 until someone makes a new testdata restore file
-
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
-    bucket_prefix  = %[2]q
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
-  }
-}
-`, rName, bucketPrefix))
-}
-
-func testAccInstanceConfig_S3Import_namePrefix(rName, bucketPrefix, identifierPrefix string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  identifier_prefix = %[1]q
-
-  allocated_storage          = 5
-  engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  auto_minor_version_upgrade = true
-  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                    = "baz"
-  password                   = "barbarbarbar"
-  publicly_accessible        = false
-  username                   = "foo"
-  backup_retention_period    = 0
-
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
-  multi_az             = false
-  db_subnet_group_name = aws_db_subnet_group.foo.id
-
-  s3_import {
-    source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6" # leave at 5.6 until someone makes a new testdata restore file
-
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
-    bucket_prefix  = %[2]q
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
-  }
-}
-`, identifierPrefix, bucketPrefix))
-}
-
-func testAccInstanceConfig_S3Import_nameGenerated(rName, bucketPrefix string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_baseS3Import(rName, bucketPrefix),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  allocated_storage          = 5
-  engine                     = data.aws_rds_orderable_db_instance.test.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  auto_minor_version_upgrade = true
-  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                    = "baz"
-  password                   = "barbarbarbar"
-  publicly_accessible        = false
-  username                   = "foo"
-  backup_retention_period    = 0
-
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
-  multi_az             = false
-  db_subnet_group_name = aws_db_subnet_group.foo.id
-
-  s3_import {
-    source_engine         = data.aws_rds_orderable_db_instance.test.engine
-    source_engine_version = "5.6" # leave at 5.6 until someone makes a new testdata restore file
-
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
+    bucket_name    = aws_s3_bucket.test.bucket
     bucket_prefix  = %[1]q
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
+    ingestion_role = aws_iam_role.test.arn
   }
 }
-`, bucketPrefix))
+`, rName))
 }
 
 func testAccInstanceConfig_finalSnapshotID(rName string) string {
