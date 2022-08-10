@@ -282,6 +282,40 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_executionClass(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_executionClass(rName, "FLEX"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "execution_class", "FLEX"),
+				),
+			},
+			{
+				Config: testAccJobConfig_executionClass(rName, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "execution_class", "STANDARD"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccGlueJob_executionProperty(t *testing.T) {
 	var job glue.Job
 
@@ -931,6 +965,22 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccJobConfig_Base(rName), glueVersion, rName)
+}
+
+func testAccJobConfig_executionClass(rName, executionClass string) string {
+	return fmt.Sprintf(`
+%s
+resource "aws_glue_job" "test" {
+  execution_class = "%s"
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
+  command {
+    script_location = "testscriptlocation"
+  }
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccJobConfig_Base(rName), executionClass, rName)
 }
 
 func testAccJobConfig_executionProperty(rName string, maxConcurrentRuns int) string {
