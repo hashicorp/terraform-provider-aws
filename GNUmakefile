@@ -202,13 +202,13 @@ semgrep:
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep -c .ci/.semgrep.yml
-	@semgrep -c .ci/.semgrep-caps-aws-ec2.yml
-	@semgrep -c .ci/.semgrep-configs.yml
-	@semgrep -c .ci/.semgrep-service-name0.yml
-	@semgrep -c .ci/.semgrep-service-name1.yml
-	@semgrep -c .ci/.semgrep-service-name2.yml
-	@semgrep -c .ci/.semgrep-service-name3.yml
+	@semgrep --config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
