@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,6 +41,13 @@ func ResourceConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
+			// The MAC Security (MACsec) connection encryption mode.
+			"encryption_mode": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -58,11 +66,39 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			// Enable or disable MAC Security (MACsec) on this connection.
+			"macsec_requested": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 			// The MAC Security (MACsec) security keys associated with the connection.
 			"macsec_keys": {
 				// Slice of type MacSecKey
 				Type:     schema.TypeList,
+				Computed: true,
 				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ckn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"start_on": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -102,7 +138,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
-		RequestMACSec:  aws.Bool(d.Get("macsec_enabled").(bool)),
+		RequestMACSec:  aws.Bool(d.Get("macsec_requested").(bool)),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -121,6 +157,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
+	d.Set("macsec_requested", d.Get("macsec_requested").(bool))
 
 	return resourceConnectionRead(d, meta)
 }
@@ -152,15 +189,37 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
+	d.Set("encryption_mode", connection.EncryptionMode)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
 	d.Set("macsec_capable", connection.MacSecCapable)
-	d.Set("macsec_keys", connection.MacSecKeys)
+	// d.Set("macsec_keys", connection.MacSecKeys)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
+
+	// if connection.MacSecKeys != nil {
+	// 	keys := make([]interface{}, len(connection.MacSecKeys))
+	// 	for i, key := range connection.MacSecKeys {
+	// 		k := map[string]interface{}{
+	// 			"Ckn":       aws.StringValue(key.Ckn),
+	// 			"SecretARN": aws.StringValue(key.SecretARN),
+	// 			"StartOn":   aws.StringValue(key.StartOn),
+	// 			"State":     aws.StringValue(key.State),
+	// 		}
+	// 		fmt.Println(k)
+	// 		keys[i] = k
+	// 	}
+	// 	d.Set("macsec_keys", keys)
+	// }
+
+	// fmt.Println("MACSec keys:", connection.MacSecKeys)
+
+	// if err := d.Set("macsec_keys", flattenMacSecKeys(connection.MacSecKeys)); err != nil {
+	// 	return fmt.Errorf("error setting macsec_keys: %s", err)
+	// }
 
 	tags, err := ListTags(conn, arn)
 
@@ -184,6 +243,19 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
+
+	// Update encryption mode
+	if d.HasChange("encryption_mode") {
+		input := &directconnect.UpdateConnectionInput{
+			ConnectionId:   aws.String(d.Id()),
+			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
+		}
+		log.Printf("[DEBUG] Modifying Direct Connect connection attributes: %s", input)
+		_, err := conn.UpdateConnection(input)
+		if err != nil {
+			return fmt.Errorf("error modifying Direct Connect connection (%s) attributes: %s", d.Id(), err)
+		}
+	}
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -224,4 +296,86 @@ func deleteConnection(conn *directconnect.DirectConnect, connectionID string, wa
 	}
 
 	return nil
+}
+
+// ValidateMacSecAvailability checks for MAC Security availability given a
+// location `l` and desired port speed `p`
+func ValidateMacSecAvailability(l string, p string, meta interface{}) bool {
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+	input := &directconnect.DescribeLocationsInput{}
+
+	response, err := conn.DescribeLocations(input)
+
+	if err != nil {
+		fmt.Printf("error checking MACSec availability: %s", err)
+		return false
+	}
+
+	var available bool
+
+	for _, location := range response.Locations {
+		if l == *location.LocationCode {
+			for _, port_speed := range location.AvailableMacSecPortSpeeds {
+				if *port_speed == p {
+					available = true
+				} else {
+					fmt.Printf("MACSec not available for location %s and desired port speed %s", l, p)
+					available = false
+				}
+			}
+		}
+	}
+	return available
+}
+
+// Expand and flatten structures for MACSec keys
+// Ref: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
+
+func flattenMacSecKey(macSecKey *directconnect.MacSecKey) map[string]interface{} {
+	if macSecKey == nil {
+		return nil
+	}
+
+	keyMap := map[string]interface{}{}
+
+	// nested attribute handling
+
+	return keyMap
+}
+
+func flattenMacSecKeyStructures(macSecKeys []*directconnect.MacSecKey) []interface{} {
+	if len(macSecKeys) == 0 {
+		return nil
+	}
+
+	var keyList []interface{}
+
+	for _, key := range macSecKeys {
+		if key == nil {
+			continue
+		}
+
+		keyList = append(keyList, flattenMacSecKey(key))
+	}
+	return keyList
+
+	// if macSecKeys == nil {
+	// 	return []interface{}{}
+	// }
+
+	// // fmt.Println("Length of MACSeckeys:", len(macSecKeys))
+
+	// keys := make([]interface{}, len(macSecKeys))
+	// for i, key := range macSecKeys {
+	// 	k := map[string]interface{}{
+	// 		"Ckn":       aws.StringValue(key.Ckn),
+	// 		"SecretARN": aws.StringValue(key.SecretARN),
+	// 		"StartOn":   aws.StringValue(key.StartOn),
+	// 		"State":     aws.StringValue(key.State),
+	// 	}
+	// 	fmt.Println(k)
+	// 	keys[i] = k
+	// }
+
+	// return []interface{}{keys}
 }

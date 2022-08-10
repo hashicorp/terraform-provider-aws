@@ -72,6 +72,44 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
+	var connection directconnect.Connection
+	resourceName := "aws_dx_connection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_macsecEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(resourceName, &connection),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Gbps"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					// macsec_capable will not return "true" while connection is in "Requesting" state
+					resource.TestCheckResourceAttr(resourceName, "macsec_capable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "macsec_requested", "true"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Ignore the "macsec_requested" attribute as isn't returned by the API during read/refresh
+				ImportStateVerifyIgnore: []string{"macsec_requested"},
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	var connection directconnect.Connection
 	resourceName := "aws_dx_connection.test"
@@ -217,6 +255,30 @@ resource "aws_dx_connection" "test" {
   name      = %[1]q
   bandwidth = "1Gbps"
   location  = local.location_codes[local.idx]
+}
+`, rName)
+}
+
+func testAccConnectionConfig_macsecEnabled(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+  idx            = min(2, length(local.location_codes) - 1)
+}
+
+data "aws_dx_location" "test" {
+  location_code = local.location_codes[local.idx]
+}
+
+resource "aws_dx_connection" "test" {
+  name      = %[1]q
+  bandwidth = "100Gbps"
+  location  = data.aws_dx_location.test.location_code
+  macsec_requested = true
+
+  provider_name = data.aws_dx_location.test.available_providers[0]
 }
 `, rName)
 }
