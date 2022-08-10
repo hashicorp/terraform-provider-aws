@@ -866,7 +866,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccDevEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
+	return testAccJobConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -879,7 +879,7 @@ resource "aws_glue_dev_endpoint" "test" {
 }
 
 func testAccDevEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
+	return testAccJobConfig_base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
