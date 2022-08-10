@@ -1456,6 +1456,36 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_networkType(rName, "DUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -7484,6 +7514,77 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, multiAz))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_networkType(rName string, networkType string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true	
+
+  tags = {
+    Name = "tf-instance-test-db-subnet-group"
+  }
+}
+
+resource "aws_subnet" "test_1" {
+  cidr_block                      = "10.1.1.0/24"
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
+  assign_ipv6_address_on_creation = true
+  availability_zone               = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-instance-test-db-subnet-group-1"
+  }
+}
+
+resource "aws_subnet" "test_2" {
+  cidr_block                      = "10.1.2.0/24"
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-instance-test-db-subnet-group-2"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name_prefix = "tf-instance-test-"
+  subnet_ids  = [aws_subnet.test_1.id, aws_subnet.test_2.id]
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  network_type         = %[2]q
+  replicate_source_db  = aws_db_instance.source.id
+  skip_final_snapshot  = true
+}
+`, rName, networkType))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName string) string {

@@ -315,6 +315,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -596,6 +601,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			opts.MultiAZ = aws.Bool(attr.(bool))
 		}
 
+		if attr, ok := d.GetOk("network_type"); ok {
+			opts.NetworkType = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
@@ -755,6 +764,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
+		}
+
+		if attr, ok := d.GetOk("network_type"); ok {
+			opts.NetworkType = aws.String(attr.(string))
 		}
 
 		if _, ok := d.GetOk("character_set_name"); ok {
@@ -1023,6 +1036,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if attr, ok := d.GetOk("network_type"); ok {
+			opts.NetworkType = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
@@ -1154,6 +1171,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 				input.DBName = aws.String(v.(string))
 			}
 
+			if attr, ok := d.GetOk("network_type"); ok {
+				input.NetworkType = aws.String(attr.(string))
+			}
+
 			if v, ok := d.GetOk("option_group_name"); ok {
 				input.OptionGroupName = aws.String(v.(string))
 			}
@@ -1235,6 +1256,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
 
+		}
+
+		if attr, ok := d.GetOk("network_type"); ok {
+			opts.NetworkType = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("character_set_name"); ok {
@@ -1701,6 +1726,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if d.HasChange("multi_az") {
 		req.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+		requestUpdate = true
+	}
+	if d.HasChange("network_type") {
+		req.NetworkType = aws.String(d.Get("network_type").(string))
 		requestUpdate = true
 	}
 	if d.HasChange("publicly_accessible") {

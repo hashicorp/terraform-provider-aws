@@ -118,6 +118,12 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"supported_network_types": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"supports_enhanced_monitoring": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -393,6 +399,7 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
 	d.Set("storage_type", found.StorageType)
 	d.Set("supported_engine_modes", found.SupportedEngineModes)
+	d.Set("supported_network_types", found.SupportedNetworkTypes)
 	d.Set("supports_enhanced_monitoring", found.SupportsEnhancedMonitoring)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
 	d.Set("supports_iam_database_authentication", found.SupportsIAMDatabaseAuthentication)
