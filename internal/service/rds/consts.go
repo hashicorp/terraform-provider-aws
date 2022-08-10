@@ -215,5 +215,5 @@ const (
 )
 
 const (
-	ResTags = "Tags"
+	ResNameTags = "Tags"
 )

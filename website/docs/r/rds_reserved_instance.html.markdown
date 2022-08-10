@@ -13,7 +13,7 @@ Manages RDS DB Instance Reservations. **Once created, a reservation is valid for
 ## Example Usage
 
 ```terraform
-resource "aws_rds_reserved_instance" "my-reservation" {
+resource "aws_rds_reserved_instance" "example" {
   offering_id    = "438012d3-4052-4cc7-b2e3-8d3372e0e706"
   reservation_id = "optionalCustomReservationID"
   instance_count = 3
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `start_time` - The time the reservation started.
 * `state` - The state of the reserved DB instance.
 * `usage_price` - The hourly price charged for this reserved DB instance.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
