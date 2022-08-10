@@ -82,7 +82,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Computed: true,
 			},
 			"recurring_charges": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 			},
 			"start_time": {
