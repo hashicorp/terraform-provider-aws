@@ -84,8 +84,6 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 
 	attachmentId := d.Get("attachment_id").(string)
 
-	// check status first and set id if already accepted
-
 	input := &networkmanager.AcceptAttachmentInput{
 		AttachmentId: aws.String(attachmentId),
 	}
@@ -100,6 +98,7 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 
 		if state == networkmanager.AttachmentStateAvailable {
 			log.Printf("[WARN] Attachment (%s) already accepted, importing attributes into state without accepting.", d.Id())
+			a.Attachment = output.Attachment
 		} else {
 			return diag.Errorf("error accepting Network Manager VPC Attachment: %s", err)
 		}

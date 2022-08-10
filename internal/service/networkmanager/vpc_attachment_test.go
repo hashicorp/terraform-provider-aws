@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkmanager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
@@ -31,41 +31,69 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkConfig_basicWithOneTag("*", "segment", "shared", false),
+				Config: testAccCoreNetworkConfig_basic("*", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basicWithOneTag("0", "segment", "shared", false),
+				Config: testAccCoreNetworkConfig_basic("0", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+				),
+			},
+			{
+				Config: testAccCoreNetworkConfig_basic("*", false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerVpcAttachment_tags(t *testing.T) {
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVpcAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_oneTag("segment", "shared"),
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basicWithOneTag("*", "segment", "shared", false),
+				Config: testAccCoreNetworkConfig_twoTag("segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-				),
-			},
-			{
-				Config: testAccCoreNetworkConfig_basicWithTwoTag("*", "segment", "shared", "Name", "test", false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basicWithOneTag("*", "segment", "shared", false),
+				Config: testAccCoreNetworkConfig_oneTag("segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
@@ -89,7 +117,7 @@ func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
 
 		_, err := tfnetworkmanager.FindVpcAttachmentByID(context.TODO(), conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
+		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -97,7 +125,7 @@ func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Network Manager Global Network %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Network Manager Attachment ID %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -123,7 +151,7 @@ resource "aws_subnet" "test" {
 }
 `
 
-const testAccCoreNetworkConfig_multipleSubnets = `
+const testAccNetworkManagerCoreNetworkConfig = `
 resource "awscc_networkmanager_global_network" "test" {}
 
 resource "awscc_networkmanager_core_network" "test" {
@@ -173,9 +201,9 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
-func testAccCoreNetworkConfig_basicWithOneTag(azs, tagKey1, tagValue1 string, ipv6Support bool) string {
+func testAccCoreNetworkConfig_basic(azs string, ipv6Support bool) string {
 	return testAccVpcConfig_multipleSubnets +
-		testAccCoreNetworkConfig_multipleSubnets + fmt.Sprintf(`
+		testAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = flatten([aws_subnet.test.%[1]s.arn])
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -184,38 +212,57 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   options {
     ipv6_support =  %[2]t
   }
-
-  tags = {
-    %[3]q = %[4]q
-  }
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
     attachment_id = aws_networkmanager_vpc_attachment.test.id
 }
-`, azs, ipv6Support, tagKey1, tagValue1)
+`, azs, ipv6Support)
 }
 
-func testAccCoreNetworkConfig_basicWithTwoTag(azs, tagKey1, tagValue1, tagKey2, tagValue2 string, ipv6Support bool) string {
+func testAccCoreNetworkConfig_oneTag(tagKey1, tagValue1 string) string {
 	return testAccVpcConfig_multipleSubnets +
-		testAccCoreNetworkConfig_multipleSubnets + fmt.Sprintf(`
+		testAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = flatten([aws_subnet.test.%[1]s.arn])
+  subnet_arns     = [aws_subnet.test.0.arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 
   options {
-    ipv6_support = %[2]t
+    ipv6_support =  false
   }
 
   tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
+    %[1]q = %[2]q
   }
 }
 
 resource "aws_networkmanager_attachment_acceptor" "test" {
     attachment_id = aws_networkmanager_vpc_attachment.test.id
 }
-`, azs, ipv6Support, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1)
+}
+
+func testAccCoreNetworkConfig_twoTag(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccVpcConfig_multipleSubnets +
+		testAccNetworkManagerCoreNetworkConfig + fmt.Sprintf(`
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = [aws_subnet.test.0.arn]
+  core_network_id = awscc_networkmanager_core_network.test.id
+  vpc_arn         = aws_vpc.test.arn
+
+  options {
+    ipv6_support = false
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+
+resource "aws_networkmanager_attachment_acceptor" "test" {
+    attachment_id = aws_networkmanager_vpc_attachment.test.id
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
