@@ -60,13 +60,14 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,
-					playerLatencyPolicies, timeoutInSeconds),
+					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", queueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
@@ -80,12 +81,14 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds),
+				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", uQueueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
 						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
@@ -186,7 +189,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,
-					playerLatencyPolicies, timeoutInSeconds),
+					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(resourceName, &conf),
 					testAccCheckGameSessionQueueDisappears(&conf),
@@ -294,7 +297,7 @@ func testAccCheckGameSessionQueueDestroy(s *terraform.State) error {
 }
 
 func testAccGameSessionQueueConfig_basic(queueName string,
-	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
+	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64, customEventData string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
   name         = "%s"
@@ -310,13 +313,16 @@ resource "aws_gamelift_game_session_queue" "test" {
   }
 
   timeout_in_seconds = %d
+
+  custom_event_data = "%s"
 }
 `,
 		queueName,
 		*playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds,
 		*playerLatencyPolicies[0].PolicyDurationSeconds,
 		*playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds,
-		timeoutInSeconds)
+		timeoutInSeconds,
+		customEventData)
 }
 
 func testAccGameSessionQueueConfig_basicTags1(rName, tagKey1, tagValue1 string) string {

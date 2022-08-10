@@ -45,6 +45,11 @@ func ResourceGameSessionQueue() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"custom_event_data": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"player_latency_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -91,6 +96,10 @@ func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("notification_target"); ok {
 		input.NotificationTarget = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_event_data"); ok {
+		input.CustomEventData = aws.String(v.(string))
 	}
 
 	log.Printf("[INFO] Creating GameLift Session Queue: %s", input)
@@ -140,6 +149,7 @@ func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", arn)
 	d.Set("name", sessionQueue.Name)
 	d.Set("notification_target", sessionQueue.NotificationTarget)
+	d.Set("custom_event_data", sessionQueue.CustomEventData)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
 	if err := d.Set("destinations", flattenGameSessionQueueDestinations(sessionQueue.Destinations)); err != nil {
 		return fmt.Errorf("error setting destinations: %s", err)
@@ -207,6 +217,10 @@ func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("notification_target"); ok {
 		input.NotificationTarget = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_event_data"); ok {
+		input.CustomEventData = aws.String(v.(string))
 	}
 
 	_, err := conn.UpdateGameSessionQueue(&input)
