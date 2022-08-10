@@ -925,10 +925,12 @@ resource "aws_glue_job" "test" {
 func testAccJobConfig_executionClass(rName, executionClass string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  execution_class = %[2]q
-  max_capacity    = 10
-  name            = %[1]q
-  role_arn        = aws_iam_role.test.arn
+  execution_class   = %[2]q
+  name              = %[1]q
+  number_of_workers = 2
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "G.1X"
+  glue_version      = "3.0"
 
   command {
     script_location = "testscriptlocation"
