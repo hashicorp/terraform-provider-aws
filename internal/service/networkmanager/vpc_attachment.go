@@ -219,12 +219,11 @@ func resourceVpcAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVpcAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	// arn:aws:networkmanager::826255695022:attachment/attachment-0f8fa60d2238d1bd8
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		acnt := meta.(*conns.AWSClient).AccountID
 		arn := fmt.Sprintf("arn:aws:networkmanager::%s:attachment/%s", acnt, d.Id())
-		// arn := d.Get("resource_arn").(string)
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating VPC Attachment (%s) tags: %s", d.Id(), err)
@@ -236,10 +235,9 @@ func resourceVpcAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 			AttachmentId: aws.String(d.Id()),
 		}
 
-		// TODO: uncomment once service bug is fixed
-		// if d.HasChange("options") {
-		// 	input.Options = expandVpcAttachmentOptions(d.Get("options").([]interface{}))
-		// }
+		if d.HasChange("options") {
+			input.Options = expandVpcAttachmentOptions(d.Get("options").([]interface{}))
+		}
 
 		if d.HasChange("subnet_arns") {
 			o, n := d.GetChange("subnet_arns")
@@ -341,7 +339,7 @@ func FindVpcAttachmentByID(ctx context.Context, conn *networkmanager.NetworkMana
 	return output.VpcAttachment, nil
 }
 
-func statusVpcAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func StatusVpcAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVpcAttachmentByID(ctx, conn, id)
 
@@ -362,7 +360,7 @@ func waitVpcAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkM
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
-		Refresh: statusVpcAttachmentState(ctx, conn, id),
+		Refresh: StatusVpcAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -379,7 +377,7 @@ func waitVpcAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkM
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusVpcAttachmentState(ctx, conn, id),
+		Refresh:        StatusVpcAttachmentState(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -397,7 +395,7 @@ func waitVpcAttachmentUpdated(ctx context.Context, conn *networkmanager.NetworkM
 		Pending: []string{networkmanager.AttachmentStateUpdating},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingTagAcceptance},
 		Timeout: timeout,
-		Refresh: statusVpcAttachmentState(ctx, conn, id),
+		Refresh: StatusVpcAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

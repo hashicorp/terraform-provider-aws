@@ -16,7 +16,8 @@ Terraform resource for managing an AWS NetworkManager Attachment Acceptor.
 
 ```terraform
 resource "aws_networkmanager_attachment_acceptor" "test" {
-    attachment_id = aws_networkmanager_vpc_attachment.core_network.id
+    attachment_id   = aws_networkmanager_vpc_attachment.vpc.id
+    attachment_type = aws_networkmanager_vpc_attachment.vpc.attachment_type
 }
 ```
 
@@ -25,13 +26,13 @@ resource "aws_networkmanager_attachment_acceptor" "test" {
 The following arguments are required:
 
 * `attachment_id` - (Required) The ID of the attachment.
+* `attachment_type` - The type of attachment. Valid values can be found in the [AWS Documentation](https://docs.aws.amazon.com/networkmanager/latest/APIReference/API_ListAttachments.html#API_ListAttachments_RequestSyntax)
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.
-* `attachment_type` - The type of attachment.
 * `core_network_arn` - The ARN of a core network.
 * `core_network_id` - The id of a core network.
 * `edge_location` - The Region where the edge is located.

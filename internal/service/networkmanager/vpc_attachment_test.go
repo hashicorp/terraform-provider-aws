@@ -38,10 +38,10 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basic("0", false),
+				Config: testAccCoreNetworkConfig_basic("0", true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
 				),
 			},
 			{
@@ -51,6 +51,14 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
 				),
 			},
+			// Cannot currently update ipv6 without also updating subnet arns
+			// {
+			// 	Config: testAccCoreNetworkConfig_basic("*", true),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+			// 		resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+			// 	),
+			// },
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

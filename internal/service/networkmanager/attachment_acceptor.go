@@ -10,9 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+// AttachmentAcceptor is not specific to AttachmentType. However, querying attachments for status updates is
+// To faciliate querying and waiters on specific attachment types, attachment_type required
 
 func ResourceAttachmentAcceptor() *schema.Resource {
 	return &schema.Resource{
@@ -36,9 +39,15 @@ func ResourceAttachmentAcceptor() *schema.Resource {
 				Computed: true,
 			},
 
+			// querying attachments requires knowing the type ahead of time
+			// therefore type is required in provider, though not on the API
 			"attachment_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{networkmanager.AttachmentTypeVpc}, false),
+				// Implement Values() function for validation as mroe types are onboarded to provider
+				// networkmanager.AttachmentType_Values(), false),
 			},
 
 			"core_network_arn": {
@@ -83,42 +92,59 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	attachmentId := d.Get("attachment_id").(string)
+	attachmentType := d.Get("attachment_type").(string)
+	attachment := &networkmanager.Attachment{}
+	accepted := false
+	var state string
 
-	input := &networkmanager.AcceptAttachmentInput{
-		AttachmentId: aws.String(attachmentId),
-	}
-
-	log.Printf("[DEBUG] Accepting Network Manager VPC Attachment: %s", input)
-	a, err := conn.AcceptAttachmentWithContext(ctx, input)
-
-	if err != nil {
+	if attachmentType == networkmanager.AttachmentTypeVpc {
 		output, err := FindVpcAttachmentByID(ctx, conn, attachmentId)
 
-		state := aws.StringValue(output.Attachment.State)
-
-		if state == networkmanager.AttachmentStateAvailable {
-			log.Printf("[WARN] Attachment (%s) already accepted, importing attributes into state without accepting.", d.Id())
-			a.Attachment = output.Attachment
-		} else {
-			return diag.Errorf("error accepting Network Manager VPC Attachment: %s", err)
+		if err != nil {
+			return diag.Errorf("error finding Network Manager VPC Attachment: %s", err)
 		}
+
+		state = aws.StringValue(output.Attachment.State)
+		attachment = output.Attachment
+	}
+
+	if state == networkmanager.AttachmentStateAvailable {
+		accepted = true
+		log.Printf("[WARN] Attachment (%s) already accepted, importing attributes into state without accepting.", attachmentId)
+	}
+
+	if !accepted {
+		input := &networkmanager.AcceptAttachmentInput{
+			AttachmentId: aws.String(attachmentId),
+		}
+
+		log.Printf("[DEBUG] Accepting Network Manager Attachment: %s", input)
+		a, err := conn.AcceptAttachmentWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("error accepting Network Manager Attachment: %s", err)
+		}
+
+		attachment = a.Attachment
 	}
 
 	d.SetId(attachmentId)
-	if _, err := waitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		d.SetId("")
-		return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+
+	if attachmentType == networkmanager.AttachmentTypeVpc {
+		if _, err := waitVpcAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			d.SetId("")
+			return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+		}
 	}
 
-	d.Set("core_network_id", a.Attachment.CoreNetworkId)
-	d.Set("state", a.Attachment.State)
-	d.Set("core_network_arn", a.Attachment.CoreNetworkArn)
-	d.Set("attachment_policy_rule_number", a.Attachment.AttachmentPolicyRuleNumber)
-	d.Set("attachment_type", a.Attachment.AttachmentType)
-	d.Set("edge_location", a.Attachment.EdgeLocation)
-	d.Set("owner_account_id", a.Attachment.OwnerAccountId)
-	d.Set("resource_arn", a.Attachment.ResourceArn)
-	d.Set("segment_name", a.Attachment.SegmentName)
+	d.Set("core_network_id", attachment.CoreNetworkId)
+	d.Set("state", attachment.State)
+	d.Set("core_network_arn", attachment.CoreNetworkArn)
+	d.Set("attachment_policy_rule_number", attachment.AttachmentPolicyRuleNumber)
+	d.Set("edge_location", attachment.EdgeLocation)
+	d.Set("owner_account_id", attachment.OwnerAccountId)
+	d.Set("resource_arn", attachment.ResourceArn)
+	d.Set("segment_name", attachment.SegmentName)
 
 	return nil
 }
@@ -129,28 +155,12 @@ func ResourceAttachmentAcceptorDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func statusAttachmentAcceptorState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVpcAttachmentByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Attachment.State), nil
-	}
-}
-
-func waitAttachmentAcceptorCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+func waitVpcAttachmentAcceptorCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
 		Timeout: timeout,
-		Refresh: statusVpcAttachmentState(ctx, conn, id),
+		Refresh: StatusVpcAttachmentState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
