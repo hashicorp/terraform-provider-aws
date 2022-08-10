@@ -968,19 +968,20 @@ resource "aws_glue_job" "test" {
 }
 
 func testAccJobConfig_executionClass(rName, executionClass string) string {
-	return fmt.Sprintf(`
-%s
+	return acctest.ConfigCompose(testAccJobConfig_Base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  execution_class = "%s"
-  max_capacity = 10
-  name         = "%s"
-  role_arn     = aws_iam_role.test.arn
+  execution_class = %[2]q
+  max_capacity    = 10
+  name            = %[1]q
+  role_arn        = aws_iam_role.test.arn
+
   command {
     script_location = "testscriptlocation"
   }
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, testAccJobConfig_Base(rName), executionClass, rName)
+`, rName, executionClass))
 }
 
 func testAccJobConfig_executionProperty(rName string, maxConcurrentRuns int) string {
