@@ -29,6 +29,7 @@ func ResourceStack() *schema.Resource {
 		Read:   resourceStackRead,
 		Update: resourceStackUpdate,
 		Delete: resourceStackDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,170 +40,142 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"region": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-
-			"service_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"default_instance_profile_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"color": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"configuration_manager_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Chef",
-			},
-
-			"configuration_manager_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "11.10",
-			},
-
-			"manage_berkshelf": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
 			"berkshelf_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "3.2.0",
 			},
-
+			"color": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"configuration_manager_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Chef",
+			},
+			"configuration_manager_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "11.10",
+			},
 			"custom_cookbooks_source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"username": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
 						"password": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
 						},
-
 						"revision": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"ssh_key": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
 						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
-
 			"custom_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
-
 			"default_availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
+			"default_instance_profile_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"default_os": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Ubuntu 12.04 LTS",
 			},
-
 			"default_root_device_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "instance-store",
 			},
-
 			"default_ssh_key_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"default_subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"hostname_theme": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Layer_Dependent",
 			},
-
+			"manage_berkshelf": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"region": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
+			"service_role_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"stack_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"use_custom_cookbooks": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"use_opsworks_security_groups": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Computed: true,
 				Optional: true,
-			},
-
-			"stack_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
