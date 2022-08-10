@@ -2038,10 +2038,6 @@ resource "aws_msk_cluster" "test" {
 		}
 		enhanced_monitoring    = %[2]q
 	}
-
-	timeouts {
-    create = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be created 
-  }
 }
 `, rName, enhancedMonitoring))
 
@@ -2063,11 +2059,6 @@ resource "aws_msk_cluster" "test" {
 			security_groups = [aws_security_group.example_sg.id]
 		}
 	}
-
-	timeouts {
-    create = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be created 
-    update = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be update
-  }
 }
 `, rName, brokerCount))
 
@@ -2208,11 +2199,6 @@ resource "aws_msk_cluster" "test" {
 			}
 		}
 	}
-
-	timeouts {
-    create = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be created 
-    update = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be update
-  }
 }
 `, rName, cloudwatchLogsEnabled, cloudwatchLogsLogGroup, firehoseEnabled, firehoseDeliveryStream, s3Enabled, s3Bucket))
 }
@@ -2241,7 +2227,7 @@ resource "aws_msk_cluster" "test" {
 	}
 
 	timeouts {
-    create = "4h" # As of Jul 2022 MSK clusters can take 3h or more to be created 
+    create = "4h" # As of Jul 2022 MSK clusters can take 4h or more to be created 
     update = "4h" # As of Jul 2022 MSK clusters can take 3h or more to be update
     delete = "4h" # As of Jul 2022 MSK clusters can take 3h or more to be delete
   }
@@ -2293,11 +2279,6 @@ resource "aws_msk_cluster" "test" {
 			revision = aws_msk_configuration.%[3]s.latest_revision
 		}
 	}
-
-	timeouts {
-    create = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be created 
-    update = "3h" # As of Jul 2022 MSK clusters can take 2h or more to be update
-  }
 }
 `, rName, kafkaVersion, configResourceName))
 }
