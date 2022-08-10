@@ -83,10 +83,13 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"prefix_list_ids": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
 				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"protocol": {

@@ -69,7 +69,7 @@ func TestAccElasticTranscoderPreset_video_noCodec(t *testing.T) {
 	})
 }
 
-//https://github.com/terraform-providers/terraform-provider-aws/issues/14090
+// https://github.com/terraform-providers/terraform-provider-aws/issues/14090
 func TestAccElasticTranscoderPreset_audio_noBitRate(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"

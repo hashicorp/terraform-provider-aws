@@ -713,7 +713,7 @@ func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-//Validates that type and account_ids are defined
+// Validates that type and account_ids are defined
 func ValidDocumentPermissions(v map[string]interface{}) (errors []error) {
 	k := "permissions"
 	t, hasType := v["type"].(string)

@@ -645,6 +645,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
+			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
+
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),
@@ -794,6 +796,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_outposts_sites":                  outposts.DataSourceSites(),
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
+
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
@@ -1189,6 +1193,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
 			"aws_connect_contact_flow_module":         connect.ResourceContactFlowModule(),
 			"aws_connect_instance":                    connect.ResourceInstance(),
+			"aws_connect_instance_storage_config":     connect.ResourceInstanceStorageConfig(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
@@ -1274,6 +1279,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_directory_service_directory":                 ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
 			"aws_directory_service_region":                    ds.ResourceRegion(),
+			"aws_directory_service_radius_settings":           ds.ResourceRadiusSettings(),
 			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
 			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
@@ -1684,6 +1690,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_place_index":         location.ResourcePlaceIndex(),
 			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
 			"aws_location_tracker":             location.ResourceTracker(),
+			"aws_location_tracker_association": location.ResourceTrackerAssociation(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),

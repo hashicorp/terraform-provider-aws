@@ -90,6 +90,7 @@ The following arguments are supported:
 * `description` – (Optional) Description of the job.
 * `execution_property` – (Optional) Execution property of the job. Defined below.
 * `glue_version` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `execution_class` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
 * `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.

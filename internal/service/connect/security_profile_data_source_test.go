@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectSecurityProfileDataSource_securityProfileID(t *testing.T) {
+func testAccSecurityProfileDataSource_securityProfileID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
@@ -38,7 +38,7 @@ func TestAccConnectSecurityProfileDataSource_securityProfileID(t *testing.T) {
 	})
 }
 
-func TestAccConnectSecurityProfileDataSource_name(t *testing.T) {
+func testAccSecurityProfileDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
