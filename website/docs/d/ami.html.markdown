@@ -39,13 +39,15 @@ data "aws_ami" "example" {
 
 ## Argument Reference
 
-* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
 
 * `executable_users` - (Optional) Limit search to users with *explicit* launch permission on
  the image. Valid items are the numeric account ID or `self`.
+
+* `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
 
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
@@ -54,7 +56,7 @@ several valid keys, for a full reference, check out
 * `name_regex` - (Optional) A regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
-impact if the result is large. It is recommended to combine this with other
+impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
 
 ~> **NOTE:** If more or less than a single match is returned by the search,
@@ -125,5 +127,11 @@ interpolation.
 * `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
 * `platform_details` - The platform details associated with the billing code of the AMI.
 * `ena_support` - Specifies whether enhanced networking with ENA is enabled.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html

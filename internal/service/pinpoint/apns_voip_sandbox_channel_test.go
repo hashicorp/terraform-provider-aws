@@ -97,10 +97,10 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 	configuration := testAccAPNSVoIPSandboxChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPNSVoIPSandboxChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicCertificate(configuration),
@@ -131,10 +131,10 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicToken(t *testing.T) {
 	configuration := testAccAPNSVoIPSandboxChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPNSVoIPSandboxChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPNSVoIPSandboxChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicToken(configuration),

@@ -205,7 +205,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
 	}
 
 	var thisEventDestination *ses.EventDestination
@@ -225,16 +225,16 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("enabled", thisEventDestination.Enabled)
 	d.Set("name", thisEventDestination.Name)
 	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_destination: %w", err)
+		return fmt.Errorf("setting cloudwatch_destination: %w", err)
 	}
 	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
-		return fmt.Errorf("error setting kinesis_destination: %w", err)
+		return fmt.Errorf("setting kinesis_destination: %w", err)
 	}
 	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
-		return fmt.Errorf("error setting matching_types: %w", err)
+		return fmt.Errorf("setting matching_types: %w", err)
 	}
 	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
-		return fmt.Errorf("error setting sns_destination: %w", err)
+		return fmt.Errorf("setting sns_destination: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -264,7 +264,7 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'configuration-set-name/event-destination-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'configuration-set-name/event-destination-name'", d.Id())
 	}
 
 	configurationSetName := parts[0]

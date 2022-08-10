@@ -15,9 +15,9 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_filter(),
@@ -39,9 +39,9 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_id(),
@@ -65,9 +65,9 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T)
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceDataSourceConfig_tags(rName),

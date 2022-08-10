@@ -2,10 +2,12 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go/service/apigateway/apigatewayiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -24,7 +26,10 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates apigateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *apigateway.APIGateway, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn apigatewayiface.APIGatewayAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn apigatewayiface.APIGatewayAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -34,10 +39,10 @@ func UpdateTags(conn *apigateway.APIGateway, identifier string, oldTagsMap inter
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -47,10 +52,10 @@ func UpdateTags(conn *apigateway.APIGateway, identifier string, oldTagsMap inter
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

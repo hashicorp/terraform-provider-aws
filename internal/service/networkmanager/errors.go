@@ -9,8 +9,8 @@ import (
 )
 
 // resourceNotFoundExceptionResourceIDEquals returns true if the error matches all these conditions:
-//  * err is of type networkmanager.ResourceNotFoundException
-//  * ResourceNotFoundException.ResourceId equals resourceID
+//   - err is of type networkmanager.ResourceNotFoundException
+//   - ResourceNotFoundException.ResourceId equals resourceID
 func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) bool {
 	var resourceNotFoundException *networkmanager.ResourceNotFoundException
 
@@ -22,9 +22,9 @@ func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) boo
 }
 
 // validationExceptionMessageContains returns true if the error matches all these conditions:
-//  * err is of type networkmanager.ValidationException
-//  * ValidationException.Reason equals reason
-//  * ValidationException.Fields.Message contains message
+//   - err is of type networkmanager.ValidationException
+//   - ValidationException.Reason equals reason
+//   - ValidationException.Fields.Message contains message
 func validationExceptionMessageContains(err error, reason string, message string) bool {
 	var validationException *networkmanager.ValidationException
 

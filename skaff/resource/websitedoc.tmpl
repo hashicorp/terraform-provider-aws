@@ -1,12 +1,12 @@
 ---
 subcategory: "{{ .Service }}"
 layout: "aws"
-page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceLower }}"
+page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
 description: |-
   Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
 ---
 
-# Resource: aws_{{ .ServicePackage }}_{{ .ResourceLower }}
+# Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
 
 Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
 
@@ -15,7 +15,7 @@ Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
 ### Basic Usage
 
 ```terraform
-resource "aws_{{ .ServicePackage }}_{{ .ResourceLower }}" "example" {
+resource "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "example" {
 }
 ```
 
@@ -38,16 +38,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_{{ .ServicePackage }}_{{ .ResourceLower }}` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `60m`)
-* `update` - (Optional, Default: `180m`)
-* `delete` - (Optional, Default: `90m`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
 {{ .Service }} {{ .Resource }} can be imported using the `example_id_arg`, e.g.,
 
 ```
-$ terraform import aws_{{ .ServicePackage }}_{{ .ResourceLower }}.example rft-8012925589
+$ terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example rft-8012925589
 ```

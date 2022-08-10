@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -174,13 +175,13 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIdentity, names.ErrActionReading, ResPool, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIdentity, names.ErrActionReading, ResPool, d.Id(), err)
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{

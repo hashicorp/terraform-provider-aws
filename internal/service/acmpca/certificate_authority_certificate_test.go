@@ -20,10 +20,10 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
@@ -51,10 +51,10 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
@@ -85,10 +85,10 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_subordinateCA(commonName),
@@ -112,7 +112,7 @@ func testAccCheckCertificateAuthorityCertificateExists(resourceName string, cert
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn

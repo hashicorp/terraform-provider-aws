@@ -25,7 +25,7 @@ type ServiceDatum struct {
 	SDKVersion        string
 	GoPackage         string
 	ProviderNameUpper string
-	ClientName        string
+	ClientTypeName    string
 }
 
 type TemplateData struct {
@@ -71,10 +71,10 @@ func main() {
 
 		if l[names.ColSDKVersion] == "1" {
 			s.GoPackage = l[names.ColGoV1Package]
-			s.ClientName = l[names.ColGoV1ClientName]
+			s.ClientTypeName = l[names.ColGoV1ClientTypeName]
 		} else {
 			s.GoPackage = l[names.ColGoV2Package]
-			s.ClientName = "Client"
+			s.ClientTypeName = "Client"
 		}
 
 		td.Services = append(td.Services, s)
@@ -150,7 +150,7 @@ type AWSClient struct {
 	TerraformVersion          string
 
 	{{ range .Services }}
-	{{ .ProviderNameUpper }}Conn *{{ .GoPackage }}.{{ .ClientName }}
+	{{ .ProviderNameUpper }}Conn *{{ .GoPackage }}.{{ .ClientTypeName }}
 	{{- end }}
 }
 

@@ -54,6 +54,13 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"disappears": testAccLFTag_disappears,
 			"values":     testAccLFTag_values,
 		},
+		"ResourceLFTags": {
+			"basic":            testAccResourceLFTags_basic,
+			"database":         testAccResourceLFTags_database,
+			"databaseMultiple": testAccResourceLFTags_databaseMultiple,
+			"table":            testAccResourceLFTags_table,
+			"tableWithColumns": testAccResourceLFTags_tableWithColumns,
+		},
 	}
 
 	for group, m := range testCases {

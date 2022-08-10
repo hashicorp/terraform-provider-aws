@@ -245,7 +245,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `on_demand_allocation_strategy` - The order of the launch template overrides to use in fulfilling On-Demand capacity. the possible values are: `lowestPrice` and `prioritized`. the default is `lowestPrice`.
 * `on_demand_max_total_price` - The maximum amount per hour for On-Demand Instances that you're willing to pay. When the maximum amount you're willing to pay is reached, the fleet stops launching instances even if it hasn’t met the target capacity.
 * `on_demand_target_capacity` - The number of On-Demand units to request. If the request type is `maintain`, you can specify a target capacity of 0 and add capacity later.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Launch Template Configs
 
@@ -382,20 +382,20 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
-* `delete` - (Defaults to 15 mins) Used when destroying the spot instance
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

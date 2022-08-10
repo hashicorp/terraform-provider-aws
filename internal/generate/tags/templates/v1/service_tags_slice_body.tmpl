@@ -1,0 +1,259 @@
+// []*SERVICE.Tag handling
+
+{{ if and ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
+// ListOfMap returns a list of {{ .ServicePackage }} in flattened map.
+//
+// Compatible with setting Terraform state for strongly typed configuration blocks.
+//
+// This function strips tag resource identifier and type. Generally, this is
+// the desired behavior so the tag schema does not require those attributes.
+// Use (tftags.KeyValueTags).ListOfMap() for full tag information.
+func ListOfMap(tags tftags.KeyValueTags) []interface{} {
+	var result []interface{}
+
+	for _, key := range tags.Keys() {
+		m := map[string]interface{}{
+			"key":                   key,
+			"value":                 aws.StringValue(tags.KeyValue(key)),
+			{{ if .TagTypeAddBoolElem }}
+			"{{ .TagTypeAddBoolElemSnake }}": aws.BoolValue(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
+			{{ end }}
+		}
+
+		result = append(result, m)
+	}
+
+	return result
+}
+{{- end }}
+
+{{ if eq .ServicePackage "autoscaling" }}
+// ListOfStringMap returns a list of {{ .ServicePackage }} tags in flattened map of only string values.
+//
+// Compatible with setting Terraform state for legacy []map[string]string schema.
+// Deprecated: Will be removed in a future major version without replacement.
+func ListOfStringMap(tags tftags.KeyValueTags) []interface{} {
+	var result []interface{}
+
+	for _, key := range tags.Keys() {
+		m := map[string]string{
+			"key":                   key,
+			"value":                 aws.StringValue(tags.KeyValue(key)),
+			{{ if .TagTypeAddBoolElem }}
+			"{{ .TagTypeAddBoolElemSnake }}": strconv.FormatBool(aws.BoolValue(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}"))),
+			{{ end }}
+		}
+
+		result = append(result, m)
+	}
+
+	return result
+}
+{{- end }}
+
+{{- if .TagKeyType }}
+// TagKeys returns {{ .ServicePackage }} service tag keys.
+func TagKeys(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagKeyType }} {
+	result := make([]*{{ .TagPackage }}.{{ .TagKeyType }}, 0, len(tags))
+
+	for k := range tags.Map() {
+		tagKey := &{{ .TagPackage }}.{{ .TagKeyType }}{
+			{{ .TagTypeKeyElem }}: aws.String(k),
+		}
+
+		result = append(result, tagKey)
+	}
+
+	return result
+}
+{{- end }}
+
+// Tags returns {{ .ServicePackage }} service tags.
+func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
+	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
+	var result []*{{ .TagPackage }}.{{ .TagType }}
+
+	for _, key := range tags.Keys() {
+		tag := &{{ .TagPackage }}.{{ .TagType }}{
+			{{ .TagTypeKeyElem }}:        aws.String(key),
+			{{ .TagTypeValElem }}:      tags.KeyValue(key),
+			{{- if ( .TagTypeIDElem ) }}
+			{{ .TagTypeIDElem }}: tags.KeyAdditionalStringValue(key, "{{ .TagTypeIDElem }}"),
+			{{- if ( .TagResTypeElem ) }}
+			{{ .TagResTypeElem }}:   tags.KeyAdditionalStringValue(key, "{{ .TagResTypeElem }}"),
+			{{- end }}
+			{{- end }}
+			{{- if .TagTypeAddBoolElem }}
+			{{ .TagTypeAddBoolElem }}:                          tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}"),
+			{{- end }}
+		}
+
+		result = append(result, tag)
+	}
+	{{- else }}
+	result := make([]*{{ .TagPackage }}.{{ .TagType }}, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &{{ .TagPackage }}.{{ .TagType }}{
+			{{ .TagTypeKeyElem }}:   aws.String(k),
+			{{ .TagTypeValElem }}: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+	{{- end }}
+
+	return result
+}
+
+// KeyValueTags creates tftags.KeyValueTags from {{ .AWSService }} service tags.
+{{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
+//
+// Accepts the following types:
+//   - []*{{ .TagPackage }}.{{ .TagType }}
+{{- if .TagType2 }}
+//   - []*{{ .TagPackage }}.{{ .TagType2 }}
+{{- end }}
+{{- if .TagTypeAddBoolElem }}
+//   - []interface{} (Terraform TypeList configuration block compatible)
+//   - *schema.Set (Terraform TypeSet configuration block compatible)
+{{- end }}
+func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
+	switch tags := tags.(type) {
+	case []*{{ .TagPackage }}.{{ .TagType }}:
+		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
+		m := make(map[string]*tftags.TagData, len(tags))
+
+		for _, tag := range tags {
+			tagData := &tftags.TagData{
+				Value: tag.{{ .TagTypeValElem }},
+			}
+
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			{{- if .TagTypeAddBoolElem }}
+			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = tag.{{ .TagTypeAddBoolElem }}
+			{{- end }}
+
+			{{- if .TagTypeIDElem }}
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["{{ .TagTypeIDElem }}"] = &identifier
+			{{- if .TagResTypeElem }}
+			tagData.AdditionalStringFields["{{ .TagResTypeElem }}"] = &resourceType
+			{{- end }}
+			{{- end }}
+
+			m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tagData
+		}
+		{{- else }}
+		m := make(map[string]*string, len(tags))
+
+		for _, tag := range tags {
+			m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tag.{{ .TagTypeValElem }}
+		}
+		{{- end }}
+
+		return tftags.New(m)
+	case []*{{ .TagPackage }}.{{ .TagType2 }}:
+		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
+		m := make(map[string]*tftags.TagData, len(tags))
+
+		for _, tag := range tags {
+			tagData := &tftags.TagData{
+				Value: tag.{{ .TagTypeValElem }},
+			}
+
+			{{- if .TagTypeAddBoolElem }}
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = tag.{{ .TagTypeAddBoolElem }}
+			{{- end }}
+
+			{{- if .TagTypeIDElem }}
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["{{ .TagTypeIDElem }}"] = &identifier
+			{{- if .TagResTypeElem }}
+			tagData.AdditionalStringFields["{{ .TagResTypeElem }}"] = &resourceType
+			{{- end }}
+			{{- end }}
+
+			m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tagData
+		}
+		{{- else }}
+		m := make(map[string]*string, len(tags))
+
+		for _, tag := range tags {
+			m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tag.{{ .TagTypeValElem }}
+		}
+		{{- end }}
+
+		return tftags.New(m)
+	{{- if .TagTypeAddBoolElem }}
+	case *schema.Set:
+		return KeyValueTags(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	case []interface{}:
+		result := make(map[string]*tftags.TagData)
+
+		for _, tfMapRaw := range tags {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			key, ok := tfMap["key"].(string)
+
+			if !ok {
+				continue
+			}
+
+			tagData := &tftags.TagData{}
+
+			if v, ok := tfMap["value"].(string); ok {
+				tagData.Value = &v
+			}
+
+			{{ if .TagTypeAddBoolElem }}
+			tagData.AdditionalBoolFields = make(map[string]*bool)
+			{{- if .TagTypeAddBoolElem }}
+			if v, ok := tfMap["{{ .TagTypeAddBoolElemSnake }}"].(bool); ok {
+				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &v
+			}
+			{{- end }}
+			{{ if eq .ServicePackage "autoscaling" }}
+			// Deprecated: Legacy map handling
+			{{- if .TagTypeAddBoolElem }}
+			if v, ok := tfMap["{{ .TagTypeAddBoolElemSnake }}"].(string); ok {
+				b, _ := strconv.ParseBool(v)
+				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &b
+			}
+			{{- end }}
+			{{- end }}
+			{{- end }}
+
+			{{ if .TagTypeIDElem }}
+			tagData.AdditionalStringFields = make(map[string]*string)
+			tagData.AdditionalStringFields["{{ .TagTypeIDElem }}"] = &identifier
+			{{- if .TagResTypeElem }}
+			tagData.AdditionalStringFields["{{ .TagResTypeElem }}"] = &resourceType
+			{{- end }}
+			{{- end }}
+
+			result[key] = tagData
+		}
+
+		return tftags.New(result)
+	{{- end }}
+	default:
+		return tftags.New(nil)
+	}
+}
+{{- else }}
+func KeyValueTags(tags []*{{ .TagPackage }}.{{ .TagType }}) tftags.KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.{{ .TagTypeKeyElem }})] = tag.{{ .TagTypeValElem }}
+	}
+
+	return tftags.New(m)
+}
+{{- end }}

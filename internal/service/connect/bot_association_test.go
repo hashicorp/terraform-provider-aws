@@ -15,31 +15,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectBotAssociation_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccBotAssociation_basic,
-		"disappears": testAccBotAssociation_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccBotAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
@@ -67,10 +52,10 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	instanceResourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),

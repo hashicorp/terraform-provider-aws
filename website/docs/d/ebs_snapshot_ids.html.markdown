@@ -46,4 +46,10 @@ several valid keys, for a full reference, check out
 * `id` - AWS Region.
 * `ids` - Set of EBS snapshot IDs, sorted by creation time in descending order.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
+
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html

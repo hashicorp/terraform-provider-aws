@@ -2,22 +2,28 @@
 package opensearch
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go/service/opensearchservice/opensearchserviceiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *opensearchservice.OpenSearchService, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn opensearchserviceiface.OpenSearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &opensearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(input)
+	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*opensearchservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates opensearch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *opensearchservice.OpenSearchService, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn opensearchserviceiface.OpenSearchServiceAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn opensearchserviceiface.OpenSearchServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +77,10 @@ func UpdateTags(conn *opensearchservice.OpenSearchService, identifier string, ol
 			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTags(input)
+		_, err := conn.RemoveTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +90,10 @@ func UpdateTags(conn *opensearchservice.OpenSearchService, identifier string, ol
 			TagList: Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTags(input)
+		_, err := conn.AddTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

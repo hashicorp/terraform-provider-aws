@@ -19,10 +19,10 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 	var a ec2.Address
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_instance(),
@@ -45,10 +45,10 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 	var a ec2.Address
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_networkInterface,
@@ -72,10 +72,10 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
@@ -102,10 +102,10 @@ func TestAccEC2EIPAssociation_ec2Classic(t *testing.T) {
 	resourceName := "aws_eip_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_classic(),
@@ -137,10 +137,10 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
@@ -166,10 +166,10 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEIPAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_disappears(rName),
@@ -426,7 +426,7 @@ resource "aws_eip_association" "test" {
 `, rName))
 }
 
-func testAccEIPAssociationConfig_classic() string { // nosemgrep:ec2-in-func-name
+func testAccEIPAssociationConfig_classic() string { // nosemgrep:ci.ec2-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPVEBSAMIConfig(),

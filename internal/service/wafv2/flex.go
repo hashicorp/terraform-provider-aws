@@ -80,6 +80,10 @@ func expandRuleAction(l []interface{}) *wafv2.RuleAction {
 		action.Block = expandBlockAction(v.([]interface{}))
 	}
 
+	if v, ok := m["captcha"]; ok && len(v.([]interface{})) > 0 {
+		action.Captcha = expandCaptchaAction(v.([]interface{}))
+	}
+
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
 		action.Count = expandCountAction(v.([]interface{}))
 	}
@@ -89,25 +93,6 @@ func expandRuleAction(l []interface{}) *wafv2.RuleAction {
 
 func expandAllowAction(l []interface{}) *wafv2.AllowAction {
 	action := &wafv2.AllowAction{}
-
-	if len(l) == 0 || l[0] == nil {
-		return action
-	}
-
-	m, ok := l[0].(map[string]interface{})
-	if !ok {
-		return action
-	}
-
-	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
-		action.CustomRequestHandling = expandCustomRequestHandling(v)
-	}
-
-	return action
-}
-
-func expandCountAction(l []interface{}) *wafv2.CountAction {
-	action := &wafv2.CountAction{}
 
 	if len(l) == 0 || l[0] == nil {
 		return action
@@ -139,6 +124,44 @@ func expandBlockAction(l []interface{}) *wafv2.BlockAction {
 
 	if v, ok := m["custom_response"].([]interface{}); ok && len(v) > 0 {
 		action.CustomResponse = expandCustomResponse(v)
+	}
+
+	return action
+}
+
+func expandCaptchaAction(l []interface{}) *wafv2.CaptchaAction {
+	action := &wafv2.CaptchaAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandCustomRequestHandling(v)
+	}
+
+	return action
+}
+
+func expandCountAction(l []interface{}) *wafv2.CountAction {
+	action := &wafv2.CountAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
 	return action
@@ -642,6 +665,10 @@ func flattenRuleAction(a *wafv2.RuleAction) interface{} {
 		m["block"] = flattenBlock(a.Block)
 	}
 
+	if a.Captcha != nil {
+		m["captcha"] = flattenCaptcha(a.Captcha)
+	}
+
 	if a.Count != nil {
 		m["count"] = flattenCount(a.Count)
 	}
@@ -671,6 +698,20 @@ func flattenBlock(a *wafv2.BlockAction) []interface{} {
 
 	if a.CustomResponse != nil {
 		m["custom_response"] = flattenCustomResponse(a.CustomResponse)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []interface{}{m}
