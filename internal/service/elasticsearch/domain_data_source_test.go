@@ -41,6 +41,7 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.throughput", resourceName, "ebs_options.0.throughput"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
@@ -150,7 +151,7 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t2.small.elasticsearch"
+    instance_type            = "t3.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -163,7 +164,9 @@ POLICY
 
   ebs_options {
     ebs_enabled = true
-    volume_type = "gp2"
+    iops        = 3000
+    throughput  = 125
+    volume_type = "gp3"
     volume_size = 20
   }
 
