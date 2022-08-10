@@ -1734,6 +1734,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_acceptor":                      networkmanager.ResourceAttachmentAcceptor(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1743,6 +1744,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVpcAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
