@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_directory_service_directory: Add `radius_settings` attribute ([#14045](https://github.com/hashicorp/terraform-provider-aws/issues/14045))
 * data-source/aws_directory_service_directory: Set `dns_ip_addresses` to the owner directory's DNS IP addresses for SharedMicrosoftAD directories ([#20819](https://github.com/hashicorp/terraform-provider-aws/issues/20819))
 * resource/aws_autoscaling_group: Better error handling when attempting to create Auto Scaling groups with incompatible options ([#25987](https://github.com/hashicorp/terraform-provider-aws/issues/25987))
+* resource/aws_backup_vault: Add `force_destroy` argument ([#26199](https://github.com/hashicorp/terraform-provider-aws/issues/26199))
 * resource/aws_directory_service_directory: Add `desired_number_of_domain_controllers` argument ([#25755](https://github.com/hashicorp/terraform-provider-aws/issues/25755))
 * resource/aws_directory_service_directory: Add configurable timeouts for Create, Update and Delete ([#25755](https://github.com/hashicorp/terraform-provider-aws/issues/25755))
 * resource/aws_directory_service_shared_directory: Add configurable timeouts for Delete ([#25755](https://github.com/hashicorp/terraform-provider-aws/issues/25755))
