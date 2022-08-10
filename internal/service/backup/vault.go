@@ -55,8 +55,8 @@ func ResourceVault() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]$`), "must consist of lowercase letters, numbers, and hyphens."),
+					validation.StringLenBetween(2, 50),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]*$`), "must consist of letters, numbers, and hyphens."),
 				),
 			},
 			"recovery_points": {
