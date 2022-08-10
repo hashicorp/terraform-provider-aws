@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +123,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	resp, err := conn.PurchaseReservedDBInstancesOfferingWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.RDS, names.ErrActionCreating, ResNameReservedInstance, d.Id(), err)
+		return create.DiagError(names.RDS, create.ErrActionCreating, ResNameReservedInstance, d.Id(), err)
 	}
 
 	d.SetId(aws.ToString(resp.ReservedDBInstance.ReservedDBInstanceId))
@@ -138,13 +139,13 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	reservation, err := FindReservedDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.RDS, names.ErrActionReading, ResNameReservedInstance, d.Id())
+		create.LogNotFoundRemoveState(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.RDS, names.ErrActionReading, ResNameReservedInstance, d.Id(), err)
+		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
 	}
 
 	d.Set("arn", reservation.ReservedDBInstanceArn)
@@ -168,16 +169,16 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResNameTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameTags, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResNameTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResNameTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 	}
 
 	return nil
@@ -190,7 +191,7 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return names.DiagError(names.RDS, names.ErrActionUpdating, ResNameTags, d.Id(), err)
+			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}
 
@@ -198,7 +199,7 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return names.DiagError(names.RDS, names.ErrActionUpdating, ResNameTags, d.Id(), err)
+			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
 		}
 	}
 
