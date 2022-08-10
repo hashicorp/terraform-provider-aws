@@ -180,67 +180,72 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:    Tags(tags.IgnoreAWS()),
 	}
 
-	if v, ok := d.GetOk("timeout"); ok {
-		input.Timeout = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("max_capacity"); ok {
-		input.MaxCapacity = aws.Float64(v.(float64))
-	}
-
 	if v, ok := d.GetOk("connections"); ok {
 		input.Connections = &glue.ConnectionsList{
 			Connections: flex.ExpandStringList(v.([]interface{})),
 		}
 	}
 
-	if kv, ok := d.GetOk("default_arguments"); ok {
-		input.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
-	}
-
-	if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-		input.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
+	if v, ok := d.GetOk("default_arguments"); ok {
+		input.DefaultArguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("glue_version"); ok {
-		input.GlueVersion = aws.String(v.(string))
+	if v, ok := d.GetOk("execution_class"); ok {
+		input.ExecutionClass = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("execution_property"); ok {
 		input.ExecutionProperty = expandExecutionProperty(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("glue_version"); ok {
+		input.GlueVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_capacity"); ok {
+		input.MaxCapacity = aws.Float64(v.(float64))
+	}
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		input.MaxRetries = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("non_overridable_arguments"); ok {
+		input.NonOverridableArguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("notification_property"); ok {
 		input.NotificationProperty = expandNotificationProperty(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("number_of_workers"); ok {
+		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("security_configuration"); ok {
 		input.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("timeout"); ok {
+		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("worker_type"); ok {
 		input.WorkerType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("number_of_workers"); ok {
-		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
-	}
-
 	log.Printf("[DEBUG] Creating Glue Job: %s", input)
-	_, err := conn.CreateJob(input)
+	output, err := conn.CreateJob(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Glue Job (%s): %s", name, err)
+		return fmt.Errorf("creating Glue Job (%s): %w", name, err)
 	}
 
-	d.SetId(name)
+	d.SetId(aws.StringValue(output.Name))
 
 	return resourceJobRead(d, meta)
 }
@@ -254,7 +259,6 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 		JobName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading Glue Job: %s", input)
 	output, err := conn.GetJob(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
@@ -337,9 +341,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
-	if d.HasChanges("command", "connections", "default_arguments", "description",
-		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
-		"role_arn", "security_configuration", "timeout", "worker_type", "non_overridable_arguments") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),
@@ -414,7 +416,7 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -425,25 +427,16 @@ func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	err := DeleteJob(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error deleting Glue Job (%s): %s", d.Id(), err)
+	_, err := conn.DeleteJob(&glue.DeleteJobInput{
+		JobName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil
 	}
 
-	return nil
-}
-
-func DeleteJob(conn *glue.Glue, jobName string) error {
-	input := &glue.DeleteJobInput{
-		JobName: aws.String(jobName),
-	}
-
-	_, err := conn.DeleteJob(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
-		}
-		return err
+		return fmt.Errorf("deleting Glue Job (%s): %w", d.Id(), err)
 	}
 
 	return nil
