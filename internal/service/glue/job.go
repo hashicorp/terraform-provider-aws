@@ -331,18 +331,6 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 			Role:    aws.String(d.Get("role_arn").(string)),
 		}
 
-		if v, ok := d.GetOk("timeout"); ok {
-			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("number_of_workers"); ok {
-			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
-		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
-				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
-			}
-		}
-
 		if v, ok := d.GetOk("connections"); ok {
 			jobUpdate.Connections = &glue.ConnectionsList{
 				Connections: flex.ExpandStringList(v.([]interface{})),
@@ -353,32 +341,48 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
-		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
-			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
-		}
-
 		if v, ok := d.GetOk("description"); ok {
 			jobUpdate.Description = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("glue_version"); ok {
-			jobUpdate.GlueVersion = aws.String(v.(string))
+		if v, ok := d.GetOk("execution_class"); ok {
+			jobUpdate.ExecutionClass = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("execution_property"); ok {
 			jobUpdate.ExecutionProperty = expandExecutionProperty(v.([]interface{}))
 		}
 
+		if v, ok := d.GetOk("glue_version"); ok {
+			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("max_retries"); ok {
 			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+		}
+
+		if kv, ok := d.GetOk("non_overridable_arguments"); ok {
+			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("notification_property"); ok {
 			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{}))
 		}
 
+		if v, ok := d.GetOk("number_of_workers"); ok {
+			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		} else {
+			if v, ok := d.GetOk("max_capacity"); ok {
+				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+			}
+		}
+
 		if v, ok := d.GetOk("security_configuration"); ok {
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("timeout"); ok {
+			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("worker_type"); ok {
@@ -392,8 +396,9 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[DEBUG] Updating Glue Job: %s", input)
 		_, err := conn.UpdateJob(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating Glue Job (%s): %s", d.Id(), err)
+			return fmt.Errorf("updating Glue Job (%s): %w", d.Id(), err)
 		}
 	}
 
