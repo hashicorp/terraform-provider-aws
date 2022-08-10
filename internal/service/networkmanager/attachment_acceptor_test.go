@@ -125,7 +125,7 @@ func testAccCheckVpcAttachmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfnetworkmanager.FindVpcAttachmentByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindVpcAttachmentByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 			continue
