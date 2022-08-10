@@ -51,13 +51,13 @@ func ResourceVault() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
-					      	validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]$`), "must consist of lowercase letters, numbers, and hyphens."),
-					      )
+					validation.StringLenBetween(1, 50),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]$`), "must consist of lowercase letters, numbers, and hyphens."),
+				),
 			},
 			"recovery_points": {
 				Type:     schema.TypeInt,
