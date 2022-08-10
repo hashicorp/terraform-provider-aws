@@ -14,6 +14,8 @@ import (
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 )
 
+// This test file serves as tests for aws_networkmanager_attachment_acceptor and the following attachment types
+// aws_networkmanager_vpc_attachment
 func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
