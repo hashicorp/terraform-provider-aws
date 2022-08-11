@@ -2,6 +2,7 @@ package opsworks_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +16,60 @@ import (
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func TestAccOpsWorksStack_basic(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			testAccPreCheckStacks(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
+					resource.TestCheckResourceAttr(resourceName, "color", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_json"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Ubuntu 12.04 LTS"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "instance-store"),
+					resource.TestCheckResourceAttr(resourceName, "default_ssh_key_name", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "default_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "hostname_theme", "Layer_Dependent"),
+					resource.TestCheckResourceAttr(resourceName, "manage_berkshelf", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "false"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 ///////////////////////////////
 //// Tests for the No-VPC case
@@ -281,6 +336,158 @@ func testAccPreCheckStacks(t *testing.T) {
 	}
 }
 
+////////////////////////////
+//// Checkers and Utilities
+////////////////////////////
+
+func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
+	resourceName := "aws_opsworks_stack.test"
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttr(resourceName, "name", rName),
+		resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
+		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
+		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+		resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
+		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
+		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+	)
+}
+
+func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+
+		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckStackDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_opsworks_stack" {
+			continue
+		}
+
+		_, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("OpsWorks Stack %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+//////////////////////////////////////////////////
+//// Helper configs for the necessary IAM objects
+//////////////////////////////////////////////////
+
+func testAccStackConfig_base(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "opsworks_service" {
+  name = "%[1]s-service"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "opsworks.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOT
+}
+
+resource "aws_iam_role_policy" "opsworks_service" {
+  name = "%[1]s-service"
+  role = aws_iam_role.opsworks_service.id
+
+  policy = <<EOT
+{
+  "Statement": [{
+    "Action": [
+      "ec2:*",
+      "iam:PassRole",
+      "cloudwatch:GetMetricStatistics",
+      "elasticloadbalancing:*",
+      "rds:*"
+    ],
+    "Effect": "Allow",
+    "Resource": ["*"]
+  }]
+}
+EOT
+}
+
+resource "aws_iam_role" "opsworks_instance" {
+  name = "%[1]s-instance"
+
+  assume_role_policy = <<EOT
+{
+  "Version": "2008-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "ec2.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOT
+}
+
+resource "aws_iam_instance_profile" "opsworks_instance" {
+  name = "%[1]s-instance"
+  role = aws_iam_role.opsworks_instance.name
+}
+`, rName)
+}
+
+func testAccStackConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(testAccStackConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2))
+}
+
+func testAccStackConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                          = %[1]q
+  region                        = %[2]q
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
+  default_subnet_id             = aws_subnet.test[0].id
+  vpc_id                        = aws_vpc.test.id
+  use_opsworks_security_groups  = false
+}
+`, rName, acctest.Region()))
+}
+
 func testAccStackConfig_classicEndpoint(rName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
@@ -454,76 +661,6 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 `, rName) //lintignore:AWSAT003,AT004
 }
-
-////////////////////////////
-//// Checkers and Utilities
-////////////////////////////
-
-func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
-	resourceName := "aws_opsworks_stack.test"
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr(resourceName, "name", rName),
-		resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
-		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
-		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-		resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
-		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
-		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
-	)
-}
-
-func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_stack" {
-			continue
-		}
-
-		_, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("OpsWorks Stack %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-//////////////////////////////////////////////////
-//// Helper configs for the necessary IAM objects
-//////////////////////////////////////////////////
 
 func testAccStackConfig_noVPCCreate(rName string) string {
 	return acctest.ConfigCompose(
