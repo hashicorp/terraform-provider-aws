@@ -595,7 +595,7 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(conn, aws.StringValue(output.TableArn), v.List(), nil, tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updateReplicaTags(conn, aws.StringValue(output.TableArn), v.List(), tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
@@ -912,20 +912,27 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	replicaTagsChange := false
 	if d.HasChange("replica") {
+		replicaTagsChange = true
+
 		if err := updateReplica(d, conn, meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
+		replicaTagsChange = true
+
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 		}
+	}
 
+	if replicaTagsChange {
 		if v, ok := d.Get("replica").(*schema.Set); ok && v.Len() > 0 {
-			if err := updateReplicaTags(conn, d.Get("arn").(string), v.List(), o, n, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			if err := updateReplicaTags(conn, d.Get("arn").(string), v.List(), d.Get("tags_all"), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 				return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 			}
 		}
@@ -967,6 +974,54 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // custom diff
+/*
+func replicaTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	if v, ok := tfMap["propagate_tags"].(bool); ok && v {
+		if aws.StringValue(conn.Config.Region) != region {
+			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+			if err != nil {
+				return fmt.Errorf("updating replica (%s) tags: %w", region, err)
+			}
+
+			conn = dynamodb.New(session)
+		}
+	}
+
+	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
+
+	if defaultTagsConfig.TagsEqual(resourceTags) {
+		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
+	}
+
+	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
+
+	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
+	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
+	// otherwise we mark the attribute as "Computed" only when their is a known diff (excluding an empty map)
+	// or a change for "tags_all".
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005
+	if len(allTags) > 0 {
+		if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+			return fmt.Errorf("error setting new tags_all diff: %w", err)
+		}
+	} else if len(diff.Get("tags_all").(map[string]interface{})) > 0 {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("error setting tags_all to computed: %w", err)
+		}
+	} else if diff.HasChange("tags_all") {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("error setting tags_all to computed: %w", err)
+		}
+	}
+
+	return nil
+}
+*/
 
 func isTableOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
@@ -1070,7 +1125,7 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 	return nil
 }
 
-func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{}, oldTags interface{}, newTags interface{}, terraformVersion string) error {
+func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{}, newTags interface{}, terraformVersion string) error {
 	for _, tfMapRaw := range replicas {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -1085,21 +1140,24 @@ func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{
 		}
 
 		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
-			if aws.StringValue(conn.Config.Region) != region {
-				session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
-				if err != nil {
-					return fmt.Errorf("updating replica (%s) tags: %w", region, err)
-				}
-
-				conn = dynamodb.New(session)
+			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+			if err != nil {
+				return fmt.Errorf("updating replica (%s) tags: %w", region, err)
 			}
 
-			newARN, err := ARNForNewRegion(rn, region)
+			conn = dynamodb.New(session)
+
+			repARN, err := ARNForNewRegion(rn, region)
 			if err != nil {
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			if err := UpdateTags(conn, newARN, oldTags, newTags); err != nil {
+			oldTags, err := ListTags(conn, repARN)
+			if err != nil {
+				return fmt.Errorf("listing tags (%s): %w", repARN, err)
+			}
+
+			if err := UpdateTags(conn, repARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
