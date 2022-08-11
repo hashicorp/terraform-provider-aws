@@ -24,7 +24,6 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -37,7 +36,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
@@ -55,7 +54,6 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var table1 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -68,7 +66,7 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &table1),
+					testAccCheckTableReplicaExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,7 +80,6 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -95,7 +92,7 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_pitr(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
 				),
 			},
@@ -113,7 +110,6 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -126,7 +122,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
 				),
@@ -139,7 +135,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
 					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
@@ -156,7 +152,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tags3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -175,7 +171,6 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -188,7 +183,7 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD"),
 				),
 			},
@@ -200,7 +195,7 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD_INFREQUENT_ACCESS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName, &conf),
+					testAccCheckTableReplicaExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD_INFREQUENT_ACCESS"),
 				),
 			},
@@ -263,7 +258,7 @@ func testAccCheckTableReplicaDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckTableReplicaExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+func testAccCheckTableReplicaExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table replica state!")
 		rs, ok := s.RootModule().Resources[n]
