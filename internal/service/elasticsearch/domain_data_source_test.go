@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
+func TestAccElasticsearchDomainDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -52,7 +52,7 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
+func TestAccElasticsearchDomainDataSource_advanced(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
