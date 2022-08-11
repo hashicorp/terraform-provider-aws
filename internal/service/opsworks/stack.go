@@ -434,76 +434,102 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	req := &opsworks.UpdateStackInput{
-		CustomJson:                aws.String(d.Get("custom_json").(string)),
-		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
-		DefaultRootDeviceType:     aws.String(d.Get("default_root_device_type").(string)),
-		DefaultSshKeyName:         aws.String(d.Get("default_ssh_key_name").(string)),
-		Name:                      aws.String(d.Get("name").(string)),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
-		StackId:                   aws.String(d.Id()),
-		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
-		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
-		Attributes:                make(map[string]*string),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &opsworks.UpdateStackInput{
+			StackId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("agent_version") {
+			input.AgentVersion = aws.String(d.Get("agent_version").(string))
+		}
+
+		if d.HasChanges("berkshelf_version", "manage_berkshelf") {
+			input.ChefConfiguration = &opsworks.ChefConfiguration{
+				BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
+				ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
+			}
+		}
+
+		if d.HasChange("color") {
+			input.Attributes = aws.StringMap(map[string]string{
+				opsworks.StackAttributesKeysColor: d.Get("color").(string),
+			})
+		}
+
+		if d.HasChanges("configuration_manager_name", "configuration_manager_version") {
+			input.ConfigurationManager = &opsworks.StackConfigurationManager{
+				Name:    aws.String(d.Get("configuration_manager_name").(string)),
+				Version: aws.String(d.Get("configuration_manager_version").(string)),
+			}
+		}
+
+		if d.HasChange("custom_json") {
+			input.CustomJson = aws.String(d.Get("custom_json").(string))
+		}
+
+		if d.HasChange("custom_cookbooks_source") {
+			if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("default_availability_zone") {
+			input.DefaultAvailabilityZone = aws.String(d.Get("default_availability_zone").(string))
+		}
+
+		if d.HasChange("default_instance_profile_arn") {
+			input.DefaultInstanceProfileArn = aws.String(d.Get("default_instance_profile_arn").(string))
+		}
+
+		if d.HasChange("default_os") {
+			input.DefaultOs = aws.String(d.Get("default_os").(string))
+		}
+
+		if d.HasChange("default_root_device_type") {
+			input.DefaultRootDeviceType = aws.String(d.Get("default_root_device_type").(string))
+		}
+
+		if d.HasChange("default_ssh_key_name") {
+			input.DefaultSshKeyName = aws.String(d.Get("default_ssh_key_name").(string))
+		}
+
+		if d.HasChange("default_subnet_id") {
+			input.DefaultSubnetId = aws.String(d.Get("default_subnet_id").(string))
+		}
+
+		if d.HasChange("hostname_theme") {
+			input.HostnameTheme = aws.String(d.Get("hostname_theme").(string))
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("service_role_arn") {
+			input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
+		}
+
+		if d.HasChange("use_custom_cookbooks") {
+			input.UseCustomCookbooks = aws.Bool(d.Get("use_custom_cookbooks").(bool))
+		}
+
+		if d.HasChange("use_opsworks_security_groups") {
+			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
+		}
+
+		log.Printf("[DEBUG] Updating OpsWorks Stack: %s", input)
+		_, err = conn.UpdateStack(input)
+
+		if err != nil {
+			return fmt.Errorf("updating OpsWorks Stack (%s): %w", d.Id(), err)
+		}
 	}
 
-	if v, ok := d.GetOk("agent_version"); ok {
-		req.AgentVersion = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		req.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("default_os"); ok {
-		req.DefaultOs = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("default_subnet_id"); ok {
-		req.DefaultSubnetId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("default_availability_zone"); ok {
-		req.DefaultAvailabilityZone = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("hostname_theme"); ok {
-		req.HostnameTheme = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("color"); ok {
-		req.Attributes["Color"] = aws.String(v.(string))
-	}
-
-	req.ChefConfiguration = &opsworks.ChefConfiguration{
-		BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
-		ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
-	}
-
-	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
-	}
-
-	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
-
-	_, err = conn.UpdateStack(req)
-	if err != nil {
-		return err
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    d.Get("region").(string),
-		Service:   "opsworks",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
-	}.String()
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
 		}
 	}
 
