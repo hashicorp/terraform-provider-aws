@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -15,7 +14,7 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
@@ -59,7 +58,7 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
@@ -107,7 +106,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  domain_substr = substr(%[1]q, 0, 28)
+  domain_substr = %[1]q
 }
 
 resource "aws_opensearch_domain" "test" {
@@ -252,7 +251,7 @@ resource "aws_security_group_rule" "test" {
 }
 
 locals {
-  domain_substr = substr(%[1]q, 0, 28)
+  domain_substr = %[1]q
 }
 
 resource "aws_opensearch_domain" "test" {
