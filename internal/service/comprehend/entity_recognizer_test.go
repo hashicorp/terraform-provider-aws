@@ -280,7 +280,7 @@ func TestAccComprehendEntityRecognizer_versionNamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccComprehendEntityRecognizer_testDocuments(t *testing.T) {
+func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -328,6 +328,166 @@ func TestAccComprehendEntityRecognizer_testDocuments(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var entityrecognizer types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_annotations_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.input_format", string(types.InputFormatOneDocPerLine)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.test_s3_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var entityrecognizer types.EntityRecognizerProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_entity_recognizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityRecognizerConfig_annotations_testDocuments(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEntityRecognizerExists(resourceName, &entityrecognizer),
+					testAccCheckEntityRecognizerPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.EntityRecognizerDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.documents.0.input_format", string(types.InputFormatOneDocPerLine)),
+					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.documents.0.test_s3_uri"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_annotations_validateNoTestDocuments(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEntityRecognizerConfig_annotations_noTestDocuments(rName),
+				ExpectError: regexp.MustCompile("input_data_config.documents.test_s3_uri must be set when input_data_config.annotations.test_s3_uri is set"),
+			},
+		},
+	})
+}
+
+func TestAccComprehendEntityRecognizer_annotations_validateNoTestAnnotations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEntityRecognizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEntityRecognizerConfig_annotations_noTestAnnotations(rName),
+				ExpectError: regexp.MustCompile("input_data_config.annotations.test_s3_uri must be set when input_data_config.documents.test_s3_uri is set"),
 			},
 		},
 	})
@@ -733,10 +893,6 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-// TODO: test deletion from in-error state. Try insufficient permissions to force error
-
-// TODO: add test for catching, e.g. permission errors in training
-
 func testAccCheckEntityRecognizerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
 	ctx := context.Background()
@@ -873,7 +1029,7 @@ func testAccEntityRecognizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -911,7 +1067,7 @@ func testAccEntityRecognizerConfig_versionName(rName, vName, key, value string) 
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -954,7 +1110,7 @@ func testAccEntityRecognizerConfig_versionNameEmpty(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -993,7 +1149,7 @@ func testAccEntityRecognizerConfig_versionNameNotSet(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1031,7 +1187,7 @@ func testAccEntityRecognizerConfig_versioNamePrefix(rName, versionNamePrefix str
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1070,7 +1226,7 @@ func testAccEntityRecognizerConfig_testDocuments(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1090,7 +1246,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
 
     documents {
       s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-	  test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
     }
 
     entity_list {
@@ -1105,11 +1261,167 @@ resource "aws_comprehend_entity_recognizer" "test" {
 `, rName))
 }
 
+func testAccEntityRecognizerConfig_annotations_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_annotations,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    annotations {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_annotations_testDocuments(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_annotations,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    annotations {
+      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_annotations_noTestDocuments(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_annotations,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    annotations {
+      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEntityRecognizerConfig_annotations_noTestAnnotations(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEntityRecognizerBasicRoleConfig(rName),
+		testAccEntityRecognizerS3BucketConfig(rName),
+		testAccEntityRecognizerConfig_S3_annotations,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_entity_recognizer" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    entity_types {
+      type = "ENGINEER"
+    }
+    entity_types {
+      type = "MANAGER"
+    }
+
+    documents {
+      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    }
+
+    annotations {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+    }
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
 func testAccEntityRecognizerConfig_kmsKeyIds(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1185,7 +1497,7 @@ func testAccEntityRecognizerConfig_kmsKeyARNs(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1261,7 +1573,7 @@ func testAccEntityRecognizerConfig_kmsKeys_None(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1299,7 +1611,7 @@ func testAccEntityRecognizerConfig_kmsKeys_Set(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1375,7 +1687,7 @@ func testAccEntityRecognizerConfig_kmsKeys_Update(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1451,7 +1763,7 @@ func testAccEntityRecognizerConfig_tags0(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1491,7 +1803,7 @@ func testAccEntityRecognizerConfig_tags1(rName, tagKey1, tagValue1 string) strin
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1533,7 +1845,7 @@ func testAccEntityRecognizerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tag
 	return acctest.ConfigCompose(
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1684,7 +1996,7 @@ func testAccEntityRecognizerConfig_vpcConfig(rName string) string {
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
 		configVPCWithSubnetsAndDNS(rName, subnetCount),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1805,7 +2117,7 @@ func testAccEntityRecognizerConfig_vpcConfig_Update(rName string) string {
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
 		configVPCWithSubnetsAndDNS(rName, subnetCount),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1924,7 +2236,7 @@ func testAccEntityRecognizerConfig_vpcConfig_None(rName string) string {
 		testAccEntityRecognizerBasicRoleConfig(rName),
 		testAccEntityRecognizerConfig_vpcRole(),
 		testAccEntityRecognizerS3BucketConfig(rName),
-		testAccEntityRecognizerConfig_S3_basic,
+		testAccEntityRecognizerConfig_S3_entityList,
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1960,7 +2272,7 @@ resource "aws_comprehend_entity_recognizer" "test" {
 `, rName))
 }
 
-const testAccEntityRecognizerConfig_S3_basic = `
+const testAccEntityRecognizerConfig_S3_entityList = `
 resource "aws_s3_object" "documents" {
   bucket = aws_s3_bucket.test.bucket
   key    = "documents.txt"
@@ -1972,4 +2284,18 @@ resource "aws_s3_object" "entities" {
   key    = "entitylist.csv"
   source = "test-fixtures/entity_recognizer/entitylist.csv"
 }
-  `
+`
+
+const testAccEntityRecognizerConfig_S3_annotations = `
+resource "aws_s3_object" "documents" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.txt"
+  source = "test-fixtures/entity_recognizer/documents.txt"
+}
+
+resource "aws_s3_object" "annotations" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "entitylist.csv"
+  source = "test-fixtures/entity_recognizer/annotations.csv"
+}
+`

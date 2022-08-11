@@ -62,9 +62,10 @@ func ResourceEntityRecognizer() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"annotations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"input_data_config.0.annotations", "input_data_config.0.entity_list"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"s3_uri": {
@@ -147,9 +148,10 @@ func ResourceEntityRecognizer() *schema.Resource {
 							},
 						},
 						"entity_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"input_data_config.0.entity_list", "input_data_config.0.annotations"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"s3_uri": {
@@ -241,10 +243,6 @@ func ResourceEntityRecognizer() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				if diff.Id() == "" {
-					return nil
-				}
-
 				tfMap := getInputDataConfig(diff)
 				if tfMap == nil {
 					return nil
@@ -257,6 +255,34 @@ func ResourceEntityRecognizer() *schema.Resource {
 				} else {
 					if tfMap["augmented_manifests"] == nil {
 						return fmt.Errorf("augmented_manifests must be set when data_format is %s", format)
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				tfMap := getInputDataConfig(diff)
+				if tfMap == nil {
+					return nil
+				}
+
+				documents := expandDocuments(tfMap["documents"].([]interface{}))
+				if documents == nil {
+					return nil
+				}
+
+				annotations := expandAnnotations(tfMap["annotations"].([]interface{}))
+				if annotations == nil {
+					return nil
+				}
+
+				if documents.TestS3Uri != nil {
+					if annotations.TestS3Uri == nil {
+						return errors.New("input_data_config.annotations.test_s3_uri must be set when input_data_config.documents.test_s3_uri is set")
+					}
+				} else {
+					if annotations.TestS3Uri != nil {
+						return errors.New("input_data_config.documents.test_s3_uri must be set when input_data_config.annotations.test_s3_uri is set")
 					}
 				}
 

@@ -99,7 +99,7 @@ The following arguments are optional:
   See the [`documents` Configuration Block](#documents-configuration-block) section below.
 * `entity_list` - (Optional) Specifies location of the entity list data.
   See the [`entity_list` Configuration Block](#entity_list-configuration-block) section below.
-  One of `entity_list` or`annotations`  is required.
+  One of `entity_list` or `annotations` is required.
 * `entity_types` - (Required) Set of entity types to be recognized.
   Has a maximum of 25 items.
   See the [`entity_types` Configuration Block](#entity_types-configuration-block) section below.
