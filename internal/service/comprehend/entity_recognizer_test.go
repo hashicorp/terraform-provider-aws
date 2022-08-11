@@ -988,7 +988,7 @@ func prefixedUniqueIDPattern(prefix string) string {
 	return fmt.Sprintf("%s[[:xdigit:]]{%d}", prefix, resource.UniqueIDSuffixLength)
 }
 
-func testAccCheckEntityRecognizerPublishedVersions(name string, count int) resource.TestCheckFunc {
+func testAccCheckEntityRecognizerPublishedVersions(name string, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1012,15 +1012,20 @@ func testAccCheckEntityRecognizerPublishedVersions(name string, count int) resou
 				RecognizerName: aws.String(name),
 			},
 		}
-		total := 0
+		count := 0
 		paginator := comprehend.NewListEntityRecognizersPaginator(conn, input)
 		for paginator.HasMorePages() {
 			output, err := paginator.NextPage(ctx)
 			if err != nil {
 				return err
 			}
-			total += len(output.EntityRecognizerPropertiesList)
+			count += len(output.EntityRecognizerPropertiesList)
 		}
+
+		if count != expected {
+			return fmt.Errorf("expected %d published versions, found %d", expected, count)
+		}
+
 		return nil
 	}
 }

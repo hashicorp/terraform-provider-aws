@@ -1546,35 +1546,40 @@ func deleteLingeringLambdaENIs(ctx context.Context, g *multierror.Group, conn *e
 	}
 
 	for _, v := range networkInterfaces {
-		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
+		v := v
+		g.Go(func() error {
+			networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
 
-		if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, networkInterfaceID, timeout)
+			if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
+				networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, networkInterfaceID, timeout)
 
-			if tfresource.NotFound(err) {
-				continue
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
+				if err != nil {
+					return fmt.Errorf("waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
+				}
+
+				v = networkInterface
 			}
+
+			if v.Attachment != nil {
+				err = DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
+
+				if err != nil {
+					return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
+				}
+			}
+
+			err = DeleteNetworkInterface(conn, networkInterfaceID)
 
 			if err != nil {
-				return fmt.Errorf("waiting for Lambda ENI (%s) to become available for detachment: %w", networkInterfaceID, err)
+				return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
 			}
 
-			v = networkInterface
-		}
-
-		if v.Attachment != nil {
-			err = DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout)
-
-			if err != nil {
-				return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
-			}
-		}
-
-		err = DeleteNetworkInterface(conn, networkInterfaceID)
-
-		if err != nil {
-			return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
-		}
+			return nil
+		})
 	}
 
 	return nil
