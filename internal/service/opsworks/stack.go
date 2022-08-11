@@ -183,74 +183,85 @@ func ResourceStack() *schema.Resource {
 	}
 }
 
-func resourceStackValidate(d *schema.ResourceData) error {
-	cookbooksSourceCount := d.Get("custom_cookbooks_source.#").(int)
-	if cookbooksSourceCount > 1 {
-		return fmt.Errorf("Only one custom_cookbooks_source is permitted")
-	}
+func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	vpcId := d.Get("vpc_id").(string)
-	if vpcId != "" {
-		if d.Get("default_subnet_id").(string) == "" {
-			return fmt.Errorf("default_subnet_id must be set if vpc_id is set")
-		}
-	} else {
-		if d.Get("default_availability_zone").(string) == "" {
-			return fmt.Errorf("either vpc_id or default_availability_zone must be set")
-		}
-	}
-
-	return nil
-}
-
-func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
-	count := d.Get("custom_cookbooks_source.#").(int)
-	if count == 0 {
-		return nil
-	}
-
-	return &opsworks.Source{
-		Type:     aws.String(d.Get("custom_cookbooks_source.0.type").(string)),
-		Url:      aws.String(d.Get("custom_cookbooks_source.0.url").(string)),
-		Username: aws.String(d.Get("custom_cookbooks_source.0.username").(string)),
-		Password: aws.String(d.Get("custom_cookbooks_source.0.password").(string)),
-		Revision: aws.String(d.Get("custom_cookbooks_source.0.revision").(string)),
-		SshKey:   aws.String(d.Get("custom_cookbooks_source.0.ssh_key").(string)),
-	}
-}
-
-func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
-	nv := make([]interface{}, 0, 1)
-	if v != nil && aws.StringValue(v.Type) != "" {
-		m := make(map[string]interface{})
-		if v.Type != nil {
-			m["type"] = aws.StringValue(v.Type)
-		}
-		if v.Url != nil {
-			m["url"] = aws.StringValue(v.Url)
-		}
-		if v.Username != nil {
-			m["username"] = aws.StringValue(v.Username)
-		}
-		if v.Revision != nil {
-			m["revision"] = aws.StringValue(v.Revision)
-		}
-
-		// v.Password and v.SshKey will, on read, contain the placeholder string
-		// "*****FILTERED*****", so we ignore it on read and let persist
-		// the value already in the state.
-		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
-		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
-
-		nv = append(nv, m)
-	}
-
-	err := d.Set("custom_cookbooks_source", nv)
+	err := resourceStackValidate(d)
 	if err != nil {
-		// should never happen
 		return err
 	}
-	return nil
+
+	req := &opsworks.CreateStackInput{
+		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
+		Name:                      aws.String(d.Get("name").(string)),
+		Region:                    aws.String(d.Get("region").(string)),
+		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
+		DefaultOs:                 aws.String(d.Get("default_os").(string)),
+		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
+	}
+	req.ConfigurationManager = &opsworks.StackConfigurationManager{
+		Name:    aws.String(d.Get("configuration_manager_name").(string)),
+		Version: aws.String(d.Get("configuration_manager_version").(string)),
+	}
+	inVpc := false
+	if vpcId, ok := d.GetOk("vpc_id"); ok {
+		req.VpcId = aws.String(vpcId.(string))
+		inVpc = true
+	}
+	if defaultSubnetId, ok := d.GetOk("default_subnet_id"); ok {
+		req.DefaultSubnetId = aws.String(defaultSubnetId.(string))
+	}
+	if defaultAvailabilityZone, ok := d.GetOk("default_availability_zone"); ok {
+		req.DefaultAvailabilityZone = aws.String(defaultAvailabilityZone.(string))
+	}
+	if defaultRootDeviceType, ok := d.GetOk("default_root_device_type"); ok {
+		req.DefaultRootDeviceType = aws.String(defaultRootDeviceType.(string))
+	}
+
+	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
+
+	var resp *opsworks.CreateStackOutput
+	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+		resp, err = conn.CreateStack(req)
+		if err != nil {
+			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
+			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
+			// to do fragile message matching.
+			// The full error we're looking for looks something like the following:
+			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
+			propErr := "not yet propagated"
+			trustErr := "not the necessary trust relationship"
+			validateErr := "validate IAM role permission"
+
+			if tfawserr.ErrMessageContains(err, "ValidationException", propErr) || tfawserr.ErrMessageContains(err, "ValidationException", trustErr) || tfawserr.ErrMessageContains(err, "ValidationException", validateErr) {
+				log.Printf("[INFO] Waiting for service IAM role to propagate")
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		resp, err = conn.CreateStack(req)
+	}
+	if err != nil {
+		return fmt.Errorf("Error creating Opsworks stack: %s", err)
+	}
+
+	d.SetId(aws.StringValue(resp.StackId))
+
+	if inVpc && *req.UseOpsworksSecurityGroups {
+		// For VPC-based stacks, OpsWorks asynchronously creates some default
+		// security groups which must exist before layers can be created.
+		// Unfortunately it doesn't tell us what the ids of these are, so
+		// we can't actually check for them. Instead, we just wait a nominal
+		// amount of time for their creation to complete.
+		log.Print("[INFO] Waiting for OpsWorks built-in security groups to be created")
+		time.Sleep(securityGroupsCreatedSleepTime)
+	}
+
+	return resourceStackUpdate(d, meta)
 }
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
@@ -377,111 +388,6 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-// opsworksConn will return a connection for the stack_endpoint in the
-// configuration. Stacks can only be accessed or managed within the endpoint
-// in which they are created, so we allow users to specify an original endpoint
-// for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
-// See:
-//   - https://github.com/hashicorp/terraform/pull/12688
-//   - https://github.com/hashicorp/terraform/issues/12842
-func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
-	originalConn := meta.(*conns.AWSClient).OpsWorksConn
-
-	// Regions are the same, no need to reconfigure
-	if aws.StringValue(originalConn.Config.Region) == region {
-		return originalConn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating AWS session: %w", err)
-	}
-
-	return opsworks.New(sess), nil
-}
-
-func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-
-	err := resourceStackValidate(d)
-	if err != nil {
-		return err
-	}
-
-	req := &opsworks.CreateStackInput{
-		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
-		Name:                      aws.String(d.Get("name").(string)),
-		Region:                    aws.String(d.Get("region").(string)),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
-		DefaultOs:                 aws.String(d.Get("default_os").(string)),
-		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
-	}
-	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
-	}
-	inVpc := false
-	if vpcId, ok := d.GetOk("vpc_id"); ok {
-		req.VpcId = aws.String(vpcId.(string))
-		inVpc = true
-	}
-	if defaultSubnetId, ok := d.GetOk("default_subnet_id"); ok {
-		req.DefaultSubnetId = aws.String(defaultSubnetId.(string))
-	}
-	if defaultAvailabilityZone, ok := d.GetOk("default_availability_zone"); ok {
-		req.DefaultAvailabilityZone = aws.String(defaultAvailabilityZone.(string))
-	}
-	if defaultRootDeviceType, ok := d.GetOk("default_root_device_type"); ok {
-		req.DefaultRootDeviceType = aws.String(defaultRootDeviceType.(string))
-	}
-
-	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
-
-	var resp *opsworks.CreateStackOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreateStack(req)
-		if err != nil {
-			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
-			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
-			// to do fragile message matching.
-			// The full error we're looking for looks something like the following:
-			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
-			propErr := "not yet propagated"
-			trustErr := "not the necessary trust relationship"
-			validateErr := "validate IAM role permission"
-
-			if tfawserr.ErrMessageContains(err, "ValidationException", propErr) || tfawserr.ErrMessageContains(err, "ValidationException", trustErr) || tfawserr.ErrMessageContains(err, "ValidationException", validateErr) {
-				log.Printf("[INFO] Waiting for service IAM role to propagate")
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateStack(req)
-	}
-	if err != nil {
-		return fmt.Errorf("Error creating Opsworks stack: %s", err)
-	}
-
-	d.SetId(aws.StringValue(resp.StackId))
-
-	if inVpc && *req.UseOpsworksSecurityGroups {
-		// For VPC-based stacks, OpsWorks asynchronously creates some default
-		// security groups which must exist before layers can be created.
-		// Unfortunately it doesn't tell us what the ids of these are, so
-		// we can't actually check for them. Instead, we just wait a nominal
-		// amount of time for their creation to complete.
-		log.Print("[INFO] Waiting for OpsWorks built-in security groups to be created")
-		time.Sleep(securityGroupsCreatedSleepTime)
-	}
-
-	return resourceStackUpdate(d, meta)
 }
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -611,4 +517,98 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourceStackValidate(d *schema.ResourceData) error {
+	cookbooksSourceCount := d.Get("custom_cookbooks_source.#").(int)
+	if cookbooksSourceCount > 1 {
+		return fmt.Errorf("Only one custom_cookbooks_source is permitted")
+	}
+
+	vpcId := d.Get("vpc_id").(string)
+	if vpcId != "" {
+		if d.Get("default_subnet_id").(string) == "" {
+			return fmt.Errorf("default_subnet_id must be set if vpc_id is set")
+		}
+	} else {
+		if d.Get("default_availability_zone").(string) == "" {
+			return fmt.Errorf("either vpc_id or default_availability_zone must be set")
+		}
+	}
+
+	return nil
+}
+
+func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
+	count := d.Get("custom_cookbooks_source.#").(int)
+	if count == 0 {
+		return nil
+	}
+
+	return &opsworks.Source{
+		Type:     aws.String(d.Get("custom_cookbooks_source.0.type").(string)),
+		Url:      aws.String(d.Get("custom_cookbooks_source.0.url").(string)),
+		Username: aws.String(d.Get("custom_cookbooks_source.0.username").(string)),
+		Password: aws.String(d.Get("custom_cookbooks_source.0.password").(string)),
+		Revision: aws.String(d.Get("custom_cookbooks_source.0.revision").(string)),
+		SshKey:   aws.String(d.Get("custom_cookbooks_source.0.ssh_key").(string)),
+	}
+}
+
+func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
+	nv := make([]interface{}, 0, 1)
+	if v != nil && aws.StringValue(v.Type) != "" {
+		m := make(map[string]interface{})
+		if v.Type != nil {
+			m["type"] = aws.StringValue(v.Type)
+		}
+		if v.Url != nil {
+			m["url"] = aws.StringValue(v.Url)
+		}
+		if v.Username != nil {
+			m["username"] = aws.StringValue(v.Username)
+		}
+		if v.Revision != nil {
+			m["revision"] = aws.StringValue(v.Revision)
+		}
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
+		// "*****FILTERED*****", so we ignore it on read and let persist
+		// the value already in the state.
+		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
+		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
+
+		nv = append(nv, m)
+	}
+
+	err := d.Set("custom_cookbooks_source", nv)
+	if err != nil {
+		// should never happen
+		return err
+	}
+	return nil
+}
+
+// opsworksConn will return a connection for the stack_endpoint in the
+// configuration. Stacks can only be accessed or managed within the endpoint
+// in which they are created, so we allow users to specify an original endpoint
+// for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
+// See:
+//   - https://github.com/hashicorp/terraform/pull/12688
+//   - https://github.com/hashicorp/terraform/issues/12842
+func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
+	originalConn := meta.(*conns.AWSClient).OpsWorksConn
+
+	// Regions are the same, no need to reconfigure
+	if aws.StringValue(originalConn.Config.Region) == region {
+		return originalConn, nil
+	}
+
+	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating AWS session: %w", err)
+	}
+
+	return opsworks.New(sess), nil
 }
