@@ -56,6 +56,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -1175,6 +1176,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cognito_user_pool_client":           cognitoidp.ResourceUserPoolClient(),
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
+
+			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),

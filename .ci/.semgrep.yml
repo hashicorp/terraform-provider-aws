@@ -158,16 +158,18 @@ rules:
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
-    message: Prefer `flex.FlattenStringSet()` function for casting a list of string pointers to a set
+    message: Prefer `flex.FlattenStringSet()` or `flex.FlattenStringValueSet()`
     paths:
       include:
         - internal/
-    pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
+    patterns:
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringValueList($APIOBJECT))
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-expandStringList-with-List
     languages: [go]
-    message: Prefer `flex.ExpandStringSet()` function for casting a set to a list of string pointers
+    message: Prefer `flex.ExpandStringSet()` or `flex.ExpandStringValueSet()`
     paths:
       include:
         - internal/
@@ -178,6 +180,11 @@ rules:
               $LIST := $SET.List()
               ...
               flex.ExpandStringList($LIST)
+          - pattern: flex.ExpandStringValueList($SET.List())
+          - pattern: |
+              $LIST := $SET.List()
+              ...
+              flex.ExpandStringValueList($LIST)
     severity: WARNING
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
