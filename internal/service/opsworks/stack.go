@@ -538,6 +538,35 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func FindStackByID(conn *opsworks.OpsWorks, id string) (*opsworks.Stack, error) {
+	input := &opsworks.DescribeStacksInput{
+		StackIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeStacks(input)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Stacks) == 0 || output.Stacks[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Stacks); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Stacks[0], nil
+}
+
 func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 	if tfMap == nil {
 		return nil

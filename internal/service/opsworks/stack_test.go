@@ -7,12 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 ///////////////////////////////
@@ -22,7 +23,7 @@ import (
 func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var opsstack opsworks.Stack
+	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -37,7 +38,7 @@ func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 			{
 				Config: testAccStackConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					testAccCheckCreateStackAttributes(rName),
 				),
 			},
@@ -53,7 +54,7 @@ func TestAccOpsWorksStack_noVPCBasic(t *testing.T) {
 func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var before, after opsworks.Stack
+	var v1, v2 opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -68,7 +69,7 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 			{
 				Config: testAccStackConfig_noVPCCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &before),
+					testAccCheckStackExists(resourceName, &v1),
 				),
 			},
 			{
@@ -79,8 +80,8 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 			{
 				Config: testAccStackConfig_noVPCCreateUpdateServiceRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &after),
-					testAccCheckStackRecreated(t, &before, &after),
+					testAccCheckStackExists(resourceName, &v2),
+					testAccCheckStackRecreated(t, &v1, &v2),
 				),
 			},
 		},
@@ -90,7 +91,7 @@ func TestAccOpsWorksStack_noVPCChangeServiceRoleForceNew(t *testing.T) {
 func TestAccOpsWorksStack_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var opsstack opsworks.Stack
+	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -105,7 +106,7 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 			{
 				Config: testAccStackConfig_vpcCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, true, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					testAccCheckCreateStackAttributes(rName),
 				),
 			},
@@ -117,7 +118,7 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 			{
 				Config: testAccStackConfig_vpcUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, true, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2015.09"),
@@ -139,7 +140,7 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var opsstack opsworks.Stack
+	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -154,7 +155,7 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 			{
 				Config: testAccStackConfig_noVPCCreateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
@@ -167,7 +168,7 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 			{
 				Config: testAccStackConfig_noVPCUpdateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.wut", "asdf"),
 				),
@@ -183,7 +184,7 @@ func TestAccOpsWorksStack_noVPCCreateTags(t *testing.T) {
 func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 	resourceName := "aws_opsworks_stack.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var opsstack opsworks.Stack
+	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -198,7 +199,7 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 			{
 				Config: testAccStackConfig_customCookbooksSet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, true, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
@@ -225,7 +226,7 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var opsstack opsworks.Stack
+	var v opsworks.Stack
 
 	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
 	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
@@ -238,7 +239,7 @@ func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
 			{
 				Config: testAccStackConfig_classicEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, false, &opsstack),
+					testAccCheckStackExists(resourceName, &v),
 				),
 			},
 			{
@@ -471,7 +472,7 @@ func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
 	)
 }
 
-func testAccCheckStackExists(n string, vpc bool, opsstack *opsworks.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -484,29 +485,13 @@ func testAccCheckStackExists(n string, vpc bool, opsstack *opsworks.Stack) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
-		params := &opsworks.DescribeStacksInput{
-			StackIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeStacks(params)
+		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.Stacks); v != 1 {
-			return fmt.Errorf("Expected 1 response returned, got %d", v)
-		}
-
-		*opsstack = *resp.Stacks[0]
-
-		if vpc {
-			if rs.Primary.Attributes["vpc_id"] != aws.StringValue(opsstack.VpcId) {
-				return fmt.Errorf("VPCID Got %s, expected %s", *opsstack.VpcId, rs.Primary.Attributes["vpc_id"])
-			}
-			if rs.Primary.Attributes["default_subnet_id"] != aws.StringValue(opsstack.DefaultSubnetId) {
-				return fmt.Errorf("Default subnet Id Got %s, expected %s", *opsstack.DefaultSubnetId, rs.Primary.Attributes["default_subnet_id"])
-			}
-		}
+		*v = *output
 
 		return nil
 	}
@@ -514,26 +499,23 @@ func testAccCheckStackExists(n string, vpc bool, opsstack *opsworks.Stack) resou
 
 func testAccCheckStackDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_stack" {
 			continue
 		}
 
-		req := &opsworks.DescribeStacksInput{
-			StackIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		}
+		_, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
 
-		_, err := conn.DescribeStacks(req)
-
-		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("OpsWorks Stack %s still exists", rs.Primary.ID)
 	}
 
 	return nil
