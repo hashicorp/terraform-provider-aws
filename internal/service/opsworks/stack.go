@@ -411,23 +411,32 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 		Attributes:                make(map[string]*string),
-		CustomCookbooksSource:     resourceStackCustomCookbooksSource(d),
 	}
+
 	if v, ok := d.GetOk("agent_version"); ok {
 		req.AgentVersion = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		req.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("default_os"); ok {
 		req.DefaultOs = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("default_subnet_id"); ok {
 		req.DefaultSubnetId = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("default_availability_zone"); ok {
 		req.DefaultAvailabilityZone = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("hostname_theme"); ok {
 		req.HostnameTheme = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("color"); ok {
 		req.Attributes["Color"] = aws.String(v.(string))
 	}
@@ -514,20 +523,38 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceStackCustomCookbooksSource(d *schema.ResourceData) *opsworks.Source {
-	count := d.Get("custom_cookbooks_source.#").(int)
-	if count == 0 {
+func expandSource(tfMap map[string]interface{}) *opsworks.Source {
+	if tfMap == nil {
 		return nil
 	}
 
-	return &opsworks.Source{
-		Type:     aws.String(d.Get("custom_cookbooks_source.0.type").(string)),
-		Url:      aws.String(d.Get("custom_cookbooks_source.0.url").(string)),
-		Username: aws.String(d.Get("custom_cookbooks_source.0.username").(string)),
-		Password: aws.String(d.Get("custom_cookbooks_source.0.password").(string)),
-		Revision: aws.String(d.Get("custom_cookbooks_source.0.revision").(string)),
-		SshKey:   aws.String(d.Get("custom_cookbooks_source.0.ssh_key").(string)),
+	apiObject := &opsworks.Source{}
+
+	if v, ok := tfMap["password"].(string); ok && v != "" {
+		apiObject.Password = aws.String(v)
 	}
+
+	if v, ok := tfMap["revision"].(string); ok && v != "" {
+		apiObject.Revision = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssh_key"].(string); ok && v != "" {
+		apiObject.SshKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	if v, ok := tfMap["url"].(string); ok && v != "" {
+		apiObject.Url = aws.String(v)
+	}
+
+	if v, ok := tfMap["username"].(string); ok && v != "" {
+		apiObject.Username = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
