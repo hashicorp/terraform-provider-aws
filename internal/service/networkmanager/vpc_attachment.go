@@ -284,7 +284,7 @@ func expandVPCAttachmentOptions(l []interface{}) *networkmanager.VpcOptions {
 	m := l[0].(map[string]interface{})
 
 	opts := &networkmanager.VpcOptions{
-		Ipv6Support: aws.Bool(bool(m["ipv6_support"].(bool))),
+		Ipv6Support: aws.Bool(m["ipv6_support"].(bool)),
 	}
 
 	return opts
