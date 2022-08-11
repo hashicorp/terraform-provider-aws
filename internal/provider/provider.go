@@ -1284,6 +1284,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
+			"aws_dynamodb_table_replica":                 dynamodb.ResourceTableReplica(),
 			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
 
 			"aws_ami":                                              ec2.ResourceAMI(),
