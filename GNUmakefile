@@ -202,7 +202,8 @@ semgrep:
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep --config .ci/.semgrep.yml \
+	@semgrep --error --quiet --metrics=off \
+		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
