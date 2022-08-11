@@ -34,6 +34,7 @@ BUG FIXES:
 * resource/aws_appflow_flow: Fix `trigger_properties.schedule` being set to `trigger_properties.trigger_properties` during resource read ([#26240](https://github.com/hashicorp/terraform-provider-aws/issues/26240))
 * resource/aws_db_instance: Add retries (for handling IAM eventual consistency) when creating database replicas that use enhanced monitoring ([#20926](https://github.com/hashicorp/terraform-provider-aws/issues/20926))
 * resource/aws_db_instance: Apply `monitoring_interval` and `monitoring_role_arn` when creating via `restore_to_point_in_time` ([#20926](https://github.com/hashicorp/terraform-provider-aws/issues/20926))
+* resource/aws_dynamodb_table: Fix `replica.*.propagate_tags` not propagating tags to newly added replicas ([#26257](https://github.com/hashicorp/terraform-provider-aws/issues/26257))
 * resource/aws_emr_instance_group: Handle deleted instance groups during resource read ([#26154](https://github.com/hashicorp/terraform-provider-aws/issues/26154))
 * resource/aws_emr_instance_group: Mark `instance_count` as Computed to prevent diff when autoscaling is active ([#26154](https://github.com/hashicorp/terraform-provider-aws/issues/26154))
 * resource/aws_lb_listener: Fix `ValidationError` when tags are added on `create` ([#26194](https://github.com/hashicorp/terraform-provider-aws/issues/26194))
