@@ -30,6 +30,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the job queue.
+* `scheduling_policy_arn` - The ARN of the fair share scheduling policy. If this attribute has a value, the job queue uses a fair share scheduling policy. If this attribute does not have a value, the job queue uses a first in, first out (FIFO) scheduling policy.
 * `status` - The current status of the job queue (for example, `CREATING` or `VALID`).
 * `status_reason` - A short, human-readable string to provide additional details about the current status
     of the job queue.

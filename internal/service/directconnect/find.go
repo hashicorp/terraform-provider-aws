@@ -3,7 +3,7 @@ package directconnect
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -99,7 +99,7 @@ func FindGatewayAssociationByID(conn *directconnect.DirectConnect, id string) (*
 	return FindGatewayAssociation(conn, input)
 }
 
-func FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, associatedGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		AssociatedGatewayId:    aws.String(associatedGatewayID),
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
@@ -108,7 +108,7 @@ func FindGatewayAssociationByDirectConnectGatewayIDAndAssociatedGatewayID(conn *
 	return FindGatewayAssociation(conn, input)
 }
 
-func FindGatewayAssociationByDirectConnectGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
+func FindGatewayAssociationByGatewayIDAndVirtualGatewayID(conn *directconnect.DirectConnect, directConnectGatewayID, virtualGatewayID string) (*directconnect.GatewayAssociation, error) {
 	input := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
 		DirectConnectGatewayId: aws.String(directConnectGatewayID),
 		VirtualGatewayId:       aws.String(virtualGatewayID),

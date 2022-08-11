@@ -53,18 +53,6 @@ resource "aws_autoscaling_group" "app" {
   launch_configuration = aws_launch_configuration.app.name
 }
 
-data "template_file" "cloud_config" {
-  template = file("${path.module}/cloud-config.yml")
-
-  vars = {
-    aws_region         = var.aws_region
-    ecs_cluster_name   = aws_ecs_cluster.main.name
-    ecs_log_level      = "info"
-    ecs_agent_version  = "latest"
-    ecs_log_group_name = aws_cloudwatch_log_group.ecs.name
-  }
-}
-
 data "aws_ami" "stable_coreos" {
   most_recent = true
 
@@ -91,11 +79,17 @@ resource "aws_launch_configuration" "app" {
     aws_security_group.instance_sg.id,
   ]
 
-  key_name                    = var.key_name
-  image_id                    = data.aws_ami.stable_coreos.id
-  instance_type               = var.instance_type
-  iam_instance_profile        = aws_iam_instance_profile.app.name
-  user_data                   = data.template_file.cloud_config.rendered
+  key_name             = var.key_name
+  image_id             = data.aws_ami.stable_coreos.id
+  instance_type        = var.instance_type
+  iam_instance_profile = aws_iam_instance_profile.app.name
+  user_data = templatefile("${path.module}/cloud-config.yml", {
+    aws_region         = var.aws_region
+    ecs_cluster_name   = aws_ecs_cluster.main.name
+    ecs_log_level      = "info"
+    ecs_agent_version  = "latest"
+    ecs_log_group_name = aws_cloudwatch_log_group.ecs.name
+  })
   associate_public_ip_address = true
 
   lifecycle {
@@ -168,20 +162,14 @@ resource "aws_ecs_cluster" "main" {
   name = "terraform_example_ecs_cluster"
 }
 
-data "template_file" "task_definition" {
-  template = file("${path.module}/task-definition.json")
-
-  vars = {
+resource "aws_ecs_task_definition" "ghost" {
+  family = "tf_example_ghost_td"
+  container_definitions = templatefile("${path.module}/task-definition.json", {
     image_url        = "ghost:latest"
     container_name   = "ghost"
     log_group_region = var.aws_region
     log_group_name   = aws_cloudwatch_log_group.app.name
-  }
-}
-
-resource "aws_ecs_task_definition" "ghost" {
-  family                = "tf_example_ghost_td"
-  container_definitions = data.template_file.task_definition.rendered
+  })
 }
 
 resource "aws_ecs_service" "test" {
@@ -275,19 +263,13 @@ resource "aws_iam_role" "app_instance" {
 EOF
 }
 
-data "template_file" "instance_profile" {
-  template = file("${path.module}/instance-profile-policy.json")
-
-  vars = {
+resource "aws_iam_role_policy" "instance" {
+  name = "TfEcsExampleInstanceRole"
+  role = aws_iam_role.app_instance.name
+  policy = templatefile("${path.module}/instance-profile-policy.json", {
     app_log_group_arn = aws_cloudwatch_log_group.app.arn
     ecs_log_group_arn = aws_cloudwatch_log_group.ecs.arn
-  }
-}
-
-resource "aws_iam_role_policy" "instance" {
-  name   = "TfEcsExampleInstanceRole"
-  role   = aws_iam_role.app_instance.name
-  policy = data.template_file.instance_profile.rendered
+  })
 }
 
 ## ALB

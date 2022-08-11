@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_nat_gateway"
 description: |-
@@ -69,3 +69,9 @@ Each attachment supports the following:
 * `network_interface_id` - The Id of the ENI allocated to the selected Nat Gateway.
 * `private_ip` - The private Ip address of the selected Nat Gateway.
 * `public_ip` - The public Ip (EIP) address of the selected Nat Gateway.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

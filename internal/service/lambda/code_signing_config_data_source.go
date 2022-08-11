@@ -98,7 +98,7 @@ func dataSourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting lambda code signing config last modified: %w", err)
 	}
 
-	if err := d.Set("allowed_publishers", flattenLambdaCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
+	if err := d.Set("allowed_publishers", flattenCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
 		return fmt.Errorf("error setting lambda code signing config allowed publishers: %w", err)
 	}
 

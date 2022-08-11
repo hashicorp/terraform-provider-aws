@@ -39,6 +39,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the association.
 
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `delete` - (Default `3m`)
+
 ## Import
 
 `aws_servicecatalog_product_portfolio_association` can be imported using the accept language, portfolio ID, and product ID, e.g.,

@@ -18,13 +18,13 @@ func testAccHSM_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMSubnetIDConfig(),
+				Config: testAccHSMConfig_subnetID(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
@@ -49,13 +49,13 @@ func testAccHSM_disappears(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMSubnetIDConfig(),
+				Config: testAccHSMConfig_subnetID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
@@ -73,13 +73,13 @@ func testAccHSM_disappears_Cluster(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMSubnetIDConfig(),
+				Config: testAccHSMConfig_subnetID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
@@ -95,13 +95,13 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMAvailabilityZoneConfig(),
+				Config: testAccHSMConfig_availabilityZone(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
@@ -120,13 +120,13 @@ func testAccHSM_IPAddress(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHSMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHSMDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMIPAddressConfig(),
+				Config: testAccHSMConfig_ipAddress(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.5"),
@@ -171,7 +171,7 @@ resource "aws_cloudhsm_v2_cluster" "test" {
 `
 }
 
-func testAccHSMAvailabilityZoneConfig() string {
+func testAccHSMConfig_availabilityZone() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`
@@ -182,7 +182,7 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 `)
 }
 
-func testAccHSMIPAddressConfig() string {
+func testAccHSMConfig_ipAddress() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`
@@ -194,7 +194,7 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 `)
 }
 
-func testAccHSMSubnetIDConfig() string {
+func testAccHSMConfig_subnetID() string {
 	return acctest.ConfigCompose(
 		testAccHSMBaseConfig(),
 		`

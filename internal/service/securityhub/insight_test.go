@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func testAccInsight_basic(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig(rName),
+				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					testAccCheckInsightARN(resourceName),
@@ -56,13 +56,13 @@ func testAccInsight_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig(rName),
+				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
@@ -81,13 +81,13 @@ func testAccInsight_DateFilters(t *testing.T) {
 	startDate := time.Now().Format(time.RFC1123)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_DateFilters_DateRange(rName),
+				Config: testAccInsightConfig_dateFiltersDateRange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -105,7 +105,7 @@ func testAccInsight_DateFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInsightConfig_DateFilters_StartEnd(rName, startDate, endDate),
+				Config: testAccInsightConfig_dateFiltersStartEnd(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -130,13 +130,13 @@ func testAccInsight_IPFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_IPFilters(rName),
+				Config: testAccInsightConfig_ipFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -160,13 +160,13 @@ func testAccInsight_KeywordFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_KeywordFilters(rName),
+				Config: testAccInsightConfig_keywordFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -190,13 +190,13 @@ func testAccInsight_MapFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_MapFilters(rName),
+				Config: testAccInsightConfig_mapFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -222,13 +222,13 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_MultipleFilters(rName),
+				Config: testAccInsightConfig_multipleFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -260,7 +260,7 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInsightConfig(rName),
+				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -282,13 +282,13 @@ func testAccInsight_Name(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig(rName),
+				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					testAccCheckInsightARN(resourceName),
@@ -296,7 +296,7 @@ func testAccInsight_Name(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInsightConfig(rNameUpdated),
+				Config: testAccInsightConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					testAccCheckInsightARN(resourceName),
@@ -317,13 +317,13 @@ func testAccInsight_NumberFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_NumberFilters(rName, "eq = 50.5"),
+				Config: testAccInsightConfig_numberFilters(rName, "eq = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -339,7 +339,7 @@ func testAccInsight_NumberFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInsightConfig_NumberFilters(rName, "gte = 50.5"),
+				Config: testAccInsightConfig_numberFilters(rName, "gte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -350,7 +350,7 @@ func testAccInsight_NumberFilters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInsightConfig_NumberFilters(rName, "lte = 50.5"),
+				Config: testAccInsightConfig_numberFilters(rName, "lte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -374,13 +374,13 @@ func testAccInsight_GroupByAttribute(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig(rName),
+				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -388,7 +388,7 @@ func testAccInsight_GroupByAttribute(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInsightConfig_UpdateGroupByAttribute(rName),
+				Config: testAccInsightConfig_updateGroupByAttribute(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -409,13 +409,13 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInsightDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInsightConfig_WorkflowStatus(rName),
+				Config: testAccInsightConfig_workflowStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -498,7 +498,7 @@ func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccInsightConfig(rName string) string {
+func testAccInsightConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -519,7 +519,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_DateFilters_DateRange(rName string) string {
+func testAccInsightConfig_dateFiltersDateRange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -542,7 +542,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_DateFilters_StartEnd(rName, startDate, endDate string) string {
+func testAccInsightConfig_dateFiltersStartEnd(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -563,7 +563,7 @@ resource "aws_securityhub_insight" "test" {
 `, startDate, endDate, rName)
 }
 
-func testAccInsightConfig_IPFilters(rName string) string {
+func testAccInsightConfig_ipFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -583,7 +583,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_KeywordFilters(rName string) string {
+func testAccInsightConfig_keywordFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -603,7 +603,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_MapFilters(rName string) string {
+func testAccInsightConfig_mapFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -625,7 +625,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_MultipleFilters(rName string) string {
+func testAccInsightConfig_multipleFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -663,7 +663,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_NumberFilters(rName, value string) string {
+func testAccInsightConfig_numberFilters(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -683,7 +683,7 @@ resource "aws_securityhub_insight" "test" {
 `, value, rName)
 }
 
-func testAccInsightConfig_UpdateGroupByAttribute(rName string) string {
+func testAccInsightConfig_updateGroupByAttribute(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -704,7 +704,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccInsightConfig_WorkflowStatus(rName string) string {
+func testAccInsightConfig_workflowStatus(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 

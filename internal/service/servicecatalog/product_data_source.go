@@ -15,6 +15,10 @@ func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceProductRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(ProductReadTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -82,7 +86,7 @@ func DataSourceProduct() *schema.Resource {
 func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
+	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Product: %w", err)

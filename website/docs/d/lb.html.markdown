@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb"
 description: |-
@@ -49,3 +49,9 @@ The following arguments are supported:
 
 See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

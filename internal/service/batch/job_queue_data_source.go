@@ -26,6 +26,11 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
+			"scheduling_policy_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -94,6 +99,7 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(jobQueue.JobQueueArn))
 	d.Set("arn", jobQueue.JobQueueArn)
 	d.Set("name", jobQueue.JobQueueName)
+	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
 	d.Set("status", jobQueue.Status)
 	d.Set("status_reason", jobQueue.StatusReason)
 	d.Set("state", jobQueue.State)

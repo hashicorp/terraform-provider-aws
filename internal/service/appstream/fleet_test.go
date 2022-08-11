@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,14 +16,15 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
+	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
 
 }
 
-// testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
+// testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"ResourceNotFoundException: The image",
+		"InvalidParameterValueException: The AppStream 2.0 user pool feature",
 	)
 }
 
@@ -38,17 +39,18 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -72,12 +74,12 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig(rName, instanceType),
+				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleet(), resourceName),
@@ -103,12 +105,12 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteConfig(rName, description, fleetType, instanceType),
+				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -116,10 +118,11 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
 			},
 			{
-				Config: testAccFleetCompleteConfig(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
+				Config: testAccFleetConfig_complete(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -127,6 +130,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
 			},
 			{
@@ -153,12 +157,12 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -170,7 +174,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetCompleteWithoutStoppingConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -206,12 +210,12 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayName),
+				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -226,7 +230,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFleetWithTagsConfig(rName, description, fleetType, instanceType, displayNameUpdated),
+				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -299,7 +303,7 @@ func testAccCheckFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFleetConfig(name, instanceType string) string {
+func testAccFleetConfig_basic(name, instanceType string) string {
 	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
@@ -314,10 +318,13 @@ resource "aws_appstream_fleet" "test" {
 `, name, instanceType)
 }
 
-func testAccFleetCompleteConfig(name, description, fleetType, instanceType string) string {
+func testAccFleetConfig_complete(name, description, fleetType, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -330,8 +337,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_appstream_fleet" "test" {
-  name       = %[1]q
-  image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  name      = %[1]q
+  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/Amazon-AppStream2-Sample-Image-02-04-2019"
 
   compute_capacity {
     desired_instances = 1
@@ -343,6 +350,7 @@ resource "aws_appstream_fleet" "test" {
   fleet_type                         = %[3]q
   instance_type                      = %[4]q
   max_user_duration_in_seconds       = 1000
+  stream_view                        = "DESKTOP"
 
   vpc_config {
     subnet_ids = aws_subnet.test.*.id
@@ -351,7 +359,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, description, fleetType, instanceType))
 }
 
-func testAccFleetCompleteWithoutStoppingConfig(name, description, fleetType, instanceType, displayName string) string {
+func testAccFleetConfig_completeNoStopping(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -389,7 +397,7 @@ resource "aws_appstream_fleet" "test" {
 `, name, description, fleetType, instanceType, displayName))
 }
 
-func testAccFleetWithTagsConfig(name, description, fleetType, instanceType, displayName string) string {
+func testAccFleetConfig_tags(name, description, fleetType, instanceType, displayName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

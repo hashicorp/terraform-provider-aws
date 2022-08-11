@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,12 +21,12 @@ import (
  ADM_CLIENT_SECRET - Amazon ADM OAuth Credentials Client Secret
 **/
 
-type testAccAWSPinpointADMChannelConfiguration struct {
+type testAccADMChannelConfiguration struct {
 	ClientID     string
 	ClientSecret string
 }
 
-func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccAWSPinpointADMChannelConfiguration {
+func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccADMChannelConfiguration {
 	if os.Getenv("ADM_CLIENT_ID") == "" {
 		t.Skipf("ADM_CLIENT_ID ENV is missing")
 	}
@@ -35,7 +35,7 @@ func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccAWSPinpointADMC
 		t.Skipf("ADM_CLIENT_SECRET ENV is missing")
 	}
 
-	conf := testAccAWSPinpointADMChannelConfiguration{
+	conf := testAccADMChannelConfiguration{
 		ClientID:     os.Getenv("ADM_CLIENT_ID"),
 		ClientSecret: os.Getenv("ADM_CLIENT_SECRET"),
 	}
@@ -50,10 +50,10 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 	config := testAccADMChannelConfigurationFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckADMChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckADMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADMChannelConfig_basic(config),
@@ -108,7 +108,7 @@ func testAccCheckADMChannelExists(n string, channel *pinpoint.ADMChannelResponse
 	}
 }
 
-func testAccADMChannelConfig_basic(conf *testAccAWSPinpointADMChannelConfiguration) string {
+func testAccADMChannelConfig_basic(conf *testAccADMChannelConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -136,7 +136,7 @@ func testAccCheckADMChannelDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetAdmChannel(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

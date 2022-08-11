@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -62,13 +62,13 @@ func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.CreateImageVersion(input)
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker Image Version %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Image Version %s: %w", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitImageVersionCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Image Version (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceImageVersionRead(d, meta)
@@ -81,10 +81,10 @@ func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Sagemaker Image Version (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker Image Version (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading Sagemaker Image Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Image Version (%s): %w", d.Id(), err)
 
 	}
 
@@ -110,14 +110,14 @@ func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Sagemaker Image Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Image Version (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitImageVersionDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Image Version (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

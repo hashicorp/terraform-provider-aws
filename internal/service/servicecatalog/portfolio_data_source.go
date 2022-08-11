@@ -17,6 +17,10 @@ func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePortfolioRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(ConstraintReadTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,

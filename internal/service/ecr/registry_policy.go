@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,8 +42,14 @@ func ResourceRegistryPolicy() *schema.Resource {
 func resourceRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	input := ecr.PutRegistryPolicyInput{
-		PolicyText: aws.String(d.Get("policy").(string)),
+		PolicyText: aws.String(policy),
 	}
 
 	out, err := conn.PutRegistryPolicy(&input)
@@ -72,7 +79,20 @@ func resourceRegistryPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("registry_id", out.RegistryId)
-	d.Set("policy", out.PolicyText)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(out.PolicyText))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

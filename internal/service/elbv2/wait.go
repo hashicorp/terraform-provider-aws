@@ -34,7 +34,7 @@ const (
 )
 
 // waitLoadBalancerActive waits for a Load Balancer to return active
-func waitLoadBalancerActive(conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) {
+func waitLoadBalancerActive(conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
 		Target:     []string{elbv2.LoadBalancerStateEnumActive},

@@ -26,18 +26,18 @@ func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
 		},
 		{
 			TestName:      "invalid ARN service",
-			InputARN:      "arn:aws:ec2:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1",
+			InputARN:      "arn:aws:ec2:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected service securityhub`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
-			InputARN:      "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark",
+			InputARN:      "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark", //lintignore:AWSAT003,AWSAT005
 			ExpectedError: regexp.MustCompile(`expected at least 3 resource parts`),
 		},
 		{
 			TestName:    "valid ARN",
-			InputARN:    "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1",
-			ExpectedARN: "arn:aws:securityhub:us-west-2:1234567890:subscription/cis-aws-foundations-benchmark/v/1.2.0",
+			InputARN:    "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1",  //lintignore:AWSAT003,AWSAT005
+			ExpectedARN: "arn:aws:securityhub:us-west-2:1234567890:subscription/cis-aws-foundations-benchmark/v/1.2.0", //lintignore:AWSAT003,AWSAT005
 		},
 	}
 

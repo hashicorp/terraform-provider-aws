@@ -7,12 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,6 +25,13 @@ func ResourceProduct() *schema.Resource {
 		Delete: resourceProductDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ProductReadyTimeout),
+			Read:   schema.DefaultTimeout(ProductReadTimeout),
+			Update: schema.DefaultTimeout(ProductUpdateTimeout),
+			Delete: schema.DefaultTimeout(ProductDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -185,7 +191,7 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *servicecatalog.CreateProductOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateProduct(input)
@@ -224,7 +230,7 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId))
 
 	if _, err := WaitProductReady(conn, aws.StringValue(input.AcceptLanguage),
-		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId)); err != nil {
+		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be ready: %w", d.Id(), err)
 	}
 
@@ -236,7 +242,7 @@ func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Id())
+	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
@@ -323,7 +329,7 @@ func resourceProductUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.SupportUrl = aws.String(v.(string))
 		}
 
-		err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.UpdateProduct(input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -378,7 +384,7 @@ func resourceProductDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Service Catalog Product (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitProductDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
+	if _, err := WaitProductDeleted(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be deleted: %w", d.Id(), err)
 	}
 

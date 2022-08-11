@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,11 +19,17 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		Read:   resourceDomainSAMLOptionsRead,
 		Update: resourceDomainSAMLOptionsPut,
 		Delete: resourceDomainSAMLOptionsDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("domain_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -83,13 +87,13 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 							Optional:         true,
 							Default:          60,
 							ValidateFunc:     validation.IntBetween(1, 1440),
-							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 						"subject_key": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          "NameID",
-							DiffSuppressFunc: elasticsearchDomainSamlOptionsDiffSupress,
+							Default:          "",
+							DiffSuppressFunc: domainSamlOptionsDiffSupress,
 						},
 					},
 				},
@@ -97,7 +101,7 @@ func ResourceDomainSAMLOptions() *schema.Resource {
 		},
 	}
 }
-func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	if v, ok := d.Get("saml_options").([]interface{}); ok && len(v) > 0 {
 		if enabled, ok := v[0].(map[string]interface{})["enabled"].(bool); ok && !enabled {
 			return true
@@ -107,43 +111,39 @@ func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.Res
 }
 
 func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elasticsearch Domain SAML Options (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-
-	domain, err := conn.DescribeElasticsearchDomain(input)
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] ElasticSearch Domain %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading Elasticsearch Domain SAML Options (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received ElasticSearch domain: %s", domain)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
 
-	ds := domain.DomainStatus
 	options := ds.AdvancedSecurityOptions.SAMLOptions
 
 	if err := d.Set("saml_options", flattenESSAMLOptions(d, options)); err != nil {
-		return fmt.Errorf("error setting saml_options for ElasticSearch Configuration: %w", err)
+		return fmt.Errorf("error setting saml_options for Elasticsearch Configuration: %w", err)
 	}
 
 	return nil
 }
 
 func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	config.SetSAMLOptions(expandESSAMLOptions(d.Get("saml_options").([]interface{})))
 
-	log.Printf("[DEBUG] Updating ElasticSearch domain SAML Options %s", config)
+	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
 
 	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
@@ -156,39 +156,15 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(domainName)
 
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
-	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error updating Elasticsearch domain SAML Options: %s", err)
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
 	}
 
 	return resourceDomainSAMLOptionsRead(d, meta)
 }
 
 func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticSearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -202,34 +178,11 @@ func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for ElasticSearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
+	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
-	input := &elasticsearch.DescribeElasticsearchDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
 	}
-	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.DescribeElasticsearchDomain(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 
-		if !*out.DomainStatus.Processing {
-			return nil
-		}
-
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for SAML Options to be deleted", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		out, err := conn.DescribeElasticsearchDomain(input)
-		if err == nil && !*out.DomainStatus.Processing {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Elasticsearch domain SAML Options: %s", err)
-	}
 	return nil
 }

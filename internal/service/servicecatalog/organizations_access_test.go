@@ -21,9 +21,9 @@ func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationsAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsAccessConfig_basic(),
@@ -44,7 +44,7 @@ func testAccCheckOrganizationsAccessDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn)
+		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn, tfservicecatalog.OrganizationsAccessStableTimeout)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)
@@ -70,7 +70,7 @@ func testAccCheckOrganizationsAccessExists(resourceName string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
-		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn)
+		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn, tfservicecatalog.OrganizationsAccessStableTimeout)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", rs.Primary.ID, err)

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,13 +24,13 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineBasicConfig(rName),
+				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
@@ -52,13 +52,13 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineKMSKeyConfig(rName),
+				Config: testAccPipelineConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
@@ -80,13 +80,13 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationsConfig(rName),
+				Config: testAccPipelineConfig_notifications(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &pipeline),
 					testAccCheckPipeline_notifications(&pipeline, []string{"warning", "completed"}),
@@ -99,7 +99,7 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 			},
 			// update and check that we have 1 less notification
 			{
-				Config: testAccNotificationsUpdateConfig(rName),
+				Config: testAccPipelineConfig_notificationsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, &pipeline),
 					testAccCheckPipeline_notifications(&pipeline, []string{"completed"}),
@@ -150,13 +150,13 @@ func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineWithContentConfig(rName),
+				Config: testAccPipelineConfig_content(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 				),
@@ -167,7 +167,7 @@ func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipelineWithContentUpdateConfig(rName),
+				Config: testAccPipelineConfig_contentUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 				),
@@ -183,13 +183,13 @@ func TestAccElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineWithPermsConfig(rName),
+				Config: testAccPipelineConfig_perms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 				),
@@ -209,13 +209,13 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPipelineBasicConfig(rName),
+				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(resourceName, pipeline),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelastictranscoder.ResourcePipeline(), resourceName),
@@ -253,7 +253,7 @@ func testAccCheckPipelineExists(n string, res *elastictranscoder.Pipeline) resou
 	}
 }
 
-func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
+func testAccCheckPipelineDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -264,7 +264,7 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 		out, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {
@@ -294,7 +294,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccPipelineBasicConfig(rName string) string {
+func testAccPipelineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket
@@ -325,12 +325,16 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
 }
 
-func testAccPipelineKMSKeyConfig(rName string) string {
+func testAccPipelineConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -383,12 +387,16 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
 }
 
-func testAccPipelineWithContentConfig(rName string) string {
+func testAccPipelineConfig_content(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.content_bucket.bucket
@@ -428,22 +436,34 @@ EOF
 
 resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
+}
+
+resource "aws_s3_bucket_acl" "content_bucket_acl" {
+  bucket = aws_s3_bucket.content_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
+}
+
+resource "aws_s3_bucket_acl" "input_bucket_acl" {
+  bucket = aws_s3_bucket.input_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
+}
+
+resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
+  bucket = aws_s3_bucket.thumb_bucket.id
   acl    = "private"
 }
 `, rName)
 }
 
-func testAccPipelineWithContentUpdateConfig(rName string) string {
+func testAccPipelineConfig_contentUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.input_bucket.bucket
@@ -483,22 +503,34 @@ EOF
 
 resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
+}
+
+resource "aws_s3_bucket_acl" "content_bucket_acl" {
+  bucket = aws_s3_bucket.content_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
+}
+
+resource "aws_s3_bucket_acl" "input_bucket_acl" {
+  bucket = aws_s3_bucket.input_bucket.id
   acl    = "private"
 }
 
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
+}
+
+resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
+  bucket = aws_s3_bucket.thumb_bucket.id
   acl    = "private"
 }
 `, rName)
 }
 
-func testAccPipelineWithPermsConfig(rName string) string {
+func testAccPipelineConfig_perms(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.test.bucket
@@ -550,12 +582,16 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 `, rName)
 }
 
-func testAccNotificationsConfig(rName string) string {
+func testAccPipelineConfig_notifications(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket
@@ -591,6 +627,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -616,7 +656,7 @@ EOF
 `, rName)
 }
 
-func testAccNotificationsUpdateConfig(rName string) string {
+func testAccPipelineConfig_notificationsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket
@@ -651,6 +691,10 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

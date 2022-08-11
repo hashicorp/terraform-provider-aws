@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -78,8 +78,11 @@ func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}
 		}
 		if v, ok := cl["maximum_core_capacity_units"].(int); ok && v > 0 {
 			computeLimits.MaximumCoreCapacityUnits = aws.Int64(int64(v))
-		}
-		if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+
+			if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v > 0 {
+				computeLimits.MaximumOnDemandCapacityUnits = aws.Int64(int64(v))
+			}
+		} else if v, ok := cl["maximum_ondemand_capacity_units"].(int); ok && v >= 0 {
 			computeLimits.MaximumOnDemandCapacityUnits = aws.Int64(int64(v))
 		}
 		managedScalingPolicy := &emr.ManagedScalingPolicy{
@@ -135,7 +138,7 @@ func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("cluster_id", d.Id())
-	d.Set("compute_limits", flattenEmrComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
+	d.Set("compute_limits", flattenComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
 
 	return nil
 }
@@ -164,7 +167,7 @@ func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func flattenEmrComputeLimits(apiObject *emr.ComputeLimits) []interface{} {
+func flattenComputeLimits(apiObject *emr.ComputeLimits) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

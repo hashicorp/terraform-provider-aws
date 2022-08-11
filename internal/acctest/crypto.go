@@ -19,7 +19,7 @@ const (
 	pemBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
 )
 
-var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
+var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
 
 // TLSRSAPrivateKeyPEM generates a RSA private key PEM string.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
@@ -110,7 +110,7 @@ func TLSRSAX509LocallySignedCertificatePEM(caKeyPem, caCertificatePem, keyPem, c
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
@@ -168,9 +168,71 @@ func TLSRSAX509SelfSignedCACertificatePEM(keyPem string) string {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
+		Subject: pkix.Name{
+			CommonName:   "ACME Root CA",
+			Organization: []string{"ACME Examples, Inc"},
+		},
+		SubjectKeyId: publicKeyBytesSha1[:],
+	}
+
+	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, certificate, &key.PublicKey, key)
+
+	if err != nil {
+		//lintignore:R009
+		panic(err)
+	}
+
+	certificateBlock := &pem.Block{
+		Bytes: certificateBytes,
+		Type:  pemBlockTypeCertificate,
+	}
+
+	return string(pem.EncodeToMemory(certificateBlock))
+}
+
+// TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM generates a x509 CA certificate PEM string.
+// The CA certificate is suitable for use as an IAM RolesAnywhere Trust Anchor.
+// See https://docs.aws.amazon.com/rolesanywhere/latest/userguide/trust-model.html#signature-verification.
+// Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: root_certificate_pem = "%[1]s"
+func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(keyPem string) string {
+	keyBlock, _ := pem.Decode([]byte(keyPem))
+
+	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
+
+	if err != nil {
+		//lintignore:R009
+		panic(err)
+	}
+
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+
+	if err != nil {
+		//lintignore:R009
+		panic(err)
+	}
+
+	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
+
+	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
+
+	if err != nil {
+		//lintignore:R009
+		panic(err)
+	}
+
+	certificate := &x509.Certificate{
+		BasicConstraintsValid: true,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		IsCA:                  true,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
+		NotBefore:             time.Now(),
+		SerialNumber:          serialNumber,
+		SignatureAlgorithm:    x509.SHA256WithRSA,
 		Subject: pkix.Name{
 			CommonName:   "ACME Root CA",
 			Organization: []string{"ACME Examples, Inc"},
@@ -217,7 +279,7 @@ func TLSRSAX509SelfSignedCertificatePEM(keyPem, commonName string) string {
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{

@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,7 +40,7 @@ func ResourceFileSystemPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 		},
 	}
@@ -48,15 +49,22 @@ func ResourceFileSystemPolicy() *schema.Resource {
 func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	fsID := d.Get("file_system_id").(string)
 	input := &efs.PutFileSystemPolicyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		FileSystemId:                   aws.String(fsID),
-		Policy:                         aws.String(d.Get("policy").(string)),
+		Policy:                         aws.String(policy),
 	}
 
 	log.Printf("[DEBUG] Putting EFS File System Policy: %s", input)
-	_, err := conn.PutFileSystemPolicy(input)
+
+	_, err = conn.PutFileSystemPolicy(input)
 
 	if err != nil {
 		return fmt.Errorf("error putting EFS File System Policy (%s): %w", fsID, err)
@@ -83,7 +91,20 @@ func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("file_system_id", output.FileSystemId)
-	d.Set("policy", output.Policy)
+
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.Policy))
+
+	if err != nil {
+		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }

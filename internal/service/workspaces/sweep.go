@@ -85,7 +85,7 @@ func sweepIPGroups(region string) error {
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = DescribeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
+	err = describeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -100,8 +100,8 @@ const (
 	cacheClusterDeletedDelay      = 30 * time.Second
 )
 
-// WaitCacheClusterAvailable waits for a Cache Cluster to return Available
-func WaitCacheClusterAvailable(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
+// waitCacheClusterAvailable waits for a Cache Cluster to return Available
+func waitCacheClusterAvailable(conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			CacheClusterStatusCreating,
@@ -150,7 +150,7 @@ func WaitCacheClusterDeleted(conn *elasticache.ElastiCache, cacheClusterID strin
 }
 
 const (
-	GlobalReplicationGroupDefaultCreatedTimeout = 20 * time.Minute
+	GlobalReplicationGroupDefaultCreatedTimeout = 25 * time.Minute
 	GlobalReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
 	GlobalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
 

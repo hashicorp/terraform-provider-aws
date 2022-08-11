@@ -5,9 +5,6 @@ The `tagresource` package is designed to provide a generator and consistent inte
 ## Code Structure
 
 ```text
-aws/internal/tagresource
-├── generator/main.go (generates tag resource)
-├── tag_resources_test.go (unit tests for shared tag resource logic)
-├── tag_resources.go (shared tag resource logic)
-└── service_generation_customizations.go (AWS Go SDK service customizations for generator)
+internal/generate/tagresource
+└── main.go (generates tag resource)
 ```

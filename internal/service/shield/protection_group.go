@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -163,30 +163,32 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
-	input := &shield.UpdateProtectionGroupInput{
-		Aggregation:       aws.String(d.Get("aggregation").(string)),
-		Pattern:           aws.String(d.Get("pattern").(string)),
-		ProtectionGroupId: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &shield.UpdateProtectionGroupInput{
+			Aggregation:       aws.String(d.Get("aggregation").(string)),
+			Pattern:           aws.String(d.Get("pattern").(string)),
+			ProtectionGroupId: aws.String(d.Id()),
+		}
 
-	if v, ok := d.GetOk("members"); ok {
-		input.Members = flex.ExpandStringList(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("members"); ok {
+			input.Members = flex.ExpandStringList(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("resource_type"); ok {
-		input.ResourceType = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("resource_type"); ok {
+			input.ResourceType = aws.String(v.(string))
+		}
 
-	log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
-	_, err := conn.UpdateProtectionGroup(input)
+		log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
+		_, err := conn.UpdateProtectionGroup(input)
 
-	if err != nil {
-		return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
+		if err != nil {
+			return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("protection_group_arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

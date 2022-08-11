@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,11 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceIdentityProvider() *schema.Resource {
@@ -129,19 +132,24 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 		UserPoolId:   aws.String(userPoolID),
 	})
 
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if ret == nil || ret.IdentityProvider == nil {
-		log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), errors.New("not found after creation"))
 	}
 
 	ip := ret.IdentityProvider
@@ -213,7 +221,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

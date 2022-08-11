@@ -7,10 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 func ResourceXSSMatchSet() *schema.Resource {
@@ -87,7 +88,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.XssMatchSet.XssMatchSetId))
 
 	if v, ok := d.Get("xss_match_tuple").(*schema.Set); ok && v.Len() > 0 {
-		err := updateXssMatchSetResourceWR(d.Id(), nil, v.List(), conn, region)
+		err := updateXSSMatchSetResourceWR(d.Id(), nil, v.List(), conn, region)
 		if err != nil {
 			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
 		}
@@ -105,8 +106,8 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetXssMatchSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, error code (404)", d.Id())
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -132,7 +133,7 @@ func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("xss_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateXssMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
+		err := updateXSSMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
 		if err != nil {
 			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
 		}
@@ -149,7 +150,7 @@ func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 		oldTuples := v.(*schema.Set).List()
 		if len(oldTuples) > 0 {
 			noTuples := []interface{}{}
-			err := updateXssMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
+			err := updateXSSMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
 			if err != nil {
 				return fmt.Errorf("Error updating regional WAF XSS Match Set: %w", err)
 			}
@@ -172,7 +173,7 @@ func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func updateXssMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateXSSMatchSetResourceWR(id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateXssMatchSetInput{
@@ -195,7 +196,7 @@ func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = tfwaf.FlattenFieldToMatch(t.FieldToMatch)
 		m["text_transformation"] = aws.StringValue(t.TextTransformation)
 		out[i] = m
 	}
@@ -216,7 +217,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -228,7 +229,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})

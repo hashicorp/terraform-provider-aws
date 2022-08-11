@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,12 +31,12 @@ func ResourceCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
-				authorityArn := re.FindString(d.Id())
-				if authorityArn == "" {
+				authorityARN := re.FindString(d.Id())
+				if authorityARN == "" {
 					return nil, fmt.Errorf("Unexpected format for ID (%q), expected ACM PCA Certificate ARN", d.Id())
 				}
 
-				d.Set("certificate_authority_arn", authorityArn)
+				d.Set("certificate_authority_arn", authorityARN)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -108,16 +108,16 @@ func ResourceCertificate() *schema.Resource {
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
+	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
 	}
-	validity, err := expandAcmpcaValidity(d.Get("validity").([]interface{}))
+	validity, err := expandValidity(d.Get("validity").([]interface{}))
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 	input.Validity = validity
 
@@ -142,7 +142,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
@@ -154,7 +154,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err = conn.WaitUntilCertificateIssued(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityArn, d.Id(), err)
+		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityARN, d.Id(), err)
 	}
 
 	return resourceCertificateRead(d, meta)
@@ -255,7 +255,7 @@ func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
+func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,6 +39,13 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"container_recipe_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -53,9 +60,10 @@ func ResourceImage() *schema.Resource {
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -157,6 +165,10 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 	}
 
+	if v, ok := d.GetOk("container_recipe_arn"); ok {
+		input.ContainerRecipeArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("distribution_configuration_arn"); ok {
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
@@ -166,7 +178,7 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageTestsConfiguration = expandImageBuilderImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
@@ -226,6 +238,10 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", image.Arn)
 	d.Set("date_created", image.DateCreated)
 
+	if image.ContainerRecipe != nil {
+		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+	}
+
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
 	}
@@ -237,7 +253,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if image.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(image.ImageTestsConfiguration)})
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
@@ -251,7 +267,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("os_version", image.OsVersion)
 
 	if image.OutputResources != nil {
-		d.Set("output_resources", []interface{}{flattenImageBuilderOutputResources(image.OutputResources)})
+		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
 	} else {
 		d.Set("output_resources", nil)
 	}
@@ -306,7 +322,7 @@ func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenImageBuilderOutputResources(apiObject *imagebuilder.OutputResources) map[string]interface{} {
+func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -314,13 +330,13 @@ func flattenImageBuilderOutputResources(apiObject *imagebuilder.OutputResources)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Amis; v != nil {
-		tfMap["amis"] = flattenImageBuilderAmis(v)
+		tfMap["amis"] = flattenAMIs(v)
 	}
 
 	return tfMap
 }
 
-func flattenImageBuilderAmi(apiObject *imagebuilder.Ami) map[string]interface{} {
+func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -350,7 +366,7 @@ func flattenImageBuilderAmi(apiObject *imagebuilder.Ami) map[string]interface{} 
 	return tfMap
 }
 
-func flattenImageBuilderAmis(apiObjects []*imagebuilder.Ami) []interface{} {
+func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -362,7 +378,7 @@ func flattenImageBuilderAmis(apiObjects []*imagebuilder.Ami) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenImageBuilderAmi(apiObject))
+		tfList = append(tfList, flattenAMI(apiObject))
 	}
 
 	return tfList

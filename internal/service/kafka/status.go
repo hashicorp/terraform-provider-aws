@@ -1,15 +1,17 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusClusterState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(conn, arn)
+		output, err := FindClusterByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +25,9 @@ func statusClusterState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc
 	}
 }
 
-func statusClusterOperationState(conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterOperationByARN(conn, arn)
+		output, err := FindClusterOperationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

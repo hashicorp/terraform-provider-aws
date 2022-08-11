@@ -2,34 +2,34 @@
 
 The `listpages` generator creates paginated variants of AWS Go SDK functions that return collections of objects where the SDK does not define them. It should typically be called using [`go generate`](https://golang.org/cmd/go/#hdr-Generate_Go_files_by_processing_source).
 
-For example, the EC2 API defines both [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) and  [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances), whereas the CloudWatch Events API defines only [`ListEventBuses`](https://docs.aws.amazon.com/sdk-for-go/api/service/cloudwatchevents/#CloudWatchEvents.ListEventBuses).
+For example, the EC2 API defines both [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) and  [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances), whereas the EventBridge API defines only [`ListEventBuses`](https://docs.aws.amazon.com/sdk-for-go/api/service/eventbridge/#EventBridge.ListEventBuses).
 
 The `listpages` executable is called as follows:
 
 ```console
-$ go run main.go -function <function-name>[,<function-name>] <source-package>
+$ go run main.go -ListOps <function-name>[,<function-name>] [<generated-lister-file>]
 ```
 
-* `<source-package>`: The full Go package name of the AWS Go SDK package to be extended, e.g. `github.com/aws/aws-sdk-go/service/cloudwatchevents`
 * `<function-name>`: Name of a function to wrap
+* `<generated-lister-file>`: Name of the generated lister source file, defaults to `list_pages_gen.go`
 
 Optional Flags:
 
-* `-paginator`: Name of the pagination token field (default `NextToken`)
-* `-package`: Override the package name for the generated code (By default, uses the environment variable `$GOPACKAGE` set by `go generate`)
+* `-Paginator`: Name of the pagination token field (default `NextToken`)
+* `-Export`: Whether to export the generated functions
 
 To use with `go generate`, add the following directive to a Go file
 
 ```go
-//go:generate go run <relative-path-to-generators>/generators/listpages/main.go -function=<comma-separated-list-of-functions> <aws-sdk-package>
+//go:generate go run <relative-path-to-generators>/generate/listpages/main.go -ListOps=<comma-separated-list-of-functions>
 ```
 
-For example, in the file `aws/internal/service/cloudwatchevents/lister/list.go`
+For example, in the file `internal/service/events/generate.go`
 
 ```go
-//go:generate go run ../../../generators/listpages/main.go -function=ListEventBuses,ListRules,ListTargetsByRule github.com/aws/aws-sdk-go/service/cloudwatchevents
+//go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
 
-package lister
+package events
 ```
 
-Generates the file `aws/internal/service/cloudwatchevents/lister/list_pages_gen.go` with the functions `ListEventBusesPages`, `ListRulesPages`, and `ListTargetsByRulePages`.
+generates the file `internal/service/events/list_pages_gen.go` with the functions `listEventBusesPages`, `listRulesPages`, and `listTargetsByRulePages` as well as their `...WithContext` equivalents.

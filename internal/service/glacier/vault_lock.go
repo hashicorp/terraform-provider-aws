@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,6 +44,10 @@ func ResourceVaultLock() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"vault_name": {
 				Type:         schema.TypeString,
@@ -58,10 +63,16 @@ func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn
 	vaultName := d.Get("vault_name").(string)
 
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	input := &glacier.InitiateVaultLockInput{
 		AccountId: aws.String("-"),
 		Policy: &glacier.VaultLockPolicy{
-			Policy: aws.String(d.Get("policy").(string)),
+			Policy: aws.String(policy),
 		},
 		VaultName: aws.String(vaultName),
 	}
@@ -88,7 +99,7 @@ func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error completing Glacier Vault (%s) Lock: %s", vaultName, err)
 	}
 
-	if err := waitForGlacierVaultLockCompletion(conn, vaultName); err != nil {
+	if err := waitVaultLockCompletion(conn, vaultName); err != nil {
 		return fmt.Errorf("error waiting for Glacier Vault Lock (%s) completion: %s", d.Id(), err)
 	}
 
@@ -106,7 +117,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", d.Id(), input)
 	output, err := conn.GetVaultLock(input)
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Glacier Vault Lock (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -123,8 +134,15 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("complete_lock", aws.StringValue(output.State) == "Locked")
-	d.Set("policy", output.Policy)
 	d.Set("vault_name", d.Id())
+
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -139,7 +157,7 @@ func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Aborting Glacier Vault Lock (%s): %s", d.Id(), input)
 	_, err := conn.AbortVaultLock(input)
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -150,7 +168,7 @@ func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func glacierVaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resource.StateRefreshFunc {
+func vaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glacier.GetVaultLockInput{
 			AccountId: aws.String("-"),
@@ -160,7 +178,7 @@ func glacierVaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resour
 		log.Printf("[DEBUG] Reading Glacier Vault Lock (%s): %s", vaultName, input)
 		output, err := conn.GetVaultLock(input)
 
-		if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
 		}
 
@@ -176,11 +194,11 @@ func glacierVaultLockRefreshFunc(conn *glacier.Glacier, vaultName string) resour
 	}
 }
 
-func waitForGlacierVaultLockCompletion(conn *glacier.Glacier, vaultName string) error {
+func waitVaultLockCompletion(conn *glacier.Glacier, vaultName string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"InProgress"},
 		Target:  []string{"Locked"},
-		Refresh: glacierVaultLockRefreshFunc(conn, vaultName),
+		Refresh: vaultLockRefreshFunc(conn, vaultName),
 		Timeout: 5 * time.Minute,
 	}
 

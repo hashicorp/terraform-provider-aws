@@ -3,31 +3,59 @@ package verify
 import (
 	"reflect"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
-	d := new(schema.ResourceData)
-
-	noWhitespace := `{"test":"test"}`
-	whitespace := `
-{
-  "test": "test"
-}`
-
-	if !SuppressEquivalentJSONDiffs("", noWhitespace, whitespace, d) {
-		t.Errorf("Expected SuppressEquivalentJSONDiffs to return true for %s == %s", noWhitespace, whitespace)
+func TestSuppressEquivalentRoundedTime(t *testing.T) {
+	testCases := []struct {
+		old        string
+		new        string
+		layout     string
+		d          time.Duration
+		equivalent bool
+	}{
+		{
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:13.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
+			equivalent: true,
+		},
+		{
+			old:        "2024-04-19T23:01:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
+			equivalent: true,
+		},
+		{
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
+			equivalent: false,
+		},
+		{
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Hour,
+			equivalent: true,
+		},
 	}
 
-	noWhitespaceDiff := `{"test":"test"}`
-	whitespaceDiff := `
-{
-  "test": "tested"
-}`
+	for i, tc := range testCases {
+		value := SuppressEquivalentRoundedTime(tc.layout, tc.d)("test_property", tc.old, tc.new, nil)
 
-	if SuppressEquivalentJSONDiffs("", noWhitespaceDiff, whitespaceDiff, d) {
-		t.Errorf("Expected SuppressEquivalentJSONDiffs to return false for %s == %s", noWhitespaceDiff, whitespaceDiff)
+		if tc.equivalent && !value {
+			t.Fatalf("expected test case %d to be equivalent", i)
+		}
+
+		if !tc.equivalent && value {
+			t.Fatalf("expected test case %d to not be equivalent", i)
+		}
 	}
 }
 
@@ -68,200 +96,6 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 
 		if !tc.equivalent && value {
 			t.Fatalf("expected test case %d to not be equivalent", i)
-		}
-	}
-}
-
-func TestSuppressEquivalentJSONOrYAMLDiffs(t *testing.T) {
-	testCases := []struct {
-		description string
-		equivalent  bool
-		old         string
-		new         string
-	}{
-		{
-			description: `JSON no change`,
-			equivalent:  true,
-			old: `
-{
-   "Resources": {
-      "TestVpc": {
-         "Type": "AWS::EC2::VPC",
-         "Properties": {
-            "CidrBlock": "10.0.0.0/16"
-         }
-      }
-   },
-   "Outputs": {
-      "TestVpcID": {
-         "Value": { "Ref" : "TestVpc" }
-      }
-   }
-}
-`,
-			new: `
-{
-   "Resources": {
-      "TestVpc": {
-         "Type": "AWS::EC2::VPC",
-         "Properties": {
-            "CidrBlock": "10.0.0.0/16"
-         }
-      }
-   },
-   "Outputs": {
-      "TestVpcID": {
-         "Value": { "Ref" : "TestVpc" }
-      }
-   }
-}
-`,
-		},
-		{
-			description: `JSON whitespace`,
-			equivalent:  true,
-			old:         `{"Resources":{"TestVpc":{"Type":"AWS::EC2::VPC","Properties":{"CidrBlock":"10.0.0.0/16"}}},"Outputs":{"TestVpcID":{"Value":{"Ref":"TestVpc"}}}}`,
-			new: `
-{
-   "Resources": {
-      "TestVpc": {
-         "Type": "AWS::EC2::VPC",
-         "Properties": {
-            "CidrBlock": "10.0.0.0/16"
-         }
-      }
-   },
-   "Outputs": {
-      "TestVpcID": {
-         "Value": { "Ref" : "TestVpc" }
-      }
-   }
-}
-`,
-		},
-		{
-			description: `JSON change`,
-			equivalent:  false,
-			old: `
-{
-   "Resources": {
-      "TestVpc": {
-         "Type": "AWS::EC2::VPC",
-         "Properties": {
-            "CidrBlock": "10.0.0.0/16"
-         }
-      }
-   },
-   "Outputs": {
-      "TestVpcID": {
-         "Value": { "Ref" : "TestVpc" }
-      }
-   }
-}
-`,
-			new: `
-{
-   "Resources": {
-      "TestVpc": {
-         "Type": "AWS::EC2::VPC",
-         "Properties": {
-            "CidrBlock": "172.16.0.0/16"
-         }
-      }
-   },
-   "Outputs": {
-      "TestVpcID": {
-         "Value": { "Ref" : "TestVpc" }
-      }
-   }
-}
-`,
-		},
-		{
-			description: `YAML no change`,
-			equivalent:  true,
-			old: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-`,
-			new: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-`,
-		},
-		{
-			description: `YAML whitespace`,
-			equivalent:  false,
-			old: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-
-`,
-			new: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-`,
-		},
-		{
-			description: `YAML change`,
-			equivalent:  false,
-			old: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 172.16.0.0/16
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-`,
-			new: `
-Resources:
-  TestVpc:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-Outputs:
-  TestVpcID:
-    Value: !Ref TestVpc
-`,
-		},
-	}
-
-	for _, tc := range testCases {
-		value := SuppressEquivalentJSONOrYAMLDiffs("test_property", tc.old, tc.new, nil)
-
-		if tc.equivalent && !value {
-			t.Fatalf("expected test case (%s) to be equivalent", tc.description)
-		}
-
-		if !tc.equivalent && value {
-			t.Fatalf("expected test case (%s) to not be equivalent", tc.description)
 		}
 	}
 }
@@ -348,9 +182,9 @@ func TestDiffStringMaps(t *testing.T) {
 
 	for i, tc := range cases {
 		c, r, u := DiffStringMaps(tc.Old, tc.New)
-		cm := PointersMapToStringList(c)
-		rm := PointersMapToStringList(r)
-		um := PointersMapToStringList(u)
+		cm := flex.PointersMapToStringList(c)
+		rm := flex.PointersMapToStringList(r)
+		um := flex.PointersMapToStringList(u)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}

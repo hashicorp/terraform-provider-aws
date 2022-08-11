@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,13 +23,13 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 	resourceName2 := "aws_iot_role_alias.ra2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoleAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleAliasConfig(alias),
+				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
@@ -37,33 +37,33 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate1Config(alias, alias2),
+				Config: testAccRoleAliasConfig_update1(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName),
 					testAccCheckRoleAliasExists(resourceName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "credential_duration", "43200"),
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate2Config(alias2),
+				Config: testAccRoleAliasConfig_update2(alias2),
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoleAliasExists(resourceName2)),
 			},
 			{
-				Config: testAccRoleAliasUpdate3Config(alias2),
+				Config: testAccRoleAliasConfig_update3(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 				),
 				ExpectError: regexp.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{
-				Config: testAccRoleAliasUpdate4Config(alias2),
+				Config: testAccRoleAliasConfig_update4(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 				),
 			},
 			{
-				Config: testAccRoleAliasUpdate5Config(alias2),
+				Config: testAccRoleAliasConfig_update5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(resourceName2),
 					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
@@ -88,7 +88,7 @@ func testAccCheckRoleAliasDestroy(s *terraform.State) error {
 
 		_, err := tfiot.GetRoleAliasDescription(conn, rs.Primary.ID)
 
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -125,7 +125,7 @@ func testAccCheckRoleAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccRoleAliasConfig(alias string) string {
+func testAccRoleAliasConfig_basic(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -152,7 +152,7 @@ resource "aws_iot_role_alias" "ra" {
 `, alias)
 }
 
-func testAccRoleAliasUpdate1Config(alias string, alias2 string) string {
+func testAccRoleAliasConfig_update1(alias string, alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -175,7 +175,7 @@ EOF
 resource "aws_iot_role_alias" "ra" {
   alias               = "%s"
   role_arn            = aws_iam_role.role.arn
-  credential_duration = 1800
+  credential_duration = 43200
 }
 
 resource "aws_iot_role_alias" "ra2" {
@@ -185,7 +185,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias, alias2)
 }
 
-func testAccRoleAliasUpdate2Config(alias2 string) string {
+func testAccRoleAliasConfig_update2(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -212,7 +212,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias2)
 }
 
-func testAccRoleAliasUpdate3Config(alias2 string) string {
+func testAccRoleAliasConfig_update3(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -244,7 +244,7 @@ resource "aws_iot_role_alias" "ra3" {
 `, alias2, alias2)
 }
 
-func testAccRoleAliasUpdate4Config(alias2 string) string {
+func testAccRoleAliasConfig_update4(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
@@ -289,7 +289,7 @@ resource "aws_iot_role_alias" "ra2" {
 `, alias2)
 }
 
-func testAccRoleAliasUpdate5Config(alias2 string) string {
+func testAccRoleAliasConfig_update5(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"

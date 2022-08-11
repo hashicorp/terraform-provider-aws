@@ -28,9 +28,10 @@ func ResourcePortfolio() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(PortfolioCreateTimeout),
+			Read:   schema.DefaultTimeout(PortfolioReadTimeout),
+			Update: schema.DefaultTimeout(PortfolioUpdateTimeout),
+			Delete: schema.DefaultTimeout(PortfolioDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

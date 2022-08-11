@@ -19,6 +19,9 @@ func init() {
 	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
 		Name: "aws_msk_cluster",
 		F:    sweepClusters,
+		Dependencies: []string{
+			"aws_mskconnect_connector",
+		},
 	})
 
 	resource.AddTestSweepers("aws_msk_configuration", &resource.Sweeper{

@@ -19,15 +19,15 @@ func TestAccCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
+					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
 					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexp.MustCompile("^[a-z0-9]+")),
@@ -50,15 +50,15 @@ func TestAccCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityNoCommentConfig,
+				Config: testAccOriginAccessIdentityConfig_noComment,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
+					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
 					resource.TestMatchResourceAttr(resourceName, "s3_canonical_user_id", regexp.MustCompile("^[a-z0-9]+")),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_access_identity_path", regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
@@ -80,15 +80,15 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentityConfig,
+				Config: testAccOriginAccessIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
+					testAccCheckOriginAccessIdentityExistence(resourceName, &origin),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginAccessIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,7 +97,7 @@ func TestAccCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFrontOriginAccessIdentityDestroy(s *terraform.State) error {
+func testAccCheckOriginAccessIdentityDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -118,7 +118,7 @@ func testAccCheckCloudFrontOriginAccessIdentityDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloudfront.GetCloudFrontOriginAccessIdentityOutput) resource.TestCheckFunc {
+func testAccCheckOriginAccessIdentityExistence(r string, origin *cloudfront.GetCloudFrontOriginAccessIdentityOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[r]
 		if !ok {
@@ -145,13 +145,13 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 	}
 }
 
-const testAccOriginAccessIdentityConfig = `
+const testAccOriginAccessIdentityConfig_basic = `
 resource "aws_cloudfront_origin_access_identity" "test" {
   comment = "some comment"
 }
 `
 
-const testAccOriginAccessIdentityNoCommentConfig = `
+const testAccOriginAccessIdentityConfig_noComment = `
 resource "aws_cloudfront_origin_access_identity" "test" {
 }
 `

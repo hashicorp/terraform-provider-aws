@@ -24,17 +24,17 @@ func TestQueueNameFromURL(t *testing.T) {
 		},
 		{
 			Name:        "too few path parts",
-			URL:         "http://sqs.us-west-2.amazonaws.com",
+			URL:         "http://sqs.us-west-2.amazonaws.com", //lintignore:AWSAT003
 			ExpectError: true,
 		},
 		{
 			Name:        "too many path parts",
-			URL:         "http://sqs.us-west-2.amazonaws.com/123456789012/queueName/extra",
+			URL:         "http://sqs.us-west-2.amazonaws.com/123456789012/queueName/extra", //lintignore:AWSAT003
 			ExpectError: true,
 		},
 		{
 			Name:              "valid URL",
-			URL:               "http://sqs.us-west-2.amazonaws.com/123456789012/queueName",
+			URL:               "http://sqs.us-west-2.amazonaws.com/123456789012/queueName", //lintignore:AWSAT003
 			ExpectedQueueName: "queueName",
 		},
 	}

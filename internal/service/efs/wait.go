@@ -58,7 +58,7 @@ func waitAccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPoi
 	return nil, err
 }
 
-func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+func waitFileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
 		Target:     []string{efs.LifeCycleStateAvailable},
@@ -124,6 +124,41 @@ func waitBackupPolicyEnabled(conn *efs.EFS, id string) (*efs.BackupPolicy, error
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*efs.BackupPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationCreated(conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.ReplicationStatusEnabling},
+		Target:  []string{efs.ReplicationStatusEnabled},
+		Refresh: statusReplicationConfiguration(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationDeleted(conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{efs.ReplicationStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusReplicationConfiguration(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
 		return output, err
 	}
 

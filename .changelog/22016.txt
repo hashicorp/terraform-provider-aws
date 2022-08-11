@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_task_definition: Add `runtime_platform` argument in support of Fargate for ECS Windows containers
+```

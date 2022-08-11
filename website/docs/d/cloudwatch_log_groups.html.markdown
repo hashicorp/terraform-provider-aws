@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_groups"
 description: |-
@@ -14,7 +14,7 @@ Use this data source to get a list of AWS Cloudwatch Log Groups
 
 ```terraform
 data "aws_cloudwatch_log_groups" "example" {
-  log_group_prefix = "/MyImportantLogs"
+  log_group_name_prefix = "/MyImportantLogs"
 }
 ```
 
@@ -22,7 +22,7 @@ data "aws_cloudwatch_log_groups" "example" {
 
 The following arguments are supported:
 
-* `log_group_name_prefix` - (Required) The group prefix of the Cloudwatch log groups to list
+* `log_group_name_prefix` - (Optional) The group prefix of the Cloudwatch log groups to list
 
 ## Attributes Reference
 

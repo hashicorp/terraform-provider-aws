@@ -30,7 +30,7 @@ func sweepScalingPlans(region string) error {
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = DescribeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+	err = describeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

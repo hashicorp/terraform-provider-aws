@@ -1,18 +1,18 @@
 name: Autoremove Labels
+
 on:
   issues:
     types: [closed]
   pull_request_target:
     types: [closed]
+
 jobs:
-  remove-labels:
+  RemoveTriagingLabelsFromClosedIssueOrPR:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        labels: ['needs-triage', 'waiting-response']
     steps:
-      - name: Remove ${{ matrix.labels }} label
+      - name: Remove triaging labels from closed issues and PRs
         uses: actions-ecosystem/action-remove-labels@v1
-        if: contains(github.event.*.labels.*.name, matrix.labels)
         with:
-          labels: ${{ matrix.labels }}
+          labels: |
+            needs-triage
+            waiting-response

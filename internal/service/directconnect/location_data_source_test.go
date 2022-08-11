@@ -12,13 +12,14 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDxLocationConfig_basic,
+				Config: testAccLocationDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dsResourceName, "available_macsec_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_providers.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "location_code"),
@@ -29,10 +30,14 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceDxLocationConfig_basic = `
+const testAccLocationDataSourceConfig_basic = `
 data "aws_dx_locations" "test" {}
 
+locals {
+  location_codes = tolist(data.aws_dx_locations.test.location_codes)
+}
+
 data "aws_dx_location" "test" {
-  location_code = tolist(data.aws_dx_locations.test.location_codes)[0]
+  location_code = local.location_codes[length(local.location_codes) - 1]
 }
 `

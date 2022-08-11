@@ -179,21 +179,21 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	nameServers, err := hostedZoneNameServers(conn, idHostedZone, aws.StringValue(hostedZoneFound.Name))
 
 	if err != nil {
-		return fmt.Errorf("error getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
+		return fmt.Errorf("getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
 	}
 
 	if err := d.Set("name_servers", nameServers); err != nil {
-		return fmt.Errorf("error setting name_servers: %w", err)
+		return fmt.Errorf("setting name_servers: %w", err)
 	}
 
 	tags, err = ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
-		return fmt.Errorf("error listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
+		return fmt.Errorf("listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -215,11 +215,11 @@ func hostedZoneNameServers(conn *route53.Route53, id string, name string) ([]str
 	output, err := conn.GetHostedZone(input)
 
 	if err != nil {
-		return nil, fmt.Errorf("error getting Route 53 Hosted Zone (%s): %w", id, err)
+		return nil, fmt.Errorf("getting Route 53 Hosted Zone (%s): %w", id, err)
 	}
 
 	if output == nil {
-		return nil, fmt.Errorf("error getting Route 53 Hosted Zone (%s): empty response", id)
+		return nil, fmt.Errorf("getting Route 53 Hosted Zone (%s): empty response", id)
 	}
 
 	if output.DelegationSet != nil {
@@ -230,7 +230,7 @@ func hostedZoneNameServers(conn *route53.Route53, id string, name string) ([]str
 		nameServers, err := getNameServers(id, name, conn)
 
 		if err != nil {
-			return nil, fmt.Errorf("error listing Route 53 Hosted Zone (%s) NS records: %w", id, err)
+			return nil, fmt.Errorf("listing Route 53 Hosted Zone (%s) NS records: %w", id, err)
 		}
 
 		return nameServers, nil

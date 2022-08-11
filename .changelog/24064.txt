@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Add support for reading custom CA bundle setting from shared config files
+```

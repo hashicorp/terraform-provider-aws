@@ -14,19 +14,19 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
-func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
+func TestAccBackupVaultNotification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultNotificationConfig(rName),
+				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", "2"),
@@ -41,19 +41,19 @@ func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupVaultNotifications_Notification_disappears(t *testing.T) {
+func TestAccBackupVaultNotification_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVaultNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupVaultNotificationConfig(rName),
+				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(resourceName, &vault),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultNotifications(), resourceName),
@@ -109,7 +109,7 @@ func testAccCheckVaultNotificationExists(name string, vault *backup.GetBackupVau
 	}
 }
 
-func testAccBackupVaultNotificationConfig(rName string) string {
+func testAccVaultNotificationsConfig_notification(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = %[1]q
@@ -135,7 +135,7 @@ data "aws_iam_policy_document" "test" {
     }
 
     resources = [
-      "${aws_sns_topic.test.arn}",
+      aws_sns_topic.test.arn,
     ]
 
     sid = "__default_statement_ID"

@@ -1,0 +1,21 @@
+name: TeamCity Config Generator
+on:
+  pull_request:
+    paths:
+      - .teamcity/**
+
+jobs:
+  validate-teamcity-config:
+    name: Validate TeamCity Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: adopt
+          java-version: 11
+          cache: maven
+      - name: Build TeamCity Configuration
+        run: |
+          cd .teamcity
+          mvn org.jetbrains.teamcity:teamcity-configs-maven-plugin:generate

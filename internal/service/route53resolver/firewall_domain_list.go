@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -42,7 +42,6 @@ func ResourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 0,
-				MaxItems: 255,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
@@ -88,7 +87,7 @@ func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) er
 
 	firewallDomainList, err := FindFirewallDomainListByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall domain list (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -200,7 +199,7 @@ func resourceFirewallDomainListDelete(d *schema.ResourceData, meta interface{}) 
 		FirewallDomainListId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

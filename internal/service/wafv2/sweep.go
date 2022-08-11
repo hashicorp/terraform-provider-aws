@@ -62,7 +62,7 @@ func sweepIPSets(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = ListIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
+	err = listIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -114,7 +114,7 @@ func sweepRegexPatternSets(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = ListRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = listRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -166,7 +166,7 @@ func sweepRuleGroups(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = ListRuleGroupsPages(conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+	err = listRuleGroupsPages(conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -220,7 +220,7 @@ func sweepWebACLs(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = ListWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+	err = listWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_s3_bucket_policy: Fix order-related diffs in `policy`
+```

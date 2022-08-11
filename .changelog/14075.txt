@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table_item: Allow `item` names to still succeed if they include non-letters
+```

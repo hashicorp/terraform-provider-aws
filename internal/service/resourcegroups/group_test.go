@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -37,13 +37,13 @@ func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
+				Config: testAccGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", n),
@@ -58,7 +58,7 @@ func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGroupConfig_basic(n, desc2, query2),
+				Config: testAccGroupConfig_basic(n, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", desc2),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
@@ -75,13 +75,13 @@ func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGroupTags1Config(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
+				Config: testAccGroupConfig_tags1(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -94,7 +94,7 @@ func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceGroupTags2Config(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupConfig_tags2(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -103,7 +103,7 @@ func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceGroupTags1Config(n, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
+				Config: testAccGroupConfig_tags1(n, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -161,7 +161,7 @@ func testAccCheckResourceGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
 			return nil
 		}
 
@@ -185,7 +185,7 @@ const testAccResourceGroupQueryConfig = `{
   ]
 }`
 
-func testAccResourceGroupConfig_basic(rName, desc, query string) string {
+func testAccGroupConfig_basic(rName, desc, query string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
@@ -201,7 +201,7 @@ JSON
 `, rName, desc, query)
 }
 
-func testAccResourceGroupTags1Config(rName, desc, query, tag1Key, tag1Value string) string {
+func testAccGroupConfig_tags1(rName, desc, query, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
@@ -221,7 +221,7 @@ JSON
 `, rName, desc, query, tag1Key, tag1Value)
 }
 
-func testAccResourceGroupTags2Config(rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccGroupConfig_tags2(rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Outposts (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ec2_local_gateway_route_tables"
 description: |-
@@ -42,3 +42,9 @@ which take the following arguments:
 
 * `id` - AWS Region.
 * `ids` - Set of Local Gateway Route Table identifiers
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

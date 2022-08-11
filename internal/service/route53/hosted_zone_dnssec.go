@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,19 +52,19 @@ func resourceHostedZoneDNSSECCreate(d *schema.ResourceData, meta interface{}) er
 
 	switch signingStatus {
 	default:
-		return fmt.Errorf("error updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
+		return fmt.Errorf("updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 	case ServeSignatureSigning:
-		if err := route53HostedZoneDnssecEnable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
+			return fmt.Errorf("enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 		}
 	case ServeSignatureNotSigning:
-		if err := route53HostedZoneDnssecDisable(conn, d.Id()); err != nil {
-			return fmt.Errorf("error disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
+			return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
-		return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
+		return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
 	}
 
 	return resourceHostedZoneDNSSECRead(d, meta)
@@ -88,12 +88,12 @@ func resourceHostedZoneDNSSECRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 	}
 
 	if hostedZoneDnssec == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Route 53 Hosted Zone DNSSEC (%s): not found", d.Id())
+			return fmt.Errorf("reading Route 53 Hosted Zone DNSSEC (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Route 53 Hosted Zone DNSSEC (%s) not found, removing from state", d.Id())
@@ -118,19 +118,19 @@ func resourceHostedZoneDNSSECUpdate(d *schema.ResourceData, meta interface{}) er
 
 		switch signingStatus {
 		default:
-			return fmt.Errorf("error updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
+			return fmt.Errorf("updating Route 53 Hosted Zone DNSSEC (%s) signing status: unknown status (%s)", d.Id(), signingStatus)
 		case ServeSignatureSigning:
-			if err := route53HostedZoneDnssecEnable(conn, d.Id()); err != nil {
-				return fmt.Errorf("error enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+			if err := hostedZoneDNSSECEnable(conn, d.Id()); err != nil {
+				return fmt.Errorf("enabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 			}
 		case ServeSignatureNotSigning:
-			if err := route53HostedZoneDnssecDisable(conn, d.Id()); err != nil {
-				return fmt.Errorf("error disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+			if err := hostedZoneDNSSECDisable(conn, d.Id()); err != nil {
+				return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 			}
 		}
 
 		if _, err := waitHostedZoneDNSSECStatusUpdated(conn, d.Id(), signingStatus); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
+			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) signing status (%s): %w", d.Id(), signingStatus, err)
 		}
 	}
 
@@ -155,19 +155,19 @@ func resourceHostedZoneDNSSECDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
+		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", d.Id(), err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
 		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %w", d.Id(), err)
 		}
 	}
 
 	return nil
 }
 
-func route53HostedZoneDnssecDisable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECDisable(conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.DisableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -175,19 +175,19 @@ func route53HostedZoneDnssecDisable(conn *route53.Route53, hostedZoneID string) 
 	output, err := conn.DisableHostedZoneDNSSEC(input)
 
 	if err != nil {
-		return fmt.Errorf("error disabling: %w", err)
+		return fmt.Errorf("disabling: %w", err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
 		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
-			return fmt.Errorf("error waiting for update: %w", err)
+			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func route53HostedZoneDnssecEnable(conn *route53.Route53, hostedZoneID string) error {
+func hostedZoneDNSSECEnable(conn *route53.Route53, hostedZoneID string) error {
 	input := &route53.EnableHostedZoneDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
@@ -195,12 +195,12 @@ func route53HostedZoneDnssecEnable(conn *route53.Route53, hostedZoneID string) e
 	output, err := conn.EnableHostedZoneDNSSEC(input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling: %w", err)
+		return fmt.Errorf("enabling: %w", err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {
 		if _, err := waitChangeInfoStatusInsync(conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
-			return fmt.Errorf("error waiting for update: %w", err)
+			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}
 

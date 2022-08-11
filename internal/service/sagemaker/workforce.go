@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -159,22 +159,22 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("cognito_config"); ok {
-		input.CognitoConfig = expandSagemakerWorkforceCognitoConfig(v.([]interface{}))
+		input.CognitoConfig = expandWorkforceCognitoConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("oidc_config"); ok {
-		input.OidcConfig = expandSagemakerWorkforceOidcConfig(v.([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("source_ip_config"); ok {
-		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(v.([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
 	_, err := conn.CreateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workforce (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Workforce (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -194,25 +194,25 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", workforce.WorkforceArn)
 	d.Set("subdomain", workforce.SubDomain)
 	d.Set("workforce_name", workforce.WorkforceName)
 
-	if err := d.Set("cognito_config", flattenSagemakerWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
-		return fmt.Errorf("error setting cognito_config : %w", err)
+	if err := d.Set("cognito_config", flattenWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
+		return fmt.Errorf("setting cognito_config : %w", err)
 	}
 
 	if workforce.OidcConfig != nil {
-		if err := d.Set("oidc_config", flattenSagemakerWorkforceOidcConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
-			return fmt.Errorf("error setting oidc_config: %w", err)
+		if err := d.Set("oidc_config", flattenWorkforceOIDCConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
+			return fmt.Errorf("setting oidc_config: %w", err)
 		}
 	}
 
-	if err := d.Set("source_ip_config", flattenSagemakerWorkforceSourceIpConfig(workforce.SourceIpConfig)); err != nil {
-		return fmt.Errorf("error setting source_ip_config: %w", err)
+	if err := d.Set("source_ip_config", flattenWorkforceSourceIPConfig(workforce.SourceIpConfig)); err != nil {
+		return fmt.Errorf("setting source_ip_config: %w", err)
 	}
 
 	return nil
@@ -226,18 +226,18 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("source_ip_config") {
-		input.SourceIpConfig = expandSagemakerWorkforceSourceIpConfig(d.Get("source_ip_config").([]interface{}))
+		input.SourceIpConfig = expandWorkforceSourceIPConfig(d.Get("source_ip_config").([]interface{}))
 	}
 
 	if d.HasChange("oidc_config") {
-		input.OidcConfig = expandSagemakerWorkforceOidcConfig(d.Get("oidc_config").([]interface{}))
+		input.OidcConfig = expandWorkforceOIDCConfig(d.Get("oidc_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
 	_, err := conn.UpdateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
@@ -256,13 +256,13 @@ func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandSagemakerWorkforceSourceIpConfig(l []interface{}) *sagemaker.SourceIpConfig {
+func expandWorkforceSourceIPConfig(l []interface{}) *sagemaker.SourceIpConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -276,7 +276,7 @@ func expandSagemakerWorkforceSourceIpConfig(l []interface{}) *sagemaker.SourceIp
 	return config
 }
 
-func flattenSagemakerWorkforceSourceIpConfig(config *sagemaker.SourceIpConfig) []map[string]interface{} {
+func flattenWorkforceSourceIPConfig(config *sagemaker.SourceIpConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -288,7 +288,7 @@ func flattenSagemakerWorkforceSourceIpConfig(config *sagemaker.SourceIpConfig) [
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoConfig {
+func expandWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -303,7 +303,7 @@ func expandSagemakerWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoCo
 	return config
 }
 
-func flattenSagemakerWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []map[string]interface{} {
+func flattenWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -316,7 +316,7 @@ func flattenSagemakerWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []m
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkforceOidcConfig(l []interface{}) *sagemaker.OidcConfig {
+func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -337,7 +337,7 @@ func expandSagemakerWorkforceOidcConfig(l []interface{}) *sagemaker.OidcConfig {
 	return config
 }
 
-func flattenSagemakerWorkforceOidcConfig(config *sagemaker.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
+func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientSecret string) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

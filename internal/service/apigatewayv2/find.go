@@ -3,7 +3,7 @@ package apigatewayv2
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -49,7 +49,7 @@ func FindAPI(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (
 func FindAPIs(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
 	var apis []*apigatewayv2.Api
 
-	err := GetAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+	err := getAPIsPages(conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

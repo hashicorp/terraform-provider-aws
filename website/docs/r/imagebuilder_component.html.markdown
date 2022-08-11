@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_component"
 description: |-
@@ -42,7 +42,7 @@ resource "aws_imagebuilder_component" "example" {
 resource "aws_imagebuilder_component" "example" {
   name     = "example"
   platform = "Linux"
-  uri      = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+  uri      = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
   version  = "1.0.0"
 }
 ```
@@ -62,7 +62,7 @@ The following attributes are optional:
 * `description` - (Optional) Description of the component.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key used to encrypt the component.
 * `supported_os_versions` - (Optional) Set of Operating Systems (OS) supported by the component.
-* `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the component. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `uri` - (Optional) S3 URI with data of the component. Exactly one of `data` and `uri` can be specified.
 
 ## Attributes Reference
@@ -73,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 * `date_created` - Date the component was created.
 * `encrypted` - Encryption status of the component.
 * `owner` - Owner of the component.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of the component.
 
 ## Import
