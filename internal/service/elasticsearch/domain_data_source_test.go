@@ -14,7 +14,7 @@ func TestAccElasticsearchDomainDataSource_Data_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
@@ -57,7 +57,7 @@ func TestAccElasticsearchDomainDataSource_Data_advanced(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"

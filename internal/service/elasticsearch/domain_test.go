@@ -28,7 +28,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 
 func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -97,7 +97,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
@@ -148,7 +148,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 
 func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -207,7 +207,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 
 func TestAccElasticsearchDomain_warm(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -264,7 +264,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 
 func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -301,7 +301,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 
 func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -344,7 +344,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -397,7 +397,7 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -430,7 +430,7 @@ func TestAccElasticsearchDomain_complex(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -461,7 +461,7 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -488,7 +488,7 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 
 func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -527,7 +527,7 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -564,7 +564,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_elasticsearch_domain.test"
 
@@ -608,7 +608,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -645,7 +645,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -682,7 +682,7 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -719,7 +719,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -754,7 +754,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -789,7 +789,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -824,7 +824,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -861,7 +861,7 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -904,7 +904,7 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -948,7 +948,7 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -979,7 +979,7 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1008,7 +1008,7 @@ func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1040,7 +1040,7 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1071,7 +1071,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1112,7 +1112,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1146,7 +1146,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1178,7 +1178,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1219,7 +1219,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1258,7 +1258,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1308,7 +1308,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 	}
 
 	var input elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1348,7 +1348,7 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 	}
 
 	var input elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1401,7 +1401,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
@@ -1434,7 +1434,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 
 func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1480,7 +1480,7 @@ func TestAccElasticsearchDomain_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := randomDomainName()
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1500,7 +1500,7 @@ func TestAccElasticsearchDomain_disappears(t *testing.T) {
 	})
 }
 
-func randomDomainName() string {
+func testAccRandomDomainName() string {
 	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
 }
 
