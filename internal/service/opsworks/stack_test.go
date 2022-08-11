@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -88,7 +89,7 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceStack(), resourceName),
 				),
@@ -115,7 +116,7 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -128,7 +129,7 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -137,7 +138,75 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			testAccPreCheckStacks(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckStackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_tags1AlternateRegion(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttrWith(resourceName, "arn", func(value string) error {
+						if !regexp.MustCompile(arn.ARN{
+							Partition: acctest.Partition(),
+							Service:   opsworks.ServiceName,
+							Region:    acctest.AlternateRegion(),
+							AccountID: acctest.AccountID(),
+							Resource:  `stack/.+/`,
+						}.String()).MatchString(value) {
+							return fmt.Errorf("%s doesn't match ARN pattern", value)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.AlternateRegion()),
+					// "In this case, the actual API endpoint of the stack is in us-east-1."
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStackConfig_tags2AlternateRegion(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccStackConfig_tags1AlternateRegion(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -559,6 +628,85 @@ resource "aws_opsworks_stack" "test" {
   }
 }
 `, rName, acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccStackConfig_baseTagsAlternateRegion(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccStackConfig_base(rName),
+		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  provider = "awsalternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  provider = "awsalternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  provider = "awsalternate"
+
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccStackConfig_tags1AlternateRegion(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseTagsAlternateRegion(rName), fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                          = %[1]q
+  region                        = %[2]q
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
+  default_subnet_id             = aws_subnet.test[0].id
+  vpc_id                        = aws_vpc.test.id
+  use_opsworks_security_groups  = false
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, acctest.AlternateRegion(), tagKey1, tagValue1))
+}
+
+func testAccStackConfig_tags2AlternateRegion(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseTagsAlternateRegion(rName), fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                          = %[1]q
+  region                        = %[2]q
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
+  default_subnet_id             = aws_subnet.test[0].id
+  vpc_id                        = aws_vpc.test.id
+  use_opsworks_security_groups  = false
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccStackConfig_classicEndpoint(rName string) string {
