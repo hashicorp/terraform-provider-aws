@@ -60,11 +60,11 @@ func ResourceTransitGatewayPolicyTableCreate(d *schema.ResourceData, meta interf
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayPolicyTable),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route Table: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Policy Table: %s", input)
 	output, err := conn.CreateTransitGatewayPolicyTable(input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway Route Table: %w", err)
+		return fmt.Errorf("creating EC2 Transit Gateway Policy Table: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPolicyTable.TransitGatewayPolicyTableId))
@@ -90,7 +90,7 @@ func ResourceTransitGatewayPolicyTableRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Route Table (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Transit Gateway Policy Table (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
