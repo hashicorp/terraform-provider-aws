@@ -23,29 +23,29 @@ resource "aws_ssoadmin_permission_set" "example" {
 }
 
 resource "aws_iam_policy" "example" {
-	name        = "TestPolicy"
-	description = "My test policy"
-	policy = jsonencode({
-	  Version = "2012-10-17"
-	  Statement = [
-		{
-		  Action = [
-			"ec2:Describe*",
-		  ]
-		  Effect   = "Allow"
-		  Resource = "*"
-		},
-	  ]
-	})
-  }
+  name        = "TestPolicy"
+  description = "My test policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:Describe*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
 
 resource "aws_ssoadmin_customer_managed_policy_attachment" "example" {
-	instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
-	permission_set_arn = aws_ssoadmin_permission_set.example.arn
-	customer_managed_policy_reference {
-		name = aws_iam_policy.example.name
-		path = "/"
-	}
+  instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.example.arn
+  customer_managed_policy_reference {
+    name = aws_iam_policy.example.name
+    path = "/"
+  }
 
 }
 ```
