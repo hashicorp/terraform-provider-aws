@@ -46,6 +46,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_type.0.scheduled"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
