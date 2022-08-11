@@ -220,17 +220,17 @@ func testAccCheckTableReplicaDestroy(s *terraform.State) error {
 		log.Printf("[DEBUG] Checking if DynamoDB table replica %s was destroyed", rs.Primary.ID)
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, "Table Replica", rs.Primary.ID, errors.New("no ID"))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
 		}
 
 		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, "Table Replica", rs.Primary.ID, err)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
 		session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, "Table Replica", rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
 		}
 
 		conn = dynamodb.New(session) // now global table region
@@ -246,7 +246,7 @@ func testAccCheckTableReplicaDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, "Table Replica", rs.Primary.ID, err)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
 		if result == nil || result.Table == nil {
@@ -254,7 +254,7 @@ func testAccCheckTableReplicaDestroy(s *terraform.State) error {
 		}
 
 		if _, err := tfdynamodb.FilterReplicasByRegion(result.Table.Replicas, replicaRegion); err == nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, "Table Replica", rs.Primary.ID, errors.New("still exists"))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("still exists"))
 		}
 
 		return err
@@ -268,23 +268,23 @@ func testAccCheckTableReplicaExists(n string, table *dynamodb.DescribeTableOutpu
 		log.Printf("[DEBUG] Trying to create initial table replica state!")
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, "Table Replica", rs.Primary.ID, fmt.Errorf("not found: %s", n))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("not found: %s", n))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, "Table Replica", rs.Primary.ID, errors.New("no ID"))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, "Table Replica", rs.Primary.ID, err)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
 		session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, "Table Replica", rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
 		}
 
 		conn = dynamodb.New(session) // now global table region
@@ -295,7 +295,7 @@ func testAccCheckTableReplicaExists(n string, table *dynamodb.DescribeTableOutpu
 
 		_, err = conn.DescribeTable(params)
 		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, "Table Replica", rs.Primary.ID, err)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
 		return nil
