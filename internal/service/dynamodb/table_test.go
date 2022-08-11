@@ -3182,8 +3182,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   tags = {
-    Name  = %[1]q
-    Pozo  = "Amargo"
+    Name = %[1]q
+    Pozo = "Amargo"
   }
 }
 `, rName, region1, propagate1))
@@ -3216,8 +3216,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   tags = {
-    Name  = %[1]q
-    Pozo  = "Amargo"
+    Name = %[1]q
+    Pozo = "Amargo"
   }
 }
 `, rName, region1, propagate1, region2, propagate2))
@@ -3245,8 +3245,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   tags = {
-    Name  = %[1]q
-    Pozo  = "Amargo"
+    Name = %[1]q
+    Pozo = "Amargo"
   }
 }
 `, rName, region1))
@@ -3384,7 +3384,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, region1, region2))
