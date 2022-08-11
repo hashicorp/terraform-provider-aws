@@ -1340,6 +1340,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
 			"aws_ec2_transit_gateway_policy_table":                 ec2.ResourceTransitGatewayPolicyTable(),
+			"aws_ec2_transit_gateway_policy_table_association":     ec2.ResourceTransitGatewayPolicyTableAssociation(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                        ec2.ResourceTransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                  ec2.ResourceTransitGatewayRouteTable(),

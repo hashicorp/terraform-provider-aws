@@ -57,7 +57,7 @@ func ResourceTransitGatewayPolicyTableCreate(d *schema.ResourceData, meta interf
 
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
 		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayRouteTable),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayPolicyTable),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route Table: %s", input)

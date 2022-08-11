@@ -4073,6 +4073,37 @@ func FindTransitGatewayRouteTableByID(conn *ec2.EC2, id string) (*ec2.TransitGat
 	return output, nil
 }
 
+func FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	input := &ec2.GetTransitGatewayPolicyTableAssociationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
+	}
+
+	output, err := FindTransitGatewayPolicyTableAssociation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayAssociationStateDisassociated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
 func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	input := &ec2.GetTransitGatewayRouteTableAssociationsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -4106,6 +4137,55 @@ func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitG
 
 func FindTransitGatewayRouteTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTableAssociationsInput) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	output, err := FindTransitGatewayRouteTableAssociations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayPolicyTableAssociations(conn *ec2.EC2, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) ([]*ec2.TransitGatewayPolicyTableAssociation, error) {
+	var output []*ec2.TransitGatewayPolicyTableAssociation
+
+	err := conn.GetTransitGatewayPolicyTableAssociationsPages(input, func(page *ec2.GetTransitGatewayPolicyTableAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Associations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPolicyTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPolicyTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	output, err := FindTransitGatewayPolicyTableAssociations(conn, input)
 
 	if err != nil {
 		return nil, err
