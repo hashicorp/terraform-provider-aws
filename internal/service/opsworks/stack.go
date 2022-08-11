@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -310,12 +310,12 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
+	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		var err error
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
 
 		if err != nil {
@@ -323,95 +323,50 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	req := &opsworks.DescribeStacksInput{
-		StackIds: []*string{
-			aws.String(d.Id()),
-		},
+	stack, err := FindStackByID(conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		// If it's not found in the the default region we're in, we check us-east-1
+		// in the event this stack was created with Terraform before version 0.9.
+		// See https://github.com/hashicorp/terraform/issues/12842.
+		conn, err = regionalConn(meta.(*conns.AWSClient), endpoints.UsEast1RegionID)
+
+		if err != nil {
+			return err
+		}
+
+		stack, err = FindStackByID(conn, d.Id())
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks stack: %s", d.Id())
-
-	// notFound represents the number of times we've called DescribeStacks looking
-	// for this Stack. If it's not found in the the default region we're in, we
-	// check us-east-1 in the event this stack was created with Terraform before
-	// version 0.9
-	// See https://github.com/hashicorp/terraform/issues/12842
-	var notFound int
-	var resp *opsworks.DescribeStacksOutput
-	var dErr error
-
-	for {
-		resp, dErr = conn.DescribeStacks(req)
-		if dErr != nil {
-			if awserr, ok := dErr.(awserr.Error); ok {
-				if awserr.Code() == "ResourceNotFoundException" {
-					if notFound < 1 {
-						// If we haven't already, try us-east-1, legacy connection
-						notFound++
-						var connErr error
-						conn, connErr = connForRegion("us-east-1", meta) //lintignore:AWSAT003
-						if connErr != nil {
-							return connErr
-						}
-						// start again from the top of the FOR loop, but with a client
-						// configured to talk to us-east-1
-						continue
-					}
-
-					// We've tried both the original and us-east-1 endpoint, and the stack
-					// is still not found
-					log.Printf("[DEBUG] OpsWorks stack (%s) not found", d.Id())
-					d.SetId("")
-					return nil
-				}
-				// not ResoureNotFoundException, fall through to returning error
-			}
-			return dErr
-		}
-		// If the stack was found, set the stack_endpoint
-		if region := aws.StringValue(conn.Config.Region); region != "" {
-			log.Printf("[DEBUG] Setting stack_endpoint for (%s) to (%s)", d.Id(), region)
-			if err := d.Set("stack_endpoint", region); err != nil {
-				log.Printf("[WARN] Error setting stack_endpoint: %s", err)
-			}
-		}
-		log.Printf("[DEBUG] Breaking stack endpoint search, found stack for (%s)", d.Id())
-		// Break the FOR loop
-		break
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpsWorks Stack %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	stack := resp.Stacks[0]
+	if err != nil {
+		return fmt.Errorf("reading OpsWorks Stack (%s): %w", d.Id(), err)
+	}
+
+	// If the stack was found, set the stack_endpoint.
+	if v := aws.StringValue(conn.Config.Region); v != "" {
+		d.Set("stack_endpoint", v)
+	}
+
+	d.Set("agent_version", stack.AgentVersion)
 	arn := aws.StringValue(stack.Arn)
 	d.Set("arn", arn)
-	d.Set("agent_version", stack.AgentVersion)
-	d.Set("name", stack.Name)
-	d.Set("region", stack.Region)
-	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
-	d.Set("service_role_arn", stack.ServiceRoleArn)
-	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
-	d.Set("default_os", stack.DefaultOs)
-	d.Set("default_root_device_type", stack.DefaultRootDeviceType)
-	d.Set("default_ssh_key_name", stack.DefaultSshKeyName)
-	d.Set("default_subnet_id", stack.DefaultSubnetId)
-	d.Set("hostname_theme", stack.HostnameTheme)
-	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
+	if stack.ChefConfiguration != nil {
+		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
+		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
-	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
-	d.Set("vpc_id", stack.VpcId)
-	if color, ok := stack.Attributes["Color"]; ok {
+	if color, ok := stack.Attributes[opsworks.StackAttributesKeysColor]; ok {
 		d.Set("color", color)
 	}
 	if stack.ConfigurationManager != nil {
 		d.Set("configuration_manager_name", stack.ConfigurationManager.Name)
 		d.Set("configuration_manager_version", stack.ConfigurationManager.Version)
 	}
-	if stack.ChefConfiguration != nil {
-		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
-		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
-	}
-
 	if stack.CustomCookbooksSource != nil {
 		tfMap := flattenSource(stack.CustomCookbooksSource)
 
@@ -430,32 +385,48 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("custom_cookbooks_source", nil)
 	}
+	if stack.CustomJson != nil {
+		d.Set("custom_json", stack.CustomJson)
+	}
+	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
+	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
+	d.Set("default_os", stack.DefaultOs)
+	d.Set("default_root_device_type", stack.DefaultRootDeviceType)
+	d.Set("default_ssh_key_name", stack.DefaultSshKeyName)
+	d.Set("default_subnet_id", stack.DefaultSubnetId)
+	d.Set("hostname_theme", stack.HostnameTheme)
+	d.Set("name", stack.Name)
+	d.Set("region", stack.Region)
+	d.Set("service_role_arn", stack.ServiceRoleArn)
+	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
+	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
+	d.Set("vpc_id", stack.VpcId)
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
+		return fmt.Errorf("listing tags for OpsWorks Stack (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
+	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		var err error
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
 
 		if err != nil {
@@ -516,7 +487,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
 
-	_, err := conn.UpdateStack(req)
+	_, err = conn.UpdateStack(req)
 	if err != nil {
 		return err
 	}
@@ -540,10 +511,10 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
+	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		var err error
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
 
 		if err != nil {
@@ -552,7 +523,7 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
-	_, err := conn.DeleteStack(&opsworks.DeleteStackInput{
+	_, err = conn.DeleteStack(&opsworks.DeleteStackInput{
 		StackId: aws.String(d.Id()),
 	})
 
