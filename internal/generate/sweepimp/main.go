@@ -6,8 +6,10 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"go/format"
+	"io/fs"
 	"log"
 	"os"
 	"sort"
@@ -68,11 +70,11 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s/sweep.go", p)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s/sweep.go", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
