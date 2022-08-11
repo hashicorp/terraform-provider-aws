@@ -81,7 +81,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -103,7 +103,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 
 func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -130,7 +130,7 @@ func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 			{
 				ResourceName:      "aws_opensearch_domain.test",
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -150,9 +150,9 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
-	customEndpoint := fmt.Sprintf("%s.example.com", rName[:28])
+	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
 	certKey := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(certKey, customEndpoint)
@@ -176,7 +176,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -201,7 +201,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 	var domain1, domain2, domain3, domain4 opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -222,7 +222,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -264,7 +264,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -284,7 +284,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -301,7 +301,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,7 +331,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -358,7 +358,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 
 func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -376,7 +376,7 @@ func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -401,7 +401,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 	}
 
 	var input opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -421,7 +421,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -441,7 +441,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -451,7 +451,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 		CheckDestroy: func(s *terraform.State) error {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
 			_, err := conn.DeleteDomain(&opensearchservice.DeleteDomainInput{
-				DomainName: aws.String(rName[:28]),
+				DomainName: aws.String(rName),
 			})
 			return err
 		},
@@ -461,7 +461,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 					// Create duplicate
 					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
 					_, err := conn.CreateDomain(&opensearchservice.CreateDomainInput{
-						DomainName: aws.String(rName[:28]),
+						DomainName: aws.String(rName),
 						EBSOptions: &opensearchservice.EBSOptions{
 							EBSEnabled: aws.Bool(true),
 							VolumeSize: aws.Int64(10),
@@ -471,7 +471,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfopensearch.WaitForDomainCreation(conn, rName[:28], 60*time.Minute)
+					err = tfopensearch.WaitForDomainCreation(conn, rName, 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -492,7 +492,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -512,7 +512,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -525,7 +525,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -543,7 +543,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -556,7 +556,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -574,7 +574,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -583,7 +583,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 
 func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -602,7 +602,7 @@ func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -622,7 +622,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -640,7 +640,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -659,7 +659,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_opensearch_domain.test"
 
@@ -689,7 +689,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -702,7 +702,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -721,7 +721,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -739,7 +739,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -758,7 +758,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -776,7 +776,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -795,7 +795,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -813,7 +813,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -835,7 +835,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -848,7 +848,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -870,7 +870,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -883,7 +883,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -905,7 +905,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -918,7 +918,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -940,7 +940,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
@@ -955,7 +955,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -978,7 +978,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -998,7 +998,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1021,7 +1021,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -1042,7 +1042,7 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1059,7 +1059,7 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1073,7 +1073,7 @@ func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1102,7 +1102,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1120,7 +1120,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1134,7 +1134,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1152,7 +1152,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1165,7 +1165,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 	}
 
 	var domain1, domain2 opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1206,7 +1206,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 	}
 
 	var domain1, domain2 opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1240,7 +1240,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1258,7 +1258,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1272,7 +1272,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 
 	var domain1, domain2 opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1313,7 +1313,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 
 	var domain1, domain2 opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1352,7 +1352,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 	}
 
 	var domain opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1372,7 +1372,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -1402,7 +1402,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 	}
 
 	var input opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1424,7 +1424,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -1455,7 +1455,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 
 	var domain opensearchservice.DomainStatus
 	resourceName := "aws_opensearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
@@ -1479,7 +1479,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1488,7 +1488,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 
 func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 	var domain1, domain2, domain3 opensearchservice.DomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1507,7 +1507,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
@@ -1534,7 +1534,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1552,6 +1552,10 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func randomDomainName() string {
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
 }
 
 func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
@@ -1896,7 +1900,7 @@ func testAccCheckELBDestroy(s *terraform.State) error {
 func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -1909,7 +1913,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_6.7"
 
   ebs_options {
@@ -1939,7 +1943,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_disabledEBSNullVolume(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_6.0"
 
   cluster_config {
@@ -1959,7 +1963,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_endpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   domain_endpoint_options {
     enforce_https       = %[2]t
@@ -1982,7 +1986,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   domain_endpoint_options {
     enforce_https                   = %[2]t
@@ -2003,7 +2007,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterZoneAwarenessAZCount(rName string, availabilityZoneCount int) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_1.5"
 
   cluster_config {
@@ -2044,7 +2048,7 @@ func testAccDomainConfig_clusterColdStorageOptions(rName string, warmEnabled boo
 
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_7.9"
 
   cluster_config {
@@ -2075,7 +2079,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_1.5"
 
   cluster_config {
@@ -2103,7 +2107,7 @@ func testAccDomainConfig_clusterWarm(rName, warmType string, enabled bool, warmC
 
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_6.8"
 
   cluster_config {
@@ -2133,7 +2137,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_dedicatedClusterMaster(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   cluster_config {
     instance_type            = "t2.small.search"
@@ -2154,7 +2158,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -2185,7 +2189,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateEBSVolume(rName string, volumeSize int, volumeThroughput int, volumeIops int) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = "Elasticsearch_6.0"
 
@@ -2213,7 +2217,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = %[2]q
 
@@ -2234,7 +2238,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateInstanceStore(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = "Elasticsearch_6.0"
 
@@ -2258,7 +2262,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2275,7 +2279,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -2293,7 +2297,7 @@ func testAccDomainConfig_policy(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2336,7 +2340,7 @@ func testAccDomainConfig_policyOrder(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2387,7 +2391,7 @@ func testAccDomainConfig_policyNewOrder(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2436,7 +2440,7 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = %[2]q
 
@@ -2464,7 +2468,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = %[2]q
 
@@ -2489,7 +2493,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_nodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = %[2]q
 
@@ -2512,7 +2516,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_complex(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -2543,7 +2547,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_v23(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2596,7 +2600,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2678,7 +2682,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2760,7 +2764,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2822,7 +2826,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2846,7 +2850,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_advancedSecurityOptionsUserDB(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1"
 
   cluster_config {
@@ -2890,7 +2894,7 @@ resource "aws_iam_user" "test" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1"
 
   cluster_config {
@@ -2929,7 +2933,7 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_advancedSecurityOptionsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1"
 
   cluster_config {
@@ -3026,7 +3030,7 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	}
 	return acctest.ConfigCompose(testAccDomain_logPublishingOptionsBase(rName), fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name    = substr(%[1]q, 0, 28)
+  domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
 
   ebs_options {
@@ -3105,7 +3109,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_opensearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   engine_version = "OpenSearch_1.1"
 
