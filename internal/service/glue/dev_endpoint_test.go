@@ -561,15 +561,15 @@ func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDevEndpointExists(resourceName string, v *glue.DevEndpoint) resource.TestCheckFunc {
+func testAccCheckDevEndpointExists(n string, v *glue.DevEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Glue Dev Endpoint ID is set")
+			return fmt.Errorf("No Glue Dev Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
@@ -638,16 +638,16 @@ data "aws_partition" "current" {}
 }
 
 func testAccDevEndpointConfig_basic(rName string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccDevEndpointConfig_arguments(rName, argKey, argValue string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -655,11 +655,11 @@ resource "aws_glue_dev_endpoint" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, argKey, argValue)
+`, rName, argKey, argValue))
 }
 
 func testAccDevEndpointConfig_arguments2(rName, argKey1, argValue1, argKey2, argValue2 string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -668,102 +668,102 @@ resource "aws_glue_dev_endpoint" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, argKey1, argValue1, argKey2, argValue2)
+`, rName, argKey1, argValue1, argKey2, argValue2))
 }
 
 func testAccDevEndpointConfig_extraJarsS3Path(rName string, extraJarsS3Path string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name               = %q
+  name               = %[1]q
   role_arn           = aws_iam_role.test.arn
-  extra_jars_s3_path = %q
+  extra_jars_s3_path = %[2]q
 }
-`, rName, extraJarsS3Path)
+`, rName, extraJarsS3Path))
 }
 
 func testAccDevEndpointConfig_extraPythonLibsS3Path(rName string, extraPythonLibsS3Path string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name                      = %q
+  name                      = %[1]q
   role_arn                  = aws_iam_role.test.arn
-  extra_python_libs_s3_path = %q
+  extra_python_libs_s3_path = %[2]q
 }
-`, rName, extraPythonLibsS3Path)
+`, rName, extraPythonLibsS3Path))
 }
 
 func testAccDevEndpointConfig_version(rName string, glueVersion string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name         = %[1]q
   role_arn     = aws_iam_role.test.arn
   glue_version = %[2]q
 }
-`, rName, glueVersion)
+`, rName, glueVersion))
 }
 
 func testAccDevEndpointConfig_numberOfNodes(rName string, numberOfNodes int) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name            = %q
+  name            = %[1]q
   role_arn        = aws_iam_role.test.arn
-  number_of_nodes = %d
+  number_of_nodes = %[2]d
 }
-`, rName, numberOfNodes)
+`, rName, numberOfNodes))
 }
 
 func testAccDevEndpointConfig_numberOfWorkers(rName string, numberOfWorkers int) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name              = %q
+  name              = %[1]q
   role_arn          = aws_iam_role.test.arn
   worker_type       = "G.1X"
-  number_of_workers = %d
+  number_of_workers = %[2]d
 }
-`, rName, numberOfWorkers)
+`, rName, numberOfWorkers))
 }
 
 func testAccDevEndpointConfig_publicKey(rName string, publicKey string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name       = %q
+  name       = %[1]q
   role_arn   = aws_iam_role.test.arn
-  public_key = "%s"
+  public_key = %[2]q
 }
-`, rName, publicKey)
+`, rName, publicKey))
 }
 
 func testAccDevEndpointConfig_publicKeys2(rName string, publicKey1 string, publicKey2 string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name        = %[1]q
   role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q]
 }
-`, rName, publicKey1, publicKey2)
+`, rName, publicKey1, publicKey2))
 }
 
 func testAccDevEndpointConfig_publicKeys3(rName string, publicKey1 string, publicKey2 string, publicKey3 string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name        = %[1]q
   role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q, %[4]q]
 }
-`, rName, publicKey1, publicKey2, publicKey3)
+`, rName, publicKey1, publicKey2, publicKey3))
 }
 
 func testAccDevEndpointConfig_publicKeys4(rName string, publicKey1 string, publicKey2 string, publicKey3 string, publicKey4 string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name        = %[1]q
   role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q, %[4]q, %[5]q]
 }
-`, rName, publicKey1, publicKey2, publicKey3, publicKey4)
+`, rName, publicKey1, publicKey2, publicKey3, publicKey4))
 }
 
 func testAccDevEndpointConfig_securityConfiguration(rName string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
@@ -787,7 +787,7 @@ resource "aws_glue_security_configuration" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccDevEndpointConfig_subnetIDSecurityGroupIDs(rName string) string {
@@ -843,6 +843,10 @@ resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
 
+  tags = {
+    Name = %[1]q
+  }
+
   ingress {
     from_port   = 0
     to_port     = 0
@@ -866,7 +870,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccDevEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -875,11 +879,11 @@ resource "aws_glue_dev_endpoint" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccDevEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccJobConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -889,27 +893,27 @@ resource "aws_glue_dev_endpoint" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDevEndpointConfig_workerType(rName, workerType string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name              = %[1]q
   role_arn          = aws_iam_role.test.arn
   worker_type       = %[2]q
   number_of_workers = 2
 }
-`, rName, workerType)
+`, rName, workerType))
 }
 
 func testAccDevEndpointConfig_workerTypeStandard(rName string) string {
-	return testAccDevEndpointConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDevEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name              = %[1]q
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
   number_of_workers = 2
 }
-`, rName)
+`, rName))
 }
