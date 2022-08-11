@@ -34,6 +34,10 @@ func ResourceStack() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"agent_version": {
 				Type:     schema.TypeString,
@@ -189,69 +193,110 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	req := &opsworks.CreateStackInput{
+	name := d.Get("name").(string)
+	region := d.Get("region").(string)
+	input := &opsworks.CreateStackInput{
+		ChefConfiguration: &opsworks.ChefConfiguration{
+			BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
+			ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
+		},
+		ConfigurationManager: &opsworks.StackConfigurationManager{
+			Name:    aws.String(d.Get("configuration_manager_name").(string)),
+			Version: aws.String(d.Get("configuration_manager_version").(string)),
+		},
 		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
-		Name:                      aws.String(d.Get("name").(string)),
-		Region:                    aws.String(d.Get("region").(string)),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
 		DefaultOs:                 aws.String(d.Get("default_os").(string)),
+		HostnameTheme:             aws.String(d.Get("hostname_theme").(string)),
+		Name:                      aws.String(name),
+		Region:                    aws.String(region),
+		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
+		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 	}
-	req.ConfigurationManager = &opsworks.StackConfigurationManager{
-		Name:    aws.String(d.Get("configuration_manager_name").(string)),
-		Version: aws.String(d.Get("configuration_manager_version").(string)),
-	}
-	inVpc := false
-	if vpcId, ok := d.GetOk("vpc_id"); ok {
-		req.VpcId = aws.String(vpcId.(string))
-		inVpc = true
-	}
-	if defaultSubnetId, ok := d.GetOk("default_subnet_id"); ok {
-		req.DefaultSubnetId = aws.String(defaultSubnetId.(string))
-	}
-	if defaultAvailabilityZone, ok := d.GetOk("default_availability_zone"); ok {
-		req.DefaultAvailabilityZone = aws.String(defaultAvailabilityZone.(string))
-	}
-	if defaultRootDeviceType, ok := d.GetOk("default_root_device_type"); ok {
-		req.DefaultRootDeviceType = aws.String(defaultRootDeviceType.(string))
+
+	if v, ok := d.GetOk("agent_version"); ok {
+		input.AgentVersion = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
+	if v, ok := d.GetOk("color"); ok {
+		input.Attributes = aws.StringMap(map[string]string{
+			opsworks.StackAttributesKeysColor: v.(string),
+		})
+	}
 
-	var err error
-	var resp *opsworks.CreateStackOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreateStack(req)
-		if err != nil {
+	if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CustomCookbooksSource = expandSource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_json"); ok {
+		input.CustomJson = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_availability_zone"); ok {
+		input.DefaultAvailabilityZone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_root_device_type"); ok {
+		input.DefaultRootDeviceType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_ssh_key_name"); ok {
+		input.DefaultSshKeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_subnet_id"); ok {
+		input.DefaultSubnetId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_id"); ok {
+		input.VpcId = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating OpsWorks Stack: %s", input)
+	outputRaw, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutCreate),
+		func() (interface{}, error) {
+			return conn.CreateStack(input)
+		},
+		func(err error) (bool, error) {
 			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
 			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
 			// to do fragile message matching.
 			// The full error we're looking for looks something like the following:
 			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
-			propErr := "not yet propagated"
-			trustErr := "not the necessary trust relationship"
-			validateErr := "validate IAM role permission"
-
-			if tfawserr.ErrMessageContains(err, "ValidationException", propErr) || tfawserr.ErrMessageContains(err, "ValidationException", trustErr) || tfawserr.ErrMessageContains(err, "ValidationException", validateErr) {
-				log.Printf("[INFO] Waiting for service IAM role to propagate")
-				return resource.RetryableError(err)
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeValidationException, "not yet propagated") ||
+				tfawserr.ErrMessageContains(err, opsworks.ErrCodeValidationException, "not the necessary trust relationship") ||
+				tfawserr.ErrMessageContains(err, opsworks.ErrCodeValidationException, "validate IAM role permission") {
+				return true, err
 			}
 
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateStack(req)
-	}
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Opsworks stack: %s", err)
+		return fmt.Errorf("creating OpsWorks Stack (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.StackId))
+	d.SetId(aws.StringValue(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
-	if inVpc && *req.UseOpsworksSecurityGroups {
+	if len(tags) > 0 {
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   opsworks.ServiceName,
+			Region:    region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  fmt.Sprintf("stack/%s/", d.Id()),
+		}.String()
+
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
+			return fmt.Errorf("adding OpsWorks Stack (%s) tags: %w", arn, err)
+		}
+	}
+
+	if aws.StringValue(input.VpcId) != "" && aws.BoolValue(input.UseOpsworksSecurityGroups) {
 		// For VPC-based stacks, OpsWorks asynchronously creates some default
 		// security groups which must exist before layers can be created.
 		// Unfortunately it doesn't tell us what the ids of these are, so
@@ -261,7 +306,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		time.Sleep(securityGroupsCreatedSleepTime)
 	}
 
-	return resourceStackUpdate(d, meta)
+	return resourceStackRead(d, meta)
 }
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
