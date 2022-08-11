@@ -67,6 +67,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"password": {
@@ -104,9 +105,10 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"default_availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
 			},
 			"default_instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -127,9 +129,10 @@ func ResourceStack() *schema.Resource {
 				Optional: true,
 			},
 			"default_subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"vpc_id"},
 			},
 			"hostname_theme": {
 				Type:     schema.TypeString,
@@ -172,10 +175,11 @@ func ResourceStack() *schema.Resource {
 				Default:  true,
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
 			},
 		},
 
@@ -185,11 +189,6 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
-
-	err := resourceStackValidate(d)
-	if err != nil {
-		return err
-	}
 
 	req := &opsworks.CreateStackInput{
 		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
@@ -220,6 +219,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating OpsWorks stack: %s", req)
 
+	var err error
 	var resp *opsworks.CreateStackOutput
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
 		resp, err = conn.CreateStack(req)
@@ -400,11 +400,6 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	err := resourceStackValidate(d)
-	if err != nil {
-		return err
-	}
-
 	req := &opsworks.UpdateStackInput{
 		CustomJson:                aws.String(d.Get("custom_json").(string)),
 		DefaultInstanceProfileArn: aws.String(d.Get("default_instance_profile_arn").(string)),
@@ -449,7 +444,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks stack: %s", req)
 
-	_, err = conn.UpdateStack(req)
+	_, err := conn.UpdateStack(req)
 	if err != nil {
 		return err
 	}
@@ -514,26 +509,6 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	if inVpc && useOpsworksDefaultSg {
 		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
 		time.Sleep(securityGroupsDeletedSleepTime)
-	}
-
-	return nil
-}
-
-func resourceStackValidate(d *schema.ResourceData) error {
-	cookbooksSourceCount := d.Get("custom_cookbooks_source.#").(int)
-	if cookbooksSourceCount > 1 {
-		return fmt.Errorf("Only one custom_cookbooks_source is permitted")
-	}
-
-	vpcId := d.Get("vpc_id").(string)
-	if vpcId != "" {
-		if d.Get("default_subnet_id").(string) == "" {
-			return fmt.Errorf("default_subnet_id must be set if vpc_id is set")
-		}
-	} else {
-		if d.Get("default_availability_zone").(string) == "" {
-			return fmt.Errorf("either vpc_id or default_availability_zone must be set")
-		}
 	}
 
 	return nil
