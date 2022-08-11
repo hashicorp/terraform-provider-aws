@@ -974,54 +974,6 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // custom diff
-/*
-func replicaTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	if v, ok := tfMap["propagate_tags"].(bool); ok && v {
-		if aws.StringValue(conn.Config.Region) != region {
-			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
-			if err != nil {
-				return fmt.Errorf("updating replica (%s) tags: %w", region, err)
-			}
-
-			conn = dynamodb.New(session)
-		}
-	}
-
-	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
-
-	if defaultTagsConfig.TagsEqual(resourceTags) {
-		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
-	}
-
-	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
-	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
-	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
-	// otherwise we mark the attribute as "Computed" only when their is a known diff (excluding an empty map)
-	// or a change for "tags_all".
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005
-	if len(allTags) > 0 {
-		if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
-			return fmt.Errorf("error setting new tags_all diff: %w", err)
-		}
-	} else if len(diff.Get("tags_all").(map[string]interface{})) > 0 {
-		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
-		}
-	} else if diff.HasChange("tags_all") {
-		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
-		}
-	}
-
-	return nil
-}
-*/
 
 func isTableOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
