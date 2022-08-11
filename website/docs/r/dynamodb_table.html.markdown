@@ -79,7 +79,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
 
-~> **Note:** [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) is an alternate way of configuring Global Tables. Do not use `replica` configuration blocks of `aws_dynamodb_table` together with with [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html).
+~> **Note:** [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) is an alternate way of configuring Global Tables. Do not use `replica` configuration blocks of `aws_dynamodb_table` together with [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html).
 
 ```terraform
 resource "aws_dynamodb_table" "example" {

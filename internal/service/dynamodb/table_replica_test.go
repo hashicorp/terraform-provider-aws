@@ -20,6 +20,10 @@ import (
 )
 
 func TestAccDynamoDBTableReplica_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -47,6 +51,10 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var table1 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -70,6 +78,10 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -97,6 +109,10 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,6 +171,10 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table_replica.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
