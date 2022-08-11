@@ -314,11 +314,12 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = connForRegion(v, meta)
-		if conErr != nil {
-			return conErr
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		var err error
+		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+
+		if err != nil {
+			return err
 		}
 	}
 
@@ -452,11 +453,13 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = connForRegion(v, meta)
-		if conErr != nil {
-			return conErr
+
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		var err error
+		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+
+		if err != nil {
+			return err
 		}
 	}
 
@@ -538,29 +541,27 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
-	var conErr error
-	if v := d.Get("stack_endpoint").(string); v != "" {
-		conn, conErr = connForRegion(v, meta)
-		if conErr != nil {
-			return conErr
+
+	if v, ok := d.GetOk("stack_endpoint"); ok {
+		var err error
+		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
+
+		if err != nil {
+			return err
 		}
 	}
 
-	req := &opsworks.DeleteStackInput{
+	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
+	_, err := conn.DeleteStack(&opsworks.DeleteStackInput{
 		StackId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting OpsWorks stack: %s", d.Id())
-
-	_, err := conn.DeleteStack(req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[DEBUG] OpsWorks Stack (%s) not found to delete; removed from state", d.Id())
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("while deleting OpsWork Stack (%s, %s): %w", d.Id(), d.Get("name").(string), err)
+		return fmt.Errorf("deleting OpsWork Stack (%s): %w", d.Id(), err)
 	}
 
 	// For a stack in a VPC, OpsWorks has created some default security groups
@@ -572,12 +573,11 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	// wait for the security groups to be deleted.
 	// There is no robust way to check for this, so we'll just wait a
 	// nominal amount of time.
-	_, inVpc := d.GetOk("vpc_id")
-	_, useOpsworksDefaultSg := d.GetOk("use_opsworks_security_groups")
-
-	if inVpc && useOpsworksDefaultSg {
-		log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
-		time.Sleep(securityGroupsDeletedSleepTime)
+	if _, ok := d.GetOk("vpc_id"); ok {
+		if _, ok := d.GetOk("use_opsworks_security_groups"); ok {
+			log.Print("[INFO] Waiting for Opsworks built-in security groups to be deleted")
+			time.Sleep(securityGroupsDeletedSleepTime)
+		}
 	}
 
 	return nil
@@ -698,7 +698,24 @@ func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) 
 	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating AWS session: %w", err)
+		return nil, fmt.Errorf("creating AWS session: %w", err)
+	}
+
+	return opsworks.New(sess), nil
+}
+
+func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
+	conn := client.OpsWorksConn
+
+	// Regions are the same, no need to reconfigure.
+	if aws.StringValue(conn.Config.Region) == regionName {
+		return conn, nil
+	}
+
+	sess, err := conns.NewSessionForRegion(&conn.Config, regionName, client.TerraformVersion)
+
+	if err != nil {
+		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)
 	}
 
 	return opsworks.New(sess), nil
