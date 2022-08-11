@@ -365,9 +365,24 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
 		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
-	err := resourceSetStackCustomCookbooksSource(d, stack.CustomCookbooksSource)
-	if err != nil {
-		return err
+
+	if stack.CustomCookbooksSource != nil {
+		tfMap := flattenSource(stack.CustomCookbooksSource)
+
+		// CustomCookbooksSource.Password and CustomCookbooksSource.SshKey will, on read, contain the placeholder string "*****FILTERED*****",
+		// so we ignore it on read and let persist the value already in the state.
+		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			v := v.([]interface{})[0].(map[string]interface{})
+
+			tfMap["password"] = v["password"]
+			tfMap["ssh_key"] = v["ssh_key"]
+		}
+
+		if err := d.Set("custom_cookbooks_source", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting custom_cookbooks_source: %w", err)
+		}
+	} else {
+		d.Set("custom_cookbooks_source", nil)
 	}
 
 	tags, err := ListTags(conn, arn)
@@ -557,38 +572,38 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 	return apiObject
 }
 
-func resourceSetStackCustomCookbooksSource(d *schema.ResourceData, v *opsworks.Source) error {
-	nv := make([]interface{}, 0, 1)
-	if v != nil && aws.StringValue(v.Type) != "" {
-		m := make(map[string]interface{})
-		if v.Type != nil {
-			m["type"] = aws.StringValue(v.Type)
-		}
-		if v.Url != nil {
-			m["url"] = aws.StringValue(v.Url)
-		}
-		if v.Username != nil {
-			m["username"] = aws.StringValue(v.Username)
-		}
-		if v.Revision != nil {
-			m["revision"] = aws.StringValue(v.Revision)
-		}
-
-		// v.Password and v.SshKey will, on read, contain the placeholder string
-		// "*****FILTERED*****", so we ignore it on read and let persist
-		// the value already in the state.
-		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
-		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
-
-		nv = append(nv, m)
+func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	err := d.Set("custom_cookbooks_source", nv)
-	if err != nil {
-		// should never happen
-		return err
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Password; v != nil {
+		tfMap["password"] = aws.StringValue(v)
 	}
-	return nil
+
+	if v := apiObject.Revision; v != nil {
+		tfMap["revision"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SshKey; v != nil {
+		tfMap["ssh_key"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Url; v != nil {
+		tfMap["url"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Username; v != nil {
+		tfMap["username"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 // opsworksConn will return a connection for the stack_endpoint in the
