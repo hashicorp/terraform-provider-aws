@@ -93,7 +93,6 @@ func ResourceTable() *schema.Resource {
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
-			setReplicaTagsDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -274,8 +273,6 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"tags":     tftags.TagsSchema(),
-						"tags_all": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -989,53 +986,6 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 
 // custom diff
 
-func setReplicaTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
-
-	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
-	replicas := diff.Get("replica").(*schema.Set).List()
-
-	setNew := false
-	tagsAllExist := false
-
-	for i, replicaRaw := range replicas {
-		replica := replicaRaw.(map[string]interface{})
-
-		replicaAllTags := tftags.New(replica["tags"].(map[string]interface{}))
-
-		if replica["propagate_tags"].(bool) {
-			replicaAllTags.Merge(allTags)
-		}
-
-		if len(replica["tags_all"].(map[string]interface{})) > 0 {
-			tagsAllExist = true
-		}
-
-		if len(replicaAllTags) > 0 {
-			replica["tags_all"] = replicaAllTags.Map()
-			setNew = true
-		}
-
-		replicas[i] = replica
-	}
-
-	if setNew {
-		if err := diff.SetNew("replica", replicas); err != nil {
-			return fmt.Errorf("setting new replica tags_all diff: %w", err)
-		}
-	} else if tagsAllExist {
-		if err := diff.SetNewComputed("replica"); err != nil {
-			return fmt.Errorf("setting replica tags_all to computed: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func isTableOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
 	if len(options) == 0 {
@@ -1125,7 +1075,7 @@ func createReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
+		if err := waitReplicaActive(conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
 			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 		}
 
@@ -1152,14 +1102,7 @@ func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{
 			continue
 		}
 
-		replicaTags := tftags.New(tfMap["tags"].(map[string]interface{}))
-		allTags := replicaTags
-
 		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
-			allTags = replicaTags.Merge(tftags.New(newTags))
-		}
-
-		if len(allTags) > 0 {
 			if aws.StringValue(conn.Config.Region) != region {
 				session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
 				if err != nil {
@@ -1174,7 +1117,7 @@ func updateReplicaTags(conn *dynamodb.DynamoDB, rn string, replicas []interface{
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			if err := UpdateTags(conn, newARN, oldTags, allTags); err != nil {
+			if err := UpdateTags(conn, newARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
@@ -1491,7 +1434,7 @@ func deleteReplicas(conn *dynamodb.DynamoDB, tableName string, tfList []interfac
 				return fmt.Errorf("deleting replica (%s): %w", regionName, err)
 			}
 
-			if _, err := waitReplicaDeleted(conn, tableName, regionName, timeout); err != nil {
+			if err := waitReplicaDeleted(conn, tableName, regionName, timeout); err != nil {
 				return fmt.Errorf("waiting for replica (%s) deletion: %w", regionName, err)
 			}
 

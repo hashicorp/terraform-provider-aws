@@ -154,7 +154,7 @@ func resourceTableReplicaCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("creating replica (%s): %w", d.Get("global_table_arn").(string), err)
 	}
 
-	if _, err := waitReplicaActive(conn, tableName, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitReplicaActive(conn, tableName, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("waiting for replica (%s) creation: %w", meta.(*conns.AWSClient).Region, err)
 	}
 
@@ -397,7 +397,7 @@ func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("updating replica (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for replica (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -419,7 +419,7 @@ func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		if _, err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("waiting for replica (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -483,7 +483,7 @@ func resourceTableReplicaDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("deleting replica (%s): %w", replicaRegion, err)
 	}
 
-	if _, err := waitReplicaDeleted(conn, tableName, replicaRegion, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitReplicaDeleted(conn, tableName, replicaRegion, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for replica (%s) deletion: %w", replicaRegion, err)
 	}
 

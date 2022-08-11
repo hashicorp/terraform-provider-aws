@@ -1508,37 +1508,6 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_tagMagic(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTableConfig_replicaMoreTags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-				),
-			},
-			{
-				Config:            testAccTableConfig_replicaMoreTags(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2836,43 +2805,6 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-  }
-}
-`, rName))
-}
-
-func testAccTableConfig_replicaMoreTags(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name    = data.aws_region.alternate.name
-    propagate_tags = true
-    
-    tags = {
-      ReplicaTag = "Bob"
-    }
-  }
-
-  tags = {
-    Name = %[1]q
-    Pozo = "Amargo"
   }
 }
 `, rName))
