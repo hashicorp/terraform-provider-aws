@@ -11,6 +11,9 @@ import (
 )
 
 func TestAccConnectVocabularyDataSource_vocabularyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_vocabulary.test"
@@ -42,6 +45,9 @@ func TestAccConnectVocabularyDataSource_vocabularyID(t *testing.T) {
 }
 
 func TestAccConnectVocabularyDataSource_name(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_vocabulary.test"
