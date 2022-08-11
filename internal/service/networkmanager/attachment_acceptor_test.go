@@ -143,6 +143,7 @@ func testAccCheckVPCAttachmentDestroy(s *terraform.State) error {
 
 const TestAccVPCConfig_multipleSubnets = `
 data "aws_availability_zones" "test" {}
+data "aws_region" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -174,7 +175,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = "us-east-1"
+      location = data.aws_region.test.name
       asn      = 64512
     }
   }

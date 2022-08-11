@@ -223,7 +223,8 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		acnt := meta.(*conns.AWSClient).AccountID
-		arn := fmt.Sprintf("arn:aws:networkmanager::%s:attachment/%s", acnt, d.Id())
+		part := meta.(*conns.AWSClient).Partition
+		arn := fmt.Sprintf("arn:%s:networkmanager::%s:attachment/%s", part, acnt, d.Id())
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating VPC Attachment (%s) tags: %s", d.Id(), err)
