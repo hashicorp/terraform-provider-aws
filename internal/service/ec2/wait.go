@@ -1371,9 +1371,28 @@ func WaitTransitGatewayRouteDeleted(conn *ec2.EC2, transitGatewayRouteTableID, d
 }
 
 const (
-	TransitGatewayRouteTableCreatedTimeout = 10 * time.Minute
-	TransitGatewayRouteTableDeletedTimeout = 10 * time.Minute
+	TransitGatewayRouteTableCreatedTimeout  = 10 * time.Minute
+	TransitGatewayRouteTableDeletedTimeout  = 10 * time.Minute
+	TransitGatewayPolicyTableCreatedTimeout = 10 * time.Minute
+	TransitGatewayPolicyTableDeletedTimeout = 10 * time.Minute
 )
+
+func WaitTransitGatewayPolicyTableCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayPolicyTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPolicyTableStatePending},
+		Target:  []string{ec2.TransitGatewayPolicyTableStateAvailable},
+		Timeout: TransitGatewayPolicyTableCreatedTimeout,
+		Refresh: StatusTransitGatewayPolicyTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func WaitTransitGatewayRouteTableCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
 	stateConf := &resource.StateChangeConf{
@@ -1386,6 +1405,23 @@ func WaitTransitGatewayRouteTableCreated(conn *ec2.EC2, id string) (*ec2.Transit
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPolicyTableDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPolicyTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPolicyTableStateAvailable, ec2.TransitGatewayPolicyTableStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayPolicyTableDeletedTimeout,
+		Refresh: StatusTransitGatewayPolicyTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPolicyTable); ok {
 		return output, err
 	}
 

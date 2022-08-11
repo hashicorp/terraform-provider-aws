@@ -59,6 +59,8 @@ const (
 	errCodeInvalidPoolIDNotFound                          = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                    = "InvalidPrefixListID.NotFound"
 	errCodeInvalidPrefixListIdNotFound                    = "InvalidPrefixListId.NotFound"
+	errCodeInvalidPolicyTableIDNotFound                   = "InvalidPolicyTableID.NotFound"
+	errCodeInvalidPolicyTableIdNotFound                   = "InvalidPolicyTableId.NotFound"
 	errCodeInvalidRouteNotFound                           = "InvalidRoute.NotFound"
 	errCodeInvalidRouteTableIDNotFound                    = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                    = "InvalidRouteTableId.NotFound"
