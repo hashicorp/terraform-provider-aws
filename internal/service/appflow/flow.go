@@ -3537,7 +3537,7 @@ func flattenTriggerProperties(triggerProperties *appflow.TriggerProperties) map[
 	m := map[string]interface{}{}
 
 	if v := triggerProperties.Scheduled; v != nil {
-		m["trigger_properties"] = []interface{}{flattenScheduled(v)}
+		m["scheduled"] = []interface{}{flattenScheduled(v)}
 	}
 
 	return m

@@ -31,7 +31,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`flow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rFlowName),
@@ -44,8 +44,12 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.#"),
-					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_type"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(5minutes)"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -188,7 +192,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigFlowBase(rSourceName string, rDestinationName string) string {
+func testAccFlowConfig_base(rSourceName string, rDestinationName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -267,7 +271,7 @@ EOF
 
 func testAccFlowConfig_basic(rSourceName string, rDestinationName string, rFlowName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigFlowBase(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
   name = %[3]q
@@ -308,7 +312,14 @@ resource "aws_appflow_flow" "test" {
   }
 
   trigger_config {
-    trigger_type = "OnDemand"
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        data_pull_mode      = "Complete"
+        schedule_expression = "rate(5minutes)"
+      }
+    }
   }
 }
 `, rSourceName, rDestinationName, rFlowName),
@@ -317,7 +328,7 @@ resource "aws_appflow_flow" "test" {
 
 func testAccFlowConfig_update(rSourceName string, rDestinationName string, rFlowName string, description string) string {
 	return acctest.ConfigCompose(
-		testAccConfigFlowBase(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
   name        = %[3]q
@@ -368,7 +379,7 @@ resource "aws_appflow_flow" "test" {
 
 func testAccFlowConfig_taskProperties(rSourceName string, rDestinationName string, rFlowName string) string {
 	return acctest.ConfigCompose(
-		testAccConfigFlowBase(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
   name = %[3]q
@@ -423,7 +434,7 @@ resource "aws_appflow_flow" "test" {
 
 func testAccFlowConfig_tags1(rSourceName string, rDestinationName string, rFlowName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccConfigFlowBase(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
   name = %[3]q
@@ -477,7 +488,7 @@ resource "aws_appflow_flow" "test" {
 
 func testAccFlowConfig_tags2(rSourceName string, rDestinationName string, rFlowName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccConfigFlowBase(rSourceName, rDestinationName),
+		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
   name = %[3]q
