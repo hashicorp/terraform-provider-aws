@@ -249,6 +249,7 @@ semall:
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
+        --config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:

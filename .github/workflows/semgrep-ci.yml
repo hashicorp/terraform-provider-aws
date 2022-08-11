@@ -25,12 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
             --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \
             --config 'r/dgryski.semgrep-go.nilerr' \
+            --config 'r/dgryski.semgrep-go.oddifsequence' \
             --config 'r/dgryski.semgrep-go.oserrors'
 
   naming_cae:
