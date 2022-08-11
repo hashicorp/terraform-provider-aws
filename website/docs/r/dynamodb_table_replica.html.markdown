@@ -52,7 +52,7 @@ resource "aws_dynamodb_table_replica" "example" {
   global_table_arn = aws_dynamodb_table.example.arn
 
   tags = {
-    Name = %[1]q
+    Name = "IZPAWS"
     Pozo = "Amargo"
   }
 }
