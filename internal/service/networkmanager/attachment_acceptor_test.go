@@ -40,10 +40,10 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_basic("0", false),
+				Config: testAccCoreNetworkConfig_basic("0", true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
 				),
 			},
 			{
@@ -53,7 +53,7 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
 				),
 			},
-			// Cannot currently update ipv6
+			// Cannot currently update ipv6 on its own, must also update subnet_arn
 			// {
 			// 	Config: testAccCoreNetworkConfig_basic("*", true),
 			// 	Check: resource.ComposeTestCheckFunc(
@@ -146,7 +146,12 @@ data "aws_availability_zones" "test" {}
 data "aws_region" "test" {}
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+}
+
+locals {
+  ipv6_cidrs = cidrsubnets(aws_vpc.test.ipv6_cidr_block, 8, 8)
 }
 
 variable "subnets" {
@@ -159,6 +164,9 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = element(var.subnets, count.index)
   availability_zone = data.aws_availability_zones.test.names[count.index]
+
+  assign_ipv6_address_on_creation = true
+  ipv6_cidr_block                 = local.ipv6_cidrs[count.index]
 }
 `
 
