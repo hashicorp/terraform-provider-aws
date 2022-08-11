@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -47,29 +49,14 @@ func ResourceTableReplica() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"global_secondary_index": { // through global table
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"read_capacity_override": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-			},
+			// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
 			"global_table_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key_arn": { // through global table
+			"kms_key_arn": { // through main table
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -80,19 +67,11 @@ func ResourceTableReplica() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"propagate_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"read_capacity_override": { // through global table
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"table_class_override": { // through global table
+			// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
+			"table_class_override": { // through main table
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),         // direct to replica
@@ -104,38 +83,30 @@ func ResourceTableReplica() *schema.Resource {
 func resourceTableReplicaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	globalRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
+	replicaRegion := aws.StringValue(conn.Config.Region)
+
+	mainRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
 		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Get("global_table_arn").(string), err)
 	}
 
-	if globalRegion == aws.StringValue(conn.Config.Region) {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Get("global_table_arn").(string), errors.New("replica cannot be in same region as global table"))
+	if mainRegion == aws.StringValue(conn.Config.Region) {
+		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Get("global_table_arn").(string), errors.New("replica cannot be in same region as main table"))
 	}
 
-	session, err := conns.NewSessionForRegion(&conn.Config, globalRegion, meta.(*conns.AWSClient).TerraformVersion)
+	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
 	if err != nil {
-		return fmt.Errorf("new session for region (%s): %w", globalRegion, err)
+		return fmt.Errorf("new session for region (%s): %w", mainRegion, err)
 	}
 
-	conn = dynamodb.New(session) // now global table region
+	conn = dynamodb.New(session) // now main table region
 
 	var replicaInput = &dynamodb.CreateReplicationGroupMemberAction{}
 
-	replicaInput.RegionName = conn.Config.Region
+	replicaInput.RegionName = aws.String(replicaRegion)
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		replicaInput.KMSMasterKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("global_secondary_index"); ok && len(v.([]interface{})) > 0 {
-		replicaInput.GlobalSecondaryIndexes = expandReplicaGlobalSecondaryIndexes(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("read_capacity_override"); ok {
-		replicaInput.ProvisionedThroughputOverride = &dynamodb.ProvisionedThroughputOverride{
-			ReadCapacityUnits: aws.Int64(v.(int64)),
-		}
 	}
 
 	if v, ok := d.GetOk("table_class_override"); ok {
@@ -186,17 +157,20 @@ func resourceTableReplicaCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("waiting for replica (%s) creation: %w", meta.(*conns.AWSClient).Region, err)
 	}
 
-	repARN, err := ARNForNewRegion(d.Get("global_table_arn").(string), aws.StringValue(conn.Config.Region))
-	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Get("global_table_arn").(string), err)
-	}
-	d.SetId(repARN)
+	d.SetId(tableReplicaID(tableName, mainRegion))
 
-	return resourceTableReplicaRead(d, meta)
+	repARN, err := ARNForNewRegion(d.Get("global_table_arn").(string), replicaRegion)
+	if err != nil {
+		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), err)
+	}
+
+	d.Set("arn", repARN)
+
+	return resourceTableReplicaUpdate(d, meta)
 }
 
 func resourceTableReplicaRead(d *schema.ResourceData, meta interface{}) error {
-	// handled through global table (main)
+	// handled through main table (global table)
 	// * global_secondary_index
 	// * kms_key_arn
 	// * read_capacity_override
@@ -205,33 +179,38 @@ func resourceTableReplicaRead(d *schema.ResourceData, meta interface{}) error {
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
-	globalRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
+	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), err)
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), err)
 	}
 
-	if globalRegion == replicaRegion {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), errors.New("replica cannot be in same region as global table"))
+	globalTableARN := arn.ARN{
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    mainRegion,
+		Resource:  fmt.Sprintf("table/%s", tableName),
+		Service:   dynamodb.EndpointsID,
+	}.String()
+
+	d.Set("global_table_arn", globalTableARN)
+
+	if mainRegion == replicaRegion {
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), errors.New("replica cannot be in same region as main table"))
 	}
 
-	session, err := conns.NewSessionForRegion(&conn.Config, globalRegion, meta.(*conns.AWSClient).TerraformVersion)
+	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
 	if err != nil {
-		return fmt.Errorf("new session for region (%s): %w", globalRegion, err)
+		return fmt.Errorf("new session for region (%s): %w", mainRegion, err)
 	}
 
-	conn = dynamodb.New(session) // now global table region
-
-	tableName, err := TableNameFromARN(d.Get("global_table_arn").(string))
-	if err != nil {
-		return fmt.Errorf("reading replica (%s): %w", d.Id(), err)
-	}
+	conn = dynamodb.New(session) // now main table region
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Dynamodb Table Replica (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Dynamodb Table (%s) not found, removing replica from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -249,19 +228,18 @@ func resourceTableReplicaRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	replica, err := filterReplicasByRegion(result.Table.Replicas, replicaRegion)
+	replica, err := FilterReplicasByRegion(result.Table.Replicas, replicaRegion)
+	if !d.IsNewResource() && err != nil && err.Error() == "no replicas found" {
+		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id())
+		d.SetId("")
+		return nil
+	}
 
-	if err := d.Set("global_secondary_index", flattenReplicaGlobalSecondaryIndexes(replica.GlobalSecondaryIndexes)); err != nil {
-		return create.SettingError(names.DynamoDB, "Table Replica", d.Id(), "global_secondary_index", err)
+	if err != nil {
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), err)
 	}
 
 	d.Set("kms_key_arn", replica.KMSMasterKeyId)
-
-	if replica.ProvisionedThroughputOverride != nil {
-		d.Set("read_capacity_override", replica.ProvisionedThroughputOverride.ReadCapacityUnits)
-	} else {
-		d.Set("read_capacity_override", nil)
-	}
 
 	if replica.ReplicaTableClassSummary != nil {
 		d.Set("table_class_override", replica.ReplicaTableClassSummary.TableClass)
@@ -279,9 +257,9 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 	// * tags
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
-	tableName, err := TableNameFromARN(d.Get("global_table_arn").(string))
+	tableName, _, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("reading replica (%s): %w", d.Id(), err)
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), err)
 	}
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
@@ -310,15 +288,15 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 	d.Set("arn", result.Table.TableArn)
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
-		TableName: aws.String(d.Id()),
+		TableName: aws.String(tableName),
 	})
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-		return create.Error(names.DynamoDB, create.ErrActionReading, "Table", d.Id(), fmt.Errorf("continuous backups: %w", err))
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
 
-	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.ContinuousBackupsStatus != nil {
-		d.Set("point_in_time_recovery", aws.StringValue(pitrOut.ContinuousBackupsDescription.ContinuousBackupsStatus) == dynamodb.PointInTimeRecoveryStatusEnabled)
+	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
+		d.Set("point_in_time_recovery", aws.StringValue(pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription.PointInTimeRecoveryStatus) == dynamodb.PointInTimeRecoveryStatusEnabled)
 	} else {
 		d.Set("point_in_time_recovery", false)
 	}
@@ -339,31 +317,6 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 		return create.SettingError(names.DynamoDB, "Table Replica", d.Id(), "tags", err)
 	}
 
-	if d.Get("propagate_tags").(bool) {
-		globalRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), err)
-		}
-
-		session, err := conns.NewSessionForRegion(&conn.Config, globalRegion, meta.(*conns.AWSClient).TerraformVersion)
-		if err != nil {
-			return fmt.Errorf("new session for region (%s): %w", globalRegion, err)
-		}
-
-		conn = dynamodb.New(session) // now global table region
-
-		globalTags, err := ListTags(conn, d.Get("global_table_arn").(string))
-
-		if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), fmt.Errorf("tags: %w", err))
-		}
-
-		globalTags = globalTags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-		globalTags = globalTags.RemoveDefaultConfig(defaultTagsConfig)
-
-		tags = tags.Merge(globalTags)
-	}
-
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.SettingError(names.DynamoDB, "Table Replica", d.Id(), "tags_all", err)
 	}
@@ -372,75 +325,53 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error {
-	// handled through global table (main)
+	// handled through main table (main)
 	// * global_secondary_index
 	// * kms_key_arn
 	// * read_capacity_override
 	// * table_class_override
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	repConn := meta.(*conns.AWSClient).DynamoDBConn
 
-	tableName, err := TableNameFromARN(d.Id())
+	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+		return create.Error(names.DynamoDB, create.ErrActionReading, "Table Replica", d.Id(), err)
 	}
 
-	replicaRegion := aws.StringValue(conn.Config.Region)
+	replicaRegion := aws.StringValue(repConn.Config.Region)
 
-	globalRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
+	if mainRegion == replicaRegion {
+		return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), errors.New("replica cannot be in same region as main table"))
+	}
+
+	session, err := conns.NewSessionForRegion(&repConn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
 	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), err)
+		return fmt.Errorf("new session for region (%s): %w", mainRegion, err)
 	}
 
-	if globalRegion == replicaRegion {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), errors.New("replica cannot be in same region as global table"))
-	}
+	tabConn := dynamodb.New(session) // now main table region
 
-	session, err := conns.NewSessionForRegion(&conn.Config, globalRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return fmt.Errorf("new session for region (%s): %w", globalRegion, err)
-	}
-
-	conn = dynamodb.New(session) // now global table region
-
-	viaGlobalChanges := false
-	viaGlobalInput := &dynamodb.UpdateReplicationGroupMemberAction{
+	viaMainChanges := false
+	viaMainInput := &dynamodb.UpdateReplicationGroupMemberAction{
 		RegionName: aws.String(replicaRegion),
 	}
 
-	if d.HasChange("global_secondary_index") {
-		viaGlobalChanges = true
-		viaGlobalInput.GlobalSecondaryIndexes = expandReplicaGlobalSecondaryIndexes(d.Get("global_secondary_index").(*schema.Set).List())
-	}
-
 	if d.HasChange("kms_key_arn") {
-		viaGlobalChanges = true
-		viaGlobalInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
+		viaMainChanges = true
+		viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
 	}
 
-	if d.HasChange("read_capacity_override") {
-		viaGlobalChanges = true
-		viaGlobalInput.ProvisionedThroughputOverride = &dynamodb.ProvisionedThroughputOverride{
-			ReadCapacityUnits: aws.Int64(d.Get("read_capacity_override").(int64)),
-		}
-	}
-
-	if d.HasChange("table_class_override") {
-		viaGlobalChanges = true
-		viaGlobalInput.TableClassOverride = aws.String(d.Get("table_class_override").(string))
-	}
-
-	if viaGlobalChanges {
+	if viaMainChanges {
 		input := &dynamodb.UpdateTableInput{
 			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
 				{
-					Update: viaGlobalInput,
+					Update: viaMainInput,
 				},
 			},
 			TableName: aws.String(tableName),
 		}
 
 		err := resource.Retry(maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *resource.RetryError {
-			_, err := conn.UpdateTable(input)
+			_, err := tabConn.UpdateTable(input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
 					return resource.RetryableError(err)
@@ -458,33 +389,37 @@ func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error 
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTable(input)
+			_, err = tabConn.UpdateTable(input)
 		}
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "ValidationException", "no actions specified") {
-			return fmt.Errorf("creating replica (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating replica (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waitReplicaActive(conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for replica (%s) creation: %w", d.Id(), err)
+		if _, err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for replica (%s) update: %w", d.Id(), err)
 		}
 	}
 
 	// handled direct to replica
 	// * point_in_time_recovery
 	// * tags
-	conn = meta.(*conns.AWSClient).DynamoDBConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+	if d.HasChanges("point_in_time_recovery", "tags_all") {
+		if d.HasChange("tags_all") {
+			o, n := d.GetChange("tags_all")
+			if err := UpdateTags(repConn, d.Get("arn").(string), o, n); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+			}
 		}
-	}
 
-	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(conn, tableName, d.Get("point_in_time_recovery").(bool), aws.StringValue(conn.Config.Region), meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+		if d.HasChange("point_in_time_recovery") {
+			if err := updatePITR(repConn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+			}
+		}
+
+		if _, err := waitReplicaActive(tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for replica (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -492,28 +427,23 @@ func resourceTableReplicaUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceTableReplicaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
-
 	log.Printf("[DEBUG] DynamoDB delete Table Replica: %s", d.Id())
 
-	tableName, err := TableNameFromARN(d.Id())
+	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionUpdating, "Table Replica", d.Id(), err)
+		return create.Error(names.DynamoDB, create.ErrActionDeleting, "Table Replica", d.Id(), err)
 	}
+
+	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
-	globalRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
+	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
 	if err != nil {
-		return create.Error(names.DynamoDB, create.ErrActionCreating, "Table Replica", d.Id(), err)
+		return fmt.Errorf("new session for region (%s): %w", mainRegion, err)
 	}
 
-	session, err := conns.NewSessionForRegion(&conn.Config, globalRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return fmt.Errorf("new session for region (%s): %w", globalRegion, err)
-	}
-
-	conn = dynamodb.New(session) // now global table region
+	conn = dynamodb.New(session) // now main table region
 
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(tableName),
@@ -559,7 +489,21 @@ func resourceTableReplicaDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func filterReplicasByRegion(replicas []*dynamodb.ReplicaDescription, region string) (*dynamodb.ReplicaDescription, error) {
+func TableReplicaParseID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected table-name:main-table-region", id)
+}
+
+func tableReplicaID(tableName, mainRegion string) string {
+	return fmt.Sprintf("%s:%s", tableName, mainRegion)
+}
+
+func FilterReplicasByRegion(replicas []*dynamodb.ReplicaDescription, region string) (*dynamodb.ReplicaDescription, error) {
 	if len(replicas) == 0 {
 		return nil, errors.New("no replicas found")
 	}
@@ -571,84 +515,4 @@ func filterReplicasByRegion(replicas []*dynamodb.ReplicaDescription, region stri
 	}
 
 	return nil, errors.New("replica not found")
-}
-
-func expandReplicaGlobalSecondaryIndex(data map[string]interface{}) *dynamodb.ReplicaGlobalSecondaryIndex {
-	if data == nil {
-		return nil
-	}
-
-	idx := &dynamodb.ReplicaGlobalSecondaryIndex{
-		IndexName: aws.String(data["name"].(string)),
-	}
-
-	if v, ok := data["read_capacity_override"].(int64); ok {
-		idx.ProvisionedThroughputOverride = &dynamodb.ProvisionedThroughputOverride{
-			ReadCapacityUnits: aws.Int64(v),
-		}
-	}
-
-	return idx
-}
-
-func expandReplicaGlobalSecondaryIndexes(tfList []interface{}) []*dynamodb.ReplicaGlobalSecondaryIndex {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*dynamodb.ReplicaGlobalSecondaryIndex
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandReplicaGlobalSecondaryIndex(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenReplicaGlobalSecondaryIndex(apiObject *dynamodb.ReplicaGlobalSecondaryIndexDescription) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if apiObject.IndexName != nil {
-		tfMap["name"] = aws.StringValue(apiObject.IndexName)
-	}
-
-	if apiObject.ProvisionedThroughputOverride != nil && apiObject.ProvisionedThroughputOverride.ReadCapacityUnits != nil {
-		tfMap["read_capacity_override"] = aws.Int64Value(apiObject.ProvisionedThroughputOverride.ReadCapacityUnits)
-	}
-
-	return tfMap
-}
-
-func flattenReplicaGlobalSecondaryIndexes(apiObjects []*dynamodb.ReplicaGlobalSecondaryIndexDescription) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenReplicaGlobalSecondaryIndex(apiObject))
-	}
-
-	return tfList
 }
