@@ -304,10 +304,8 @@ POLICY
     security_group_ids = [
       aws_security_group.test.id
     ]
-    subnet_ids = [
-      aws_subnet.test.id,
-      aws_subnet.test2.id
-    ]
+
+    subnet_ids = aws_subnet.test[*].id
   }
 
   advanced_security_options {
