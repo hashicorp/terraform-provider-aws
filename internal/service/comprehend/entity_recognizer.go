@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -832,7 +833,7 @@ func flattenAugmentedManifestsListItem(apiObject *types.AugmentedManifestsListIt
 	}
 
 	m := map[string]interface{}{
-		"attribute_names": FlattenStringList(apiObject.AttributeNames),
+		"attribute_names": flex.FlattenStringValueList(apiObject.AttributeNames),
 		"s3_uri":          aws.ToString(apiObject.S3Uri),
 		"document_type":   apiObject.DocumentType,
 		"split":           apiObject.Split,
@@ -884,8 +885,8 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": FlattenStringSet(apiObject.SecurityGroupIds),
-		"subnets":            FlattenStringSet(apiObject.Subnets),
+		"security_group_ids": flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		"subnets":            flex.FlattenStringValueSet(apiObject.Subnets),
 	}
 
 	return []interface{}{m}
@@ -1009,7 +1010,7 @@ func expandAugmentedManifestsListItem(tfMap map[string]interface{}) *types.Augme
 	}
 
 	a := &types.AugmentedManifestsListItem{
-		AttributeNames: ExpandStringList(tfMap["attribute_names"].([]interface{})),
+		AttributeNames: flex.ExpandStringValueList(tfMap["attribute_names"].([]interface{})),
 		S3Uri:          aws.String(tfMap["s3_uri"].(string)),
 		DocumentType:   types.AugmentedManifestsDocumentTypeFormat(tfMap["document_type"].(string)),
 		Split:          types.Split(tfMap["split"].(string)),
@@ -1067,8 +1068,8 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	tfMap := tfList[0].(map[string]interface{})
 
 	a := &types.VpcConfig{
-		SecurityGroupIds: ExpandStringSet(tfMap["security_group_ids"].(*schema.Set)),
-		Subnets:          ExpandStringSet(tfMap["subnets"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
 	}
 
 	return a
