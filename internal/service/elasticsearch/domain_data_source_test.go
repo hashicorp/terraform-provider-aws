@@ -316,6 +316,8 @@ POLICY
   tags = {
     Name = local.random_name
   }
+
+  depends_on = [aws_cloudwatch_log_resource_policy.test]
 }
 
 data "aws_elasticsearch_domain" "test" {
