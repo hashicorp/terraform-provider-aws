@@ -279,6 +279,21 @@ func ResourceTable() *schema.Resource {
 					},
 				},
 			},
+			"restore_date_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidUTCTimestamp,
+			},
+			"restore_source_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"restore_to_latest_time": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"server_side_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -327,6 +342,11 @@ func ResourceTable() *schema.Resource {
 					dynamodb.StreamViewTypeKeysOnly,
 				}, false),
 			},
+			"table_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"ttl": {
@@ -353,26 +373,6 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
-			},
-			"table_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
-			},
-			"restore_source_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"restore_to_latest_time": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"restore_date_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidUTCTimestamp,
 			},
 		},
 	}
@@ -581,6 +581,18 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 	if output, err = waitTableActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.Error(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTable, d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("global_secondary_index"); ok {
+		gsiSet := v.(*schema.Set)
+
+		for _, gsiObject := range gsiSet.List() {
+			gsi := gsiObject.(map[string]interface{})
+
+			if _, err := waitGSIActive(conn, d.Id(), gsi["name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", gsi["name"].(string), err))
+			}
+		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
@@ -953,7 +965,10 @@ func resourceTableDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		if err := deleteReplicas(conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionDeleting, ResNameTable, d.Id(), err)
+			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
+			if !tfawserr.ErrMessageContains(err, "ValidationException", "request was not found") {
+				return create.Error(names.DynamoDB, create.ErrActionDeleting, ResNameTable, d.Id(), err)
+			}
 		}
 	}
 
