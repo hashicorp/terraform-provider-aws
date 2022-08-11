@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectVocabularyDataSource_vocabularyID(t *testing.T) {
+func testAccVocabularyDataSource_vocabularyID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -44,7 +44,7 @@ func TestAccConnectVocabularyDataSource_vocabularyID(t *testing.T) {
 	})
 }
 
-func TestAccConnectVocabularyDataSource_name(t *testing.T) {
+func testAccVocabularyDataSource_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
