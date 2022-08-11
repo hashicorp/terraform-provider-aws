@@ -14,9 +14,9 @@ import (
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 )
 
-// This test file serves as tests for aws_networkmanager_attachment_acceptor and the following attachment types
+// This test file serves as tests for aws_networkmanager_attachment_accepter and the following attachment types
 // aws_networkmanager_vpc_attachment
-func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentBasic(t *testing.T) {
+func TestAccNetworkManagerAttachmentAccepter_vpcAttachmentBasic(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -70,7 +70,7 @@ func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentBasic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerAttachmentAcceptor_vpcAttachmentTags(t *testing.T) {
+func TestAccNetworkManagerAttachmentAccepter_vpcAttachmentTags(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -233,7 +233,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   }
 }
 
-resource "aws_networkmanager_attachment_acceptor" "test" {
+resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
@@ -257,7 +257,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   }
 }
 
-resource "aws_networkmanager_attachment_acceptor" "test" {
+resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
@@ -282,7 +282,7 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   }
 }
 
-resource "aws_networkmanager_attachment_acceptor" "test" {
+resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }

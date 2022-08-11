@@ -13,14 +13,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// AttachmentAcceptor is not specific to AttachmentType. However, querying attachments for status updates is
+// AttachmentAccepter is not specific to AttachmentType. However, querying attachments for status updates is
 // To facilitate querying and waiters on specific attachment types, attachment_type required
 
-func ResourceAttachmentAcceptor() *schema.Resource {
+func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceAttachmentAcceptorCreate,
+		CreateWithoutTimeout: ResourceAttachmentAccepterCreate,
 		ReadWithoutTimeout:   schema.NoopContext,
-		DeleteWithoutTimeout: ResourceAttachmentAcceptorDelete,
+		DeleteWithoutTimeout: ResourceAttachmentAccepterDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -87,7 +87,7 @@ func ResourceAttachmentAcceptor() *schema.Resource {
 	}
 }
 
-func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	attachmentId := d.Get("attachment_id").(string)
@@ -148,7 +148,7 @@ func ResourceAttachmentAcceptorCreate(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func ResourceAttachmentAcceptorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[WARN] Attachment (%s) not deleted, removing from state.", d.Id())
 
 	return nil

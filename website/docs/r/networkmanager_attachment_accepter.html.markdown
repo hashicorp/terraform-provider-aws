@@ -1,21 +1,21 @@
 ---
 subcategory: "Network Manager"
 layout: "aws"
-page_title: "AWS: aws_networkmanager_attachment_acceptor"
+page_title: "AWS: aws_networkmanager_attachment_accepter"
 description: |-
   Terraform resource for managing an AWS NetworkManager VpcAttachment.
 ---
 
-# Resource: aws_networkmanager_attachment_acceptor
+# Resource: aws_networkmanager_attachment_accepter
 
-Terraform resource for managing an AWS NetworkManager Attachment Acceptor.
+Terraform resource for managing an AWS NetworkManager Attachment Accepter.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_networkmanager_attachment_acceptor" "test" {
+resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.vpc.id
   attachment_type = aws_networkmanager_vpc_attachment.vpc.attachment_type
 }
