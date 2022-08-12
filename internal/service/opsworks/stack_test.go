@@ -254,6 +254,141 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 	})
 }
 
+func TestAccOpsWorksStack_allAttributes(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			testAccPreCheckStacks(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_allAttributes(rName, "4039-20200430042739", "rgb(186, 65, 50)", "main", testAccStackCustomJSON1, "test1", "Baked_Goods"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_version", "4039-20200430042739"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
+					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.password", "avoid-plaintext-passwords"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.revision", "main"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.ssh_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+					resource.TestCheckResourceAttr(resourceName, "default_ssh_key_name", "test1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "hostname_theme", "Baked_Goods"),
+					resource.TestCheckResourceAttr(resourceName, "manage_berkshelf", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"custom_cookbooks_source.0.password",
+				},
+			},
+			{
+				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(186, 65, 50)", "main", testAccStackCustomJSON1, "test2", "Scottish_Islands"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
+					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.password", "avoid-plaintext-passwords"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.revision", "main"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.ssh_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+					resource.TestCheckResourceAttr(resourceName, "default_ssh_key_name", "test2"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "hostname_theme", "Scottish_Islands"),
+					resource.TestCheckResourceAttr(resourceName, "manage_berkshelf", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+			{
+				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(209, 105, 41)", "dev", testAccStackCustomJSON2, "test2", "Scottish_Islands"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
+					resource.TestCheckResourceAttr(resourceName, "color", "rgb(209, 105, 41)"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.password", "avoid-plaintext-passwords"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.revision", "dev"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.ssh_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
+					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON2),
+					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
+					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
+					resource.TestCheckResourceAttr(resourceName, "default_ssh_key_name", "test2"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "hostname_theme", "Scottish_Islands"),
+					resource.TestCheckResourceAttr(resourceName, "manage_berkshelf", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
+					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 ///////////////////////////////
 //// Tests for the No-VPC case
 ///////////////////////////////
@@ -361,7 +496,7 @@ func TestAccOpsWorksStack_vpc(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -402,7 +537,7 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 					resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_custom_cookbooks", "true"),
@@ -454,7 +589,7 @@ func testAccCheckCreateStackAttributes(rName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 		resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2016.09"),
 		resource.TestCheckResourceAttr(resourceName, "default_root_device_type", "ebs"),
-		resource.TestCheckResourceAttr(resourceName, "custom_json", customJSON),
+		resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
 		resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 		resource.TestCheckResourceAttr(resourceName, "use_opsworks_security_groups", "false"),
 	)
@@ -743,6 +878,40 @@ resource "aws_opsworks_stack" "test" {
   }
 }
 `, rName, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccStackConfig_allAttributes(rName, agentVersion, color, customCookbookRevision, customJSON, defaultSSHKeyName, hostnameTheme string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                          = %[1]q
+  region                        = %[2]q
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
+  default_subnet_id             = aws_subnet.test[0].id
+  vpc_id                        = aws_vpc.test.id
+  use_opsworks_security_groups  = false
+
+  agent_version                 = %[3]q
+  color                         = %[4]q
+  configuration_manager_name    = "Chef"
+  configuration_manager_version = "12"
+  custom_json                   = %[6]q
+  default_os                    = "Amazon Linux 2"
+  default_root_device_type      = "ebs"
+  default_ssh_key_name          = %[7]q
+  hostname_theme                = %[8]q
+  manage_berkshelf              =  false
+
+  use_custom_cookbooks = true
+  custom_cookbooks_source {
+    type     = "git"
+    revision = %[5]q
+    url      = "https://github.com/aws/opsworks-example-cookbooks.git"
+    password = "avoid-plaintext-passwords"
+    username = "tfacctest"
+  }
+}
+`, rName, acctest.Region(), agentVersion, color, customCookbookRevision, customJSON, defaultSSHKeyName, hostnameTheme))
 }
 
 func testAccStackConfig_noVPCCreate(rName string) string {
@@ -1399,6 +1568,7 @@ const sshKey = "-----BEGIN RSA PRIVATE KEY-----" +
 	"tmm0+hpmkjX7jiPcljjs8S8gh+uCWieJoO4JNPk2SXRiePpYgKzdlg==" +
 	"-----END RSA PRIVATE KEY-----"
 
-const customJSON = `{
-  "key": "value"
-}`
+const (
+	testAccStackCustomJSON1 = `{"key1": "value1"}`
+	testAccStackCustomJSON2 = `{"key2": "value2"}`
+)

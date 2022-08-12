@@ -51,7 +51,7 @@ func ResourceStack() *schema.Resource {
 			"berkshelf_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "3.2.0",
+				Default:  defaultBerkshelfVersion,
 			},
 			"color": {
 				Type:     schema.TypeString,
@@ -200,8 +200,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	region := d.Get("region").(string)
 	input := &opsworks.CreateStackInput{
 		ChefConfiguration: &opsworks.ChefConfiguration{
-			BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
-			ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
+			ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
 		},
 		ConfigurationManager: &opsworks.StackConfigurationManager{
 			Name:    aws.String(d.Get("configuration_manager_name").(string)),
@@ -249,6 +248,10 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("default_subnet_id"); ok {
 		input.DefaultSubnetId = aws.String(v.(string))
+	}
+
+	if d.Get("manage_berkshelf").(bool) {
+		input.ChefConfiguration.BerkshelfVersion = aws.String(d.Get("berkshelf_version").(string))
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
@@ -357,7 +360,11 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	arn := aws.StringValue(stack.Arn)
 	d.Set("arn", arn)
 	if stack.ChefConfiguration != nil {
-		d.Set("berkshelf_version", stack.ChefConfiguration.BerkshelfVersion)
+		if v := aws.StringValue(stack.ChefConfiguration.BerkshelfVersion); v != "" {
+			d.Set("berkshelf_version", v)
+		} else {
+			d.Set("berkshelf_version", defaultBerkshelfVersion)
+		}
 		d.Set("manage_berkshelf", stack.ChefConfiguration.ManageBerkshelf)
 	}
 	if color, ok := stack.Attributes[opsworks.StackAttributesKeysColor]; ok {
@@ -445,8 +452,11 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChanges("berkshelf_version", "manage_berkshelf") {
 			input.ChefConfiguration = &opsworks.ChefConfiguration{
-				BerkshelfVersion: aws.String(d.Get("berkshelf_version").(string)),
-				ManageBerkshelf:  aws.Bool(d.Get("manage_berkshelf").(bool)),
+				ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
+			}
+
+			if d.Get("manage_berkshelf").(bool) {
+				input.ChefConfiguration.BerkshelfVersion = aws.String(d.Get("berkshelf_version").(string))
 			}
 		}
 
@@ -684,23 +694,6 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 // See:
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
-func connForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
-	originalConn := meta.(*conns.AWSClient).OpsWorksConn
-
-	// Regions are the same, no need to reconfigure
-	if aws.StringValue(originalConn.Config.Region) == region {
-		return originalConn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&originalConn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS session: %w", err)
-	}
-
-	return opsworks.New(sess), nil
-}
-
 func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
 	conn := client.OpsWorksConn
 
