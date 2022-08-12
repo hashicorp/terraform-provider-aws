@@ -140,7 +140,7 @@ func ResourceTransitGatewayPolicyTableDelete(d *schema.ResourceData, meta interf
 		TransitGatewayPolicyTableId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPolicyTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIDNotFound) {
 		return nil
 	}
 
