@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -345,6 +347,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		Delete: func(d *schema.ResourceData, meta interface{}) error {
 			return lt.Delete(d, meta)
 		},
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -689,6 +692,35 @@ func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func FindLayerByID(conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) {
+	input := &opsworks.DescribeLayersInput{
+		LayerIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeLayers(input)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Layers) == 0 || output.Layers[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Layers); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Layers[0], nil
 }
 
 func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*string, error) {

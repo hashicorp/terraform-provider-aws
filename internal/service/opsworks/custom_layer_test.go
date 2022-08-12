@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 )
 
@@ -265,68 +262,6 @@ func TestAccOpsWorksCustomLayer_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckLayerExists(n string, opslayer *opsworks.Layer) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-		params := &opsworks.DescribeLayersInput{
-			LayerIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeLayers(params)
-
-		if err != nil {
-			return err
-		}
-
-		if v := len(resp.Layers); v != 1 {
-			return fmt.Errorf("Expected 1 response returned, got %d", v)
-		}
-
-		*opslayer = *resp.Layers[0]
-
-		return nil
-	}
-}
-
-func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourceType {
-			continue
-		}
-		req := &opsworks.DescribeLayersInput{
-			LayerIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		}
-
-		output, err := conn.DescribeLayers(req)
-		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-
-		if output == nil || len(output.Layers) == 0 {
-			return nil
-		}
-
-		return fmt.Errorf("OpsWorks layer %q still exists", rs.Primary.ID)
-	}
-
-	return nil
 }
 
 func testAccCheckCustomLayerDestroy(s *terraform.State) error {

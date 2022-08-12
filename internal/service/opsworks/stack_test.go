@@ -464,7 +464,7 @@ func testAccCheckStackExistsWithProvider(n string, v *opsworks.Stack, providerF 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No OpsWorks Stack ID is set")
 		}
 
 		conn := providerF().Meta().(*conns.AWSClient).OpsWorksConn
