@@ -60,3 +60,25 @@ func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
 
 	return nil
 }
+
+func testAccLayerConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccStackConfig_basic(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 8
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
