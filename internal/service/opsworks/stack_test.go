@@ -581,6 +581,49 @@ func testAccStackConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(testAccStackConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2))
 }
 
+func testAccStackConfig_baseVPCAlternateRegion(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccStackConfig_base(rName),
+		fmt.Sprintf(`
+# The VPC (and subnets) must be in the target (alternate) AWS Region.
+data "aws_availability_zones" "available" {
+  provider = "awsalternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  provider = "awsalternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  provider = "awsalternate"
+
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
 func testAccStackConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccStackConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_opsworks_stack" "test" {
@@ -649,51 +692,8 @@ resource "aws_opsworks_stack" "test" {
 `, rName, acctest.EC2ClassicRegion()))
 }
 
-func testAccStackConfig_baseTagsAlternateRegion(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		testAccStackConfig_base(rName),
-		fmt.Sprintf(`
-# The VPC (and subnets) must be in the target (alternate) AWS Region.
-data "aws_availability_zones" "available" {
-  provider = "awsalternate"
-
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  provider = "awsalternate"
-
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  provider = "awsalternate"
-
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
 func testAccStackConfig_tags1AlternateRegion(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccStackConfig_baseTagsAlternateRegion(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackConfig_baseVPCAlternateRegion(rName), fmt.Sprintf(`
 resource "aws_opsworks_stack" "test" {
   name                         = %[1]q
   region                       = %[2]q
@@ -711,7 +711,7 @@ resource "aws_opsworks_stack" "test" {
 }
 
 func testAccStackConfig_tags2AlternateRegion(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccStackConfig_baseTagsAlternateRegion(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStackConfig_baseVPCAlternateRegion(rName), fmt.Sprintf(`
 resource "aws_opsworks_stack" "test" {
   name                         = %[1]q
   region                       = %[2]q
