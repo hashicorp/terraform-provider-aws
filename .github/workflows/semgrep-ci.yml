@@ -24,7 +24,11 @@ jobs:
       image: returntocorp/semgrep
     steps:
       - uses: actions/checkout@v3
-      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep.yml
+      - run: |
+          semgrep $COMMON_PARAMS \
+            --config .ci/.semgrep.yml \
+            --config 'r/dgryski.semgrep-go.errnilcheck' \
+            --config 'r/dgryski.semgrep-go.nilerr'
 
   naming_cae:
     name: Naming Scan Caps/AWS/EC2

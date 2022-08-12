@@ -113,13 +113,7 @@ func (m *migrator) migrate(outputFilename string) error {
 		return err
 	}
 
-	err = m.applyTemplate(outputFilename, templateData)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.applyTemplate(outputFilename, templateData)
 }
 
 func (m *migrator) applyTemplate(filename string, templateData *templateData) error {

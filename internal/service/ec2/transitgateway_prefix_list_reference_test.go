@@ -195,11 +195,7 @@ func testAccTransitGatewayPrefixListReferenceExists(n string) resource.TestCheck
 
 		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

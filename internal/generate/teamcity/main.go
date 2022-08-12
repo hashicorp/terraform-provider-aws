@@ -178,10 +178,5 @@ func decodeHclFile(filename string, target interface{}) error {
 		return err
 	}
 
-	err = hclsimple.Decode(filename, b, nil, target)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return hclsimple.Decode(filename, b, nil, target)
 }

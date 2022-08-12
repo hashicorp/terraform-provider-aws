@@ -107,13 +107,7 @@ func testAccCheckApprovalRuleTemplateAssociationExists(name string) resource.Tes
 			return err
 		}
 
-		err = tfcodecommit.FindApprovalRuleTemplateAssociation(conn, approvalTemplateName, repositoryName)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfcodecommit.FindApprovalRuleTemplateAssociation(conn, approvalTemplateName, repositoryName)
 	}
 }
 

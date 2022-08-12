@@ -62,11 +62,7 @@ func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

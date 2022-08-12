@@ -295,11 +295,7 @@ func testAccCheckAcceleratorExists(name string) resource.TestCheckFunc {
 
 		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

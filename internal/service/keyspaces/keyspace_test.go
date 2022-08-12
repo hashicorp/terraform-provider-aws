@@ -153,11 +153,7 @@ func testAccCheckKeyspaceExists(n string) resource.TestCheckFunc {
 
 		_, err := tfkeyspaces.FindKeyspaceByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -61,11 +61,7 @@ func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName 
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
@@ -94,11 +90,7 @@ func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName st
 		}
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
@@ -147,9 +139,6 @@ func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName st
 	}
 
 	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }

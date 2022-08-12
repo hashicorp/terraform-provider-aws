@@ -111,7 +111,7 @@ func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EFS Backup Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -509,11 +509,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

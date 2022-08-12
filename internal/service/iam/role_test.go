@@ -952,11 +952,7 @@ func testAccCheckRolePolicyDetachManagedPolicy(role *iam.Role, policyName string
 			RoleName:  role.RoleName,
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -991,11 +987,8 @@ func testAccCheckRolePolicyAttachManagedPolicy(role *iam.Role, policyName string
 			PolicyArn: aws.String(managedARN),
 			RoleName:  role.RoleName,
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -1009,10 +1002,7 @@ func testAccCheckRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) 
 			RoleName:       role.RoleName,
 		})
 
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
@@ -1025,10 +1015,7 @@ func testAccCheckRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy strin
 			RoleName:   role.RoleName,
 		})
 
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
