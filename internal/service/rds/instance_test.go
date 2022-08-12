@@ -633,8 +633,10 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var snap rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v rds.DBInstance
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -645,9 +647,17 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_finalSnapshotID(rName),
+				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.snapshot", &snap),
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			// Test updating just final_snapshot_identifier.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/26280
+			{
+				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
 		},
@@ -5081,31 +5091,31 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_finalSnapshotID(rName string) string {
+func testAccInstanceConfig_finalSnapshotID(rName1, rName2 string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
-resource "aws_db_instance" "snapshot" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
   allocated_storage       = 5
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
-  password                = "barbarbarbar"
+  db_name                 = "test"
   publicly_accessible     = true
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   backup_retention_period = 1
 
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
 
   copy_tags_to_snapshot     = true
-  final_snapshot_identifier = %[1]q
+  final_snapshot_identifier = %[2]q
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName1, rName2))
 }
 
 func testAccInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {
