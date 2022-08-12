@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_dx_macsec_key
+```
+
+```release-note:enhancement
+resource/aws_dx_connection: Add arguments to enable MACsec support
+```

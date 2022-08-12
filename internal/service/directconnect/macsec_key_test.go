@@ -12,40 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-// func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
-// 	var connection directconnect.Connection
-// 	resourceName := "aws_dx_macsec_key.test"
-// 	dxResourceName := "aws_dx_connection.test"
-// 	ckn := testAccDirecConnectMacSecGenerateHex()
-// 	cak := testAccDirecConnectMacSecGenerateHex()
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:          func() { acctest.PreCheck(t) },
-// 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-// 		ProviderFactories: acctest.ProviderFactories,
-// 		CheckDestroy:      testAccCheckConnectionDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDirectConnectMacSecConfig_withSecret(rName, ckn, cak),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckConnectionExists(dxResourceName, &connection),
-// 					// TODO: check that DX connection ID and MacSec connection ID match
-// 					// resource.TestCheckResourceAttrPair(resourceName, "connection_id", dxResourceName, "id"),
-// 					// TODO: check that MacSecKey exists on DX connection
-// 					// resource.TestMatchResourceAttr(dxResourceName, "macsec_keys", regexp.MustCompile(``)),
-// 				),
-// 			},
-// 			// Test import.
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 	// Requires an existing MACsec-capable DX connection set as environmental variable
 	key := "DX_CONNECTION_ID"
@@ -56,7 +22,6 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 	resourceName := "aws_dx_macsec_key.test"
 	ckn := testAccDirecConnectMacSecGenerateHex()
 	cak := testAccDirecConnectMacSecGenerateHex()
-	// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { acctest.PreCheck(t) },
@@ -119,31 +84,29 @@ func testAccDirecConnectMacSecGenerateHex() string {
 }
 
 func testAccDirectConnectMacSecConfig_withCkn(ckn, cak, connectionId string) string {
-	conf := fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_dx_macsec_key" "test" {
   connection_id = %[3]q
-  ckn = %[1]q
-  cak = %[2]q
+  ckn           = %[1]q
+  cak           = %[2]q
 }
 
+
 `, ckn, cak, connectionId)
-	fmt.Println(conf)
-	return conf
 }
 
 // Can only be used with an EXISTING secrets - cannot create secrets from scratch
 func testAccDirectConnectMacSecConfig_withSecret(secretArn, connectionId string) string {
-	conf := fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_secretsmanager_secret" "test" {
   arn = %[1]q
 }
 
 resource "aws_dx_macsec_key" "test" {
   connection_id = %[2]q
-  secret_arn = data.aws_secretsmanager_secret.test.arn
+  secret_arn    = data.aws_secretsmanager_secret.test.arn
 }
 
+
 `, secretArn, connectionId)
-	fmt.Println(conf)
-	return conf
 }
