@@ -168,16 +168,6 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 				},
 			},
 		},
-		"custom_instance_profile_arn": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: verify.ValidARN,
-		},
-		"custom_setup_recipes": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
 		"custom_configure_recipes": {
 			Type:     schema.TypeList,
 			Optional: true,
@@ -188,21 +178,10 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Optional: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"custom_undeploy_recipes": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"custom_shutdown_recipes": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"custom_security_group_ids": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
+		"custom_instance_profile_arn": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
 		},
 		"custom_json": {
 			Type:         schema.TypeString,
@@ -212,6 +191,26 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 				return json
 			},
 			Optional: true,
+		},
+		"custom_security_group_ids": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"custom_setup_recipes": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"custom_shutdown_recipes": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"custom_undeploy_recipes": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"drain_elb_on_shutdown": {
 			Type:     schema.TypeBool,
@@ -223,6 +222,11 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"encrypted": {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
+					},
 					"iops": {
 						Type:     schema.TypeInt,
 						Optional: true,
@@ -257,11 +261,6 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 							"sc1",
 						}, false),
 					},
-					"encrypted": {
-						Type:     schema.TypeBool,
-						Optional: true,
-						Default:  false,
-					},
 				},
 			},
 			Set: func(v interface{}) int {
@@ -273,34 +272,33 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"install_updates_on_boot": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true,
-		},
 		"instance_shutdown_timeout": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  120,
 		},
+		"install_updates_on_boot": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
 		"system_packages": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
-			Set:      schema.HashString,
 		},
 		"stack_id": {
 			Type:     schema.TypeString,
 			ForceNew: true,
 			Required: true,
 		},
+		"tags":     tftags.TagsSchema(),
+		"tags_all": tftags.TagsSchemaComputed(),
 		"use_ebs_optimized_instances": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
 	if lt.CustomShortName {
