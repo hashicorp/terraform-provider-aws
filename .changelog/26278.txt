@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_opsworks_stack: Correctly apply `tags` during create if `region` is not equal to the configured AWS Region
 ```
+
+```release-note:enhancement
+resource/aws_opsworks_stack: Add plan-time validation for `custom_cookbooks_source.type`
+```
