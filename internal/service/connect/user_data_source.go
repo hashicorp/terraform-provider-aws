@@ -124,11 +124,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		userSummary, err := dataSourceGetUserSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect User Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect User Summary by name (%s): %s", name, err)
 		}
 
 		if userSummary == nil {
-			return diag.Errorf("error finding Connect User Summary by name (%s): not found", name)
+			return diag.Errorf("finding Connect User Summary by name (%s): not found", name)
 		}
 
 		input.UserId = userSummary.Id
@@ -137,11 +137,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.DescribeUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User: %w", err))
+		return diag.Errorf("getting Connect User: %s", err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.Errorf("error getting Connect User: empty response")
+		return diag.Errorf("getting Connect User: empty response")
 	}
 
 	user := resp.User
@@ -156,15 +156,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting identity_info: %w", err))
+		return diag.Errorf("setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
+		return diag.Errorf("setting phone_config: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(user.Id)))
