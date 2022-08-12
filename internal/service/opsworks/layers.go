@@ -333,11 +333,11 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Read(d, meta)
-		},
 		Create: func(d *schema.ResourceData, meta interface{}) error {
 			return lt.Create(d, meta)
+		},
+		Read: func(d *schema.ResourceData, meta interface{}) error {
+			return lt.Read(d, meta)
 		},
 		Update: func(d *schema.ResourceData, meta interface{}) error {
 			return lt.Update(d, meta)
@@ -354,6 +354,108 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).OpsWorksConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	attributes, err := lt.AttributeMap(d)
+	if err != nil {
+		return err
+	}
+	req := &opsworks.CreateLayerInput{
+		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
+		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
+		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
+		CustomRecipes:               lt.CustomRecipes(d),
+		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
+		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
+		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
+		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
+		Name:                        aws.String(d.Get("name").(string)),
+		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
+		Type:                        aws.String(lt.TypeName),
+		StackId:                     aws.String(d.Get("stack_id").(string)),
+		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
+		Attributes:                  attributes,
+		VolumeConfigurations:        lt.VolumeConfigurations(d),
+	}
+
+	if v, ok := d.GetOk("cloudwatch_configuration"); ok {
+		req.CloudWatchLogsConfiguration = expandCloudWatchConfig(v.([]interface{}))
+	}
+
+	if lt.CustomShortName {
+		req.Shortname = aws.String(d.Get("short_name").(string))
+	} else {
+		req.Shortname = aws.String(lt.TypeName)
+	}
+
+	req.CustomJson = aws.String(d.Get("custom_json").(string))
+
+	log.Printf("[DEBUG] Creating OpsWorks layer: %s", d.Id())
+
+	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
+		ecsClusterArn := v.(string)
+		//Need to attach the ECS Cluster to the stack before creating the layer
+		log.Printf("[DEBUG] Attaching ECS Cluster: %s", ecsClusterArn)
+		_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
+			EcsClusterArn: aws.String(ecsClusterArn),
+			StackId:       req.StackId,
+		})
+		if err != nil {
+			return fmt.Errorf("error Registering Opsworks Layer ECS Cluster (%s): %w", d.Get("name").(string), err)
+		}
+	}
+
+	resp, err := conn.CreateLayer(req)
+	if err != nil {
+		return fmt.Errorf("error Creating Opsworks Layer (%s): %w", d.Get("name").(string), err)
+	}
+
+	d.SetId(aws.StringValue(resp.LayerId))
+
+	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
+	if aws.StringValue(loadBalancer) != "" {
+		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
+		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+			ElasticLoadBalancerName: loadBalancer,
+			LayerId:                 resp.LayerId,
+		})
+		if err != nil {
+			return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
+		}
+	}
+
+	if len(tags) > 0 {
+		req := &opsworks.DescribeLayersInput{
+			LayerIds: []*string{
+				aws.String(d.Id()),
+			},
+		}
+
+		log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
+
+		resp, err := conn.DescribeLayers(req)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+				d.SetId("")
+				return nil
+			}
+			return err
+		}
+
+		layer := resp.Layers[0]
+		arn := aws.StringValue(layer.Arn)
+
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
+			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %w", arn, err)
+		}
+	}
+
+	return lt.Read(d, meta)
 }
 
 func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
@@ -468,108 +570,6 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-}
-
-func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	attributes, err := lt.AttributeMap(d)
-	if err != nil {
-		return err
-	}
-	req := &opsworks.CreateLayerInput{
-		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
-		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
-		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
-		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
-		Type:                        aws.String(lt.TypeName),
-		StackId:                     aws.String(d.Get("stack_id").(string)),
-		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  attributes,
-		VolumeConfigurations:        lt.VolumeConfigurations(d),
-	}
-
-	if v, ok := d.GetOk("cloudwatch_configuration"); ok {
-		req.CloudWatchLogsConfiguration = expandCloudWatchConfig(v.([]interface{}))
-	}
-
-	if lt.CustomShortName {
-		req.Shortname = aws.String(d.Get("short_name").(string))
-	} else {
-		req.Shortname = aws.String(lt.TypeName)
-	}
-
-	req.CustomJson = aws.String(d.Get("custom_json").(string))
-
-	log.Printf("[DEBUG] Creating OpsWorks layer: %s", d.Id())
-
-	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
-		ecsClusterArn := v.(string)
-		//Need to attach the ECS Cluster to the stack before creating the layer
-		log.Printf("[DEBUG] Attaching ECS Cluster: %s", ecsClusterArn)
-		_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
-			EcsClusterArn: aws.String(ecsClusterArn),
-			StackId:       req.StackId,
-		})
-		if err != nil {
-			return fmt.Errorf("error Registering Opsworks Layer ECS Cluster (%s): %w", d.Get("name").(string), err)
-		}
-	}
-
-	resp, err := conn.CreateLayer(req)
-	if err != nil {
-		return fmt.Errorf("error Creating Opsworks Layer (%s): %w", d.Get("name").(string), err)
-	}
-
-	d.SetId(aws.StringValue(resp.LayerId))
-
-	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
-	if aws.StringValue(loadBalancer) != "" {
-		log.Printf("[DEBUG] Attaching load balancer: %s", aws.StringValue(loadBalancer))
-		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
-			ElasticLoadBalancerName: loadBalancer,
-			LayerId:                 resp.LayerId,
-		})
-		if err != nil {
-			return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
-		}
-	}
-
-	if len(tags) > 0 {
-		req := &opsworks.DescribeLayersInput{
-			LayerIds: []*string{
-				aws.String(d.Id()),
-			},
-		}
-
-		log.Printf("[DEBUG] Reading OpsWorks layer: %s", d.Id())
-
-		resp, err := conn.DescribeLayers(req)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-				d.SetId("")
-				return nil
-			}
-			return err
-		}
-
-		layer := resp.Layers[0]
-		arn := aws.StringValue(layer.Arn)
-
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %w", arn, err)
-		}
-	}
-
-	return lt.Read(d, meta)
 }
 
 func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
