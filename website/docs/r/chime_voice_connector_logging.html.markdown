@@ -19,9 +19,9 @@ resource "aws_chime_voice_connector" "default" {
 }
 
 resource "aws_chime_voice_connector_logging" "default" {
-  enable_sip_logs    = true
-  enable_media_metric_logs    = true
-  voice_connector_id = aws_chime_voice_connector.default.id
+  enable_sip_logs          = true
+  enable_media_metric_logs = true
+  voice_connector_id       = aws_chime_voice_connector.default.id
 }
 ```
 
